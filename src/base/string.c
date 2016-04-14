@@ -75,7 +75,7 @@ qn_string * qn_str_join_raw_strings(
     int i = 0;
     int arg_pair_count = 0;
 
-    //== Count argument pairs
+    //== Check fixed arguments
     if (!delimiter) {
         // Not a valid string as delimiter.
         errno = EINVAL;
@@ -145,7 +145,7 @@ qn_string * qn_str_join_raw_strings(
                 memcpy(dst_pos, src_str, src_size);
                 dst_pos += src_size;
             }
-        } // while
+        } // for
         va_end(ap);
     } // if
 
@@ -153,6 +153,68 @@ qn_string * qn_str_join_raw_strings(
     new_str->str = &new_str->data[0];
     return new_str;
 } // qn_str_join_raw_strings
+
+qn_string * qn_str_join_strings(const char * restrict delimiter, qn_string strs[], int n)
+{
+    qn_string * new_str = NULL;
+    char * dst_pos = NULL;
+    qn_size remainder_capacity = QN_STR_MAX_SIZE;
+    qn_size delimiter_size = 0L;
+    int i = 0;
+
+    //== Check fixed arguments
+    if (!delimiter || !strs || n == 0) {
+        // Not a valid string as delimiter, or no strings to join.
+        errno = EINVAL;
+        return NULL;
+    }
+
+    if (n == 1) {
+        return qn_str_duplicate(&strs[0]);
+    }
+
+    delimiter_size = strlen(delimiter);
+
+    // Check string objects
+    for (i = 0; i < n; i += 1) {
+        if (remainder_capacity < delimiter_size + strs[i].size) {
+            errno = EOVERFLOW;
+            return NULL;
+        }
+        remainder_capacity -= (delimiter_size + strs[i].size);
+    } // for
+
+    //== Prepare a new string object
+    new_str = calloc(1, sizeof(*new_str) + (QN_STR_MAX_SIZE - remainder_capacity) + 1);
+    if (!new_str) {
+        errno = ENOMEM;
+        return NULL;
+    }
+
+    //== Copy all source strings and delimiters between them.
+    dst_pos = &new_str->data[0];
+
+    // Copy all strings and delimiters between them.
+    if (strs[0].size > 0L) {
+        memcpy(dst_pos, strs[0].str, strs[0].size);
+        dst_pos += strs[0].size;
+    } // if
+
+    for (i = 1; i < n; i += 1) {
+        if (delimiter_size > 0L) {
+            memcpy(dst_pos, delimiter, delimiter_size);
+            dst_pos += delimiter_size;
+        }
+        if (strs[i].size > 0L) {
+            memcpy(dst_pos, strs[i].str, strs[i].size);
+            dst_pos += strs[i].size;
+        }
+    } // for
+
+    new_str->size = QN_STR_MAX_SIZE - remainder_capacity;
+    new_str->str = &new_str->data[0];
+    return new_str;
+} // qn_str_join_strings
 
 qn_bool qn_str_compare(const qn_string * restrict s1, const qn_string * restrict s2)
 {
