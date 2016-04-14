@@ -57,47 +57,48 @@ void qn_str_destroy(qn_string * self)
     }
 } // qn_str_destroy
 
-qn_string * qn_str_join_strings(const char * delimiter, ...)
+qn_string * qn_str_join_raw_strings(
+    const char * restrict delimiter,
+    const char * restrict s1,
+    qn_size s1_size,
+    const char * restrict s2,
+    qn_size s2_size,
+    ...)
 {
     va_list ap;
     qn_string * new_str = NULL;
-    const char * first_str = NULL;
     const char * src_str = NULL;
     char * dst_pos = NULL;
-    qn_size first_size = 0L;
     qn_size src_size = 0L;
     qn_size remainder_capacity = QN_STR_MAX_SIZE;
     qn_size delimiter_size = 0L;
     int i = 0;
     int arg_pair_count = 0;
 
-    assert(delimiter != NULL);
-
     //== Count argument pairs
-    delimiter_size = strlen(delimiter);
-
-    va_start(ap, delimiter);
-    // Check the first argument pair
-    first_str = va_arg(ap, const char *);
-    if (!first_str) {
-        // No argument pairs are passed.
-        va_end(ap);
+    if (!delimiter) {
+        // Not a valid string as delimiter.
         errno = EINVAL;
         return NULL;
     }
 
-    first_size = va_arg(ap, qn_size);
-    if (remainder_capacity < first_size) {
-        va_end(ap);
+    delimiter_size = strlen(delimiter);
+
+    // Check the first and second strings
+    if (!s1 || !s2) {
+        errno = EINVAL;
+        return NULL;
+    }
+
+    if (remainder_capacity < (s1_size + delimiter_size + s2_size)) {
         errno = EOVERFLOW;
         return NULL;
     }
-    remainder_capacity -= first_size;
-    arg_pair_count += 1;
+    remainder_capacity -= (s1_size + delimiter_size + s2_size);
 
-    // Check other argument pairs
-    src_str = va_arg(ap, const char *);
-    while (src_str) {
+    // Check other <str,size> pairs
+    va_start(ap, s2_size);
+    while ((src_str = va_arg(ap, const char *))) {
         src_size = va_arg(ap, qn_size);
         if (remainder_capacity < delimiter_size + src_size) {
             va_end(ap);
@@ -106,16 +107,8 @@ qn_string * qn_str_join_strings(const char * delimiter, ...)
         }
         remainder_capacity -= (delimiter_size + src_size);
         arg_pair_count += 1;
-
-        // Try to fetch next string.
-        src_str = va_arg(ap, const char *);
     } // while
     va_end(ap);
-
-    if (arg_pair_count == 1) {
-        // Only one argument pair is passed.
-        return qn_str_create(first_str, first_size);
-    } // if
 
     //== Prepare a new string object
     new_str = calloc(1, sizeof(*new_str) + (QN_STR_MAX_SIZE - remainder_capacity) + 1);
@@ -125,35 +118,41 @@ qn_string * qn_str_join_strings(const char * delimiter, ...)
     }
 
     //== Copy all source strings and delimiters between them.
-    va_start(ap, delimiter);
     dst_pos = &new_str->data[0];
 
-    // Copy the first string.
-    src_str = va_arg(ap, const char *);
-    src_size = va_arg(ap, qn_size);
-    if (src_size > 0L) {
-        memcpy(dst_pos, src_str, src_size);
-        dst_pos += src_size;
-    }
-
-    // Copy other strings and delimiters between them.
-    for (i = 1; i < arg_pair_count; i += 1) {
+    // Copy the first and second strings, and the delimiter between them.
+    memcpy(dst_pos, s1, s1_size);
+    dst_pos += s1_size;
+    if (delimiter_size > 0L) {
         memcpy(dst_pos, delimiter, delimiter_size);
         dst_pos += delimiter_size;
+    }
+    memcpy(dst_pos, s2, s2_size);
+    dst_pos += s2_size;
 
-        src_str = va_arg(ap, const char *);
-        src_size = va_arg(ap, qn_size);
-        if (src_size > 0L) {
-            memcpy(dst_pos, src_str, src_size);
-            dst_pos += src_size;
-        }
-    } // while
-    va_end(ap);
+    // Copy other strings and delimiters between them.
+    if (arg_pair_count > 0) {
+        va_start(ap, s2_size);
+        for (i = 0; i < arg_pair_count; i += 1) {
+            if (delimiter_size > 0L) {
+                memcpy(dst_pos, delimiter, delimiter_size);
+                dst_pos += delimiter_size;
+            }
+
+            src_str = va_arg(ap, const char *);
+            src_size = va_arg(ap, qn_size);
+            if (src_size > 0L) {
+                memcpy(dst_pos, src_str, src_size);
+                dst_pos += src_size;
+            }
+        } // while
+        va_end(ap);
+    } // if
 
     new_str->size = QN_STR_MAX_SIZE - remainder_capacity;
     new_str->str = &new_str->data[0];
     return new_str;
-} // qn_str_join_strings
+} // qn_str_join_raw_strings
 
 qn_bool qn_str_compare(const qn_string * restrict s1, const qn_string * restrict s2)
 {
