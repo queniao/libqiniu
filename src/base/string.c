@@ -57,7 +57,7 @@ void qn_str_destroy(qn_string * self)
     }
 } // qn_str_destroy
 
-qn_string * qn_str_join_raw_strings(
+qn_string * qn_str_join_raw(
     const char * restrict delimiter,
     const char * restrict s1,
     qn_size s1_size,
@@ -152,9 +152,9 @@ qn_string * qn_str_join_raw_strings(
     new_str->size = QN_STR_MAX_SIZE - remainder_capacity;
     new_str->str = &new_str->data[0];
     return new_str;
-} // qn_str_join_raw_strings
+} // qn_str_join_raw
 
-qn_string * qn_str_join_strings(const char * restrict delimiter, qn_string strs[], int n)
+qn_string * qn_str_join(const char * restrict delimiter, qn_string strs[], int n)
 {
     qn_string * new_str = NULL;
     char * dst_pos = NULL;
@@ -214,7 +214,7 @@ qn_string * qn_str_join_strings(const char * restrict delimiter, qn_string strs[
     new_str->size = QN_STR_MAX_SIZE - remainder_capacity;
     new_str->str = &new_str->data[0];
     return new_str;
-} // qn_str_join_strings
+} // qn_str_join
 
 qn_bool qn_str_compare(const qn_string * restrict s1, const qn_string * restrict s2)
 {
@@ -239,7 +239,7 @@ qn_bool qn_str_compare(const qn_string * restrict s1, const qn_string * restrict
     // s2     | BBBB   | BBBB    | BBBB
     // return | -1     | 0       | 1
     return memcmp(s1->str, s2->str, s1->size);
-} // qn_Str_compare
+} // qn_str_compare
 
 #ifdef __cplusplus
 }
