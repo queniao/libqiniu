@@ -11,7 +11,7 @@ extern "C"
 
 typedef struct _QN_STRING
 {
-    const char * str;
+    const char * cstr;
     qn_size size;
     char data[0];
 } qn_string;
@@ -23,10 +23,10 @@ static inline qn_size qn_str_size(const qn_string * self)
     return self->size;
 } // qn_str_size
 
-static inline const char * qn_str_string(const qn_string * self)
+static inline const char * qn_str_cstr(const qn_string * self)
 {
-    return self->str;
-} // qn_str_string
+    return self->cstr;
+} // qn_str_cstr
 
 extern qn_bool qn_str_compare(const qn_string * restrict s1, const qn_string * restrict s2);
 
@@ -77,6 +77,10 @@ extern qn_string * qn_str_join(const char * restrict delimiter, qn_string strs[]
 extern qn_string * qn_str_vprintf(const char * restrict format, va_list ap);
 extern qn_string * qn_str_printf(const char * restrict format, ...);
 extern int qn_str_snprintf(char * restrict str, qn_size size,  const char * restrict format, ...);
+
+//extern qn_string * qn_str_encode_base64_urlsafe(const char * restrict bin_data, qn_size bin_size);
+//extern int qn_str_decode_base64_urlsafe_raw(char * restrict bin_data, qn_size bin_size, const char * restrict encoded_data, qn_size encoded_size);
+//#define qn_str_decode_base64_urlsafe(bin_data, bin_size, encoded_str) qn_str_decode_base64_urlsafe_raw(bin_data, bin_size, qn_str_cstr(encoded_str), qn_str_size(encoded_str))
 
 #ifdef __cplusplus
 }

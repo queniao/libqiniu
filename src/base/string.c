@@ -21,7 +21,7 @@ qn_bool qn_str_compare(const qn_string * restrict s1, const qn_string * restrict
         // s1     | AABB   | BBBB    | BBCC
         // s2     | BBBBBB | BBBBBB  | BBBBBB
         // return | -1     | 0 => -1 | 1
-        return (memcmp(s1->str, s2->str, s1->size) <= 0) ? -1 : 1;
+        return (memcmp(s1->cstr, s2->cstr, s1->size) <= 0) ? -1 : 1;
     } // if
 
     if (s1->size > s2->size) {
@@ -29,14 +29,14 @@ qn_bool qn_str_compare(const qn_string * restrict s1, const qn_string * restrict
         // s1     | AABBBB | BBBBBB | BBBBBB
         // s2     | BBBB   | BBBB   | AABB
         // return | -1     | 0 => 1 | 1
-        return (memcmp(s1->str, s2->str, s2->size) >= 0) ? 1 : -1;
+        return (memcmp(s1->cstr, s2->cstr, s2->size) >= 0) ? 1 : -1;
     } // if
 
     // case   | 1      | 2       | 3
     // s1     | AABB   | BBBB    | BBCC
     // s2     | BBBB   | BBBB    | BBBB
     // return | -1     | 0       | 1
-    return memcmp(s1->str, s2->str, s1->size);
+    return memcmp(s1->cstr, s2->cstr, s1->size);
 } // qn_str_compare
 
 static inline qn_string * qn_str_allocate(qn_size size)
@@ -52,7 +52,7 @@ qn_string * qn_str_create(const char * str, qn_size size)
         return &qn_str_empty_one;
     }
 
-    src.str = str;
+    src.cstr = str;
     src.size = size;
 
     return qn_str_duplicate(&src);
@@ -72,10 +72,10 @@ qn_string * qn_str_duplicate(qn_string * src)
     }
 
     new_str->size = src->size;
-    new_str->str = &new_str->data[0];
+    new_str->cstr = &new_str->data[0];
 
     if (new_str->size > 0) {
-        memcpy((void*)new_str->str, src->str, new_str->size);
+        memcpy((void*)new_str->cstr, src->cstr, new_str->size);
     }
     return new_str;
 } // qn_str_duplicate
@@ -180,7 +180,7 @@ qn_string * qn_str_join_raw(
     } // if
 
     new_str->size = QN_STR_MAX_SIZE - remainder_capacity;
-    new_str->str = &new_str->data[0];
+    new_str->cstr = &new_str->data[0];
     return new_str;
 } // qn_str_join_raw
 
@@ -226,7 +226,7 @@ qn_string * qn_str_join(const char * restrict delimiter, qn_string strs[], int n
 
     // Copy all strings and delimiters between them.
     if (strs[0].size > 0L) {
-        memcpy(dst_pos, strs[0].str, strs[0].size);
+        memcpy(dst_pos, strs[0].cstr, strs[0].size);
         dst_pos += strs[0].size;
     } // if
 
@@ -236,13 +236,13 @@ qn_string * qn_str_join(const char * restrict delimiter, qn_string strs[], int n
             dst_pos += delimiter_size;
         }
         if (strs[i].size > 0L) {
-            memcpy(dst_pos, strs[i].str, strs[i].size);
+            memcpy(dst_pos, strs[i].cstr, strs[i].size);
             dst_pos += strs[i].size;
         }
     } // for
 
     new_str->size = QN_STR_MAX_SIZE - remainder_capacity;
-    new_str->str = &new_str->data[0];
+    new_str->cstr = &new_str->data[0];
     return new_str;
 } // qn_str_join
 
