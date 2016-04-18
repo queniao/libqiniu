@@ -1,5 +1,5 @@
 #include <stdlib.h>
-#include <stdarg.h>
+#include <stdio.h>
 #include <string.h>
 
 #include <assert.h>
@@ -13,6 +13,36 @@ extern "C"
 #endif
 
 static qn_string qn_str_empty_one = {"", 0};
+
+qn_bool qn_str_compare(const qn_string * restrict s1, const qn_string * restrict s2)
+{
+    if (s1->size < s2->size) {
+        // case   | 1      | 2       | 3
+        // s1     | AABB   | BBBB    | BBCC
+        // s2     | BBBBBB | BBBBBB  | BBBBBB
+        // return | -1     | 0 => -1 | 1
+        return (memcmp(s1->str, s2->str, s1->size) <= 0) ? -1 : 1;
+    } // if
+
+    if (s1->size > s2->size) {
+        // case   | 1      | 2      | 3
+        // s1     | AABBBB | BBBBBB | BBBBBB
+        // s2     | BBBB   | BBBB   | AABB
+        // return | -1     | 0 => 1 | 1
+        return (memcmp(s1->str, s2->str, s2->size) >= 0) ? 1 : -1;
+    } // if
+
+    // case   | 1      | 2       | 3
+    // s1     | AABB   | BBBB    | BBCC
+    // s2     | BBBB   | BBBB    | BBBB
+    // return | -1     | 0       | 1
+    return memcmp(s1->str, s2->str, s1->size);
+} // qn_str_compare
+
+static inline qn_string * qn_str_allocate(qn_size size)
+{
+    return calloc(1, sizeof(qn_string) + size + 1);
+} // qn_str_allocate
 
 qn_string * qn_str_create(const char * str, qn_size size)
 {
@@ -36,7 +66,7 @@ qn_string * qn_str_duplicate(qn_string * src)
         return NULL;
     }
 
-    new_str = calloc(1, sizeof(*new_str) + src->size + 1);
+    new_str = qn_str_allocate(src->size);
     if (!new_str) {
         return NULL;
     }
@@ -216,30 +246,93 @@ qn_string * qn_str_join(const char * restrict delimiter, qn_string strs[], int n
     return new_str;
 } // qn_str_join
 
-qn_bool qn_str_compare(const qn_string * restrict s1, const qn_string * restrict s2)
+qn_string * qn_str_vprintf(const char * restrict format, va_list ap)
 {
-    if (s1->size < s2->size) {
-        // case   | 1      | 2       | 3
-        // s1     | AABB   | BBBB    | BBCC
-        // s2     | BBBBBB | BBBBBB  | BBBBBB
-        // return | -1     | 0 => -1 | 1
-        return (memcmp(s1->str, s2->str, s1->size) <= 0) ? -1 : 1;
+    va_list cp;
+    qn_string * new_str = NULL;
+    int printed_count = 0;
+
+    va_copy(cp, ap);
+#if defined(_MSC_VER)
+    printed_count = vsnprintf(0x1, 1, format, ap);
+#else
+    printed_count = vsnprintf(NULL, 0, format, ap);
+#endif
+    va_end(cp);
+
+    if (printed_count < 0) {
+        return NULL;
+    }
+    if (printed_count == 0) {
+        return &qn_str_empty_one;
+    }
+
+    new_str = qn_str_allocate(printed_count);
+    if (!new_str) {
+        errno = ENOMEM;
+        return NULL;
+    }
+
+    va_copy(cp, ap);
+    printed_count = vsnprintf(&new_str->data[0], printed_count + 1, format, ap);
+    va_end(cp);
+
+    if (printed_count < 0) {
+        qn_str_destroy(new_str);
+        return NULL;
+    }
+    return new_str;
+} // qn_str_vprintf
+
+qn_string * qn_str_printf(const char * restrict format, ...)
+{
+    va_list ap;
+    qn_string * new_str = NULL;
+
+    va_start(ap, format);
+    new_str = qn_str_vprintf(format, ap);
+    va_end(ap);
+    return new_str;
+} // qn_str_printf
+
+#if defined(_MSC_VER)
+
+#if (_MSC_VER < 1400)
+#error The MSVC compiler's version is lower then VC++ 2005.
+#endif
+
+int qn_str_snprintf(char * restrict str, qn_size size,  const char * restrict format, ...)
+{
+    va_list ap;
+    int printed_count = 0;
+    char * buf = str;
+    qn_size buf_cap = size;
+
+    if (str == NULL || size == 0) {
+        buf = 0x1;
+        buf_cap = 1;
     } // if
 
-    if (s1->size > s2->size) {
-        // case   | 1      | 2      | 3
-        // s1     | AABBBB | BBBBBB | BBBBBB
-        // s2     | BBBB   | BBBB   | AABB
-        // return | -1     | 0 => 1 | 1
-        return (memcmp(s1->str, s2->str, s2->size) >= 0) ? 1 : -1;
-    } // if
+    va_start(ap, format);
+    printed_count = vsnprintf(buf, buf_cap, format, ap);
+    va_end(ap);
+    return printed_count;
+} // qn_str_snprintf
 
-    // case   | 1      | 2       | 3
-    // s1     | AABB   | BBBB    | BBCC
-    // s2     | BBBB   | BBBB    | BBBB
-    // return | -1     | 0       | 1
-    return memcmp(s1->str, s2->str, s1->size);
-} // qn_str_compare
+#else
+
+int qn_str_snprintf(char * restrict str, qn_size size,  const char * restrict format, ...)
+{
+    va_list ap;
+    int printed_count = 0;
+
+    va_start(ap, format);
+    printed_count = vsnprintf(str, size, format, ap);
+    va_end(ap);
+    return printed_count;
+} // qn_str_snprintf
+
+#endif
 
 #ifdef __cplusplus
 }

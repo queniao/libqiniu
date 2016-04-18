@@ -1,6 +1,7 @@
 #ifndef __QN_STRING_H__
 #define __QN_STRING_H__
 
+#include <stdarg.h>
 #include "base/basic_types.h"
 
 #ifdef __cplusplus
@@ -26,6 +27,8 @@ static inline const char * qn_str_string(const qn_string * self)
 {
     return self->str;
 } // qn_str_string
+
+extern qn_bool qn_str_compare(const qn_string * restrict s1, const qn_string * restrict s2);
 
 extern qn_string * qn_str_create(const char * str, qn_size size);
 extern qn_string * qn_str_duplicate(qn_string * src);
@@ -71,10 +74,9 @@ extern qn_string * qn_str_join(const char * restrict delimiter, qn_string strs[]
 
 #define qn_str_concat(strs, n) qn_str_join("", strs, n)
 
-//extern qn_string * qn_str_sprintf(const char * restrict format, ...);
-//extern qn_string * qn_str_snprintf(char * restrict str, qn_size size,  const char * restrict format, ...);
-
-extern qn_bool qn_str_compare(const qn_string * restrict s1, const qn_string * restrict s2);
+extern qn_string * qn_str_vprintf(const char * restrict format, va_list ap);
+extern qn_string * qn_str_printf(const char * restrict format, ...);
+extern int qn_str_snprintf(char * restrict str, qn_size size,  const char * restrict format, ...);
 
 #ifdef __cplusplus
 }
