@@ -6,6 +6,7 @@
 #include <errno.h>
 
 #include "base/string.h"
+#include "base/base64.h"
 
 #ifdef __cplusplus
 extern "C"
@@ -333,6 +334,44 @@ int qn_str_snprintf(char * restrict str, qn_size size,  const char * restrict fo
 } // qn_str_snprintf
 
 #endif
+
+qn_string * qn_str_encode_base64_urlsafe(const char * restrict bin, qn_size bin_size)
+{
+    qn_string * new_str = NULL;
+    qn_size encoding_size = qn_b64_encode_urlsafe(NULL, 0, bin, bin_size, QN_B64_APPEND_PADDING);
+    
+    if (encoding_size == 0) {
+        return &qn_str_empty_one;
+    }
+
+    new_str = qn_str_allocate(encoding_size);
+    if (!new_str) {
+        errno = ENOMEM;
+        return NULL;
+    }
+
+    qn_b64_encode_urlsafe(&new_str->data[0], encoding_size, bin, bin_size, QN_B64_APPEND_PADDING);
+    return new_str;
+} // qn_str_encode_base64_urlsafe
+
+qn_string * qn_str_decode_base64_urlsafe(const char * restrict str, qn_size str_size)
+{
+    qn_string * new_str = NULL;
+    qn_size decoding_size = qn_b64_decode_urlsafe(NULL, 0, str, str_size, 0);
+    
+    if (decoding_size == 0) {
+        return &qn_str_empty_one;
+    }
+
+    new_str = qn_str_allocate(decoding_size);
+    if (!new_str) {
+        errno = ENOMEM;
+        return NULL;
+    }
+
+    qn_b64_decode_urlsafe(&new_str->data[0], decoding_size, str, str_size, 0);
+    return new_str;
+} // qn_str_decode_base64_urlsafe
 
 #ifdef __cplusplus
 }

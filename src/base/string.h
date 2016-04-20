@@ -78,9 +78,8 @@ extern qn_string * qn_str_vprintf(const char * restrict format, va_list ap);
 extern qn_string * qn_str_printf(const char * restrict format, ...);
 extern int qn_str_snprintf(char * restrict str, qn_size size,  const char * restrict format, ...);
 
-//extern qn_string * qn_str_encode_base64_urlsafe(const char * restrict bin_data, qn_size bin_size);
-//extern int qn_str_decode_base64_urlsafe_raw(char * restrict bin_data, qn_size bin_size, const char * restrict encoded_data, qn_size encoded_size);
-//#define qn_str_decode_base64_urlsafe(bin_data, bin_size, encoded_str) qn_str_decode_base64_urlsafe_raw(bin_data, bin_size, qn_str_cstr(encoded_str), qn_str_size(encoded_str))
+extern qn_string * qn_str_encode_base64_urlsafe(const char * restrict bin, qn_size bin_size);
+extern qn_string * qn_str_decode_base64_urlsafe(const char * restrict str, qn_size str_size);
 
 #ifdef __cplusplus
 }
