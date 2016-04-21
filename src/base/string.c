@@ -64,11 +64,13 @@ qn_string * qn_str_duplicate(qn_string * src)
     qn_string * new_str = NULL;
 
     if (!src) {
+        errno = EINVAL;
         return NULL;
     }
 
     new_str = qn_str_allocate(src->size);
     if (!new_str) {
+        errno = ENOMEM;
         return NULL;
     }
 
@@ -108,7 +110,7 @@ qn_string * qn_str_join_raw(
 
     //== Check fixed arguments
     if (!delimiter) {
-        // Not a valid string as delimiter.
+        // Not a valid string passed as delimiter.
         errno = EINVAL;
         return NULL;
     }
@@ -262,6 +264,7 @@ qn_string * qn_str_vprintf(const char * restrict format, va_list ap)
     va_end(cp);
 
     if (printed_count < 0) {
+        // Keep the errno set by vsnprintf.
         return NULL;
     }
     if (printed_count == 0) {
@@ -279,6 +282,7 @@ qn_string * qn_str_vprintf(const char * restrict format, va_list ap)
     va_end(cp);
 
     if (printed_count < 0) {
+        // Keep the errno set by vsnprintf.
         qn_str_destroy(new_str);
         return NULL;
     }
