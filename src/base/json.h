@@ -27,9 +27,8 @@ extern void qn_json_pop(qn_json_ptr self);
 extern qn_bool qn_json_unshift(qn_json_ptr self, qn_json_ptr val);
 extern void qn_json_shift(qn_json_ptr self);
 
-typedef void * qn_json_handle;
-
-extern qn_json_ptr qn_json_get(qn_json_ptr self, qn_json_handle h);
+extern qn_json_ptr qn_json_get(qn_json_ptr self, const char * key);
+extern qn_json_ptr qn_json_get_at(qn_json_ptr self, qn_size n);
 
 extern qn_bool qn_json_is_object(qn_json_ptr self);
 extern qn_bool qn_json_is_array(qn_json_ptr self);
@@ -39,7 +38,7 @@ extern qn_bool qn_json_is_number(qn_json_ptr self);
 extern qn_bool qn_json_is_boolean(qn_json_ptr self);
 extern qn_bool qn_json_is_null(qn_json_ptr self);
 
-extern qn_string qn_json_cast_to_string(qn_json_ptr self);
+extern qn_string * qn_json_cast_to_string(qn_json_ptr self);
 extern qn_integer qn_json_cast_to_integer(qn_json_ptr self);
 extern qn_number qn_json_cast_to_number(qn_json_ptr self);
 extern qn_bool qn_json_cast_to_boolean(qn_json_ptr self);

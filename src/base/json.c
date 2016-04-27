@@ -68,30 +68,6 @@ typedef struct _QN_JSON
 
 //-- Implementation of qn_json_object
 
-qn_json_ptr qn_json_new_object(void)
-{
-    qn_json_ptr new_obj = NULL;
-    qn_json_object * obj_data = NULL;
-    int i = 0;
-
-    new_obj = calloc(1, sizeof(*new_obj) + sizeof(new_obj->obj_data[0]));
-    if (new_obj == NULL) {
-        errno = ENOMEM;
-        return NULL;
-    }
-
-    new_obj->class = QN_JSON_OBJECT;
-    new_obj->object = obj_data = &new_obj->obj_data[0];
-
-    obj_data->size = 0;
-    for (i = 0; i < QN_JSON_OBJECT_MAX_BUCKETS; i += 1) {
-        qn_eslink_init(&obj_data->heads[i]);
-        obj_data->tails[i] = &obj_data->heads[i];
-    } // for
-
-    return new_obj;
-} // qn_json_new_object
-
 static
 void qn_json_object_delete(qn_json_object_ptr obj_data)
 {
@@ -155,6 +131,81 @@ void qn_json_object_find(
     *prev = pn;
     *curr = cn;
 } // qn_json_object_find
+
+//-- Implementation of qn_json_array
+
+static
+void qn_json_array_delete(qn_json_array_ptr arr_data)
+{
+    qn_eslink * head = NULL;
+    qn_eslink * pn = NULL;
+    qn_eslink * cn = NULL;
+    qn_json_ptr cv = NULL;
+
+    assert(arr_data);
+
+    if (arr_data->size == 0) {
+        return;
+    } // if
+
+    head = &arr_data->head;
+    for (pn = head, cn = qn_eslink_next(head); cn != head; pn = cn, cn = qn_eslink_next(cn)) {
+        qn_eslink_remove_after(cn, pn);
+        cv = qn_eslink_super(cn, qn_json_ptr, node);
+        qn_json_delete(cv);
+    } // for
+    arr_data->size = 0;
+} // qn_json_array_delete
+
+static
+void qn_json_array_find(
+    qn_eslink * head,
+    qn_size n,
+    qn_eslink ** prev,
+    qn_eslink ** curr
+)
+{
+    qn_size i = 0;
+    qn_eslink * pn = NULL;
+    qn_eslink * cn = NULL;
+
+    assert(head != qn_eslink_next(head));
+    
+    for (pn = head, cn = qn_eslink_next(head); cn != head; pn = cn, cn = qn_eslink_next(cn)) {
+        if (i == n) {
+            break;
+        }
+        i += 1;
+    } // for
+    *prev = pn;
+    *curr = cn;
+} // qn_json_array_find
+
+//-- Implementation of qn_json
+
+qn_json_ptr qn_json_new_object(void)
+{
+    qn_json_ptr new_obj = NULL;
+    qn_json_object * obj_data = NULL;
+    int i = 0;
+
+    new_obj = calloc(1, sizeof(*new_obj) + sizeof(new_obj->obj_data[0]));
+    if (new_obj == NULL) {
+        errno = ENOMEM;
+        return NULL;
+    }
+
+    new_obj->class = QN_JSON_OBJECT;
+    new_obj->object = obj_data = &new_obj->obj_data[0];
+
+    obj_data->size = 0;
+    for (i = 0; i < QN_JSON_OBJECT_MAX_BUCKETS; i += 1) {
+        qn_eslink_init(&obj_data->heads[i]);
+        obj_data->tails[i] = &obj_data->heads[i];
+    } // for
+
+    return new_obj;
+} // qn_json_new_object
 
 qn_bool qn_json_set(qn_json_ptr self, const char * key, qn_json_ptr new_value)
 {
@@ -233,8 +284,6 @@ void qn_json_unset(qn_json_ptr self, const char * key)
     obj_data->size -= 1;
 } // qn_json_unset
 
-//-- Implementation of qn_json_array
-
 qn_json_ptr qn_json_new_array(void)
 {
     qn_json_ptr new_arr = NULL;
@@ -256,52 +305,24 @@ qn_json_ptr qn_json_new_array(void)
     return new_arr;
 } // qn_json_new_array
 
-static
-void qn_json_array_delete(qn_json_array_ptr arr_data)
-{
-    qn_eslink * head = NULL;
-    qn_eslink * pn = NULL;
-    qn_eslink * cn = NULL;
-    qn_json_ptr cv = NULL;
+void qn_json_delete(qn_json_ptr self) {
+    if (self) {
+        switch (self->class) {
+            case QN_JSON_OBJECT:
+                qn_json_object_delete(self->object);
+                break;
 
-    assert(arr_data);
+            case QN_JSON_ARRAY:
+                qn_json_array_delete(self->array);
+                break;
 
-    if (arr_data->size == 0) {
-        return;
-    } // if
-
-    head = &arr_data->head;
-    for (pn = head, cn = qn_eslink_next(head); cn != head; pn = cn, cn = qn_eslink_next(cn)) {
-        qn_eslink_remove_after(cn, pn);
-        cv = qn_eslink_super(cn, qn_json_ptr, node);
-        qn_json_delete(cv);
-    } // for
-    arr_data->size = 0;
-} // qn_json_array_delete
-
-static
-void qn_json_array_find(
-    qn_eslink * head,
-    qn_size n,
-    qn_eslink ** prev,
-    qn_eslink ** curr
-)
-{
-    qn_size i = 0;
-    qn_eslink * pn = NULL;
-    qn_eslink * cn = NULL;
-
-    assert(head != qn_eslink_next(head));
-    
-    for (pn = head, cn = qn_eslink_next(head); cn != head; pn = cn, cn = qn_eslink_next(cn)) {
-        if (i == n) {
-            break;
+            default:
+                break;
         }
-        i += 1;
-    } // for
-    *prev = pn;
-    *curr = cn;
-} // qn_json_array_find
+        free((void*)self->key);
+        free(self);
+    } // if
+} // qn_json_delete
 
 qn_bool qn_json_push(qn_json_ptr self, qn_json_ptr new_value)
 {
@@ -374,27 +395,76 @@ void qn_json_shift(qn_json_ptr self)
     return;
 } // qn_json_shift
 
+qn_json_ptr qn_json_get(qn_json_ptr self, const char * key)
+{
+    qn_eslink_ptr prev_node = NULL;
+    qn_eslink_ptr curr_node = NULL;
+    qn_json_object_ptr obj_data = NULL;
+    qn_json_hash hash = 0;
+    int bucket = 0;
 
-//-- Implementation of qn_json
+    assert(self && self->class == QN_JSON_OBJECT);
+    assert(key);
 
-void qn_json_delete(qn_json_ptr self) {
-    if (self) {
-        switch (self->class) {
-            case QN_JSON_OBJECT:
-                qn_json_object_delete(self->object);
-                break;
-
-            case QN_JSON_ARRAY:
-                qn_json_array_delete(self->array);
-                break;
-
-            default:
-                break;
-        }
-        free((void*)self->key);
-        free(self);
+    obj_data = &self->obj_data[0];
+    if (obj_data->size == 0) {
+        // The object is empty.
+        return NULL;
     } // if
-} // qn_json_delete
+
+    hash = qn_json_object_calculate_hash(key);
+    bucket = hash % QN_JSON_OBJECT_MAX_BUCKETS;
+
+    qn_json_object_find(&obj_data->heads[bucket], hash, key, &prev_node, &curr_node);
+    if (curr_node == &obj_data->heads[bucket]) {
+        // The value according to the given key does not exist.
+        return NULL;
+    } // if
+    return qn_eslink_super(curr_node, qn_json_ptr, node);
+} // qn_json_get
+
+qn_json_ptr qn_json_get_at(qn_json_ptr self, qn_size n)
+{
+    qn_eslink_ptr prev_node = NULL;
+    qn_eslink_ptr curr_node = NULL;
+    qn_json_array_ptr arr_data = NULL;
+
+    assert(self && self->class == QN_JSON_ARRAY);
+
+    arr_data = &self->arr_data[0];
+    if (arr_data->size == 0 || arr_data->size < n) {
+        // The array is empty or n exceeds the size of the array.
+        return NULL;
+    } // if
+
+    qn_json_array_find(&arr_data->head, n, &prev_node, &curr_node);
+
+    return qn_eslink_super(curr_node, qn_json_ptr, node);
+} // qn_json_get_at
+
+qn_string * qn_json_cast_to_string(qn_json_ptr self)
+{
+    assert(self && self->class == QN_JSON_STRING);
+    return self->string;
+} // qn_json_cast_to_string
+
+qn_integer qn_json_cast_to_integer(qn_json_ptr self)
+{
+    assert(self && self->class == QN_JSON_INTEGER);
+    return self->integer;
+} // qn_json_cast_to_integer
+
+qn_number qn_json_cast_to_number(qn_json_ptr self)
+{
+    assert(self && self->class == QN_JSON_NUMBER);
+    return self->number;
+} // qn_json_cast_to_number
+
+qn_bool qn_json_cast_to_boolean(qn_json_ptr self)
+{
+    assert(self && self->class == QN_JSON_BOOLEAN);
+    return self->boolean;
+} // qn_json_cast_to_boolean
 
 qn_bool qn_json_is_object(qn_json_ptr self)
 {
@@ -430,6 +500,17 @@ qn_bool qn_json_is_null(qn_json_ptr self)
 {
     return (self->class == QN_JSON_NULL);
 } // qn_json_is_null
+
+qn_bool qn_json_is_empty(qn_json_ptr self)
+{
+    if (self->class == QN_JSON_OBJECT) {
+        return self->obj_data[0].size == 0;
+    }
+    if (self->class == QN_JSON_ARRAY) {
+        return self->arr_data[0].size == 0;
+    }
+    return qn_false;
+} // qn_json_is_empty
 
 #ifdef __cplusplus
 }
