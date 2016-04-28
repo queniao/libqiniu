@@ -61,7 +61,7 @@ typedef struct _QN_JSON
 {
     qn_eslink node;
     qn_json_hash hash;
-    const char * key;
+    qn_string_ptr key;
     struct {
         qn_json_class class:3;
         qn_json_status status:3;
@@ -125,7 +125,7 @@ static
 void qn_json_object_find(
     qn_eslink * head,
     qn_json_hash hash,
-    const char * key,
+    qn_string_ptr key,
     qn_eslink ** prev,
     qn_eslink ** curr
 )
@@ -138,9 +138,9 @@ void qn_json_object_find(
     
     for (pn = head, cn = qn_eslink_next(head); cn != head; pn = cn, cn = qn_eslink_next(cn)) {
         cv = qn_eslink_super(cn, qn_json_ptr, node);
-        if (cv->hash != hash || (strcmp(cv->key, key) != 0)) {
+        if (cv->hash != hash || (qn_str_compare(key, cv->key)) != 0) {
             continue;
-        }
+        } // if
     } // for
 
     *prev = pn;
@@ -298,7 +298,8 @@ qn_json_ptr qn_json_new_object(void)
     return new_obj;
 } // qn_json_new_object
 
-qn_bool qn_json_set(qn_json_ptr self, const char * key, qn_json_ptr new_element)
+static
+qn_bool qn_json_set_impl(qn_json_ptr self, qn_string_ptr key, qn_json_ptr new_element)
 {
     qn_eslink_ptr prev_node = NULL;
     qn_eslink_ptr curr_node = NULL;
@@ -311,7 +312,7 @@ qn_bool qn_json_set(qn_json_ptr self, const char * key, qn_json_ptr new_element)
     assert(key && new_element);
 
     obj_data = &self->obj_data[0];
-    hash = qn_json_object_calculate_hash(key);
+    hash = qn_json_object_calculate_hash(qn_str_cstr(key));
     bucket = hash % QN_JSON_OBJECT_MAX_BUCKETS;
 
     qn_json_object_find(&obj_data->heads[bucket], hash, key, &prev_node, &curr_node);
@@ -331,9 +332,8 @@ qn_bool qn_json_set(qn_json_ptr self, const char * key, qn_json_ptr new_element)
     } // if
 
     new_element->hash = hash;
-    new_element->key = strdup(key);
+    new_element->key = qn_str_duplicate(key);
     if (!new_element->key) {
-        errno = ENOMEM;
         return qn_false;
     } // if
 
@@ -341,10 +341,17 @@ qn_bool qn_json_set(qn_json_ptr self, const char * key, qn_json_ptr new_element)
     obj_data->tails[bucket] = &new_element->node;
     obj_data->size += 1;
     return qn_true;
+} // qn_json_set_impl
+
+qn_bool qn_json_set(qn_json_ptr self, const char * key, qn_json_ptr new_element)
+{
+    qn_string key2 = {key, strlen(key)};
+    return qn_json_set_impl(self, &key2, new_element);
 } // qn_json_set
 
 void qn_json_unset(qn_json_ptr self, const char * key)
 {
+    qn_string key2;
     qn_eslink_ptr prev_node = NULL;
     qn_eslink_ptr curr_node = NULL;
     qn_json_ptr curr_element = NULL;
@@ -355,11 +362,14 @@ void qn_json_unset(qn_json_ptr self, const char * key)
     assert(self && self->class == QN_JSON_OBJECT);
     assert(key);
 
+    key2.cstr = key;
+    key2.size = strlen(key);
+
     obj_data = &self->obj_data[0];
     hash = qn_json_object_calculate_hash(key);
     bucket = hash % QN_JSON_OBJECT_MAX_BUCKETS;
 
-    qn_json_object_find(&obj_data->heads[bucket], hash, key, &prev_node, &curr_node);
+    qn_json_object_find(&obj_data->heads[bucket], hash, &key2, &prev_node, &curr_node);
     if (curr_node == &obj_data->heads[bucket]) {
         // The element according to the given key does not exist.
         return;
@@ -409,7 +419,11 @@ void qn_json_delete(qn_json_ptr self) {
             default:
                 break;
         }
-        free((void*)self->key);
+
+        if (self->key) {
+            qn_str_destroy(self->key);
+            self->key = NULL;
+        } // if
         free(self);
     } // if
 } // qn_json_delete
@@ -487,6 +501,7 @@ void qn_json_shift(qn_json_ptr self)
 
 qn_json_ptr qn_json_get(qn_json_ptr self, const char * key)
 {
+    qn_string key2;
     qn_eslink_ptr prev_node = NULL;
     qn_eslink_ptr curr_node = NULL;
     qn_json_object_ptr obj_data = NULL;
@@ -495,6 +510,9 @@ qn_json_ptr qn_json_get(qn_json_ptr self, const char * key)
 
     assert(self && self->class == QN_JSON_OBJECT);
     assert(key);
+
+    key2.cstr = key;
+    key2.size = strlen(key);
 
     obj_data = &self->obj_data[0];
     if (obj_data->size == 0) {
@@ -505,7 +523,7 @@ qn_json_ptr qn_json_get(qn_json_ptr self, const char * key)
     hash = qn_json_object_calculate_hash(key);
     bucket = hash % QN_JSON_OBJECT_MAX_BUCKETS;
 
-    qn_json_object_find(&obj_data->heads[bucket], hash, key, &prev_node, &curr_node);
+    qn_json_object_find(&obj_data->heads[bucket], hash, &key2, &prev_node, &curr_node);
     if (curr_node == &obj_data->heads[bucket]) {
         // The element according to the given key does not exist.
         return NULL;
@@ -702,7 +720,7 @@ qn_json_token qn_json_scan_number(qn_json_scanner_ptr s, const char ** restrict 
             if (tkn == QN_JSON_TKN_NUMBER) { break; }
             tkn = QN_JSON_TKN_NUMBER;
             continue;
-        }
+        } // if
         if (s->buf[pos] < '0' || s->buf[pos] > '9') { break; }
     } // for
     if (pos == s->buf_size) {
@@ -735,7 +753,7 @@ qn_json_token qn_json_scan(qn_json_scanner_ptr s, const char ** restrict txt, qn
     if (pos == s->buf_size) {
         s->pos = pos;
         return QN_JSON_TKNERR_NEED_MORE_TEXT;
-    }
+    } // if
 
     // 此处 s->pos 应指向第一个非空白符的字符
     switch (s->buf[pos]) {
@@ -761,11 +779,11 @@ qn_json_token qn_json_scan(qn_json_scanner_ptr s, const char ** restrict txt, qn
                 if (strncmp(s->buf + pos, "true", 4) == 0) {
                     s->pos = pos + 4;
                     return QN_JSON_TKN_TRUE;
-                }
+                } // if
                 if (strncmp(s->buf + pos, "TRUE", 4) == 0) {
                     s->pos = pos + 4;
                     return QN_JSON_TKN_TRUE;
-                }
+                } // if
             } // if
             break;
 
@@ -774,11 +792,11 @@ qn_json_token qn_json_scan(qn_json_scanner_ptr s, const char ** restrict txt, qn
                 if (strncmp(s->buf + pos, "false", 5) == 0) {
                     s->pos = pos + 5;
                     return QN_JSON_TKN_FALSE;
-                }
+                } // if
                 if (strncmp(s->buf + pos, "FALSE", 5) == 0) {
                     s->pos = pos + 5;
                     return QN_JSON_TKN_FALSE;
-                }
+                } // if
             } // if
             break;
 
@@ -787,11 +805,11 @@ qn_json_token qn_json_scan(qn_json_scanner_ptr s, const char ** restrict txt, qn
                 if (strncmp(s->buf + pos, "null", 4) == 0) {
                     s->pos = pos + 4;
                     return QN_JSON_TKN_NULL;
-                }
+                } // if
                 if (strncmp(s->buf + pos, "NULL", 4) == 0) {
                     s->pos = pos + 4;
                     return QN_JSON_TKN_NULL;
-                }
+                } // if
             } // if
             break;
     } // switch
@@ -834,7 +852,6 @@ void qn_json_delete_parser(qn_json_parser_ptr prs)
 static
 qn_bool qn_json_put_in(
     qn_json_parser_ptr prs,
-    const char * key,
     qn_json_token tkn,
     const char * txt,
     qn_size txt_size,
@@ -953,9 +970,8 @@ qn_bool qn_json_put_in(
     } // switch
 
     if (owner_element->class == QN_JSON_OBJECT) {
-        qn_json_set(owner_element, owner_element->key, new_element);
-    } // if
-    if (owner_element->class == QN_JSON_ARRAY) {
+        qn_json_set_impl(owner_element, owner_element->key, new_element);
+    } else {
         qn_json_push(owner_element, new_element);
     } // if
     return qn_true;
@@ -984,8 +1000,7 @@ PARSING_NEXT_ELEMENT_IN_THE_OBJECT:
                 return qn_false;
             } // if
 
-            // TODO: Use a qn_string_ptr to hold the key string.
-            parsing_obj->key = txt;
+            parsing_obj->key = qn_str_create(txt, txt_size);
             parsing_obj->status = QN_JSON_PARSING_COLON;
 
         case QN_JSON_PARSING_COLON:
@@ -1001,9 +1016,10 @@ PARSING_NEXT_ELEMENT_IN_THE_OBJECT:
             tkn = qn_json_scan(&prs->scanner, &txt, &txt_size);
 
             // Put the parsed element into the container.
-            if (!qn_json_put_in(prs, parsing_obj->key, tkn, txt, txt_size, parsing_obj)) {
+            if (!qn_json_put_in(prs, tkn, txt, txt_size, parsing_obj)) {
                 return qn_false;
             } // if
+            qn_str_destroy(parsing_obj->key);
             parsing_obj->key = NULL;
             parsing_obj->status = QN_JSON_PARSING_COMMA;
 
@@ -1055,7 +1071,7 @@ PARSING_NEXT_ELEMENT_IN_THE_ARRAY:
             } // if
 
             // Put the parsed element into the container.
-            if (!qn_json_put_in(prs, NULL, tkn, txt, txt_size, parsing_arr)) {
+            if (!qn_json_put_in(prs, tkn, txt, txt_size, parsing_arr)) {
                 return qn_false;
             } // if
             parsing_arr->status = QN_JSON_PARSING_COMMA;
@@ -1151,7 +1167,7 @@ qn_bool qn_json_parse(qn_json_parser_ptr prs, const char * restrict buf, qn_size
         // Put the parsed element into the container.
         owner_element = qn_eslink_super(qn_eslink_next(&prs->stack_head), qn_json_ptr, node);
         if (owner_element->class == QN_JSON_OBJECT) {
-            qn_json_set(owner_element, owner_element->key, parsing_element);
+            qn_json_set_impl(owner_element, owner_element->key, parsing_element);
         } else {
             qn_json_push(owner_element, parsing_element);
         } // if
