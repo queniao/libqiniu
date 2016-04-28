@@ -40,7 +40,6 @@ qn_bool qn_str_compare(const qn_string_ptr restrict s1, const qn_string_ptr rest
     return memcmp(s1->cstr, s2->cstr, s1->size);
 } // qn_str_compare
 
-static inline 
 qn_string_ptr qn_str_allocate(qn_size size)
 {
     return calloc(1, sizeof(qn_string) + size + 1);

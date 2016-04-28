@@ -30,6 +30,7 @@ static inline const char * qn_str_cstr(const qn_string_ptr self)
 
 extern qn_bool qn_str_compare(const qn_string_ptr restrict s1, const qn_string_ptr restrict s2);
 
+extern qn_string_ptr qn_str_allocate(qn_size size);
 extern qn_string_ptr qn_str_create(const char * cstr, qn_size cstr_size);
 extern qn_string_ptr qn_str_duplicate(qn_string_ptr src);
 extern void qn_str_destroy(qn_string_ptr self);
