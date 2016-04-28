@@ -59,15 +59,15 @@ typedef struct _QN_JSON_PARSER * qn_json_parser_ptr;
 
 extern qn_json_parser_ptr qn_json_new_parser(void);
 extern void qn_json_delete_parser(qn_json_parser_ptr prs);
-extern qn_bool qn_json_parse(qn_json_parser_ptr prs, const char * restrict buf, qn_size * restrict buf_size, qn_json_ptr * ret_json);
+extern qn_bool qn_json_parse(qn_json_parser_ptr prs, const char * restrict buf, qn_size * restrict buf_size, qn_json_ptr * root_element);
 
 struct _QN_JSON_FORMATTER;
 typedef struct _QN_JSON_FORMATTER * qn_json_formatter_ptr;
 
-extern qn_bool qn_json_new_formatter(qn_json_formatter_ptr * fmt, qn_json_ptr self);
+extern qn_json_formatter_ptr qn_json_new_formatter(void);
 extern void qn_json_delete_formatter(qn_json_formatter_ptr fmt);
-extern qn_bool qn_json_format(qn_json_formatter_ptr fmt, char * buf, size_t * buf_cap);
-extern qn_bool qn_json_format_to_string(qn_json_ptr self, char ** cstr, size_t * cstr_size);
+extern void qn_json_reset_formatter(qn_json_formatter_ptr fmt);
+extern qn_bool qn_json_format(qn_json_formatter_ptr fmt, qn_json_ptr root_element, const char ** restrict buf, qn_size * restrict buf_size);
 
 #ifdef __cplusplus
 }

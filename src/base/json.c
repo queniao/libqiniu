@@ -1176,6 +1176,59 @@ qn_bool qn_json_parse(
 #undef qn_json_prs_stack_is_empty
 } // qn_json_parse
 
+typedef struct _QN_JSON_FORMATTER {
+    char * buf;
+    qn_size buf_size;
+    qn_size buf_capacity;
+} qn_json_formatter;
+
+#define QN_JSON_FMT_PAGE_SIZE 4096
+
+qn_json_formatter_ptr qn_json_new_formatter(void)
+{
+    qn_json_formatter_ptr new_fmt = NULL;
+
+    new_fmt = calloc(1, sizeof(*new_fmt));
+    if (!new_fmt) {
+        errno = ENOMEM;
+        return NULL;
+    } // if
+
+    new_fmt->buf_capacity = QN_JSON_FMT_PAGE_SIZE * 2;
+    new_fmt->buf = calloc(1, new_fmt->buf_capacity);
+    if (!new_fmt->buf) {
+        free(new_fmt);
+        errno = ENOMEM;
+        return NULL;
+    } // if
+
+    return new_fmt;
+} // qn_json_new_formatter
+
+void qn_json_delete_formatter(qn_json_formatter_ptr fmt)
+{
+    if (fmt) {
+        free(fmt->buf);
+        free(fmt);
+    } // for
+} // qn_json_delete_formatter
+
+void qn_json_reset_formatter(qn_json_formatter_ptr fmt)
+{
+    if (fmt) {
+        fmt->buf_size = 0;
+    } // for
+} // qn_json_reset_formatter
+
+qn_bool qn_json_format(
+    qn_json_formatter_ptr fmt,
+    qn_json_ptr root_element,
+    const char ** restrict buf,
+    qn_size * restrict buf_size)
+{
+    return qn_true;
+} // qn_json_format
+
 #ifdef __cplusplus
 }
 #endif
