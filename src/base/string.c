@@ -15,7 +15,7 @@ extern "C"
 
 static qn_string qn_str_empty_one = {"", 0};
 
-qn_bool qn_str_compare(const qn_string * restrict s1, const qn_string * restrict s2)
+qn_bool qn_str_compare(const qn_string_ptr restrict s1, const qn_string_ptr restrict s2)
 {
     if (s1->size < s2->size) {
         // case   | 1      | 2       | 3
@@ -40,12 +40,13 @@ qn_bool qn_str_compare(const qn_string * restrict s1, const qn_string * restrict
     return memcmp(s1->cstr, s2->cstr, s1->size);
 } // qn_str_compare
 
-static inline qn_string * qn_str_allocate(qn_size size)
+static inline 
+qn_string_ptr qn_str_allocate(qn_size size)
 {
     return calloc(1, sizeof(qn_string) + size + 1);
 } // qn_str_allocate
 
-qn_string * qn_str_create(const char * str, qn_size size)
+qn_string_ptr qn_str_create(const char * str, qn_size size)
 {
     qn_string src;
 
@@ -59,9 +60,9 @@ qn_string * qn_str_create(const char * str, qn_size size)
     return qn_str_duplicate(&src);
 } // qn_str_create
 
-qn_string * qn_str_duplicate(qn_string * src)
+qn_string_ptr qn_str_duplicate(qn_string_ptr src)
 {
-    qn_string * new_str = NULL;
+    qn_string_ptr new_str = NULL;
 
     if (!src) {
         errno = EINVAL;
@@ -83,14 +84,14 @@ qn_string * qn_str_duplicate(qn_string * src)
     return new_str;
 } // qn_str_duplicate
 
-void qn_str_destroy(qn_string * self)
+void qn_str_destroy(qn_string_ptr self)
 {
     if (self && self != &qn_str_empty_one) {
         free(self);
     }
 } // qn_str_destroy
 
-qn_string * qn_str_join_raw(
+qn_string_ptr qn_str_join_raw(
     const char * restrict delimiter,
     const char * restrict s1,
     qn_size s1_size,
@@ -99,7 +100,7 @@ qn_string * qn_str_join_raw(
     ...)
 {
     va_list ap;
-    qn_string * new_str = NULL;
+    qn_string_ptr new_str = NULL;
     const char * src_str = NULL;
     char * dst_pos = NULL;
     qn_size src_size = 0L;
@@ -187,9 +188,9 @@ qn_string * qn_str_join_raw(
     return new_str;
 } // qn_str_join_raw
 
-qn_string * qn_str_join(const char * restrict delimiter, qn_string strs[], int n)
+qn_string_ptr qn_str_join(const char * restrict delimiter, qn_string strs[], int n)
 {
-    qn_string * new_str = NULL;
+    qn_string_ptr new_str = NULL;
     char * dst_pos = NULL;
     qn_size remainder_capacity = QN_STR_MAX_SIZE;
     qn_size delimiter_size = 0L;
@@ -249,10 +250,10 @@ qn_string * qn_str_join(const char * restrict delimiter, qn_string strs[], int n
     return new_str;
 } // qn_str_join
 
-qn_string * qn_str_vprintf(const char * restrict format, va_list ap)
+qn_string_ptr qn_str_vprintf(const char * restrict format, va_list ap)
 {
     va_list cp;
-    qn_string * new_str = NULL;
+    qn_string_ptr new_str = NULL;
     int printed_count = 0;
 
     va_copy(cp, ap);
@@ -289,10 +290,10 @@ qn_string * qn_str_vprintf(const char * restrict format, va_list ap)
     return new_str;
 } // qn_str_vprintf
 
-qn_string * qn_str_printf(const char * restrict format, ...)
+qn_string_ptr qn_str_printf(const char * restrict format, ...)
 {
     va_list ap;
-    qn_string * new_str = NULL;
+    qn_string_ptr new_str = NULL;
 
     va_start(ap, format);
     new_str = qn_str_vprintf(format, ap);
@@ -339,9 +340,9 @@ int qn_str_snprintf(char * restrict str, qn_size size,  const char * restrict fo
 
 #endif
 
-qn_string * qn_str_encode_base64_urlsafe(const char * restrict bin, qn_size bin_size)
+qn_string_ptr qn_str_encode_base64_urlsafe(const char * restrict bin, qn_size bin_size)
 {
-    qn_string * new_str = NULL;
+    qn_string_ptr new_str = NULL;
     qn_size encoding_size = qn_b64_encode_urlsafe(NULL, 0, bin, bin_size, QN_B64_APPEND_PADDING);
     
     if (encoding_size == 0) {
@@ -358,9 +359,9 @@ qn_string * qn_str_encode_base64_urlsafe(const char * restrict bin, qn_size bin_
     return new_str;
 } // qn_str_encode_base64_urlsafe
 
-qn_string * qn_str_decode_base64_urlsafe(const char * restrict str, qn_size str_size)
+qn_string_ptr qn_str_decode_base64_urlsafe(const char * restrict str, qn_size str_size)
 {
-    qn_string * new_str = NULL;
+    qn_string_ptr new_str = NULL;
     qn_size decoding_size = qn_b64_decode_urlsafe(NULL, 0, str, str_size, 0);
     
     if (decoding_size == 0) {
