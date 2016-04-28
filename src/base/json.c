@@ -50,10 +50,11 @@ typedef enum _QN_JSON_CLASS {
 
 typedef enum _QN_JSON_STATUS
 {
-    QN_JSON_PARSING_KEY = 0,
-    QN_JSON_PARSING_COLON = 1,
-    QN_JSON_PARSING_VALUE = 2,
-    QN_JSON_PARSING_COMMA = 3
+    QN_JSON_PARSING_DONE = 0,
+    QN_JSON_PARSING_KEY = 1,
+    QN_JSON_PARSING_COLON = 2,
+    QN_JSON_PARSING_VALUE = 3,
+    QN_JSON_PARSING_COMMA = 4
 } qn_json_status;
 
 typedef struct _QN_JSON
@@ -63,7 +64,7 @@ typedef struct _QN_JSON
     const char * key;
     struct {
         qn_json_class class:3;
-        qn_json_status status:2;
+        qn_json_status status:3;
     };
     union {
         qn_json_object * object;
@@ -297,17 +298,17 @@ qn_json_ptr qn_json_new_object(void)
     return new_obj;
 } // qn_json_new_object
 
-qn_bool qn_json_set(qn_json_ptr self, const char * key, qn_json_ptr new_value)
+qn_bool qn_json_set(qn_json_ptr self, const char * key, qn_json_ptr new_element)
 {
     qn_eslink_ptr prev_node = NULL;
     qn_eslink_ptr curr_node = NULL;
-    qn_json_ptr curr_value = NULL;
+    qn_json_ptr curr_element = NULL;
     qn_json_object_ptr obj_data = NULL;
     qn_json_hash hash = 0;
     int bucket = 0;
 
     assert(self && self->class == QN_JSON_OBJECT);
-    assert(key && new_value);
+    assert(key && new_element);
 
     obj_data = &self->obj_data[0];
     hash = qn_json_object_calculate_hash(key);
@@ -315,29 +316,29 @@ qn_bool qn_json_set(qn_json_ptr self, const char * key, qn_json_ptr new_value)
 
     qn_json_object_find(&obj_data->heads[bucket], hash, key, &prev_node, &curr_node);
     if (curr_node != &obj_data->heads[bucket]) {
-        // The value according to the given key has been existing.
-        curr_value = qn_eslink_super(curr_node, qn_json_ptr, node);
+        // The element according to the given key has been existing.
+        curr_element = qn_eslink_super(curr_node, qn_json_ptr, node);
 
-        new_value->hash = curr_value->hash;
-        new_value->key = curr_value->key;
+        new_element->hash = curr_element->hash;
+        new_element->key = curr_element->key;
 
         qn_eslink_remove_after(curr_node, prev_node);
-        qn_eslink_insert_after(&new_value->node, prev_node);
+        qn_eslink_insert_after(&new_element->node, prev_node);
 
-        curr_value->key = NULL;
-        qn_json_delete(curr_value);
+        curr_element->key = NULL;
+        qn_json_delete(curr_element);
         return qn_true;
     } // if
 
-    new_value->hash = hash;
-    new_value->key = strdup(key);
-    if (!new_value->key) {
+    new_element->hash = hash;
+    new_element->key = strdup(key);
+    if (!new_element->key) {
         errno = ENOMEM;
         return qn_false;
     } // if
 
-    qn_eslink_insert_after(&new_value->node, obj_data->tails[bucket]);
-    obj_data->tails[bucket] = &new_value->node;
+    qn_eslink_insert_after(&new_element->node, obj_data->tails[bucket]);
+    obj_data->tails[bucket] = &new_element->node;
     obj_data->size += 1;
     return qn_true;
 } // qn_json_set
@@ -346,7 +347,7 @@ void qn_json_unset(qn_json_ptr self, const char * key)
 {
     qn_eslink_ptr prev_node = NULL;
     qn_eslink_ptr curr_node = NULL;
-    qn_json_ptr curr_value = NULL;
+    qn_json_ptr curr_element = NULL;
     qn_json_object_ptr obj_data = NULL;
     qn_json_hash hash = 0;
     int bucket = 0;
@@ -360,7 +361,7 @@ void qn_json_unset(qn_json_ptr self, const char * key)
 
     qn_json_object_find(&obj_data->heads[bucket], hash, key, &prev_node, &curr_node);
     if (curr_node == &obj_data->heads[bucket]) {
-        // The value according to the given key does not exist.
+        // The element according to the given key does not exist.
         return;
     } // if
 
@@ -369,8 +370,8 @@ void qn_json_unset(qn_json_ptr self, const char * key)
         obj_data->tails[bucket] = prev_node;
     } // if
 
-    curr_value = qn_eslink_super(curr_node, qn_json_ptr, node);
-    qn_json_delete(curr_value);
+    curr_element = qn_eslink_super(curr_node, qn_json_ptr, node);
+    qn_json_delete(curr_element);
     obj_data->size -= 1;
 } // qn_json_unset
 
@@ -413,16 +414,16 @@ void qn_json_delete(qn_json_ptr self) {
     } // if
 } // qn_json_delete
 
-qn_bool qn_json_push(qn_json_ptr self, qn_json_ptr new_value)
+qn_bool qn_json_push(qn_json_ptr self, qn_json_ptr new_element)
 {
     qn_json_array_ptr arr_data = NULL;
 
     assert(self && self->class == QN_JSON_ARRAY);
-    assert(new_value);
+    assert(new_element);
 
     arr_data = &self->arr_data[0];
-    qn_eslink_insert_after(&new_value->node, arr_data->tail);
-    arr_data->tail = &new_value->node;
+    qn_eslink_insert_after(&new_element->node, arr_data->tail);
+    arr_data->tail = &new_element->node;
     arr_data->size += 1;
     return qn_true;
 } // qn_json_push
@@ -431,7 +432,7 @@ void qn_json_pop(qn_json_ptr self)
 {
     qn_eslink_ptr prev_node = NULL;
     qn_eslink_ptr curr_node = NULL;
-    qn_json_ptr curr_value = NULL;
+    qn_json_ptr curr_element = NULL;
     qn_json_array_ptr arr_data = NULL;
 
     assert(self && self->class == QN_JSON_ARRAY);
@@ -443,30 +444,30 @@ void qn_json_pop(qn_json_ptr self)
 
     qn_json_array_find(&arr_data->head, arr_data->size - 1, &prev_node, &curr_node);
 
-    curr_value = qn_eslink_super(curr_node, qn_json_ptr, node);
+    curr_element = qn_eslink_super(curr_node, qn_json_ptr, node);
     qn_eslink_remove_after(curr_node, prev_node);
     arr_data->size -= 1;
 
-    qn_json_delete(curr_value);
+    qn_json_delete(curr_element);
     return;
 } // qn_json_pop
 
-qn_bool qn_json_unshift(qn_json_ptr self, qn_json_ptr new_value)
+qn_bool qn_json_unshift(qn_json_ptr self, qn_json_ptr new_element)
 {
     qn_json_array_ptr arr_data = NULL;
 
     assert(self && self->class == QN_JSON_ARRAY);
-    assert(new_value);
+    assert(new_element);
 
     arr_data = &self->arr_data[0];
-    qn_eslink_insert_after(&new_value->node, &arr_data->head);
+    qn_eslink_insert_after(&new_element->node, &arr_data->head);
     arr_data->size += 1;
     return qn_true;
 } // qn_json_unshift
 
 void qn_json_shift(qn_json_ptr self)
 {
-    qn_json_ptr curr_value = NULL;
+    qn_json_ptr curr_element = NULL;
     qn_json_array_ptr arr_data = NULL;
 
     assert(self && self->class == QN_JSON_ARRAY);
@@ -476,11 +477,11 @@ void qn_json_shift(qn_json_ptr self)
         return;
     } // if
 
-    curr_value = qn_eslink_super(qn_eslink_next(&arr_data->head), qn_json_ptr, node);
+    curr_element = qn_eslink_super(qn_eslink_next(&arr_data->head), qn_json_ptr, node);
     qn_eslink_remove_after(qn_eslink_next(&arr_data->head), &arr_data->head);
     arr_data->size -= 1;
 
-    qn_json_delete(curr_value);
+    qn_json_delete(curr_element);
     return;
 } // qn_json_shift
 
@@ -506,7 +507,7 @@ qn_json_ptr qn_json_get(qn_json_ptr self, const char * key)
 
     qn_json_object_find(&obj_data->heads[bucket], hash, key, &prev_node, &curr_node);
     if (curr_node == &obj_data->heads[bucket]) {
-        // The value according to the given key does not exist.
+        // The element according to the given key does not exist.
         return NULL;
     } // if
     return qn_eslink_super(curr_node, qn_json_ptr, node);
@@ -799,7 +800,7 @@ qn_json_token qn_json_scan(qn_json_scanner_ptr s, const char ** restrict txt, qn
 
 typedef struct _QN_JSON_PARSER
 {
-    qn_eslink head;
+    qn_eslink stack_head;
     qn_json_scanner scanner;
 } qn_json_parser;
 
@@ -812,7 +813,7 @@ qn_json_parser_ptr qn_json_new_parser(void)
         errno = ENOMEM;
         return NULL;
     }
-    qn_eslink_init(&new_prs->head);
+    qn_eslink_init(&new_prs->stack_head);
     return new_prs;
 } // qn_json_new_parser
 
@@ -822,7 +823,7 @@ void qn_json_delete_parser(qn_json_parser_ptr prs)
     qn_json_ptr curr_json = NULL;
 
     if (prs) {
-        for (curr_node = qn_eslink_next(&prs->head); curr_node != &prs->head; curr_node = qn_eslink_next(curr_node)) {
+        for (curr_node = qn_eslink_next(&prs->stack_head); curr_node != &prs->stack_head; curr_node = qn_eslink_next(curr_node)) {
             curr_json = qn_eslink_super(curr_node, qn_json_ptr, node);
             qn_json_delete(curr_json);
         } // while
@@ -837,35 +838,35 @@ qn_bool qn_json_put_in(
     qn_json_token tkn,
     const char * txt,
     qn_size txt_size,
-    qn_json_ptr owner_json)
+    qn_json_ptr owner_element)
 {
     qn_json_integer integer = 0L;
     qn_json_number number = 0.0L;
-    qn_json_ptr new_json = NULL;
+    qn_json_ptr new_element = NULL;
     char * end_txt = NULL;
 
     switch (tkn) {
         case QN_JSON_TKN_OPEN_BRACE:
-            new_json = qn_json_new_object();
-            if (!new_json) {
+            new_element = qn_json_new_object();
+            if (!new_element) {
                 errno = ENOMEM;
                 return qn_false;
             } // if
-            qn_eslink_insert_after(&new_json->node, &prs->head);
+            qn_eslink_insert_after(&new_element->node, &prs->stack_head);
             return qn_true;
 
         case QN_JSON_TKN_OPEN_BRACKET:
-            new_json = qn_json_new_array();
-            if (!new_json) {
+            new_element = qn_json_new_array();
+            if (!new_element) {
                 errno = ENOMEM;
                 return qn_false;
             } // if
-            qn_eslink_insert_after(&new_json->node, &prs->head);
+            qn_eslink_insert_after(&new_element->node, &prs->stack_head);
             return qn_true;
 
         case QN_JSON_TKN_STRING:
-            new_json = qn_json_new_string(txt, txt_size);
-            if (!new_json) {
+            new_element = qn_json_new_string(txt, txt_size);
+            if (!new_element) {
                 errno = ENOMEM;
                 return qn_false;
             } // if
@@ -883,8 +884,8 @@ qn_bool qn_json_put_in(
                 errno = EOVERFLOW;
                 return qn_false;
             } // if
-            new_json = qn_json_new_integer(integer);
-            if (!new_json) {
+            new_element = qn_json_new_integer(integer);
+            if (!new_element) {
                 errno = ENOMEM;
                 return qn_false;
             } // if
@@ -907,32 +908,32 @@ qn_bool qn_json_put_in(
                 errno = EOVERFLOW;
                 return qn_false;
             } // if
-            new_json = qn_json_new_number(number);
-            if (!new_json) {
+            new_element = qn_json_new_number(number);
+            if (!new_element) {
                 errno = ENOMEM;
                 return qn_false;
             } // if
             break;
 
         case QN_JSON_TKN_TRUE:
-            new_json = qn_json_new_boolean(qn_true);
-            if (!new_json) {
+            new_element = qn_json_new_boolean(qn_true);
+            if (!new_element) {
                 errno = ENOMEM;
                 return qn_false;
             } // if
             break;
 
         case QN_JSON_TKN_FALSE:
-            new_json = qn_json_new_boolean(qn_false);
-            if (!new_json) {
+            new_element = qn_json_new_boolean(qn_false);
+            if (!new_element) {
                 errno = ENOMEM;
                 return qn_false;
             } // if
             break;
 
         case QN_JSON_TKN_NULL:
-            new_json = qn_json_new_null();
-            if (!new_json) {
+            new_element = qn_json_new_null();
+            if (!new_element) {
                 errno = ENOMEM;
                 return qn_false;
             } // if
@@ -951,11 +952,11 @@ qn_bool qn_json_put_in(
             return qn_false;
     } // switch
 
-    if (owner_json->class == QN_JSON_OBJECT) {
-        qn_json_set(owner_json, owner_json->key, new_json);
+    if (owner_element->class == QN_JSON_OBJECT) {
+        qn_json_set(owner_element, owner_element->key, new_element);
     } // if
-    if (owner_json->class == QN_JSON_ARRAY) {
-        qn_json_push(owner_json, new_json);
+    if (owner_element->class == QN_JSON_ARRAY) {
+        qn_json_push(owner_element, new_element);
     } // if
     return qn_true;
 } // qn_json_put_in
@@ -966,59 +967,72 @@ qn_bool qn_json_parse_object(qn_json_parser_ptr prs)
     qn_json_token tkn = QN_JSON_TKNERR_NEED_MORE_TEXT;
     const char * txt = NULL;
     qn_size txt_size = 0;
-    qn_json_ptr curr_obj = NULL;
+    qn_json_ptr parsing_obj = qn_eslink_super(qn_eslink_next(&prs->stack_head), qn_json_ptr, node);
 
-    while (1) {
-        curr_obj = qn_eslink_super(qn_eslink_next(&prs->head), qn_json_ptr, node);
-
-        if (curr_obj->status == QN_JSON_PARSING_KEY) {
+PARSING_NEXT_ELEMENT_IN_THE_OBJECT:
+    switch (parsing_obj->status) {
+        case QN_JSON_PARSING_KEY:
             tkn = qn_json_scan(&prs->scanner, &txt, &txt_size);
             if (tkn == QN_JSON_TKN_CLOSE_BRACE) {
+                // The current object element has been parsed.
+                parsing_obj->status = QN_JSON_PARSING_DONE;
                 return qn_true;
             } // if
+
             if (tkn != QN_JSON_TKN_STRING) {
                 errno = EBADMSG;
                 return qn_false;
             } // if
 
-            curr_obj->key = txt;
-            curr_obj->status = QN_JSON_PARSING_COLON;
-        } // if
+            // TODO: Use a qn_string_ptr to hold the key string.
+            parsing_obj->key = txt;
+            parsing_obj->status = QN_JSON_PARSING_COLON;
 
-        if (curr_obj->status == QN_JSON_PARSING_COLON) {
+        case QN_JSON_PARSING_COLON:
             tkn = qn_json_scan(&prs->scanner, &txt, &txt_size);
             if (tkn != QN_JSON_TKN_COLON) {
                 errno = EBADMSG;
                 return qn_false;
             } // if
 
-            curr_obj->status = QN_JSON_PARSING_VALUE;
-        } // if
+            parsing_obj->status = QN_JSON_PARSING_VALUE;
 
-        if (curr_obj->status == QN_JSON_PARSING_VALUE) {
+        case QN_JSON_PARSING_VALUE:
             tkn = qn_json_scan(&prs->scanner, &txt, &txt_size);
-            if (!qn_json_put_in(prs, curr_obj->key, tkn, txt, txt_size, curr_obj)) {
+
+            // Put the parsed element into the container.
+            if (!qn_json_put_in(prs, parsing_obj->key, tkn, txt, txt_size, parsing_obj)) {
                 return qn_false;
             } // if
+            parsing_obj->key = NULL;
+            parsing_obj->status = QN_JSON_PARSING_COMMA;
 
-            curr_obj->key = NULL;
-            curr_obj->status = QN_JSON_PARSING_COMMA;
-
+            // Go to parse the new element on the top of the stack.
             if (tkn == QN_JSON_TKN_OPEN_BRACE || tkn == QN_JSON_TKN_OPEN_BRACKET) {
                 return qn_true;
             } // if
-        } // if
 
-        tkn = qn_json_scan(&prs->scanner, &txt, &txt_size);
-        if (tkn == QN_JSON_TKN_CLOSE_BRACE) {
-            return qn_true;
-        } // if
-        if (tkn != QN_JSON_TKN_COMMA) {
-            errno = EBADMSG;
+        case QN_JSON_PARSING_COMMA:
+            tkn = qn_json_scan(&prs->scanner, &txt, &txt_size);
+            if (tkn == QN_JSON_TKN_CLOSE_BRACE) {
+                // The current object element has been parsed.
+                parsing_obj->status = QN_JSON_PARSING_DONE;
+                return qn_true;
+            } // if
+            if (tkn != QN_JSON_TKN_COMMA) {
+                errno = EBADMSG;
+                return qn_false;
+            } // if
+
+            parsing_obj->status = QN_JSON_PARSING_KEY;
+            break;
+
+        default:
+            assert(parsing_obj->status != QN_JSON_PARSING_DONE);
             return qn_false;
-        } // if
-        curr_obj->status = QN_JSON_PARSING_KEY;
-    } // while
+    } // switch
+
+    goto PARSING_NEXT_ELEMENT_IN_THE_OBJECT;
     return qn_false;
 } // qn_json_parse_object
 
@@ -1028,96 +1042,123 @@ qn_bool qn_json_parse_array(qn_json_parser_ptr prs)
     qn_json_token tkn = QN_JSON_TKNERR_NEED_MORE_TEXT;
     const char * txt = NULL;
     qn_size txt_size = 0;
-    qn_json_ptr curr_arr = NULL;
+    qn_json_ptr parsing_arr = qn_eslink_super(qn_eslink_next(&prs->stack_head), qn_json_ptr, node);
 
-    while (1) {
-        curr_arr = qn_eslink_super(qn_eslink_next(&prs->head), qn_json_ptr, node);
-        if (curr_arr->status == QN_JSON_PARSING_VALUE) {
+PARSING_NEXT_ELEMENT_IN_THE_ARRAY:
+    switch (parsing_arr->status) {
+        case QN_JSON_PARSING_VALUE:
             tkn = qn_json_scan(&prs->scanner, &txt, &txt_size);
             if (tkn == QN_JSON_TKN_CLOSE_BRACKET) {
+                // The current array element has been parsed.
+                parsing_arr->status = QN_JSON_PARSING_DONE;
                 return qn_true;
             } // if
 
-            if (!qn_json_put_in(prs, NULL, tkn, txt, txt_size, curr_arr)) {
+            // Put the parsed element into the container.
+            if (!qn_json_put_in(prs, NULL, tkn, txt, txt_size, parsing_arr)) {
                 return qn_false;
             } // if
-            curr_arr->status = QN_JSON_PARSING_COMMA;
+            parsing_arr->status = QN_JSON_PARSING_COMMA;
 
+            // Go to parse the new element on the top of the stack.
             if (tkn == QN_JSON_TKN_OPEN_BRACE || tkn == QN_JSON_TKN_OPEN_BRACKET) {
                 return qn_true;
             } // if
-        } // if
 
-        tkn = qn_json_scan(&prs->scanner, &txt, &txt_size);
-        if (tkn == QN_JSON_TKN_CLOSE_BRACKET) {
-            return qn_true;
-        } // if
-        if (tkn != QN_JSON_TKN_COMMA) {
-            errno = EBADMSG;
+        case QN_JSON_PARSING_COMMA:
+            tkn = qn_json_scan(&prs->scanner, &txt, &txt_size);
+            if (tkn == QN_JSON_TKN_CLOSE_BRACKET) {
+                // The current array element has been parsed.
+                parsing_arr->status = QN_JSON_PARSING_DONE;
+                return qn_true;
+            } // if
+            if (tkn != QN_JSON_TKN_COMMA) {
+                errno = EBADMSG;
+                return qn_false;
+            } // if
+
+            parsing_arr->status = QN_JSON_PARSING_VALUE;
+            break;
+
+        default:
+            assert(
+                parsing_arr->status != QN_JSON_PARSING_DONE
+                && parsing_arr->status != QN_JSON_PARSING_VALUE
+                && parsing_arr->status != QN_JSON_PARSING_COMMA
+            );
             return qn_false;
-        } // if
+    } // switch
 
-        curr_arr->status = QN_JSON_PARSING_VALUE;
-    } // while
+    goto PARSING_NEXT_ELEMENT_IN_THE_ARRAY;
     return qn_false;
 } // qn_json_parse_array
 
-qn_bool qn_json_parse(qn_json_parser_ptr prs, const char * restrict buf, qn_size * restrict buf_size, qn_json_ptr * ret_json)
+#define qn_json_prs_stack_is_empty(prs) (!qn_eslink_is_linked(&prs->stack_head))
+
+qn_bool qn_json_parse(qn_json_parser_ptr prs, const char * restrict buf, qn_size * restrict buf_size, qn_json_ptr * root_element)
 {
     qn_json_token tkn = QN_JSON_TKNERR_NEED_MORE_TEXT;
     const char * txt = NULL;
     qn_size txt_size = 0;
-    qn_json_ptr curr_json = NULL;
-    qn_json_ptr owner_json = NULL;
+    qn_json_ptr parsing_element = NULL;
+    qn_json_ptr owner_element = NULL;
 
     prs->scanner.buf = buf;
     prs->scanner.buf_size = *buf_size;
     prs->scanner.pos = 0;
 
-    if (!qn_eslink_is_linked(&prs->head)) {
+    if (qn_json_prs_stack_is_empty(prs)) {
         tkn = qn_json_scan(&prs->scanner, &txt, &txt_size);
         if (tkn == QN_JSON_TKN_OPEN_BRACE) {
-            curr_json = qn_json_new_object();
+            parsing_element = qn_json_new_object();
         } else if (tkn == QN_JSON_TKN_OPEN_BRACKET) {
-            curr_json = qn_json_new_array();
+            parsing_element = qn_json_new_array();
         } else {
+            // Not a valid piece of JSON text.
             errno = EBADMSG;
             return qn_false;
         } // if
 
-        if (!curr_json) {
+        if (!parsing_element) {
             errno = ENOMEM;
             return qn_false;
         } // if
-        qn_eslink_insert_after(&curr_json->node, &prs->head);
+
+        // Push the first new element into the stack as the root.
+        qn_eslink_insert_after(&parsing_element->node, &prs->stack_head);
     } // if
 
     while (1) {
-        curr_json = qn_eslink_super(qn_eslink_next(&prs->head), qn_json_ptr, node);
-        if (curr_json->class == QN_JSON_OBJECT && !qn_json_parse_object(prs)) {
+        parsing_element = qn_eslink_super(qn_eslink_next(&prs->stack_head), qn_json_ptr, node);
+        if (parsing_element->class == QN_JSON_OBJECT && !qn_json_parse_object(prs)) {
+            // Failed to parse the current object element.
             *buf_size = prs->scanner.pos;
             return qn_false;
         } else if (!qn_json_parse_array(prs)) {
+            // Failed to parse the current array element.
             *buf_size = prs->scanner.pos;
             return qn_false;
         } // if
 
-        qn_eslink_remove_after(qn_eslink_next(&prs->head), &prs->head);
-        if (qn_eslink_is_linked(&prs->head)) {
-            owner_json = curr_json;
+        // Pop the parsed element out of the stack.
+        qn_eslink_remove_after(qn_eslink_next(&prs->stack_head), &prs->stack_head);
+        if (qn_json_prs_stack_is_empty(prs)) {
+            // And it is the root element.
+            owner_element = parsing_element;
             break;
         } // if
 
-        owner_json = qn_eslink_super(qn_eslink_next(&prs->head), qn_json_ptr, node);
-        if (owner_json->class == QN_JSON_OBJECT) {
-            qn_json_set(owner_json, owner_json->key, curr_json);
+        // Put the parsed element into the container.
+        owner_element = qn_eslink_super(qn_eslink_next(&prs->stack_head), qn_json_ptr, node);
+        if (owner_element->class == QN_JSON_OBJECT) {
+            qn_json_set(owner_element, owner_element->key, parsing_element);
         } else {
-            qn_json_push(owner_json, curr_json);
+            qn_json_push(owner_element, parsing_element);
         } // if
     } // while
 
     *buf_size = prs->scanner.pos;
-    *ret_json = owner_json;
+    *root_element = owner_element;
     return qn_true;
 } // qn_json_parse
 
