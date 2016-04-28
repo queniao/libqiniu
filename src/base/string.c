@@ -46,16 +46,16 @@ qn_string_ptr qn_str_allocate(qn_size size)
     return calloc(1, sizeof(qn_string) + size + 1);
 } // qn_str_allocate
 
-qn_string_ptr qn_str_create(const char * str, qn_size size)
+qn_string_ptr qn_str_create(const char * cstr, qn_size cstr_size)
 {
     qn_string src;
 
-    if (size == 0L) {
+    if (cstr_size == 0L) {
         return &qn_str_empty_one;
     }
 
-    src.cstr = str;
-    src.size = size;
+    src.cstr = cstr;
+    src.size = cstr_size;
 
     return qn_str_duplicate(&src);
 } // qn_str_create
@@ -90,6 +90,11 @@ void qn_str_destroy(qn_string_ptr self)
         free(self);
     }
 } // qn_str_destroy
+
+void qn_str_copy(qn_string_ptr self, const char * cstr, qn_size cstr_size)
+{
+    memcpy((void*)self->cstr, cstr, cstr_size);
+} // qn_str_copy
 
 qn_string_ptr qn_str_join_raw(
     const char * restrict delimiter,
