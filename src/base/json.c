@@ -1176,10 +1176,22 @@ qn_bool qn_json_prs_parse(
 #undef qn_json_prs_stack_is_empty
 } // qn_json_prs_parse
 
+typedef struct _QN_JSON_ITERATOR {
+    qn_json_ptr owner_element;
+    qn_eslink_ptr node;
+    int bucket;
+    int element_count;
+} qn_json_iterator, *qn_json_iterator_ptr;
+
 typedef struct _QN_JSON_FORMATTER {
     char * buf;
     qn_size buf_size;
     qn_size buf_capacity;
+    qn_size buf_pages;
+
+    int stack_top;
+    int stack_count;
+    qn_json_iterator * stack;
 } qn_json_formatter;
 
 #define QN_JSON_FMT_PAGE_SIZE 4096
@@ -1194,9 +1206,19 @@ qn_json_formatter_ptr qn_json_fmt_create(void)
         return NULL;
     } // if
 
-    new_fmt->buf_capacity = QN_JSON_FMT_PAGE_SIZE * 2;
+    new_fmt->buf_pages = 2;
+    new_fmt->buf_capacity = QN_JSON_FMT_PAGE_SIZE * new_fmt->buf_pages;
     new_fmt->buf = calloc(1, new_fmt->buf_capacity);
     if (!new_fmt->buf) {
+        free(new_fmt);
+        errno = ENOMEM;
+        return NULL;
+    } // if
+
+    new_fmt->stack_count = 4;
+    new_fmt->stack = calloc(1, sizeof(new_fmt->stack[0]) * new_fmt->stack_count);
+    if (!new_fmt->stack) {
+        free(new_fmt->buf);
         free(new_fmt);
         errno = ENOMEM;
         return NULL;
@@ -1208,17 +1230,182 @@ qn_json_formatter_ptr qn_json_fmt_create(void)
 void qn_json_fmt_destroy(qn_json_formatter_ptr fmt)
 {
     if (fmt) {
+        free(fmt->stack);
         free(fmt->buf);
         free(fmt);
     } // for
 } // qn_json_fmt_destroy
 
-void qn_json_fmt_reset(qn_json_formatter_ptr fmt)
+static
+qn_bool qn_json_fmt_augment_stack(qn_json_formatter_ptr fmt)
 {
-    if (fmt) {
-        fmt->buf_size = 0;
+    qn_size new_stack_count = fmt->stack_count + (fmt->stack_count >> 1); // 1.5 time of the old stack capacity.
+    qn_json_iterator_ptr new_stack = calloc(new_stack_count, sizeof(fmt->stack[0]));
+    if (!new_stack) {
+        errno = ENOMEM;
+        return qn_false;
+    } // if
+
+    memcpy(new_stack, fmt->stack, sizeof(fmt->stack[0]) * fmt->stack_top);
+    free(fmt->stack);
+
+    fmt->stack = new_stack;
+    fmt->stack_count = new_stack_count;
+    return qn_true;
+} // qn_json_fmt_augment_stack
+
+static
+qn_json_iterator_ptr qn_json_fmt_push_iterator(qn_json_formatter_ptr fmt, qn_json_ptr element)
+{
+    qn_json_iterator_ptr itr = NULL;
+
+    if (fmt->stack_top + 1 >= fmt->stack_count && !qn_json_fmt_augment_stack(fmt)) {
+        return NULL;
+    } // if
+    
+    itr = &fmt->stack[fmt->stack_top++];
+    itr->owner_element = element;
+    itr->bucket = 0;
+    itr->element_count = 0;
+    return itr;
+} // qn_json_fmt_push_iterator
+
+static inline
+qn_json_iterator_ptr qn_json_fmt_pop_iterator(qn_json_formatter_ptr fmt)
+{
+    if (fmt->stack_top > 0) {
+        return &fmt->stack[--fmt->stack_top];
+    } // if
+    return NULL;
+} // qn_json_fmt_pop_iterator
+
+static inline
+qn_json_iterator_ptr qn_json_fmt_top_iterator(qn_json_formatter_ptr fmt)
+{
+    if (fmt->stack_top > 0) {
+        return &fmt->stack[fmt->stack_top - 1];
+    } // if
+    return NULL;
+} // qn_json_fmt_pop_iterator
+
+static
+qn_bool qn_json_fmt_augment_buffer(qn_json_formatter_ptr fmt)
+{
+    qn_size new_buf_pages = fmt->buf_pages + (fmt->buf_pages >> 1); // 1.5 time of the old pages.
+    qn_size new_buf_capacity = QN_JSON_FMT_PAGE_SIZE * new_buf_pages;
+    char * new_buf = malloc(new_buf_capacity);
+    if (!new_buf) {
+        errno = ENOMEM;
+        return qn_false;
+    } // if
+
+    memcpy(new_buf, fmt->buf, fmt->buf_size);
+    free(fmt->buf);
+
+    fmt->buf = new_buf;
+    fmt->buf_capacity = new_buf_capacity;
+    fmt->buf_pages = new_buf_pages;
+    return qn_true;
+} // qn_json_fmt_augment_buffer
+
+static
+qn_bool qn_json_fmt_putc(qn_json_formatter_ptr fmt, char ch)
+{
+    if (fmt->buf_size + 1 >= fmt->buf_capacity) {
+        if (!qn_json_fmt_augment_buffer(fmt)) {
+            return qn_false;
+        } // if
+    } // if
+
+    fmt->buf[fmt->buf_size++] = ch;
+    return qn_true;
+} // qn_json_fmt_putc
+
+static
+qn_bool qn_json_fmt_format_ordinary_element(qn_json_formatter_ptr fmt, qn_json_iterator_ptr itr)
+{
+    return qn_true;
+} // qn_json_fmt_format_ordinary_element
+
+static
+qn_bool qn_json_fmt_format_object(
+    qn_json_formatter_ptr fmt,
+    qn_json_iterator_ptr itr)
+{
+    int i = 0;
+    qn_eslink * pn = NULL;
+    qn_eslink * cn = NULL;
+    qn_json_ptr ce = NULL;
+    qn_json_object_ptr obj_data = itr->owner_element->object;
+
+    for (i = itr->bucket; i < QN_JSON_OBJECT_MAX_BUCKETS; i += 1) {
+        for (pn = itr->node, cn = qn_eslink_next(itr->node); cn != &obj_data->heads[itr->bucket]; pn = cn, cn = qn_eslink_next(cn)) {
+            ce = qn_eslink_super(cn, qn_json_ptr, node);
+
+            // TODO: Output the key and colon sign.
+            if (!qn_json_fmt_putc(fmt, ':')) {
+                return qn_false;
+            } // if
+
+            if (itr->owner_element->class == QN_JSON_OBJECT) {
+                if (!qn_json_fmt_putc(fmt, '{')) {
+                    return qn_false;
+                } // if
+                return qn_true;
+            } else {
+                if (!qn_json_fmt_putc(fmt, '[')) {
+                    return qn_false;
+                } // if
+                return qn_true;
+            } // if
+
+            // Output the element itself.
+            if (!qn_json_fmt_format_ordinary_element(fmt, itr)) {
+                return qn_false;
+            } // if
+            if (++itr->element_count > 1 && !qn_json_fmt_putc(fmt, ',')) {
+                return qn_false;
+            } // if
+        } // for
     } // for
-} // qn_json_fmt_reset
+    return qn_true;
+} // qn_json_fmt_format_object
+
+static
+qn_bool qn_json_fmt_format_array(
+    qn_json_formatter_ptr fmt,
+    qn_json_iterator_ptr itr)
+{
+    qn_eslink * pn = NULL;
+    qn_eslink * cn = NULL;
+    qn_json_ptr ce = NULL;
+    qn_json_array_ptr  arr_data = itr->owner_element->array;
+
+    for (pn = itr->node, cn = qn_eslink_next(itr->node); cn != &arr_data->head; pn = cn, cn = qn_eslink_next(cn)) {
+        ce = qn_eslink_super(cn, qn_json_ptr, node);
+
+        if (ce->class == QN_JSON_OBJECT) {
+            if (!qn_json_fmt_push_iterator(fmt, ce) || !qn_json_fmt_putc(fmt, '{')) {
+                return qn_false;
+            } // if
+            return qn_true;
+        } else {
+            if (!qn_json_fmt_push_iterator(fmt, ce) || !qn_json_fmt_putc(fmt, '[')) {
+                return qn_false;
+            } // if
+            return qn_true;
+        } // if
+
+        // Output the element itself.
+        if (!qn_json_fmt_format_ordinary_element(fmt, itr)) {
+            return qn_false;
+        } // if
+        if (++itr->element_count > 1 && !qn_json_fmt_putc(fmt, ',')) {
+            return qn_false;
+        } // if
+    } // for
+    return qn_true;
+} // qn_json_fmt_format_array
 
 qn_bool qn_json_fmt_format(
     qn_json_formatter_ptr fmt,
@@ -1226,6 +1413,51 @@ qn_bool qn_json_fmt_format(
     const char ** restrict buf,
     qn_size * restrict buf_size)
 {
+    qn_json_iterator_ptr itr = NULL;
+
+    assert(fmt);
+    assert(root_element);
+    assert(root_element->class == QN_JSON_OBJECT || root_element->class == QN_JSON_ARRAY);
+
+    // Reset all fields.
+    fmt->buf_size = 0;
+    fmt->stack_top = 0;
+
+    // Set the first element to format.
+    itr = qn_json_fmt_push_iterator(fmt, root_element);
+    if (itr->owner_element->class == QN_JSON_OBJECT) {
+        fmt->buf[fmt->buf_size++] = '{';
+    } else {
+        fmt->buf[fmt->buf_size++] = '[';
+    } // if
+
+    while (1) {
+        if (itr->owner_element->class == QN_JSON_OBJECT) {
+            if (!qn_json_fmt_format_object(fmt, itr) || !qn_json_fmt_putc(fmt, '}')) {
+                return qn_false;
+            } // if
+        } else {
+            if (!qn_json_fmt_format_array(fmt, itr) || !qn_json_fmt_putc(fmt, ']')) {
+                return qn_false;
+            } // if
+        } // if
+
+        if (itr != qn_json_fmt_top_iterator(fmt)) {
+            // A new complex element has been pushed in the stack.
+            itr = qn_json_fmt_top_iterator(fmt);
+            continue;
+        } // if
+
+        itr = qn_json_fmt_pop_iterator(fmt);
+        if (fmt->stack_top == 0) {
+            break;
+        } // if
+
+        itr = qn_json_fmt_top_iterator(fmt);
+        if (++itr->element_count > 1 && !qn_json_fmt_putc(fmt, ',')) {
+            return qn_false;
+        } // if
+    } // while
     return qn_true;
 } // qn_json_fmt_format
 
