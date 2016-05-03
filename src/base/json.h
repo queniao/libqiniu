@@ -50,9 +50,19 @@ extern qn_bool qn_json_to_boolean(qn_json_ptr self);
 
 extern qn_bool qn_json_is_empty(qn_json_ptr self);
 
-typedef int (*qn_json_iterate_func)(void *, char *, int, qn_json_ptr);
+struct _QN_JSON_ITERATOR;
+typedef struct _QN_JSON_ITERATOR * qn_json_iterator_ptr;
 
-extern int qn_json_iterate(qn_json_ptr self, void * data, qn_json_iterate_func itr);
+extern qn_json_iterator_ptr qn_json_itr_create(void);
+extern void qn_json_itr_destroy(qn_json_iterator_ptr self);
+extern void qn_json_itr_reset(qn_json_iterator_ptr self);
+extern void qn_json_itr_rewind(qn_json_iterator_ptr self);
+extern int qn_json_itr_count(qn_json_iterator_ptr self);
+
+extern qn_bool qn_json_itr_push(qn_json_iterator_ptr self, qn_json_ptr owner);
+extern void qn_json_itr_pop(qn_json_iterator_ptr self);
+extern qn_json_ptr qn_json_itr_top(qn_json_iterator_ptr self);
+extern qn_json_ptr qn_json_itr_next(qn_json_iterator_ptr self);
 
 struct _QN_JSON_PARSER;
 typedef struct _QN_JSON_PARSER * qn_json_parser_ptr;

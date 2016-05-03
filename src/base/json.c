@@ -623,6 +623,163 @@ qn_bool qn_json_is_empty(qn_json_ptr self)
     return qn_false;
 } // qn_json_is_empty
 
+//-- Implementation of qn_json_iterator
+
+typedef struct _QN_JSON_ITR_LEVEL
+{
+    qn_json_ptr owner;
+    qn_eslink_ptr node;
+    int bucket;
+    int count;
+} qn_json_itr_level, *qn_json_itr_level_ptr;
+
+typedef struct _QN_JSON_ITERATOR
+{
+    int size;
+    int capacity;
+    qn_json_itr_level * levels;
+    qn_json_itr_level lvl_data[3];
+} qn_json_iterator;
+
+qn_json_iterator_ptr qn_json_itr_create(void)
+{
+    qn_json_iterator_ptr new_itr = NULL;
+
+    new_itr = calloc(1, sizeof(*new_itr));
+    if (!new_itr) {
+        errno = ENOMEM;
+        return NULL;
+    } // if
+
+    new_itr->capacity = sizeof(new_itr->lvl_data) / sizeof(new_itr->lvl_data[0]);
+    new_itr->levels = &new_itr->lvl_data[0];
+    return new_itr;
+} // qn_json_itr_create
+
+void qn_json_itr_destroy(qn_json_iterator_ptr self)
+{
+    if (self->levels != &self->lvl_data[0]) {
+        free(self->levels);
+    } // if
+    free(self);
+} // qn_json_itr_destroy
+
+void qn_json_itr_reset(qn_json_iterator_ptr self)
+{
+    self->size = 0;
+} // qn_json_itr_reset
+
+void qn_json_itr_rewind(qn_json_iterator_ptr self)
+{
+    qn_json_itr_level_ptr curr_level = NULL;
+    
+    if (self->size <= 0) {
+        return;
+    } // if
+    
+    curr_level = &self->levels[self->size - 1];
+    curr_level->bucket = 0;
+    curr_level->count = 0;
+    if (curr_level->owner->class == QN_JSON_OBJECT) {
+        curr_level->node = qn_eslink_next(&curr_level->owner->object->heads[0]);
+    } else {
+        curr_level->node = qn_eslink_next(&curr_level->owner->array->head);
+    } // if
+} // qn_json_itr_rewind
+
+int qn_json_itr_count(qn_json_iterator_ptr self)
+{
+    if (self->size <= 0) {
+        return 0;
+    } // if
+    return self->levels[self->size - 1].count;
+} // qn_json_itr_count
+
+static
+qn_bool qn_json_itr_augment_levels(qn_json_iterator_ptr self)
+{
+    int new_capacity = 0;
+    qn_json_itr_level_ptr new_levels = NULL;
+
+    new_capacity = self->capacity + (self->capacity >> 1); // 1.5 times of the last stack capacity.
+    new_levels = calloc(1, sizeof(new_levels[0]) * new_capacity);
+    if (!new_levels) {
+        errno = ENOMEM;
+        return qn_false;
+    }  // if
+
+    memcpy(new_levels, self->levels, self->size);
+    if (self->levels != &self->lvl_data[0]) {
+        free(self->levels);
+    } // if
+    self->levels = new_levels;
+    self->capacity = new_capacity;
+    return qn_true;
+} // qn_json_itr_augment_levels
+
+qn_bool qn_json_itr_push(qn_json_iterator_ptr self, qn_json_ptr com)
+{
+    if ((self->size + 1) > self->capacity && !qn_json_itr_augment_levels(self)) {
+        return qn_false;
+    } // if
+
+    self->levels[self->size++].owner = com;
+    qn_json_itr_rewind(self);
+    return qn_true;
+} // qn_json_itr_push
+
+void qn_json_itr_pop(qn_json_iterator_ptr self)
+{
+    if (self->size > 0) {
+        self->size -= 1;
+    } // if
+} // qn_json_itr_pop
+
+qn_json_ptr qn_json_itr_top(qn_json_iterator_ptr self)
+{
+    if (self->size <= 0) {
+        return NULL;
+    } // if
+    return self->levels[self->size - 1].owner;
+} // qn_json_itr_top
+
+qn_json_ptr qn_json_itr_next(qn_json_iterator_ptr self)
+{
+    qn_json_ptr element = NULL;
+    qn_json_itr_level_ptr curr_level = NULL;
+
+    if (self->size <= 0) {
+        // No levels in the stack.
+        return NULL;
+    } // if
+
+    curr_level = &self->levels[self->size - 1];
+    if (!curr_level->node) {
+        // End of the iteration of this level.
+        return NULL;
+    } // if
+
+    if (curr_level->owner->class == QN_JSON_OBJECT) {
+        while (curr_level->node == &curr_level->owner->object->heads[curr_level->bucket]) {
+            if ((curr_level->bucket += 1) >= QN_JSON_OBJECT_MAX_BUCKETS) {
+                curr_level->node = NULL;
+                return NULL;
+            } // if
+
+            // Move to the next bucket.
+            curr_level->node = qn_eslink_next(&curr_level->owner->object->heads[curr_level->bucket]);
+        } // while
+    } else if (curr_level->node == &curr_level->owner->array->head) {
+        curr_level->node = NULL;
+        return NULL;
+    } // if
+
+    element = qn_eslink_super(curr_level->node, qn_json_ptr, node);
+    curr_level->node = qn_eslink_next(curr_level->node);
+    curr_level->count += 1;
+    return element;
+} // qn_json_itr_next
+
 //-- Implementation of qn_json_scanner
 
 typedef enum _QN_JSON_TOKEN
@@ -1176,12 +1333,7 @@ qn_bool qn_json_prs_parse(
 #undef qn_json_prs_stack_is_empty
 } // qn_json_prs_parse
 
-typedef struct _QN_JSON_ITERATOR {
-    qn_json_ptr owner_element;
-    qn_eslink_ptr node;
-    int bucket;
-    int element_count;
-} qn_json_iterator, *qn_json_iterator_ptr;
+//-- Implementation of qn_json_formatter
 
 typedef struct _QN_JSON_FORMATTER {
     char * buf;
@@ -1189,9 +1341,7 @@ typedef struct _QN_JSON_FORMATTER {
     qn_size buf_capacity;
     qn_size buf_pages;
 
-    int stack_top;
-    int stack_count;
-    qn_json_iterator * stack;
+    qn_json_iterator_ptr iterator;
 } qn_json_formatter;
 
 #define QN_JSON_FMT_PAGE_SIZE 4096
@@ -1215,9 +1365,8 @@ qn_json_formatter_ptr qn_json_fmt_create(void)
         return NULL;
     } // if
 
-    new_fmt->stack_count = 4;
-    new_fmt->stack = calloc(1, sizeof(new_fmt->stack[0]) * new_fmt->stack_count);
-    if (!new_fmt->stack) {
+    new_fmt->iterator = qn_json_itr_create();
+    if (!new_fmt->iterator) {
         free(new_fmt->buf);
         free(new_fmt);
         errno = ENOMEM;
@@ -1230,63 +1379,11 @@ qn_json_formatter_ptr qn_json_fmt_create(void)
 void qn_json_fmt_destroy(qn_json_formatter_ptr fmt)
 {
     if (fmt) {
-        free(fmt->stack);
+        qn_json_itr_destroy(fmt->iterator);
         free(fmt->buf);
         free(fmt);
     } // for
 } // qn_json_fmt_destroy
-
-static
-qn_bool qn_json_fmt_augment_stack(qn_json_formatter_ptr fmt)
-{
-    qn_size new_stack_count = fmt->stack_count + (fmt->stack_count >> 1); // 1.5 time of the old stack capacity.
-    qn_json_iterator_ptr new_stack = calloc(new_stack_count, sizeof(fmt->stack[0]));
-    if (!new_stack) {
-        errno = ENOMEM;
-        return qn_false;
-    } // if
-
-    memcpy(new_stack, fmt->stack, sizeof(fmt->stack[0]) * fmt->stack_top);
-    free(fmt->stack);
-
-    fmt->stack = new_stack;
-    fmt->stack_count = new_stack_count;
-    return qn_true;
-} // qn_json_fmt_augment_stack
-
-static
-qn_json_iterator_ptr qn_json_fmt_push_iterator(qn_json_formatter_ptr fmt, qn_json_ptr element)
-{
-    qn_json_iterator_ptr itr = NULL;
-
-    if (fmt->stack_top + 1 >= fmt->stack_count && !qn_json_fmt_augment_stack(fmt)) {
-        return NULL;
-    } // if
-    
-    itr = &fmt->stack[fmt->stack_top++];
-    itr->owner_element = element;
-    itr->bucket = 0;
-    itr->element_count = 0;
-    return itr;
-} // qn_json_fmt_push_iterator
-
-static inline
-qn_json_iterator_ptr qn_json_fmt_pop_iterator(qn_json_formatter_ptr fmt)
-{
-    if (fmt->stack_top > 0) {
-        return &fmt->stack[--fmt->stack_top];
-    } // if
-    return NULL;
-} // qn_json_fmt_pop_iterator
-
-static inline
-qn_json_iterator_ptr qn_json_fmt_top_iterator(qn_json_formatter_ptr fmt)
-{
-    if (fmt->stack_top > 0) {
-        return &fmt->stack[fmt->stack_top - 1];
-    } // if
-    return NULL;
-} // qn_json_fmt_pop_iterator
 
 static
 qn_bool qn_json_fmt_augment_buffer(qn_json_formatter_ptr fmt)
@@ -1322,90 +1419,50 @@ qn_bool qn_json_fmt_putc(qn_json_formatter_ptr fmt, char ch)
 } // qn_json_fmt_putc
 
 static
-qn_bool qn_json_fmt_format_ordinary_element(qn_json_formatter_ptr fmt, qn_json_iterator_ptr itr)
+qn_bool qn_json_fmt_format_ordinary_element(qn_json_formatter_ptr fmt)
 {
     return qn_true;
 } // qn_json_fmt_format_ordinary_element
 
 static
-qn_bool qn_json_fmt_format_object(
-    qn_json_formatter_ptr fmt,
-    qn_json_iterator_ptr itr)
+qn_bool qn_json_fmt_format_complex_element(qn_json_formatter_ptr fmt)
 {
-    int i = 0;
-    qn_eslink * pn = NULL;
-    qn_eslink * cn = NULL;
-    qn_json_ptr ce = NULL;
-    qn_json_object_ptr obj_data = itr->owner_element->object;
+    qn_json_ptr curr_element = NULL;
 
-    for (i = itr->bucket; i < QN_JSON_OBJECT_MAX_BUCKETS; i += 1) {
-        for (pn = itr->node, cn = qn_eslink_next(itr->node); cn != &obj_data->heads[itr->bucket]; pn = cn, cn = qn_eslink_next(cn)) {
-            ce = qn_eslink_super(cn, qn_json_ptr, node);
+    while ((curr_element = qn_json_itr_next(fmt->iterator))) {
+        // Output the comma between multiple elements.
+        if (qn_json_itr_count(fmt->iterator) > 1 && !qn_json_fmt_putc(fmt, ',')) {
+            return qn_false;
+        } // if
 
-            // TODO: Output the key and colon sign.
+        if (curr_element->key) {
+            // TODO: Output the key.
+            // Output the comma between the key and the value.
             if (!qn_json_fmt_putc(fmt, ':')) {
                 return qn_false;
             } // if
+        } // if
 
-            if (itr->owner_element->class == QN_JSON_OBJECT) {
-                if (!qn_json_fmt_putc(fmt, '{')) {
-                    return qn_false;
-                } // if
-                return qn_true;
-            } else {
-                if (!qn_json_fmt_putc(fmt, '[')) {
-                    return qn_false;
-                } // if
-                return qn_true;
-            } // if
-
-            // Output the element itself.
-            if (!qn_json_fmt_format_ordinary_element(fmt, itr)) {
+        if (curr_element->class == QN_JSON_OBJECT) {
+            if (!qn_json_fmt_putc(fmt, '{') || !qn_json_itr_push(fmt->iterator, curr_element)) {
                 return qn_false;
             } // if
-            if (++itr->element_count > 1 && !qn_json_fmt_putc(fmt, ',')) {
+            return qn_true;
+        } // if
+        if (curr_element->class == QN_JSON_ARRAY) {
+            if (!qn_json_fmt_putc(fmt, '[') || !qn_json_itr_push(fmt->iterator, curr_element)) {
                 return qn_false;
             } // if
-        } // for
-    } // for
+            return qn_true;
+        } // if
+
+        // Output the ordinary element itself.
+        if (!qn_json_fmt_format_ordinary_element(fmt)) {
+            return qn_false;
+        } // if
+    } // while
     return qn_true;
 } // qn_json_fmt_format_object
-
-static
-qn_bool qn_json_fmt_format_array(
-    qn_json_formatter_ptr fmt,
-    qn_json_iterator_ptr itr)
-{
-    qn_eslink * pn = NULL;
-    qn_eslink * cn = NULL;
-    qn_json_ptr ce = NULL;
-    qn_json_array_ptr  arr_data = itr->owner_element->array;
-
-    for (pn = itr->node, cn = qn_eslink_next(itr->node); cn != &arr_data->head; pn = cn, cn = qn_eslink_next(cn)) {
-        ce = qn_eslink_super(cn, qn_json_ptr, node);
-
-        if (ce->class == QN_JSON_OBJECT) {
-            if (!qn_json_fmt_push_iterator(fmt, ce) || !qn_json_fmt_putc(fmt, '{')) {
-                return qn_false;
-            } // if
-            return qn_true;
-        } else {
-            if (!qn_json_fmt_push_iterator(fmt, ce) || !qn_json_fmt_putc(fmt, '[')) {
-                return qn_false;
-            } // if
-            return qn_true;
-        } // if
-
-        // Output the element itself.
-        if (!qn_json_fmt_format_ordinary_element(fmt, itr)) {
-            return qn_false;
-        } // if
-        if (++itr->element_count > 1 && !qn_json_fmt_putc(fmt, ',')) {
-            return qn_false;
-        } // if
-    } // for
-    return qn_true;
-} // qn_json_fmt_format_array
 
 qn_bool qn_json_fmt_format(
     qn_json_formatter_ptr fmt,
@@ -1413,7 +1470,7 @@ qn_bool qn_json_fmt_format(
     const char ** restrict buf,
     qn_size * restrict buf_size)
 {
-    qn_json_iterator_ptr itr = NULL;
+    qn_json_ptr owner_element = NULL;
 
     assert(fmt);
     assert(root_element);
@@ -1421,41 +1478,30 @@ qn_bool qn_json_fmt_format(
 
     // Reset all fields.
     fmt->buf_size = 0;
-    fmt->stack_top = 0;
+    qn_json_itr_reset(fmt->iterator);
 
     // Set the first element to format.
-    itr = qn_json_fmt_push_iterator(fmt, root_element);
-    if (itr->owner_element->class == QN_JSON_OBJECT) {
+    qn_json_itr_push(fmt->iterator, root_element);
+    if (root_element->class == QN_JSON_OBJECT) {
         fmt->buf[fmt->buf_size++] = '{';
     } else {
         fmt->buf[fmt->buf_size++] = '[';
     } // if
 
-    while (1) {
-        if (itr->owner_element->class == QN_JSON_OBJECT) {
-            if (!qn_json_fmt_format_object(fmt, itr) || !qn_json_fmt_putc(fmt, '}')) {
-                return qn_false;
-            } // if
-        } else {
-            if (!qn_json_fmt_format_array(fmt, itr) || !qn_json_fmt_putc(fmt, ']')) {
-                return qn_false;
-            } // if
-        } // if
-
-        if (itr != qn_json_fmt_top_iterator(fmt)) {
-            // A new complex element has been pushed in the stack.
-            itr = qn_json_fmt_top_iterator(fmt);
-            continue;
-        } // if
-
-        itr = qn_json_fmt_pop_iterator(fmt);
-        if (fmt->stack_top == 0) {
-            break;
-        } // if
-
-        itr = qn_json_fmt_top_iterator(fmt);
-        if (++itr->element_count > 1 && !qn_json_fmt_putc(fmt, ',')) {
+    while ((owner_element = qn_json_itr_top(fmt->iterator))) {
+        if (!qn_json_fmt_format_complex_element(fmt)) {
             return qn_false;
+        } // if
+
+        if (owner_element->class == QN_JSON_OBJECT && !qn_json_fmt_putc(fmt, '}')) {
+            return qn_false;
+        } else if (!qn_json_fmt_putc(fmt, ']')) {
+            return qn_false;
+        } // if
+
+        if (owner_element == qn_json_itr_top(fmt->iterator)) {
+            // No new complex element has been pushed in the stack.
+            qn_json_itr_pop(fmt->iterator);
         } // if
     } // while
     return qn_true;
