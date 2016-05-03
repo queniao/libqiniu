@@ -851,6 +851,9 @@ qn_json_token qn_json_scan_string(qn_json_scanner_ptr s, qn_string_ptr * txt)
             if (cstr[i] == '\\') {
                 i += 1;
                 switch (cstr[i]) {
+                    case '"': cstr[m++] = '"'; break;
+                    case '\\': cstr[m++] = '\\'; break;
+                    case '/': cstr[m++] = '/'; break;
                     case 't': cstr[m++] = '\t'; break;
                     case 'n': cstr[m++] = '\n'; break;
                     case 'r': cstr[m++] = '\r'; break;
