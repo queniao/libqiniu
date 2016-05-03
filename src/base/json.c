@@ -1424,46 +1424,6 @@ qn_bool qn_json_fmt_format_ordinary_element(qn_json_formatter_ptr fmt)
     return qn_true;
 } // qn_json_fmt_format_ordinary_element
 
-static
-qn_bool qn_json_fmt_format_complex_element(qn_json_formatter_ptr fmt)
-{
-    qn_json_ptr curr_element = NULL;
-
-    while ((curr_element = qn_json_itr_next(fmt->iterator))) {
-        // Output the comma between multiple elements.
-        if (qn_json_itr_count(fmt->iterator) > 1 && !qn_json_fmt_putc(fmt, ',')) {
-            return qn_false;
-        } // if
-
-        if (curr_element->key) {
-            // TODO: Output the key.
-            // Output the comma between the key and the value.
-            if (!qn_json_fmt_putc(fmt, ':')) {
-                return qn_false;
-            } // if
-        } // if
-
-        if (curr_element->class == QN_JSON_OBJECT) {
-            if (!qn_json_fmt_putc(fmt, '{') || !qn_json_itr_push(fmt->iterator, curr_element)) {
-                return qn_false;
-            } // if
-            return qn_true;
-        } // if
-        if (curr_element->class == QN_JSON_ARRAY) {
-            if (!qn_json_fmt_putc(fmt, '[') || !qn_json_itr_push(fmt->iterator, curr_element)) {
-                return qn_false;
-            } // if
-            return qn_true;
-        } // if
-
-        // Output the ordinary element itself.
-        if (!qn_json_fmt_format_ordinary_element(fmt)) {
-            return qn_false;
-        } // if
-    } // while
-    return qn_true;
-} // qn_json_fmt_format_object
-
 qn_bool qn_json_fmt_format(
     qn_json_formatter_ptr fmt,
     qn_json_ptr root_element,
@@ -1471,6 +1431,7 @@ qn_bool qn_json_fmt_format(
     qn_size * restrict buf_size)
 {
     qn_json_ptr owner_element = NULL;
+    qn_json_ptr curr_element = NULL;
 
     assert(fmt);
     assert(root_element);
@@ -1489,9 +1450,40 @@ qn_bool qn_json_fmt_format(
     } // if
 
     while ((owner_element = qn_json_itr_top(fmt->iterator))) {
-        if (!qn_json_fmt_format_complex_element(fmt)) {
-            return qn_false;
-        } // if
+NEXT_FORMATTING_LEVEL:
+        while ((curr_element = qn_json_itr_next(fmt->iterator))) {
+            // Output the comma between multiple elements.
+            if (qn_json_itr_count(fmt->iterator) > 1 && !qn_json_fmt_putc(fmt, ',')) {
+                return qn_false;
+            } // if
+
+            if (curr_element->key) {
+                // TODO: Output the key.
+                // Output the comma between the key and the value.
+                if (!qn_json_fmt_putc(fmt, ':')) {
+                    return qn_false;
+                } // if
+            } // if
+
+            if (curr_element->class == QN_JSON_OBJECT) {
+                if (!qn_json_fmt_putc(fmt, '{') || !qn_json_itr_push(fmt->iterator, curr_element)) {
+                    return qn_false;
+                } // if
+                goto NEXT_FORMATTING_LEVEL;
+            } // if
+
+            if (curr_element->class == QN_JSON_ARRAY) {
+                if (!qn_json_fmt_putc(fmt, '[') || !qn_json_itr_push(fmt->iterator, curr_element)) {
+                    return qn_false;
+                } // if
+                goto NEXT_FORMATTING_LEVEL;
+            } // if
+
+            // Output the ordinary element itself.
+            if (!qn_json_fmt_format_ordinary_element(fmt)) {
+                return qn_false;
+            } // if
+        } // while
 
         if (owner_element->class == QN_JSON_OBJECT && !qn_json_fmt_putc(fmt, '}')) {
             return qn_false;
@@ -1499,11 +1491,11 @@ qn_bool qn_json_fmt_format(
             return qn_false;
         } // if
 
-        if (owner_element == qn_json_itr_top(fmt->iterator)) {
-            // No new complex element has been pushed in the stack.
-            qn_json_itr_pop(fmt->iterator);
-        } // if
+        qn_json_itr_pop(fmt->iterator);
     } // while
+
+    *buf = (const char *)&fmt->buf;
+    *buf_size = fmt->buf_size;
     return qn_true;
 } // qn_json_fmt_format
 
