@@ -90,7 +90,6 @@ void qn_json_obj_destroy(qn_json_object_ptr obj_data)
 {
     int i = 0;
     qn_eslink * head = NULL;
-    qn_eslink * pn = NULL;
     qn_eslink * cn = NULL;
     qn_json_ptr ce = NULL;
 
@@ -102,11 +101,13 @@ void qn_json_obj_destroy(qn_json_object_ptr obj_data)
 
     for (i = 0; i < QN_JSON_OBJECT_MAX_BUCKETS; i += 1) {
         head = &obj_data->heads[i];
-        for (pn = head, cn = qn_eslink_next(head); cn != head; pn = cn, cn = qn_eslink_next(cn)) {
-            qn_eslink_remove_after(cn, pn);
+        cn = qn_eslink_next(head);
+        while (cn != head) {
+            qn_eslink_remove_after(cn, head);
             ce = qn_eslink_super(cn, qn_json_ptr, node);
+            cn = qn_eslink_next(cn);
             qn_json_destroy(ce);
-        } // for
+        } // while
     } // for
     obj_data->size = 0;
 } // qn_json_obj_destroy
@@ -154,7 +155,6 @@ static
 void qn_json_arr_destroy(qn_json_array_ptr arr_data)
 {
     qn_eslink * head = NULL;
-    qn_eslink * pn = NULL;
     qn_eslink * cn = NULL;
     qn_json_ptr ce = NULL;
 
@@ -165,11 +165,13 @@ void qn_json_arr_destroy(qn_json_array_ptr arr_data)
     } // if
 
     head = &arr_data->head;
-    for (pn = head, cn = qn_eslink_next(head); cn != head; pn = cn, cn = qn_eslink_next(cn)) {
-        qn_eslink_remove_after(cn, pn);
+    cn = qn_eslink_next(head);
+    while (cn != head) {
+        qn_eslink_remove_after(cn, head);
         ce = qn_eslink_super(cn, qn_json_ptr, node);
+        cn = qn_eslink_next(cn);
         qn_json_destroy(ce);
-    } // for
+    } // while
     arr_data->size = 0;
 } // qn_json_arr_destroy
 
