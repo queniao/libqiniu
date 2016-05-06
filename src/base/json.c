@@ -344,7 +344,7 @@ qn_json_ptr qn_json_create_object(void)
 } // qn_json_create_object
 
 static
-qn_bool qn_json_set_impl(qn_json_ptr self, qn_string_ptr key, qn_json_ptr new_element)
+qn_bool qn_json_set_impl(qn_json_ptr self, qn_string_ptr key, qn_json_ptr new_child)
 {
     qn_eslink_ptr prev_node = NULL;
     qn_eslink_ptr child_node = NULL;
@@ -354,7 +354,7 @@ qn_bool qn_json_set_impl(qn_json_ptr self, qn_string_ptr key, qn_json_ptr new_el
     int bucket = 0;
 
     assert(self && self->class == QN_JSON_OBJECT);
-    assert(key && new_element);
+    assert(key && new_child);
 
     obj_data = &self->obj_data[0];
     hash = qn_json_obj_calculate_hash(qn_str_cstr(key));
@@ -365,33 +365,33 @@ qn_bool qn_json_set_impl(qn_json_ptr self, qn_string_ptr key, qn_json_ptr new_el
         // The element according to the given key has been existing.
         child = qn_eslink_super(child_node, qn_json_ptr, node);
 
-        new_element->hash = child->hash;
-        new_element->key = child->key;
+        new_child->hash = child->hash;
+        new_child->key = child->key;
 
         qn_eslink_remove_after(child_node, prev_node);
-        qn_eslink_insert_after(&new_element->node, prev_node);
+        qn_eslink_insert_after(&new_child->node, prev_node);
 
         child->key = NULL;
         qn_json_destroy(child);
         return qn_true;
     } // if
 
-    new_element->hash = hash;
-    new_element->key = qn_str_duplicate(key);
-    if (!new_element->key) {
+    new_child->hash = hash;
+    new_child->key = qn_str_duplicate(key);
+    if (!new_child->key) {
         return qn_false;
     } // if
 
-    qn_eslink_insert_after(&new_element->node, obj_data->tails[bucket]);
-    obj_data->tails[bucket] = &new_element->node;
+    qn_eslink_insert_after(&new_child->node, obj_data->tails[bucket]);
+    obj_data->tails[bucket] = &new_child->node;
     obj_data->size += 1;
     return qn_true;
 } // qn_json_set_impl
 
-qn_bool qn_json_set(qn_json_ptr self, const char * key, qn_json_ptr new_element)
+qn_bool qn_json_set(qn_json_ptr self, const char * key, qn_json_ptr new_child)
 {
     qn_string key2 = {key, strlen(key)};
-    return qn_json_set_impl(self, &key2, new_element);
+    return qn_json_set_impl(self, &key2, new_child);
 } // qn_json_set
 
 void qn_json_unset(qn_json_ptr self, const char * key)
@@ -477,16 +477,16 @@ void qn_json_destroy(qn_json_ptr self) {
     } // if
 } // qn_json_destroy
 
-qn_bool qn_json_push(qn_json_ptr self, qn_json_ptr new_element)
+qn_bool qn_json_push(qn_json_ptr self, qn_json_ptr new_child)
 {
     qn_json_array_ptr arr_data = NULL;
 
     assert(self && self->class == QN_JSON_ARRAY);
-    assert(new_element);
+    assert(new_child);
 
     arr_data = &self->arr_data[0];
-    qn_eslink_insert_after(&new_element->node, arr_data->tail);
-    arr_data->tail = &new_element->node;
+    qn_eslink_insert_after(&new_child->node, arr_data->tail);
+    arr_data->tail = &new_child->node;
     arr_data->size += 1;
     return qn_true;
 } // qn_json_push
@@ -515,15 +515,15 @@ void qn_json_pop(qn_json_ptr self)
     return;
 } // qn_json_pop
 
-qn_bool qn_json_unshift(qn_json_ptr self, qn_json_ptr new_element)
+qn_bool qn_json_unshift(qn_json_ptr self, qn_json_ptr new_child)
 {
     qn_json_array_ptr arr_data = NULL;
 
     assert(self && self->class == QN_JSON_ARRAY);
-    assert(new_element);
+    assert(new_child);
 
     arr_data = &self->arr_data[0];
-    qn_eslink_insert_after(&new_element->node, &arr_data->head);
+    qn_eslink_insert_after(&new_child->node, &arr_data->head);
     arr_data->size += 1;
     return qn_true;
 } // qn_json_unshift
@@ -1047,26 +1047,26 @@ qn_bool qn_json_put_in(
 {
     qn_json_integer integer = 0L;
     qn_json_number number = 0.0L;
-    qn_json_ptr new_element = NULL;
+    qn_json_ptr new_child = NULL;
     char * end_txt = NULL;
 
     switch (tkn) {
         case QN_JSON_TKN_OPEN_BRACE:
-            if (! (new_element = qn_json_create_object()) ) {
+            if (! (new_child = qn_json_create_object()) ) {
                 return qn_false;
             } // if
-            qn_eslink_insert_after(&new_element->node, &prs->top);
+            qn_eslink_insert_after(&new_child->node, &prs->top);
             return qn_true;
 
         case QN_JSON_TKN_OPEN_BRACKET:
-            if (! (new_element = qn_json_create_array()) ) {
+            if (! (new_child = qn_json_create_array()) ) {
                 return qn_false;
             } // if
-            qn_eslink_insert_after(&new_element->node, &prs->top);
+            qn_eslink_insert_after(&new_child->node, &prs->top);
             return qn_true;
 
         case QN_JSON_TKN_STRING:
-            if (! (new_element = qn_json_create_string(qn_str_cstr(txt), qn_str_size(txt))) ) {
+            if (! (new_child = qn_json_create_string(qn_str_cstr(txt), qn_str_size(txt))) ) {
                 return qn_false;
             } // if
             break;
@@ -1083,7 +1083,7 @@ qn_bool qn_json_put_in(
                 errno = EOVERFLOW;
                 return qn_false;
             } // if
-            if (! (new_element = qn_json_create_integer(integer)) ) {
+            if (! (new_child = qn_json_create_integer(integer)) ) {
                 return qn_false;
             } // if
             break;
@@ -1105,25 +1105,25 @@ qn_bool qn_json_put_in(
                 errno = EOVERFLOW;
                 return qn_false;
             } // if
-            if (! (new_element = qn_json_create_number(number)) ) {
+            if (! (new_child = qn_json_create_number(number)) ) {
                 return qn_false;
             } // if
             break;
 
         case QN_JSON_TKN_TRUE:
-            if (! (new_element = qn_json_create_boolean(qn_true)) ) {
+            if (! (new_child = qn_json_create_boolean(qn_true)) ) {
                 return qn_false;
             } // if
             break;
 
         case QN_JSON_TKN_FALSE:
-            if (! (new_element = qn_json_create_boolean(qn_false)) ) {
+            if (! (new_child = qn_json_create_boolean(qn_false)) ) {
                 return qn_false;
             } // if
             break;
 
         case QN_JSON_TKN_NULL:
-            if (! (new_element = qn_json_create_null()) ) {
+            if (! (new_child = qn_json_create_null()) ) {
                 return qn_false;
             } // if
             break;
@@ -1142,11 +1142,11 @@ qn_bool qn_json_put_in(
     } // switch
 
     if (parent->class == QN_JSON_OBJECT) {
-        new_element->key = parent->key;
+        new_child->key = parent->key;
         parent->key = NULL;
-        qn_json_set_impl(parent, new_element->key, new_element);
+        qn_json_set_impl(parent, new_child->key, new_child);
     } else {
-        qn_json_push(parent, new_element);
+        qn_json_push(parent, new_child);
     } // if
     return qn_true;
 } // qn_json_put_in
