@@ -838,6 +838,90 @@ typedef struct _QN_JSON_SCANNER
     qn_size pos;
 } qn_json_scanner, *qn_json_scanner_ptr;
 
+static inline
+qn_uint32 qn_json_hex_to_dec(const char ch)
+{
+    if ('0' <= ch && ch <= '9') {
+        return ch - '0';
+    } // if
+    if ('A' <= ch && ch <= 'F') {
+        return ch - 'A' + 10;
+    } // if
+    if ('a' <= ch && ch <= 'f') {
+        return ch - 'a' + 10;
+    } // if
+    return 0;
+} // qn_json_hex_to_dec
+
+static 
+qn_bool qn_json_unescape_to_utf8(char * cstr, qn_size * i, qn_size * m)
+{
+    qn_uint32 head_code = 0;
+    qn_uint32 tail_code = 0;
+    qn_uint32 wch = 0;
+
+#define h1 qn_json_hex_to_dec(cstr[*i+2])
+#define h2 qn_json_hex_to_dec(cstr[*i+3])
+#define h3 qn_json_hex_to_dec(cstr[*i+4])
+#define h4 qn_json_hex_to_dec(cstr[*i+5])
+
+    // TODO: Chech if all four hexidecimal characters are valid.
+    head_code = (h1 << 12) + (h2 << 8) + (h3 << 4) + h4;
+    if (head_code <= 127) {
+        *i += 6;
+        cstr[*m++] = head_code & 0x7F;
+        return qn_true;
+    } // if
+
+    if (head_code < 0xD800 || 0xDBFF < head_code) {
+        errno = EBADMSG;
+        return qn_false;
+    } // if
+
+    *i += 6;
+    if (cstr[*i] != '\\' || cstr[*i+1] != 'u') {
+        errno = EBADMSG;
+        return qn_false;
+    } // if
+
+    tail_code = (h1 << 12) + (h2 << 8) + (h3 << 4) + h4;
+    if (tail_code < 0xDC00 || 0xDFFF < tail_code) {
+        errno = EBADMSG;
+        return qn_false;
+    } // if
+
+    *i += 6;
+    wch = ((head_code - 0xD800) << 10) + (tail_code - 0xDC00) + 0x10000;
+    if (0x80 <= wch && wch <= 0x07FF) {
+        // From : 00000000 00000yyy yyzzzzzz
+        // To   : 110yyyyy（C0-DF) 10zzzzzz(80-BF）
+        cstr[*m] = 0xC0 | ((wch >> 6) & 0x1F);
+        cstr[*m+1] = 0x80 | (wch & 0x3F);
+        *m += 2;
+    } else if ((0x0800 <= wch && wch <= 0xD7FF) || (0xE000 <= wch && wch <= 0xFFFF)) {
+        // From : 00000000 xxxxyyyy yyzzzzzz
+        // To   : 1110xxxx(E0-EF) 10yyyyyy 10zzzzzz
+        cstr[*m] = 0xE0 | ((wch >> 12) & 0x0F);
+        cstr[*m+1] = 0x80 | ((wch >> 6) & 0x3F);
+        cstr[*m+2] = 0x80 | (wch & 0x3F);
+        *m += 3;
+    } else if (0x10000 <= wch && wch <= 0x10FFFF) {
+        // From : 000wwwxx xxxxyyyy yyzzzzzz
+        // To   : 11110www(F0-F7) 10xxxxxx 10yyyyyy 10zzzzzz
+        cstr[*m] = 0xF0 | ((wch >> 18) & 0x07);
+        cstr[*m+1] = 0x80 | ((wch >> 12) & 0x3F);
+        cstr[*m+2] = 0x80 | ((wch >> 6) & 0x3F);
+        cstr[*m+3] = 0x80 | (wch & 0x3F);
+        *m += 4;
+    } // if
+    return qn_true;
+
+#undef h1
+#undef h2
+#undef h3
+#undef h4
+} // qn_json_unescape_to_utf8
+
 static
 qn_json_token qn_json_scan_string(qn_json_scanner_ptr s, qn_string_ptr * txt)
 {
@@ -869,26 +953,33 @@ qn_json_token qn_json_scan_string(qn_json_scanner_ptr s, qn_string_ptr * txt)
     cstr = &new_str->data[0];
     if (m > 0) {
         // 处理转义码
-        for (i = 0, m = 0; i < primitive_len; i += 1) {
-            // TODO: \u0026 形式的转义码转换
+        i = 0;
+        m = 0;
+        while (i < primitive_len) {
             if (cstr[i] == '\\') {
-                i += 1;
-                switch (cstr[i]) {
-                    case '"': cstr[m++] = '"'; break;
-                    case '\\': cstr[m++] = '\\'; break;
-                    case '/': cstr[m++] = '/'; break;
-                    case 't': cstr[m++] = '\t'; break;
-                    case 'n': cstr[m++] = '\n'; break;
-                    case 'r': cstr[m++] = '\r'; break;
-                    case 'f': cstr[m++] = '\f'; break;
-                    case 'v': cstr[m++] = '\v'; break;
-                    case 'b': cstr[m++] = '\b'; break;
-                    default:  cstr[m++] = cstr[i];
+                switch (cstr[i+1]) {
+                    case 't': cstr[m++] = '\t'; i += 2; break;
+                    case 'n': cstr[m++] = '\n'; i += 2; break;
+                    case 'r': cstr[m++] = '\r'; i += 2; break;
+                    case 'f': cstr[m++] = '\f'; i += 2; break;
+                    case 'v': cstr[m++] = '\v'; i += 2; break;
+                    case 'b': cstr[m++] = '\b'; i += 2; break;
+                    case 'u': 
+                        if (!qn_json_unescape_to_utf8(cstr, &i, &m)) {
+                            return qn_false;
+                        } // if
+                        break;
+
+                    default:
+                        // Process cases '"', '\\', '/', and other characters.
+                        cstr[m++] = cstr[i+1];
+                        i += 2;
+                        break;
                 } // switch
             } else {
-                cstr[m++] = cstr[i];
+                cstr[m++] = cstr[i++];
             } // if
-        } // for
+        } // while
         cstr[m] = '\0';
         new_str->size = m;
     } // if
@@ -1493,23 +1584,19 @@ qn_bool qn_json_fmt_format_string(qn_json_formatter_ptr fmt, qn_string_ptr str)
             // TODO: Check if the d2 is valid.
             // From : 110yyyyy（C0-DF) 10zzzzzz(80-BF）
             // To   : 00000000 00000yyy yyzzzzzz
-            wch = ((c1 & 0x1C) >> 2) << 8;
-            wch |= ((c1 & 0x03) << 6) | (c2 & 0x3F);
+            wch = ((c1 & 0x1F) << 6) | (c2 & 0x3F);
             j = 2;
         } else if ((c1 & 0xF0) == 0xE0) {
             // TODO: Check if the d2 and d3 are valid.
             // From : 1110xxxx(E0-EF) 10yyyyyy 10zzzzzz
             // To   : 00000000 xxxxyyyy yyzzzzzz
-            wch = ((((c1 & 0x0F) << 4) | ((c2 & 0x3C) >> 2))) << 8;
-            wch |= ((c2 & 0x03) << 6) | (c3 & 0x3F);
+            wch = ((c1 & 0x0F) << 12) | ((c2 & 0x3F) << 6) | (c3 & 0x3F);
             j = 3;
         } else if ((c1 & 0xF8) == 0xF0) {
             // TODO: Check if the d2 and d3 and d4 are valid.
             // From : 11110www(F0-F7) 10xxxxxx 10yyyyyy 10zzzzzz
             // To   : 000wwwxx xxxxyyyy yyzzzzzz
-            wch = (((c1 & 0x07) << 2) | ((c2 & 0x30) >> 4)) << 16;
-            wch |= (((c2 & 0x0F) << 4) | ((c3 & 0x3C) >> 2)) << 8;
-            wch |= ((c3 & 0x03) << 6) | (c4 & 0x3F);
+            wch = ((c1 & 0x1F) << 18) | ((c2 & 0x3F) << 12) | ((c3 & 0x3F) << 6) | (c4 & 0x3F);
             j = 4;
         } // if
 
