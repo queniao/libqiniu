@@ -1436,13 +1436,11 @@ qn_bool qn_json_fmt_augment_buffer(qn_json_formatter_ptr fmt)
     return qn_true;
 } // qn_json_fmt_augment_buffer
 
-static
+static inline
 qn_bool qn_json_fmt_putc(qn_json_formatter_ptr fmt, char ch)
 {
-    if (fmt->buf_size + 1 >= fmt->buf_capacity) {
-        if (!qn_json_fmt_augment_buffer(fmt)) {
-            return qn_false;
-        } // if
+    if (fmt->buf_size + 1 >= fmt->buf_capacity && !qn_json_fmt_augment_buffer(fmt)) {
+        return qn_false;
     } // if
 
     fmt->buf[fmt->buf_size++] = ch;
@@ -1450,12 +1448,111 @@ qn_bool qn_json_fmt_putc(qn_json_formatter_ptr fmt, char ch)
 } // qn_json_fmt_putc
 
 static
-qn_bool qn_json_fmt_format_ordinary_element(qn_json_formatter_ptr fmt, qn_json_ptr child)
+qn_bool qn_json_fmt_format_string(qn_json_formatter_ptr fmt, qn_string_ptr str)
+{
+#define c1 (qn_str_cstr(str)[i])
+#define c2 (qn_str_cstr(str)[i+1])
+#define c3 (qn_str_cstr(str)[i+2])
+#define c4 (qn_str_cstr(str)[i+3])
+#define head_code (0xD800 + (((wch - 0x10000) & 0xFFC00) >> 10))
+#define tail_code (0xDC00 + ((wch - 0x10000) & 0x003FF))
+
+    int i = 0;
+    int j = 0;
+    int ret = 0;
+    qn_uint32 wch = 0;
+
+    if (!qn_json_fmt_putc(fmt, '"')) {
+        return qn_false;
+    } // if
+    while (i < qn_str_size(str)) {
+        if ((c1 & 0x80) == 0) {
+            // ASCII range: 0zzzzzzz（00-7F）
+            if (c1 == '&') {
+                if ((fmt->buf_size + 6) >= fmt->buf_capacity && !qn_json_fmt_augment_buffer(fmt)) {
+                    return qn_false;
+                } // if
+
+                ret = qn_str_snprintf(fmt->buf + fmt->buf_size, (fmt->buf_capacity - fmt->buf_size), "\\u%4X", c1);
+                if (ret < 0) {
+                    return qn_false;
+                } // if
+                i += 1;
+                fmt->buf_size += ret;
+                continue;
+            } // if
+
+            if (!qn_json_fmt_putc(fmt, c1)) {
+                return qn_false;
+            } // if
+            i += 1;
+            continue;
+        } // if
+
+        if ((c1 & 0xE0) == 0xC0) {
+            // TODO: Check if the d2 is valid.
+            // From : 110yyyyy（C0-DF) 10zzzzzz(80-BF）
+            // To   : 00000000 00000yyy yyzzzzzz
+            wch = ((c1 & 0x1C) >> 2) << 8;
+            wch |= ((c1 & 0x03) << 6) | (c2 & 0x3F);
+            j = 2;
+        } else if ((c1 & 0xF0) == 0xE0) {
+            // TODO: Check if the d2 and d3 are valid.
+            // From : 1110xxxx(E0-EF) 10yyyyyy 10zzzzzz
+            // To   : 00000000 xxxxyyyy yyzzzzzz
+            wch = ((((c1 & 0x0F) << 4) | ((c2 & 0x3C) >> 2))) << 8;
+            wch |= ((c2 & 0x03) << 6) | (c3 & 0x3F);
+            j = 3;
+        } else if ((c1 & 0xF8) == 0xF0) {
+            // TODO: Check if the d2 and d3 and d4 are valid.
+            // From : 11110www(F0-F7) 10xxxxxx 10yyyyyy 10zzzzzz
+            // To   : 000wwwxx xxxxyyyy yyzzzzzz
+            wch = (((c1 & 0x07) << 2) | ((c2 & 0x30) >> 4)) << 16;
+            wch |= (((c2 & 0x0F) << 4) | ((c3 & 0x3C) >> 2)) << 8;
+            wch |= ((c3 & 0x03) << 6) | (c4 & 0x3F);
+            j = 4;
+        } // if
+
+        if (0xD800 <= wch && wch <= 0xDFFF) {
+            errno = EBADMSG;
+            return qn_false;
+        } // if
+
+        if ((fmt->buf_size + 12) >= fmt->buf_capacity && !qn_json_fmt_augment_buffer(fmt)) {
+            return qn_false;
+        } // if
+
+        ret = qn_str_snprintf(fmt->buf + fmt->buf_size, (fmt->buf_capacity - fmt->buf_size), "\\u%4X\\u%4X", head_code, tail_code);
+        if (ret < 0) {
+            return qn_false;
+        } // if
+        i += j;
+        fmt->buf_size += ret;
+    } // while
+
+    if (!qn_json_fmt_putc(fmt, '"')) {
+        return qn_false;
+    } // if
+    return qn_true;
+
+#undef c1
+#undef c2
+#undef c3
+#undef c4
+#undef head_code
+#undef tail_code
+} // qn_json_fmt_format_string
+
+static
+qn_bool qn_json_fmt_format_ordinary(qn_json_formatter_ptr fmt, qn_json_ptr child)
 {
     int ret = 0;
     const char * str = NULL;
 
-    // TODO: Format string values.
+    // Format string value.
+    if (child->class == QN_JSON_STRING) {
+        return qn_json_fmt_format_string(fmt, child->string);
+    } // if
 
 FORMAT_ORDINARY_ELEMENT:
     switch (child->class) {
@@ -1498,7 +1595,7 @@ FORMAT_ORDINARY_ELEMENT:
     goto FORMAT_ORDINARY_ELEMENT;
     // TODO: Specify a reasonable errno value.
     return qn_false;
-} // qn_json_fmt_format_ordinary_element
+} // qn_json_fmt_format_ordinary
 
 qn_bool qn_json_fmt_format(
     qn_json_formatter_ptr fmt,
@@ -1533,7 +1630,11 @@ NEXT_FORMATTING_LEVEL:
             } // if
 
             if (child->key) {
-                // TODO: Output the key.
+                // Output the key.
+                if (!qn_json_fmt_format_string(fmt, child->key)) {
+                    return qn_false;
+                } // if
+
                 // Output the comma between the key and the value.
                 if (!qn_json_fmt_putc(fmt, ':')) {
                     return qn_false;
@@ -1555,7 +1656,7 @@ NEXT_FORMATTING_LEVEL:
             } // if
 
             // Output the ordinary element itself.
-            if (!qn_json_fmt_format_ordinary_element(fmt, child)) {
+            if (!qn_json_fmt_format_ordinary(fmt, child)) {
                 return qn_false;
             } // if
         } // while
