@@ -1450,9 +1450,54 @@ qn_bool qn_json_fmt_putc(qn_json_formatter_ptr fmt, char ch)
 } // qn_json_fmt_putc
 
 static
-qn_bool qn_json_fmt_format_ordinary_element(qn_json_formatter_ptr fmt)
+qn_bool qn_json_fmt_format_ordinary_element(qn_json_formatter_ptr fmt, qn_json_ptr child)
 {
-    return qn_true;
+    int ret = 0;
+    const char * str = NULL;
+
+    // TODO: Format string values.
+
+FORMAT_ORDINARY_ELEMENT:
+    switch (child->class) {
+        case QN_JSON_INTEGER:
+            ret = qn_str_snprintf(fmt->buf + fmt->buf_size, (fmt->buf_capacity - fmt->buf_size), "%lld", child->integer);
+            break;
+
+        case QN_JSON_NUMBER:
+            ret = qn_str_snprintf(fmt->buf + fmt->buf_size, (fmt->buf_capacity - fmt->buf_size), "%Lf", child->number);
+            break;
+
+        case QN_JSON_BOOLEAN:
+            str = (child->boolean) ? "true" : "false";
+            ret = qn_str_snprintf(fmt->buf + fmt->buf_size, (fmt->buf_capacity - fmt->buf_size), str);
+            break;
+
+        case QN_JSON_NULL:
+            str = "null";
+            ret = qn_str_snprintf(fmt->buf + fmt->buf_size, (fmt->buf_capacity - fmt->buf_size), str);
+            break;
+
+        default:
+            errno = EINVAL;
+            return qn_false;
+    } // switch
+
+    if (ret < 0) {
+        return qn_false;
+    } else if ((ret + 1) < (fmt->buf_capacity - fmt->buf_size)) {
+        // All the output, include the final nul character, has been written into the buffer.
+        // And this does not consume all remainder buffer space.
+        fmt->buf_size += ret;
+        return qn_true;
+    } // if
+
+    if (!qn_json_fmt_augment_buffer(fmt)) {
+        return qn_false;
+    } // if
+
+    goto FORMAT_ORDINARY_ELEMENT;
+    // TODO: Specify a reasonable errno value.
+    return qn_false;
 } // qn_json_fmt_format_ordinary_element
 
 qn_bool qn_json_fmt_format(
@@ -1510,7 +1555,7 @@ NEXT_FORMATTING_LEVEL:
             } // if
 
             // Output the ordinary element itself.
-            if (!qn_json_fmt_format_ordinary_element(fmt)) {
+            if (!qn_json_fmt_format_ordinary_element(fmt, child)) {
                 return qn_false;
             } // if
         } // while
