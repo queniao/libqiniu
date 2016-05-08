@@ -23,31 +23,32 @@ typedef qn_integer qn_json_integer;
 typedef qn_number qn_json_number;
 typedef qn_uint32 qn_json_hash;
 
+#ifndef QN_JSON_SIMPLE_OBJECT
+
 typedef struct _QN_JSON_OBJECT
 {
+#define QN_JSON_OBJECT_MAX_BUCKETS 5
     qn_size size;
-
-#ifdef QN_JSON_SIMPLE_OBJECT
-
-    qn_eslink head;
-    qn_eslink * tail;
+    qn_eslink heads[QN_JSON_OBJECT_MAX_BUCKETS];
+    qn_eslink_ptr tails[QN_JSON_OBJECT_MAX_BUCKETS];
+} qn_json_object, *qn_json_object_ptr;
 
 #else
 
-#define QN_JSON_OBJECT_MAX_BUCKETS 5
-
-    qn_eslink heads[QN_JSON_OBJECT_MAX_BUCKETS];
-    qn_eslink * tails[QN_JSON_OBJECT_MAX_BUCKETS];
+typedef struct _QN_JSON_OBJECT
+{
+    qn_size size;
+    qn_eslink head;
+    qn_eslink_ptr tail;
+} qn_json_object, *qn_json_object_ptr;
 
 #endif // QN_JSON_SIMPLE_OBJECT
-
-} qn_json_object, *qn_json_object_ptr;
 
 typedef struct _QN_JSON_ARRAY
 {
     qn_size size;
     qn_eslink head;
-    qn_eslink * tail;
+    qn_eslink_ptr tail;
 } qn_json_array, *qn_json_array_ptr;
 
 typedef enum _QN_JSON_CLASS {
@@ -125,12 +126,12 @@ qn_json_ptr qn_json_elem_itr_next(qn_json_elem_iterator_ptr self)
 static inline
 void qn_json_obj_itr_init(qn_json_elem_iterator_ptr self, qn_json_ptr parent)
 {
-#ifdef QN_JSON_SIMPLE_OBJECT
-    self->head = &parent->object->head;
-    self->end = self->head + 1;
-#else
+#ifndef QN_JSON_SIMPLE_OBJECT
     self->head = &parent->object->heads[0];
     self->end = self->head + QN_JSON_OBJECT_MAX_BUCKETS;
+#else
+    self->head = &parent->object->head;
+    self->end = self->head + 1;
 #endif // QN_JSON_SIMPLE_OBJECT
 
     self->node = qn_eslink_next(self->head);
@@ -151,12 +152,12 @@ void qn_json_obj_destroy(qn_json_object_ptr obj_data)
         return;
     } // if
 
-#ifdef QN_JSON_SIMPLE_OBJECT
-    begin = &obj_data->head;
-    end = &obj_data->head + 1;
-#else
+#ifndef QN_JSON_SIMPLE_OBJECT
     begin = &obj_data->heads[0];
     end = begin + QN_JSON_OBJECT_MAX_BUCKETS;
+#else
+    begin = &obj_data->head;
+    end = &obj_data->head + 1;
 #endif // QN_JSON_SIMPLE_OBJECT
 
     for (head = begin; head < end; head += 1) {
@@ -364,14 +365,14 @@ qn_json_ptr qn_json_create_object(void)
 
     obj_data->size = 0;
 
-#ifdef QN_JSON_SIMPLE_OBJECT
-    qn_eslink_init(&obj_data->head);
-    obj_data->tail = &obj_data->head;
-#else
+#ifndef QN_JSON_SIMPLE_OBJECT
     for (i = 0; i < QN_JSON_OBJECT_MAX_BUCKETS; i += 1) {
         qn_eslink_init(&obj_data->heads[i]);
         obj_data->tails[i] = &obj_data->heads[i];
     } // for
+#else
+    qn_eslink_init(&obj_data->head);
+    obj_data->tail = &obj_data->head;
 #endif // QN_JSON_SIMPLE_OBJECT
 
     return new_obj;
@@ -394,12 +395,12 @@ qn_bool qn_json_set_impl(qn_json_ptr self, qn_string_ptr key, qn_json_ptr new_ch
     obj_data = &self->obj_data[0];
     hash = qn_json_obj_calculate_hash(qn_str_cstr(key));
 
-#ifdef QN_JSON_SIMPLE_OBJECT
-    head = &obj_data->head;
-    tail = &obj_data->tail;
-#else
+#ifndef QN_JSON_SIMPLE_OBJECT
     head = &obj_data->heads[hash % QN_JSON_OBJECT_MAX_BUCKETS];
     tail = &obj_data->tails[hash % QN_JSON_OBJECT_MAX_BUCKETS];
+#else
+    head = &obj_data->head;
+    tail = &obj_data->tail;
 #endif // QN_JSON_SIMPLE_OBJECT
 
     qn_json_obj_find(head, hash, key, &prev_node, &child_node);
@@ -460,12 +461,12 @@ void qn_json_unset(qn_json_ptr self, const char * key)
 
     hash = qn_json_obj_calculate_hash(key);
 
-#ifdef QN_JSON_SIMPLE_OBJECT
-    head = &obj_data->head;
-    tail = &obj_data->tail;
-#else
+#ifndef QN_JSON_SIMPLE_OBJECT
     head = &obj_data->heads[hash % QN_JSON_OBJECT_MAX_BUCKETS];
     tail = &obj_data->tails[hash % QN_JSON_OBJECT_MAX_BUCKETS];
+#else
+    head = &obj_data->head;
+    tail = &obj_data->tail;
 #endif // QN_JSON_SIMPLE_OBJECT
 
     qn_json_obj_find(head, hash, &key2, &prev_node, &child_node);
@@ -621,10 +622,10 @@ qn_json_ptr qn_json_get(qn_json_ptr self, const char * key)
 
     hash = qn_json_obj_calculate_hash(key);
 
-#ifdef QN_JSON_SIMPLE_OBJECT
-    head = &obj_data->head;
-#else
+#ifndef QN_JSON_SIMPLE_OBJECT
     head = &obj_data->heads[hash % QN_JSON_OBJECT_MAX_BUCKETS];
+#else
+    head = &obj_data->head;
 #endif // QN_JSON_SIMPLE_OBJECT
 
     qn_json_obj_find(head, hash, &key2, &prev_node, &child_node);
