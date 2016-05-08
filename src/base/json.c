@@ -865,7 +865,12 @@ qn_bool qn_json_unescape_to_utf8(char * cstr, qn_size * i, qn_size * m)
 #define h3 qn_json_hex_to_dec(cstr[*i+4])
 #define h4 qn_json_hex_to_dec(cstr[*i+5])
 
-    // TODO: Chech if all four hexidecimal characters are valid.
+    // Chech if all four hexidecimal characters are valid.
+    if (!ishexnumber(h1) || !ishexnumber(h2) || !ishexnumber(h3) || !ishexnumber(h4)) {
+        errno = EBADMSG;
+        return qn_false;
+    } // if
+
     head_code = (h1 << 12) + (h2 << 8) + (h3 << 4) + h4;
     if (head_code <= 127) {
         *i += 6;
@@ -1581,19 +1586,34 @@ qn_bool qn_json_fmt_format_string(qn_json_formatter_ptr fmt, qn_string_ptr str)
         } // if
 
         if ((c1 & 0xE0) == 0xC0) {
-            // TODO: Check if the d2 is valid.
+            // Check if the c2 is valid.
+            if ((c2 & 0xC0) != 0x80) {
+                errno = EBADMSG;
+                return qn_false;
+            } // if
+
             // From : 110yyyyy（C0-DF) 10zzzzzz(80-BF）
             // To   : 00000000 00000yyy yyzzzzzz
             wch = ((c1 & 0x1F) << 6) | (c2 & 0x3F);
             j = 2;
         } else if ((c1 & 0xF0) == 0xE0) {
-            // TODO: Check if the d2 and d3 are valid.
+            // Check if the c2 and c3 are valid.
+            if (((c2 & 0xC0) != 0x80) || ((c3 & 0xC0) != 0x80)) {
+                errno = EBADMSG;
+                return qn_false;
+            } // if
+
             // From : 1110xxxx(E0-EF) 10yyyyyy 10zzzzzz
             // To   : 00000000 xxxxyyyy yyzzzzzz
             wch = ((c1 & 0x0F) << 12) | ((c2 & 0x3F) << 6) | (c3 & 0x3F);
             j = 3;
         } else if ((c1 & 0xF8) == 0xF0) {
-            // TODO: Check if the d2 and d3 and d4 are valid.
+            // Check if the c2 and c3 and c4 are valid.
+            if (((c2 & 0xC0) != 0x80) || ((c3 & 0xC0) != 0x80) || ((c4 & 0xC0) != 0x80)) {
+                errno = EBADMSG;
+                return qn_false;
+            } // if
+
             // From : 11110www(F0-F7) 10xxxxxx 10yyyyyy 10zzzzzz
             // To   : 000wwwxx xxxxyyyy yyzzzzzz
             wch = ((c1 & 0x1F) << 18) | ((c2 & 0x3F) << 12) | ((c3 & 0x3F) << 6) | (c4 & 0x3F);
