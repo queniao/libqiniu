@@ -23,13 +23,24 @@ typedef qn_integer qn_json_integer;
 typedef qn_number qn_json_number;
 typedef qn_uint32 qn_json_hash;
 
-#define QN_JSON_OBJECT_MAX_BUCKETS 5
-
 typedef struct _QN_JSON_OBJECT
 {
     qn_size size;
+
+#ifdef QN_JSON_SIMPLE_OBJECT
+
+    qn_eslink head;
+    qn_eslink * tail;
+
+#else
+
+#define QN_JSON_OBJECT_MAX_BUCKETS 5
+
     qn_eslink heads[QN_JSON_OBJECT_MAX_BUCKETS];
     qn_eslink * tails[QN_JSON_OBJECT_MAX_BUCKETS];
+
+#endif // QN_JSON_SIMPLE_OBJECT
+
 } qn_json_object, *qn_json_object_ptr;
 
 typedef struct _QN_JSON_ARRAY
@@ -114,16 +125,23 @@ qn_json_ptr qn_json_elem_itr_next(qn_json_elem_iterator_ptr self)
 static inline
 void qn_json_obj_itr_init(qn_json_elem_iterator_ptr self, qn_json_ptr parent)
 {
+#ifdef QN_JSON_SIMPLE_OBJECT
+    self->head = &parent->object->head;
+    self->end = self->head + 1;
+#else
     self->head = &parent->object->heads[0];
-    self->end = &parent->object->heads[QN_JSON_OBJECT_MAX_BUCKETS];
+    self->end = self->head + QN_JSON_OBJECT_MAX_BUCKETS;
+#endif // QN_JSON_SIMPLE_OBJECT
+
     self->node = qn_eslink_next(self->head);
 } // qn_json_obj_itr_init
 
 static
 void qn_json_obj_destroy(qn_json_object_ptr obj_data)
 {
-    int i = 0;
     qn_eslink * head = NULL;
+    qn_eslink * begin = NULL;
+    qn_eslink * end = NULL;
     qn_eslink * cn = NULL;
     qn_json_ptr ce = NULL;
 
@@ -133,8 +151,15 @@ void qn_json_obj_destroy(qn_json_object_ptr obj_data)
         return;
     } // if
 
-    for (i = 0; i < QN_JSON_OBJECT_MAX_BUCKETS; i += 1) {
-        head = &obj_data->heads[i];
+#ifdef QN_JSON_SIMPLE_OBJECT
+    begin = &obj_data->head;
+    end = &obj_data->head + 1;
+#else
+    begin = &obj_data->heads[0];
+    end = begin + QN_JSON_OBJECT_MAX_BUCKETS;
+#endif // QN_JSON_SIMPLE_OBJECT
+
+    for (head = begin; head < end; head += 1) {
         cn = qn_eslink_next(head);
         while (cn != head) {
             qn_eslink_remove_after(cn, head);
@@ -323,7 +348,10 @@ qn_json_ptr qn_json_create_object(void)
 {
     qn_json_ptr new_obj = NULL;
     qn_json_object * obj_data = NULL;
+
+#ifndef QN_JSON_SIMPLE_OBJECT
     int i = 0;
+#endif
 
     new_obj = calloc(1, sizeof(*new_obj) + sizeof(new_obj->obj_data[0]));
     if (new_obj == NULL) {
@@ -335,10 +363,16 @@ qn_json_ptr qn_json_create_object(void)
     new_obj->object = obj_data = &new_obj->obj_data[0];
 
     obj_data->size = 0;
+
+#ifdef QN_JSON_SIMPLE_OBJECT
+    qn_eslink_init(&obj_data->head);
+    obj_data->tail = &obj_data->head;
+#else
     for (i = 0; i < QN_JSON_OBJECT_MAX_BUCKETS; i += 1) {
         qn_eslink_init(&obj_data->heads[i]);
         obj_data->tails[i] = &obj_data->heads[i];
     } // for
+#endif // QN_JSON_SIMPLE_OBJECT
 
     return new_obj;
 } // qn_json_create_object
@@ -351,17 +385,25 @@ qn_bool qn_json_set_impl(qn_json_ptr self, qn_string_ptr key, qn_json_ptr new_ch
     qn_json_ptr child = NULL;
     qn_json_object_ptr obj_data = NULL;
     qn_json_hash hash = 0;
-    int bucket = 0;
+    qn_eslink_ptr head = NULL;
+    qn_eslink_ptr * tail = NULL;
 
     assert(self && self->class == QN_JSON_OBJECT);
     assert(key && new_child);
 
     obj_data = &self->obj_data[0];
     hash = qn_json_obj_calculate_hash(qn_str_cstr(key));
-    bucket = hash % QN_JSON_OBJECT_MAX_BUCKETS;
 
-    qn_json_obj_find(&obj_data->heads[bucket], hash, key, &prev_node, &child_node);
-    if (child_node != &obj_data->heads[bucket]) {
+#ifdef QN_JSON_SIMPLE_OBJECT
+    head = &obj_data->head;
+    tail = &obj_data->tail;
+#else
+    head = &obj_data->heads[hash % QN_JSON_OBJECT_MAX_BUCKETS];
+    tail = &obj_data->tails[hash % QN_JSON_OBJECT_MAX_BUCKETS];
+#endif // QN_JSON_SIMPLE_OBJECT
+
+    qn_json_obj_find(head, hash, key, &prev_node, &child_node);
+    if (child_node != head) {
         // The element according to the given key has been existing.
         child = qn_eslink_super(child_node, qn_json_ptr, node);
 
@@ -382,8 +424,8 @@ qn_bool qn_json_set_impl(qn_json_ptr self, qn_string_ptr key, qn_json_ptr new_ch
         return qn_false;
     } // if
 
-    qn_eslink_insert_after(&new_child->node, obj_data->tails[bucket]);
-    obj_data->tails[bucket] = &new_child->node;
+    qn_eslink_insert_after(&new_child->node, *tail);
+    *tail = &new_child->node;
     obj_data->size += 1;
     return qn_true;
 } // qn_json_set_impl
@@ -402,7 +444,8 @@ void qn_json_unset(qn_json_ptr self, const char * key)
     qn_json_ptr child = NULL;
     qn_json_object_ptr obj_data = NULL;
     qn_json_hash hash = 0;
-    int bucket = 0;
+    qn_eslink_ptr head = NULL;
+    qn_eslink_ptr * tail = NULL;
 
     assert(self && self->class == QN_JSON_OBJECT);
     assert(key);
@@ -416,17 +459,24 @@ void qn_json_unset(qn_json_ptr self, const char * key)
     key2.size = strlen(key);
 
     hash = qn_json_obj_calculate_hash(key);
-    bucket = hash % QN_JSON_OBJECT_MAX_BUCKETS;
 
-    qn_json_obj_find(&obj_data->heads[bucket], hash, &key2, &prev_node, &child_node);
-    if (child_node == &obj_data->heads[bucket]) {
+#ifdef QN_JSON_SIMPLE_OBJECT
+    head = &obj_data->head;
+    tail = &obj_data->tail;
+#else
+    head = &obj_data->heads[hash % QN_JSON_OBJECT_MAX_BUCKETS];
+    tail = &obj_data->tails[hash % QN_JSON_OBJECT_MAX_BUCKETS];
+#endif // QN_JSON_SIMPLE_OBJECT
+
+    qn_json_obj_find(head, hash, &key2, &prev_node, &child_node);
+    if (child_node == head) {
         // The element according to the given key does not exist.
         return;
     } // if
 
     qn_eslink_remove_after(child_node, prev_node);
-    if (obj_data->tails[bucket] == child_node) {
-        obj_data->tails[bucket] = prev_node;
+    if (*tail == child_node) {
+        *tail = prev_node;
     } // if
 
     child = qn_eslink_super(child_node, qn_json_ptr, node);
@@ -555,7 +605,7 @@ qn_json_ptr qn_json_get(qn_json_ptr self, const char * key)
     qn_eslink_ptr child_node = NULL;
     qn_json_object_ptr obj_data = NULL;
     qn_json_hash hash = 0;
-    int bucket = 0;
+    qn_eslink_ptr head = NULL;
 
     assert(self && self->class == QN_JSON_OBJECT);
     assert(key);
@@ -570,10 +620,15 @@ qn_json_ptr qn_json_get(qn_json_ptr self, const char * key)
     } // if
 
     hash = qn_json_obj_calculate_hash(key);
-    bucket = hash % QN_JSON_OBJECT_MAX_BUCKETS;
 
-    qn_json_obj_find(&obj_data->heads[bucket], hash, &key2, &prev_node, &child_node);
-    if (child_node == &obj_data->heads[bucket]) {
+#ifdef QN_JSON_SIMPLE_OBJECT
+    head = &obj_data->head;
+#else
+    head = &obj_data->heads[hash % QN_JSON_OBJECT_MAX_BUCKETS];
+#endif // QN_JSON_SIMPLE_OBJECT
+
+    qn_json_obj_find(head, hash, &key2, &prev_node, &child_node);
+    if (child_node == head) {
         // The element according to the given key does not exist.
         return NULL;
     } // if
