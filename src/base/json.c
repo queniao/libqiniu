@@ -23,6 +23,148 @@ typedef qn_integer qn_json_integer;
 typedef qn_number qn_json_number;
 typedef qn_uint32 qn_json_hash;
 
+typedef struct _QN_JSON_DQUEUE
+{
+    qn_size capacity;
+    qn_size begin;
+    qn_size end;
+    qn_json_ptr * elements;
+    qn_json_ptr elements_data[0];
+} qn_json_dqueue, *qn_json_dqueue_ptr;
+
+static
+qn_bool qn_json_dqueue_create(qn_size init_capacity)
+{
+    qn_json_dqueue_ptr new_queue = NULL;
+
+    if (init_capacity < 4) {
+        init_capacity = 4;
+    } // if
+    new_queue = calloc(1, sizeof(new_queue) + sizeof(new_queue->elements[0]) * init_capacity);
+    if (!new_queue) {
+        errno = ENOMEM;
+        return qn_false;
+    } // if
+
+    new_queue->elements = &new_queue->elements_data[0];
+    return new_queue;
+} // qn_json_dqueue_create
+
+static
+void qn_json_dqueue_destroy(qn_json_dqueue_ptr queue)
+{
+    if (queue) {
+        if (queue->elements != queue->elements_data) {
+            free(queue->elements);
+        } // if
+        free(queue);
+    } // if
+} // qn_json_dqueue_destroy
+
+static
+qn_bool qn_json_dqueue_augment_head(qn_json_dqueue_ptr queue)
+{
+    qn_size delta = 0;
+    qn_size new_capacity = queue->capacity * ((queue->capacity < 16) ? 2 : 1.5);
+    qn_json_ptr * new_data = NULL;
+
+    new_data = calloc(1, sizeof(queue->elements[0]) * new_capacity);
+    if (!new_data) {
+        errno = ENOMEM;
+        return qn_false;
+    } // if
+
+    delta = new_capacity - queue->capacity;
+    memcpy(&new_data[delta], &queue->elements[0], sizeof(queue->elements[0]) * queue->capacity);
+    if (queue->elements != queue->elements_data) {
+        free(queue->elements);
+    } // if
+
+    queue->elements = new_data;
+    queue->begin += delta;
+    queue->end += delta;
+    queue->capacity = new_capacity;
+    return qn_true;
+} // qn_json_dqueue_augment_head
+
+static
+qn_bool qn_json_dqueue_augment_tail(qn_json_dqueue_ptr queue)
+{
+    qn_size new_capacity = queue->capacity * ((queue->capacity < 16) ? 2 : 1.5);
+    qn_json_ptr * new_data = NULL;
+
+    new_data = calloc(1, sizeof(queue->elements[0]) * new_capacity);
+    if (!new_data) {
+        errno = ENOMEM;
+        return qn_false;
+    } // if
+
+    memcpy(&new_data[0], &queue->elements[0], sizeof(queue->elements[0]) * queue->capacity);
+    if (queue->elements != queue->elements_data) {
+        free(queue->elements);
+    } // if
+
+    queue->elements = new_data;
+    queue->capacity = new_capacity;
+    return qn_true;
+} // qn_json_dqueue_augment_tail
+
+static inline
+qn_size qn_json_dqueue_size(qn_json_dqueue_ptr queue)
+{
+    return (queue->end - queue->begin);
+} // qn_json_dqueue_size
+
+#define qn_json_dqueue_is_empty(q) (qn_json_dqueue_size(q) == 0)
+
+static inline
+qn_bool qn_json_dqueue_push(qn_json_dqueue_ptr queue, qn_json_ptr element)
+{
+    if ((queue->end == queue->capacity) && !qn_json_dqueue_augment_tail(queue)) {
+        return qn_false;
+    } // if
+    queue->elements[queue->end++] = element;
+    return qn_true;
+} // qn_json_dqueue_push
+
+static inline
+void qn_json_dqueue_pop(qn_json_dqueue_ptr queue, qn_json_ptr * element)
+{
+    if (qn_json_dqueue_is_empty(queue)) {
+        return;
+    } // if
+    if (element) {
+        *element = queue->elements[--queue->end];
+    } else {
+        qn_json_destroy(queue->elements[--queue->end]);
+    } // if
+    queue->elements[queue->end] = NULL;
+} // qn_json_dqueue_pop
+
+static inline
+qn_bool qn_json_dqueue_unshift(qn_json_dqueue_ptr queue, qn_json_ptr element)
+{
+    if ((queue->end == 0) && !qn_json_dqueue_augment_head(queue)) {
+        return qn_false;
+    } // if
+    queue->elements[--queue->begin] = element;
+    return qn_true;
+} // qn_json_dqueue_unshift
+
+static inline
+void qn_json_dqueue_shift(qn_json_dqueue_ptr queue, qn_json_ptr * element)
+{
+    if (qn_json_dqueue_is_empty(queue)) {
+        return;
+    } // if
+    if (element) {
+        *element = queue->elements[queue->begin++];
+    } else {
+        qn_json_destroy(queue->elements[queue->begin++]);
+    } // if
+    queue->elements[queue->begin - 1] = NULL;
+} // qn_json_dqueue_shift
+
 #ifndef QN_JSON_SIMPLE_OBJECT
 
 typedef struct _QN_JSON_OBJECT
