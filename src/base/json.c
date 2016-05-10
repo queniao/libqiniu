@@ -4,8 +4,7 @@
 #include <math.h>
 #include <limits.h>
 #include <errno.h>
-
-#include "base/ds/eslink.h"
+#include <assert.h>
 
 #include "base/string.h"
 #include "base/json.h"
@@ -192,6 +191,15 @@ qn_json_ptr qn_json_dqueue_get(qn_json_dqueue_ptr queue, qn_size n)
 } // qn_json_dqueue_get
 
 static inline
+qn_json_ptr qn_json_dqueue_last(qn_json_dqueue_ptr queue)
+{
+    if (qn_json_dqueue_is_empty(queue)) {
+        return NULL;
+    } // if
+    return queue->elements[queue->end - 1];
+} // qn_json_dqueue_last
+
+static inline
 void qn_json_dqueue_replace(qn_json_dqueue_ptr queue, qn_size n, qn_json_ptr element)
 {
     queue->elements[queue->begin + n] = element;
@@ -258,7 +266,6 @@ typedef enum _QN_JSON_STATUS
 
 typedef struct _QN_JSON
 {
-    qn_eslink node;
     qn_json_hash hash;
     qn_string_ptr key;
     struct {
@@ -1255,7 +1262,7 @@ qn_json_token qn_json_scan(qn_json_scanner_ptr s, qn_string_ptr * txt)
 
 typedef struct _QN_JSON_PARSER
 {
-    qn_eslink top;
+    qn_json_dqueue queue;
     qn_json_scanner scanner;
 } qn_json_parser;
 
@@ -1268,19 +1275,18 @@ qn_json_parser_ptr qn_json_prs_create(void)
         errno = ENOMEM;
         return NULL;
     }
-    qn_eslink_init(&new_prs->top);
+    qn_json_dqueue_init(&new_prs->queue);
     return new_prs;
 } // qn_json_prs_create
 
 void qn_json_prs_destroy(qn_json_parser_ptr prs)
 {
-    qn_eslink_ptr child_node = NULL;
-    qn_json_ptr curr_json = NULL;
+    qn_json_ptr ce = NULL;
 
     if (prs) {
-        for (child_node = qn_eslink_next(&prs->top); child_node != &prs->top; child_node = qn_eslink_next(child_node)) {
-            curr_json = qn_eslink_super(child_node, qn_json_ptr, node);
-            qn_json_destroy(curr_json);
+        while (!qn_json_dqueue_is_empty(&prs->queue)) {
+            qn_json_dqueue_pop(&prs->queue, &ce);
+            qn_json_destroy(ce);
         } // while
         free(prs);
     } // if
@@ -1303,14 +1309,14 @@ qn_bool qn_json_put_in(
             if (! (new_child = qn_json_create_object()) ) {
                 return qn_false;
             } // if
-            qn_eslink_insert_after(&new_child->node, &prs->top);
+            qn_json_dqueue_push(&prs->queue, new_child);
             return qn_true;
 
         case QN_JSON_TKN_OPEN_BRACKET:
             if (! (new_child = qn_json_create_array()) ) {
                 return qn_false;
             } // if
-            qn_eslink_insert_after(&new_child->node, &prs->top);
+            qn_json_dqueue_push(&prs->queue, new_child);
             return qn_true;
 
         case QN_JSON_TKN_STRING:
@@ -1404,7 +1410,7 @@ qn_bool qn_json_parse_object(qn_json_parser_ptr prs)
 {
     qn_json_token tkn = QN_JSON_TKNERR_NEED_MORE_TEXT;
     qn_string_ptr txt = NULL;
-    qn_json_ptr parsing_obj = qn_eslink_super(qn_eslink_next(&prs->top), qn_json_ptr, node);
+    qn_json_ptr parsing_obj = qn_json_dqueue_last(&prs->queue);
 
 PARSING_NEXT_ELEMENT_IN_THE_OBJECT:
     switch (parsing_obj->status) {
@@ -1481,7 +1487,7 @@ qn_bool qn_json_parse_array(qn_json_parser_ptr prs)
 {
     qn_json_token tkn = QN_JSON_TKNERR_NEED_MORE_TEXT;
     qn_string_ptr txt = NULL;
-    qn_json_ptr parsing_arr = qn_eslink_super(qn_eslink_next(&prs->top), qn_json_ptr, node);
+    qn_json_ptr parsing_arr = qn_json_dqueue_last(&prs->queue);
 
 PARSING_NEXT_ELEMENT_IN_THE_ARRAY:
     switch (parsing_arr->status) {
@@ -1543,7 +1549,7 @@ qn_bool qn_json_prs_parse(
     qn_size * restrict buf_size,
     qn_json_ptr * root)
 {
-#define qn_json_prs_stack_is_empty(prs) (!qn_eslink_is_linked(&prs->top))
+#define qn_json_prs_stack_is_empty(prs) (!qn_json_dqueue_is_empty(&prs->queue))
 
     qn_json_token tkn = QN_JSON_TKNERR_NEED_MORE_TEXT;
     qn_string_ptr txt = NULL;
@@ -1571,11 +1577,11 @@ qn_bool qn_json_prs_parse(
         } // if
 
         // Push the first new element into the stack as the root.
-        qn_eslink_insert_after(&child->node, &prs->top);
+        qn_json_dqueue_push(&prs->queue, child);
     } // if
 
     while (1) {
-        child = qn_eslink_super(qn_eslink_next(&prs->top), qn_json_ptr, node);
+        child = qn_json_dqueue_last(&prs->queue);
         if (child->class == QN_JSON_OBJECT && !qn_json_parse_object(prs)) {
             // Failed to parse the current object element.
             *buf_size = prs->scanner.pos;
@@ -1587,7 +1593,7 @@ qn_bool qn_json_prs_parse(
         } // if
 
         // Pop the parsed element out of the stack.
-        qn_eslink_remove_after(qn_eslink_next(&prs->top), &prs->top);
+        qn_json_dqueue_pop(&prs->queue, NULL);
         if (qn_json_prs_stack_is_empty(prs)) {
             // And it is the root element.
             parent = child;
@@ -1595,7 +1601,7 @@ qn_bool qn_json_prs_parse(
         } // if
 
         // Put the parsed element into the container.
-        parent = qn_eslink_super(qn_eslink_next(&prs->top), qn_json_ptr, node);
+        qn_json_dqueue_pop(&prs->queue, &parent);
         if (parent->class == QN_JSON_OBJECT) {
             child->key = parent->key;
             parent->key = NULL;
