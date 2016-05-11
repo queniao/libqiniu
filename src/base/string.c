@@ -13,9 +13,26 @@ extern "C"
 {
 #endif
 
+typedef struct _QN_STRING
+{
+    const char * cstr;
+    qn_size size;
+    char data[0];
+} qn_string;
+
 static qn_string qn_str_empty_one = {"", 0};
 
-qn_bool qn_str_compare(const qn_string_ptr restrict s1, const qn_string_ptr restrict s2)
+qn_size qn_str_size(const qn_string_ptr self)
+{
+    return self->size;
+} // qn_str_size
+
+const char * qn_str_cstr(const qn_string_ptr self)
+{
+    return self->cstr;
+} // qn_str_cstr
+
+int qn_str_compare(const qn_string_ptr restrict s1, const qn_string_ptr restrict s2)
 {
     if (s1->size < s2->size) {
         // case   | 1      | 2       | 3
@@ -40,6 +57,11 @@ qn_bool qn_str_compare(const qn_string_ptr restrict s1, const qn_string_ptr rest
     return memcmp(s1->cstr, s2->cstr, s1->size);
 } // qn_str_compare
 
+int qn_str_compare_raw(const qn_string_ptr restrict s1, const char * restrict s2)
+{
+    return strcmp(s1->cstr, s2);
+} // qn_str_compare_raw
+
 qn_string_ptr qn_str_allocate(qn_size size)
 {
     return calloc(1, sizeof(qn_string) + size + 1);
@@ -58,6 +80,11 @@ qn_string_ptr qn_str_create(const char * cstr, qn_size cstr_size)
 
     return qn_str_duplicate(&src);
 } // qn_str_create
+
+qn_string_ptr qn_str_clone_raw(const char * cstr)
+{
+    return qn_str_create(cstr, strlen(cstr));
+} // qn_str_clone_raw
 
 qn_string_ptr qn_str_duplicate(qn_string_ptr src)
 {
@@ -192,7 +219,7 @@ qn_string_ptr qn_str_join_raw(
     return new_str;
 } // qn_str_join_raw
 
-qn_string_ptr qn_str_join(const char * restrict delimiter, qn_string strs[], int n)
+qn_string_ptr qn_str_join(const char * restrict delimiter, qn_string_ptr strs[], int n)
 {
     qn_string_ptr new_str = NULL;
     char * dst_pos = NULL;
@@ -208,18 +235,18 @@ qn_string_ptr qn_str_join(const char * restrict delimiter, qn_string strs[], int
     }
 
     if (n == 1) {
-        return qn_str_duplicate(&strs[0]);
+        return qn_str_duplicate(strs[0]);
     }
 
     delimiter_size = strlen(delimiter);
 
     // Check string objects
     for (i = 0; i < n; i += 1) {
-        if (remainder_capacity < delimiter_size + strs[i].size) {
+        if (remainder_capacity < delimiter_size + strs[i]->size) {
             errno = EOVERFLOW;
             return NULL;
         }
-        remainder_capacity -= (delimiter_size + strs[i].size);
+        remainder_capacity -= (delimiter_size + strs[i]->size);
     } // for
 
     //== Prepare a new string object
@@ -233,9 +260,9 @@ qn_string_ptr qn_str_join(const char * restrict delimiter, qn_string strs[], int
     dst_pos = &new_str->data[0];
 
     // Copy all strings and delimiters between them.
-    if (strs[0].size > 0L) {
-        memcpy(dst_pos, strs[0].cstr, strs[0].size);
-        dst_pos += strs[0].size;
+    if (strs[0]->size > 0L) {
+        memcpy(dst_pos, strs[0]->cstr, strs[0]->size);
+        dst_pos += strs[0]->size;
     } // if
 
     for (i = 1; i < n; i += 1) {
@@ -243,9 +270,9 @@ qn_string_ptr qn_str_join(const char * restrict delimiter, qn_string strs[], int
             memcpy(dst_pos, delimiter, delimiter_size);
             dst_pos += delimiter_size;
         }
-        if (strs[i].size > 0L) {
-            memcpy(dst_pos, strs[i].cstr, strs[i].size);
-            dst_pos += strs[i].size;
+        if (strs[i]->size > 0L) {
+            memcpy(dst_pos, strs[i]->cstr, strs[i]->size);
+            dst_pos += strs[i]->size;
         }
     } // for
 

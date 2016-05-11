@@ -19,7 +19,7 @@ extern "C"
 #endif
 
 typedef qn_bool qn_json_boolean;
-typedef qn_string qn_json_string;
+typedef qn_string_ptr qn_json_string;
 typedef qn_integer qn_json_integer;
 typedef qn_number qn_json_number;
 typedef qn_uint32 qn_json_hash;
@@ -78,7 +78,7 @@ typedef struct _QN_JSON
     union {
         qn_json_object * object;
         qn_json_array * array;
-        qn_json_string * string;
+        qn_json_string string;
         qn_json_integer integer;
         qn_json_number number;
         qn_json_boolean boolean;
@@ -86,7 +86,6 @@ typedef struct _QN_JSON
     union {
         qn_json_object obj_data[0];
         qn_json_array arr_data[0];
-        qn_json_string str_data[0];
     };
 } qn_json; // _QN_JSON
 
@@ -178,14 +177,14 @@ qn_json_hash qn_json_obj_calculate_hash(const char * cstr)
 } // qn_json_obj_calculate_hash
 
 static
-qn_json_ptr qn_json_obj_find(qn_dqueue_ptr queue, qn_json_hash hash, qn_string_ptr key, qn_size * pos)
+qn_json_ptr qn_json_obj_find(qn_dqueue_ptr queue, qn_json_hash hash, const char * key, qn_size * pos)
 {
     qn_size i = 0;
     qn_json_ptr ce = NULL;
 
     for (i = 0; i < qn_dqueue_size(queue); i += 1) {
         ce = qn_dqueue_get(queue, i);
-        if (ce->hash == hash && (qn_str_compare(key, ce->key)) == 0) {
+        if (ce->hash == hash && (qn_str_compare_raw(ce->key, key)) == 0) {
             *pos = i;
             return ce;
         } // if
@@ -223,17 +222,18 @@ void qn_json_arr_destroy(qn_json_array_ptr arr_data)
 qn_json_ptr qn_json_create_string(const char * cstr, qn_size cstr_size)
 {
     qn_json_ptr new_str = NULL;
-    qn_string_ptr str_data = NULL;
 
-    new_str = calloc(1, sizeof(*new_str) + sizeof(new_str->str_data[0]) + cstr_size);
+    new_str = calloc(1, sizeof(*new_str));
     if (new_str == NULL) {
         errno = ENOMEM;
         return NULL;
     } // if
 
     new_str->class = QN_JSON_STRING;
-    new_str->string = str_data = &new_str->str_data[0];
-    qn_str_copy(str_data, cstr, cstr_size);
+    new_str->string = qn_str_create(cstr, cstr_size);
+    if (!new_str->string) {
+        return NULL;
+    } // if
     return new_str;
 } // qn_json_create_string
 
@@ -338,8 +338,7 @@ qn_json_ptr qn_json_create_object(void)
     return new_obj;
 } // qn_json_create_object
 
-static
-qn_bool qn_json_set_impl(qn_json_ptr self, qn_string_ptr key, qn_json_ptr new_child)
+qn_bool qn_json_set(qn_json_ptr self, const char * key, qn_json_ptr new_child)
 {
     qn_json_ptr child = NULL;
     qn_json_object_ptr obj_data = NULL;
@@ -351,7 +350,7 @@ qn_bool qn_json_set_impl(qn_json_ptr self, qn_string_ptr key, qn_json_ptr new_ch
     assert(key && new_child);
 
     obj_data = &self->obj_data[0];
-    hash = qn_json_obj_calculate_hash(qn_str_cstr(key));
+    hash = qn_json_obj_calculate_hash(key);
 
 #ifdef QN_JSON_BIG_OBJECT
     queue = obj_data->queues[hash % QN_JSON_OBJECT_MAX_BUCKETS];
@@ -373,7 +372,7 @@ qn_bool qn_json_set_impl(qn_json_ptr self, qn_string_ptr key, qn_json_ptr new_ch
     } // if
 
     new_child->hash = hash;
-    new_child->key = qn_str_duplicate(key);
+    new_child->key = qn_str_clone_raw(key);
     if (!new_child->key) {
         return qn_false;
     } // if
@@ -383,17 +382,10 @@ qn_bool qn_json_set_impl(qn_json_ptr self, qn_string_ptr key, qn_json_ptr new_ch
     obj_data->size += 1;
 #endif
     return qn_true;
-} // qn_json_set_impl
-
-qn_bool qn_json_set(qn_json_ptr self, const char * key, qn_json_ptr new_child)
-{
-    qn_string key2 = {key, strlen(key)};
-    return qn_json_set_impl(self, &key2, new_child);
 } // qn_json_set
 
 void qn_json_unset(qn_json_ptr self, const char * key)
 {
-    qn_string key2;
     qn_json_ptr child = NULL;
     qn_json_object_ptr obj_data = NULL;
     qn_dqueue_ptr queue = NULL;
@@ -414,9 +406,6 @@ void qn_json_unset(qn_json_ptr self, const char * key)
     } // if
 #endif // QN_JSON_BIG_OBJECT
 
-    key2.cstr = key;
-    key2.size = strlen(key);
-
     hash = qn_json_obj_calculate_hash(key);
 
 #ifdef QN_JSON_BIG_OBJECT
@@ -425,7 +414,7 @@ void qn_json_unset(qn_json_ptr self, const char * key)
     queue = obj_data->queue;
 #endif // QN_JSON_BIG_OBJECT
 
-    child = qn_json_obj_find(queue, hash, &key2, &pos);
+    child = qn_json_obj_find(queue, hash, key, &pos);
     if (!child) {
         // The element according to the given key does not exist.
         return;
@@ -529,7 +518,6 @@ void qn_json_shift(qn_json_ptr self)
 
 qn_json_ptr qn_json_get(qn_json_ptr self, const char * key)
 {
-    qn_string key2;
     qn_json_ptr child = NULL;
     qn_json_object_ptr obj_data = NULL;
     qn_dqueue_ptr queue = NULL;
@@ -538,9 +526,6 @@ qn_json_ptr qn_json_get(qn_json_ptr self, const char * key)
 
     assert(self && self->class == QN_JSON_OBJECT);
     assert(key);
-
-    key2.cstr = key;
-    key2.size = strlen(key);
 
     obj_data = &self->obj_data[0];
 
@@ -564,7 +549,7 @@ qn_json_ptr qn_json_get(qn_json_ptr self, const char * key)
     queue = obj_data->queue;
 #endif // QN_JSON_BIG_OBJECT
 
-    child = qn_json_obj_find(queue, hash, &key2, &pos);
+    child = qn_json_obj_find(queue, hash, key, &pos);
     if (!child) {
         // The element according to the given key does not exist.
         return NULL;
@@ -578,7 +563,7 @@ qn_json_ptr qn_json_get_at(qn_json_ptr self, qn_size n)
     return qn_dqueue_get(self->array->queue, n);
 } // qn_json_get_at
 
-qn_string * qn_json_to_string(qn_json_ptr self)
+qn_string_ptr qn_json_to_string(qn_json_ptr self)
 {
     assert(self && self->class == QN_JSON_STRING);
     return self->string;
@@ -931,14 +916,13 @@ qn_json_token qn_json_scan_string(qn_json_scanner_ptr s, qn_string_ptr * txt)
     pos += 1; // 跳过终止双引号
 
     primitive_len = pos - s->pos - 2;
-    new_str = qn_str_allocate(primitive_len);
-    if (!new_str) {
+    cstr = calloc(1, primitive_len + 1);
+    if (!cstr) {
         errno = ENOMEM;
         return QN_JSON_TKNERR_NO_ENOUGH_MEMORY;
     } // if
-    qn_str_copy(new_str, s->buf + s->pos + 1, primitive_len);
 
-    cstr = &new_str->data[0];
+    memcpy(cstr, s->buf + s->pos + 1, primitive_len);
     if (m > 0) {
         // 处理转义码
         i = 0;
@@ -969,7 +953,13 @@ qn_json_token qn_json_scan_string(qn_json_scanner_ptr s, qn_string_ptr * txt)
             } // if
         } // while
         cstr[m] = '\0';
-        new_str->size = m;
+    } // if
+
+    new_str = qn_str_create(cstr, m);
+    free(cstr);
+
+    if (!new_str) {
+        return QN_JSON_TKNERR_NO_ENOUGH_MEMORY;
     } // if
 
     *txt = new_str;
@@ -1234,7 +1224,7 @@ qn_bool qn_json_put_in(
     if (parent->class == QN_JSON_OBJECT) {
         new_child->key = parent->key;
         parent->key = NULL;
-        qn_json_set_impl(parent, new_child->key, new_child);
+        qn_json_set(parent, qn_str_cstr(new_child->key), new_child);
     } else {
         qn_json_push(parent, new_child);
     } // if
@@ -1441,7 +1431,7 @@ qn_bool qn_json_prs_parse(
         if (parent->class == QN_JSON_OBJECT) {
             child->key = parent->key;
             parent->key = NULL;
-            qn_json_set_impl(parent, parent->key, child);
+            qn_json_set(parent, qn_str_cstr(parent->key), child);
         } else {
             qn_json_push(parent, child);
         } // if

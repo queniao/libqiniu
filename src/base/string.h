@@ -9,33 +9,24 @@ extern "C"
 {
 #endif
 
-typedef struct _QN_STRING
-{
-    const char * cstr;
-    qn_size size;
-    char data[0];
-} qn_string, *qn_string_ptr;
+struct _QN_STRING;
+typedef struct _QN_STRING *qn_string_ptr;
 
 #define QN_STR_MAX_SIZE ((~ (qn_size)0L) - sizeof(qn_string) - 1)
 
-static inline qn_size qn_str_size(const qn_string_ptr self)
-{
-    return self->size;
-} // qn_str_size
+extern qn_size qn_str_size(const qn_string_ptr self);
+extern const char * qn_str_cstr(const qn_string_ptr self);
 
-static inline const char * qn_str_cstr(const qn_string_ptr self)
-{
-    return self->cstr;
-} // qn_str_cstr
-
-extern qn_bool qn_str_compare(const qn_string_ptr restrict s1, const qn_string_ptr restrict s2);
+extern int qn_str_compare(const qn_string_ptr restrict s1, const qn_string_ptr restrict s2);
+extern int qn_str_compare_raw(const qn_string_ptr restrict s1, const char * restrict s2);
 
 extern qn_string_ptr qn_str_allocate(qn_size size);
+extern void qn_str_copy(qn_string_ptr self, const char * cstr, qn_size cstr_size);
+
 extern qn_string_ptr qn_str_create(const char * cstr, qn_size cstr_size);
+extern qn_string_ptr qn_str_clone_raw(const char * cstr);
 extern qn_string_ptr qn_str_duplicate(qn_string_ptr src);
 extern void qn_str_destroy(qn_string_ptr self);
-
-extern void qn_str_copy(qn_string_ptr self, const char * cstr, qn_size cstr_size);
 
 //== Function qn_str_join_raw()
 //== Parameters:
@@ -73,7 +64,7 @@ extern qn_string_ptr qn_str_join_raw(const char * restrict delimiter, const char
 //==    ENOMEM      No enough memory for allocating buffer space.
 //==    EINVALID    The delimiter is NULL, or no string objects is passed.
 //==    EOVERFLOW   The size of the joined string would overflow the max string size(QN_STR_MAX_SIZE).
-extern qn_string_ptr qn_str_join(const char * restrict delimiter, qn_string strs[], int n);
+extern qn_string_ptr qn_str_join(const char * restrict delimiter, qn_string_ptr strs[], int n);
 
 #define qn_str_concat(strs, n) qn_str_join("", strs, n)
 
