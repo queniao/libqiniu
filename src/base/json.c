@@ -622,6 +622,11 @@ qn_bool qn_json_is_null(qn_json_ptr self)
     return (self->class == QN_JSON_NULL);
 } // qn_json_is_null
 
+qn_string_ptr qn_json_key(qn_json_ptr self)
+{
+    return self->key;
+} // qh_json_key
+
 qn_bool qn_json_is_empty(qn_json_ptr self)
 {
     if (self->class == QN_JSON_OBJECT) {
