@@ -1141,6 +1141,7 @@ qn_bool qn_json_put_in(
             if (! (new_child = qn_json_create_object()) ) {
                 return qn_false;
             } // if
+            new_child->status = QN_JSON_PARSING_KEY;
             qn_dqueue_push(prs->queue, new_child);
             return qn_true;
 
@@ -1148,6 +1149,7 @@ qn_bool qn_json_put_in(
             if (! (new_child = qn_json_create_array()) ) {
                 return qn_false;
             } // if
+            new_child->status = QN_JSON_PARSING_VALUE;
             qn_dqueue_push(prs->queue, new_child);
             return qn_true;
 
@@ -1381,7 +1383,7 @@ qn_bool qn_json_prs_parse(
     qn_size * restrict buf_size,
     qn_json_ptr * root)
 {
-#define qn_json_prs_stack_is_empty(prs) (!qn_dqueue_is_empty(prs->queue))
+#define qn_json_prs_stack_is_empty(prs) (qn_dqueue_is_empty(prs->queue))
 
     qn_json_token tkn = QN_JSON_TKNERR_NEED_MORE_TEXT;
     qn_string_ptr txt = NULL;
@@ -1396,8 +1398,10 @@ qn_bool qn_json_prs_parse(
         tkn = qn_json_scan(&prs->scanner, &txt);
         if (tkn == QN_JSON_TKN_OPEN_BRACE) {
             child = qn_json_create_object();
+            child->status = QN_JSON_PARSING_KEY;
         } else if (tkn == QN_JSON_TKN_OPEN_BRACKET) {
             child = qn_json_create_array();
+            child->status = QN_JSON_PARSING_VALUE;
         } else {
             // Not a valid piece of JSON text.
             qn_err_set_bad_text_input();
@@ -1414,14 +1418,18 @@ qn_bool qn_json_prs_parse(
 
     while (1) {
         child = qn_dqueue_last(prs->queue);
-        if (child->class == QN_JSON_OBJECT && !qn_json_parse_object(prs)) {
-            // Failed to parse the current object element.
-            *buf_size = prs->scanner.pos;
-            return qn_false;
-        } else if (!qn_json_parse_array(prs)) {
-            // Failed to parse the current array element.
-            *buf_size = prs->scanner.pos;
-            return qn_false;
+        if (child->class == QN_JSON_OBJECT) {
+            if (!qn_json_parse_object(prs)) {
+                // Failed to parse the current object element.
+                *buf_size = prs->scanner.pos;
+                return qn_false;
+            } // if
+        } else {
+            if (!qn_json_parse_array(prs)) {
+                // Failed to parse the current array element.
+                *buf_size = prs->scanner.pos;
+                return qn_false;
+            } // if
         } // if
 
         // Pop the parsed element out of the stack.
@@ -1758,10 +1766,14 @@ NEXT_FORMATTING_LEVEL:
             } // if
         } // while
 
-        if (parent->class == QN_JSON_OBJECT && !qn_json_fmt_putc(fmt, '}')) {
-            return qn_false;
-        } else if (!qn_json_fmt_putc(fmt, ']')) {
-            return qn_false;
+        if (parent->class == QN_JSON_OBJECT) {
+            if (!qn_json_fmt_putc(fmt, '}')) {
+                return qn_false;
+            } // if
+        } else {
+            if (!qn_json_fmt_putc(fmt, ']')) {
+                return qn_false;
+            } // if
         } // if
 
         qn_json_itr_pop(fmt->iterator);
