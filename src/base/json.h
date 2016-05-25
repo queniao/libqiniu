@@ -2,14 +2,12 @@
 #define __QN_JSON_H__
 
 #include "base/basic_types.h"
+#include "base/string.h"
 
 #ifdef __cplusplus
 extern "C"
 {
 #endif
-
-#define QN_JSON_ITR_RECUR 0
-#define QN_JSON_ITR_END 1
 
 struct _QN_JSON;
 typedef struct _QN_JSON * qn_json_ptr;
