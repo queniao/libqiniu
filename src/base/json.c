@@ -10,6 +10,7 @@
 
 #include "base/string.h"
 #include "base/json.h"
+#include "base/errors.h"
 
 #define qn_json_assert_complex_element(elem) assert(elem && (elem->class == QN_JSON_OBJECT || elem->class == QN_JSON_ARRAY))
 
@@ -225,7 +226,7 @@ qn_json_ptr qn_json_create_string(const char * cstr, qn_size cstr_size)
 
     new_str = calloc(1, sizeof(*new_str));
     if (new_str == NULL) {
-        errno = ENOMEM;
+        qn_err_set_no_enough_memory();
         return NULL;
     } // if
 
@@ -243,7 +244,7 @@ qn_json_ptr qn_json_create_integer(qn_integer val)
 
     new_int = calloc(1, sizeof(*new_int));
     if (new_int == NULL) {
-        errno = ENOMEM;
+        qn_err_set_no_enough_memory();
         return NULL;
     } // if
 
@@ -258,7 +259,7 @@ qn_json_ptr qn_json_create_number(qn_number val)
 
     new_num = calloc(1, sizeof(*new_num));
     if (new_num == NULL) {
-        errno = ENOMEM;
+        qn_err_set_no_enough_memory();
         return NULL;
     } // if
 
@@ -273,7 +274,7 @@ qn_json_ptr qn_json_create_boolean(qn_bool val)
 
     new_bool = calloc(1, sizeof(*new_bool));
     if (new_bool == NULL) {
-        errno = ENOMEM;
+        qn_err_set_no_enough_memory();
         return NULL;
     } // if
 
@@ -288,7 +289,7 @@ qn_json_ptr qn_json_create_null(void)
 
     new_null = calloc(1, sizeof(*new_null));
     if (new_null == NULL) {
-        errno = ENOMEM;
+        qn_err_set_no_enough_memory();
         return NULL;
     } // if
 
@@ -307,7 +308,7 @@ qn_json_ptr qn_json_create_object(void)
 
     new_obj = calloc(1, sizeof(*new_obj) + sizeof(new_obj->obj_data[0]));
     if (new_obj == NULL) {
-        errno = ENOMEM;
+        qn_err_set_no_enough_memory();
         return NULL;
     } // if
 
@@ -434,7 +435,7 @@ qn_json_ptr qn_json_create_array(void)
 
     new_arr = calloc(1, sizeof(*new_arr) + sizeof(new_arr->arr_data[0]));
     if (new_arr == NULL) {
-        errno = ENOMEM;
+        qn_err_set_no_enough_memory();
         return NULL;
     }
 
@@ -665,7 +666,7 @@ qn_json_iterator_ptr qn_json_itr_create(void)
 
     new_itr = calloc(1, sizeof(*new_itr));
     if (!new_itr) {
-        errno = ENOMEM;
+        qn_err_set_no_enough_memory();
         return NULL;
     } // if
 
@@ -721,7 +722,7 @@ qn_bool qn_json_itr_augment_levels(qn_json_iterator_ptr self)
     new_capacity = self->capacity + (self->capacity >> 1); // 1.5 times of the last stack capacity.
     new_levels = calloc(1, sizeof(new_levels[0]) * new_capacity);
     if (!new_levels) {
-        errno = ENOMEM;
+        qn_err_set_no_enough_memory();
         return qn_false;
     }  // if
 
@@ -840,7 +841,7 @@ qn_bool qn_json_unescape_to_utf8(char * cstr, qn_size * i, qn_size * m)
 
     // Chech if all four hexidecimal characters are valid.
     if (!ishexnumber(h1) || !ishexnumber(h2) || !ishexnumber(h3) || !ishexnumber(h4)) {
-        errno = EBADMSG;
+        qn_err_set_bad_text_input();
         return qn_false;
     } // if
 
@@ -852,19 +853,19 @@ qn_bool qn_json_unescape_to_utf8(char * cstr, qn_size * i, qn_size * m)
     } // if
 
     if (head_code < 0xD800 || 0xDBFF < head_code) {
-        errno = EBADMSG;
+        qn_err_set_bad_text_input();
         return qn_false;
     } // if
 
     *i += 6;
     if (cstr[*i] != '\\' || cstr[*i+1] != 'u') {
-        errno = EBADMSG;
+        qn_err_set_bad_text_input();
         return qn_false;
     } // if
 
     tail_code = (h1 << 12) + (h2 << 8) + (h3 << 4) + h4;
     if (tail_code < 0xDC00 || 0xDFFF < tail_code) {
-        errno = EBADMSG;
+        qn_err_set_bad_text_input();
         return qn_false;
     } // if
 
@@ -923,7 +924,7 @@ qn_json_token qn_json_scan_string(qn_json_scanner_ptr s, qn_string_ptr * txt)
     primitive_len = pos - s->pos - 2;
     cstr = calloc(1, primitive_len + 1);
     if (!cstr) {
-        errno = ENOMEM;
+        qn_err_set_no_enough_memory();
         return QN_JSON_TKNERR_NO_ENOUGH_MEMORY;
     } // if
 
@@ -995,7 +996,7 @@ qn_json_token qn_json_scan_number(qn_json_scanner_ptr s, qn_string_ptr * txt)
     primitive_len = pos - s->pos;
     new_str = qn_str_allocate(primitive_len);
     if (!new_str) {
-        errno = ENOMEM;
+        qn_err_set_no_enough_memory();
         return QN_JSON_TKNERR_NO_ENOUGH_MEMORY;
     } // if
     qn_str_copy(new_str, s->buf + s->pos, primitive_len);
@@ -1091,7 +1092,7 @@ qn_json_parser_ptr qn_json_prs_create(void)
 
     new_prs = calloc(1, sizeof(*new_prs));
     if (!new_prs) {
-        errno = ENOMEM;
+        qn_err_set_no_enough_memory();
         return NULL;
     }
     new_prs->queue = qn_dqueue_create(4);
@@ -1160,12 +1161,12 @@ qn_bool qn_json_put_in(
             integer = strtoll(qn_str_cstr(txt), &end_txt, 10);
             if (end_txt == qn_str_cstr(txt)) {
                 // 未解析
-                errno = EBADMSG;
+                qn_err_set_bad_text_input();
                 return qn_false;
             } // if
             if ((integer == LLONG_MAX || integer == LLONG_MIN) && errno == ERANGE) {
                 // 溢出
-                errno = EOVERFLOW;
+                qn_err_set_overflow_upper_bound();
                 return qn_false;
             } // if
             if (! (new_child = qn_json_create_integer(integer)) ) {
@@ -1177,17 +1178,17 @@ qn_bool qn_json_put_in(
             number = strtold(qn_str_cstr(txt), &end_txt);
             if (end_txt == qn_str_cstr(txt)) {
                 // 未解析
-                errno = EBADMSG;
+                qn_err_set_bad_text_input();
                 return qn_false;
             } // if
             if (number >= HUGE_VALL && number <= HUGE_VALL && errno == ERANGE) {
                 // 上溢
-                errno = EOVERFLOW;
+                qn_err_set_overflow_upper_bound();
                 return qn_false;
             } // if
             if (number >= 0.0L && number <= 0.0L && errno == ERANGE) {
                 // 下溢
-                errno = EOVERFLOW;
+                qn_err_set_overflow_lower_bound();
                 return qn_false;
             } // if
             if (! (new_child = qn_json_create_number(number)) ) {
@@ -1214,15 +1215,15 @@ qn_bool qn_json_put_in(
             break;
 
         case QN_JSON_TKNERR_NEED_MORE_TEXT:
-            errno = EAGAIN;
+            qn_err_set_try_again();
             return qn_false;
 
         case QN_JSON_TKNERR_NO_ENOUGH_MEMORY:
-            errno = ENOMEM;
+            qn_err_set_no_enough_memory();
             return qn_false;
 
         default:
-            errno = EBADMSG;
+            qn_err_set_bad_text_input();
             return qn_false;
     } // switch
 
@@ -1254,7 +1255,7 @@ PARSING_NEXT_ELEMENT_IN_THE_OBJECT:
             } // if
 
             if (tkn != QN_JSON_TKN_STRING) {
-                errno = EBADMSG;
+                qn_err_set_bad_text_input();
                 return qn_false;
             } // if
 
@@ -1264,7 +1265,7 @@ PARSING_NEXT_ELEMENT_IN_THE_OBJECT:
         case QN_JSON_PARSING_COLON:
             tkn = qn_json_scan(&prs->scanner, &txt);
             if (tkn != QN_JSON_TKN_COLON) {
-                errno = EBADMSG;
+                qn_err_set_bad_text_input();
                 return qn_false;
             } // if
 
@@ -1297,7 +1298,7 @@ PARSING_NEXT_ELEMENT_IN_THE_OBJECT:
                 return qn_true;
             } // if
             if (tkn != QN_JSON_TKN_COMMA) {
-                errno = EBADMSG;
+                qn_err_set_bad_text_input();
                 return qn_false;
             } // if
 
@@ -1354,7 +1355,7 @@ PARSING_NEXT_ELEMENT_IN_THE_ARRAY:
                 return qn_true;
             } // if
             if (tkn != QN_JSON_TKN_COMMA) {
-                errno = EBADMSG;
+                qn_err_set_bad_text_input();
                 return qn_false;
             } // if
 
@@ -1399,7 +1400,7 @@ qn_bool qn_json_prs_parse(
             child = qn_json_create_array();
         } else {
             // Not a valid piece of JSON text.
-            errno = EBADMSG;
+            qn_err_set_bad_text_input();
             return qn_false;
         } // if
 
@@ -1468,7 +1469,7 @@ qn_json_formatter_ptr qn_json_fmt_create(void)
 
     new_fmt = calloc(1, sizeof(*new_fmt));
     if (!new_fmt) {
-        errno = ENOMEM;
+        qn_err_set_no_enough_memory();
         return NULL;
     } // if
 
@@ -1477,7 +1478,7 @@ qn_json_formatter_ptr qn_json_fmt_create(void)
     new_fmt->buf = calloc(1, new_fmt->buf_capacity);
     if (!new_fmt->buf) {
         free(new_fmt);
-        errno = ENOMEM;
+        qn_err_set_no_enough_memory();
         return NULL;
     } // if
 
@@ -1485,7 +1486,7 @@ qn_json_formatter_ptr qn_json_fmt_create(void)
     if (!new_fmt->iterator) {
         free(new_fmt->buf);
         free(new_fmt);
-        errno = ENOMEM;
+        qn_err_set_no_enough_memory();
         return NULL;
     } // if
 
@@ -1508,7 +1509,7 @@ qn_bool qn_json_fmt_augment_buffer(qn_json_formatter_ptr fmt)
     qn_size new_buf_capacity = QN_JSON_FMT_PAGE_SIZE * new_buf_pages;
     char * new_buf = malloc(new_buf_capacity);
     if (!new_buf) {
-        errno = ENOMEM;
+        qn_err_set_no_enough_memory();
         return qn_false;
     } // if
 
@@ -1577,7 +1578,7 @@ qn_bool qn_json_fmt_format_string(qn_json_formatter_ptr fmt, qn_string_ptr str)
         if ((c1 & 0xE0) == 0xC0) {
             // Check if the c2 is valid.
             if ((c2 & 0xC0) != 0x80) {
-                errno = EBADMSG;
+                qn_err_set_bad_text_input();
                 return qn_false;
             } // if
 
@@ -1588,7 +1589,7 @@ qn_bool qn_json_fmt_format_string(qn_json_formatter_ptr fmt, qn_string_ptr str)
         } else if ((c1 & 0xF0) == 0xE0) {
             // Check if the c2 and c3 are valid.
             if (((c2 & 0xC0) != 0x80) || ((c3 & 0xC0) != 0x80)) {
-                errno = EBADMSG;
+                qn_err_set_bad_text_input();
                 return qn_false;
             } // if
 
@@ -1599,7 +1600,7 @@ qn_bool qn_json_fmt_format_string(qn_json_formatter_ptr fmt, qn_string_ptr str)
         } else if ((c1 & 0xF8) == 0xF0) {
             // Check if the c2 and c3 and c4 are valid.
             if (((c2 & 0xC0) != 0x80) || ((c3 & 0xC0) != 0x80) || ((c4 & 0xC0) != 0x80)) {
-                errno = EBADMSG;
+                qn_err_set_bad_text_input();
                 return qn_false;
             } // if
 
@@ -1610,7 +1611,7 @@ qn_bool qn_json_fmt_format_string(qn_json_formatter_ptr fmt, qn_string_ptr str)
         } // if
 
         if (0xD800 <= wch && wch <= 0xDFFF) {
-            errno = EBADMSG;
+            qn_err_set_bad_text_input();
             return qn_false;
         } // if
 
@@ -1671,7 +1672,7 @@ FORMAT_ORDINARY_ELEMENT:
             break;
 
         default:
-            errno = EINVAL;
+            qn_err_set_invalid_argument();
             return qn_false;
     } // switch
 
