@@ -379,6 +379,7 @@ qn_bool qn_json_set(qn_json_ptr self, const char * key, qn_json_ptr new_child)
     } // if
 
     qn_dqueue_push(obj_data->queue, new_child);
+
 #ifdef QN_JSON_BIG_OBJECT
     obj_data->size += 1;
 #endif
@@ -1231,9 +1232,12 @@ qn_bool qn_json_put_in(
     } // switch
 
     if (parent->class == QN_JSON_OBJECT) {
-        new_child->key = parent->key;
+        if (!qn_json_set(parent, qn_str_cstr(parent->key), new_child)) {
+            return qn_false;
+        } // if
+
+        qn_str_destroy(parent->key);
         parent->key = NULL;
-        qn_json_set(parent, qn_str_cstr(new_child->key), new_child);
     } else {
         qn_json_push(parent, new_child);
     } // if
@@ -1263,6 +1267,7 @@ PARSING_NEXT_ELEMENT_IN_THE_OBJECT:
             } // if
 
             parsing_obj->key = txt;
+            txt = NULL;
             parsing_obj->status = QN_JSON_PARSING_COLON;
 
         case QN_JSON_PARSING_COLON:
@@ -1444,9 +1449,12 @@ qn_bool qn_json_prs_parse(
         // Put the parsed element into the container.
         parent = qn_dqueue_pop(prs->queue);
         if (parent->class == QN_JSON_OBJECT) {
-            child->key = parent->key;
+            if (!qn_json_set(parent, qn_str_cstr(parent->key), child)) {
+                return qn_false;
+            } // if
+
+            qn_str_destroy(parent->key);
             parent->key = NULL;
-            qn_json_set(parent, qn_str_cstr(parent->key), child);
         } else {
             qn_json_push(parent, child);
         } // if
