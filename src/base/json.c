@@ -929,7 +929,7 @@ qn_json_token qn_json_scan_string(qn_json_scanner_ptr s, qn_string_ptr * txt)
     } // if
 
     memcpy(cstr, s->buf + s->pos + 1, primitive_len);
-    if (primitive_len > 0) {
+    if (m > 0) {
         // 处理转义码
         i = 0;
         m = 0;
@@ -959,6 +959,8 @@ qn_json_token qn_json_scan_string(qn_json_scanner_ptr s, qn_string_ptr * txt)
             } // if
         } // while
         cstr[m] = '\0';
+    } else {
+        m = primitive_len;
     } // if
 
     new_str = qn_str_create(cstr, m);
