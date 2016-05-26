@@ -994,12 +994,11 @@ qn_json_token qn_json_scan_number(qn_json_scanner_ptr s, qn_string_ptr * txt)
     } // if
 
     primitive_len = pos - s->pos;
-    new_str = qn_str_allocate(primitive_len);
+    new_str = qn_str_create(s->buf + s->pos, primitive_len);
     if (!new_str) {
         qn_err_set_no_enough_memory();
         return QN_JSON_TKNERR_NO_ENOUGH_MEMORY;
     } // if
-    qn_str_copy(new_str, s->buf + s->pos, primitive_len);
 
     *txt = new_str;
     s->pos = pos;
