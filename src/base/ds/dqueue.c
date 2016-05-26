@@ -110,8 +110,10 @@ void qn_dqueue_reset(qn_dqueue_ptr queue)
 
 qn_bool qn_dqueue_push(qn_dqueue_ptr queue, qn_dqueue_element_ptr element)
 {
-    if ((queue->end == queue->capacity) && !qn_dqueue_augment_tail(queue)) {
-        return qn_false;
+    if (queue->end == queue->capacity) {
+        if (!qn_dqueue_augment_tail(queue)) {
+            return qn_false;
+        } // if
     } // if
     queue->elements[queue->end++] = element;
     return qn_true;
@@ -127,8 +129,10 @@ qn_dqueue_element_ptr qn_dqueue_pop(qn_dqueue_ptr queue)
 
 qn_bool qn_dqueue_unshift(qn_dqueue_ptr queue, qn_dqueue_element_ptr element)
 {
-    if ((queue->end == 0) && !qn_dqueue_augment_head(queue)) {
-        return qn_false;
+    if (queue->end == 0) {
+        if (!qn_dqueue_augment_head(queue)) {
+            return qn_false;
+        } // if
     } // if
     queue->elements[--queue->begin] = element;
     return qn_true;
