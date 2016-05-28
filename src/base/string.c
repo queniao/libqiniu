@@ -64,7 +64,14 @@ int qn_str_compare_raw(const qn_string_ptr restrict s1, const char * restrict s2
 
 qn_string_ptr qn_str_allocate(qn_size size)
 {
-    return calloc(1, sizeof(qn_string) + size + 1);
+    qn_string_ptr new_str = calloc(1, sizeof(qn_string) + size + 1);
+    if (!new_str) {
+        errno = ENOMEM;
+        return NULL;
+    } // if
+    new_str->cstr = &new_str->data[0];
+    new_str->size = size;
+    return new_str;
 } // qn_str_allocate
 
 qn_string_ptr qn_str_create(const char * cstr, qn_size cstr_size)
@@ -296,9 +303,9 @@ qn_string_ptr qn_str_vprintf(const char * restrict format, va_list ap)
 
     va_copy(cp, ap);
 #if defined(_MSC_VER)
-    printed_count = vsnprintf(0x1, 1, format, ap);
+    printed_count = vsnprintf(0x1, 1, format, cp);
 #else
-    printed_count = vsnprintf(NULL, 0, format, ap);
+    printed_count = vsnprintf(NULL, 0, format, cp);
 #endif
     va_end(cp);
 
@@ -317,7 +324,7 @@ qn_string_ptr qn_str_vprintf(const char * restrict format, va_list ap)
     }
 
     va_copy(cp, ap);
-    printed_count = vsnprintf(&new_str->data[0], printed_count + 1, format, ap);
+    printed_count = vsnprintf(&new_str->data[0], printed_count + 1, format, cp);
     va_end(cp);
 
     if (printed_count < 0) {

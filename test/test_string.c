@@ -162,7 +162,7 @@ void test_join(void)
     CU_ASSERT_PTR_NOT_EQUAL(qn_str_cstr(str3), qn_str_cstr(srcs[1]));
     CU_ASSERT_PTR_NOT_EQUAL(qn_str_cstr(str3), qn_str_cstr(srcs[2]));
     CU_ASSERT_STRING_EQUAL(qn_str_cstr(str3), "ABCDEF");
-    CU_ASSERT_EQUAL(qn_str_size(str2), qn_str_size(srcs[0]) + qn_str_size(srcs[1]) + qn_str_size(srcs[2]));
+    CU_ASSERT_EQUAL(qn_str_size(str3), qn_str_size(srcs[0]) + qn_str_size(srcs[1]) + qn_str_size(srcs[2]));
 
     qn_str_destroy(str3);
     qn_str_destroy(str2);
@@ -173,12 +173,30 @@ void test_join(void)
     qn_str_destroy(srcs[0]);
 } // test_join
 
+void test_sprintf(void)
+{
+    qn_string_ptr str = NULL;
+    char ret[] = {"Testing sprintf -123 ABCD."};
+    
+    str = qn_str_sprintf("Testing sprintf %d %s.", -123, "ABCD");
+    if (!str) {
+        CU_FAIL("Cannot sprintf a new.");
+        return;
+    } // if
+
+    CU_ASSERT_STRING_EQUAL(qn_str_cstr(str), ret);
+    CU_ASSERT_EQUAL(qn_str_size(str), strlen(ret));
+
+    qn_str_destroy(str);
+} // test_sprintf
+
 CU_TestInfo test_normal_cases[] = {
     {"test_create", test_create},
     {"test_clone_raw", test_clone_raw},
     {"test_duplicate", test_duplicate},
     {"test_join_raw", test_join_raw},
     {"test_join", test_join},
+    {"test_sprintf", test_sprintf},
     CU_TEST_INFO_NULL
 };
 
