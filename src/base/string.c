@@ -241,7 +241,8 @@ qn_string_ptr qn_str_join(const char * restrict delimiter, qn_string_ptr strs[],
     delimiter_size = strlen(delimiter);
 
     // Check string objects
-    for (i = 0; i < n; i += 1) {
+    remainder_capacity -= strs[0]->size;
+    for (i = 1; i < n; i += 1) {
         if (remainder_capacity < delimiter_size + strs[i]->size) {
             errno = EOVERFLOW;
             return NULL;

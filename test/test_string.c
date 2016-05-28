@@ -103,11 +103,82 @@ void test_join_raw(void)
     qn_str_destroy(str2);
 } // test_join_raw
 
+void test_join(void)
+{
+    const char buf1[] = {"AB"};
+    const char buf2[] = {"CD"};
+    const char buf3[] = {"EF"};
+    qn_string_ptr srcs[3];
+    qn_string_ptr str1 = NULL;
+    qn_string_ptr str2 = NULL;
+    qn_string_ptr str3 = NULL;
+    
+    srcs[0] = qn_str_clone_raw(buf1);
+    if (!srcs[0]) {
+        CU_FAIL("Cannot clone a raw string to source input #1.");
+        return;
+    } // if
+    
+    srcs[1] = qn_str_clone_raw(buf2);
+    if (!srcs[1]) {
+        CU_FAIL("Cannot clone a raw string to source input #2.");
+        return;
+    } // if
+    
+    srcs[2] = qn_str_clone_raw(buf3);
+    if (!srcs[2]) {
+        CU_FAIL("Cannot clone a raw string to source input #3.");
+        return;
+    } // if
+
+    str1 = qn_str_join(",", srcs, 1);
+    if (!str1) {
+        CU_FAIL("Cannot join one string to a new one.");
+        return;
+    } // if
+
+    CU_ASSERT_PTR_NOT_EQUAL(qn_str_cstr(str1), qn_str_cstr(srcs[0]));
+    CU_ASSERT_STRING_EQUAL(qn_str_cstr(str1), "AB");
+    CU_ASSERT_EQUAL(qn_str_size(str1), qn_str_size(srcs[0]));
+
+    str2 = qn_str_join("::", srcs, 2);
+    if (!str2) {
+        CU_FAIL("Cannot join two strings to a new one.");
+        return;
+    } // if
+
+    CU_ASSERT_PTR_NOT_EQUAL(qn_str_cstr(str2), qn_str_cstr(srcs[0]));
+    CU_ASSERT_PTR_NOT_EQUAL(qn_str_cstr(str2), qn_str_cstr(srcs[1]));
+    CU_ASSERT_STRING_EQUAL(qn_str_cstr(str2), "AB::CD");
+    CU_ASSERT_EQUAL(qn_str_size(str2), qn_str_size(srcs[0]) + 2 + qn_str_size(srcs[1]));
+
+    str3 = qn_str_join("", srcs, 3);
+    if (!str3) {
+        CU_FAIL("Cannot join three strings to a new one.");
+        return;
+    } // if
+
+    CU_ASSERT_PTR_NOT_EQUAL(qn_str_cstr(str3), qn_str_cstr(srcs[0]));
+    CU_ASSERT_PTR_NOT_EQUAL(qn_str_cstr(str3), qn_str_cstr(srcs[1]));
+    CU_ASSERT_PTR_NOT_EQUAL(qn_str_cstr(str3), qn_str_cstr(srcs[2]));
+    CU_ASSERT_STRING_EQUAL(qn_str_cstr(str3), "ABCDEF");
+    CU_ASSERT_EQUAL(qn_str_size(str2), qn_str_size(srcs[0]) + qn_str_size(srcs[1]) + qn_str_size(srcs[2]));
+
+    qn_str_destroy(str3);
+    qn_str_destroy(str2);
+    qn_str_destroy(str1);
+
+    qn_str_destroy(srcs[2]);
+    qn_str_destroy(srcs[1]);
+    qn_str_destroy(srcs[0]);
+} // test_join
+
 CU_TestInfo test_normal_cases[] = {
     {"test_create", test_create},
     {"test_clone_raw", test_clone_raw},
     {"test_duplicate", test_duplicate},
     {"test_join_raw", test_join_raw},
+    {"test_join", test_join},
     CU_TEST_INFO_NULL
 };
 
