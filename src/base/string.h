@@ -22,7 +22,7 @@ extern int qn_str_compare(const qn_string_ptr restrict s1, const qn_string_ptr r
 extern int qn_str_compare_raw(const qn_string_ptr restrict s1, const char * restrict s2);
 
 extern qn_string_ptr qn_str_allocate(qn_size size);
-extern void qn_str_copy(qn_string_ptr self, const char * cstr, qn_size cstr_size);
+extern void qn_str_fill(qn_string_ptr self, const char * cstr, qn_size cstr_size);
 
 extern qn_string_ptr qn_str_create(const char * cstr, qn_size cstr_size);
 extern qn_string_ptr qn_str_clone_raw(const char * cstr);
@@ -70,7 +70,7 @@ extern qn_string_ptr qn_str_join(const char * restrict delimiter, qn_string_ptr 
 #define qn_str_concat(strs, n) qn_str_join("", strs, n)
 
 extern qn_string_ptr qn_str_vprintf(const char * restrict format, va_list ap);
-extern qn_string_ptr qn_str_printf(const char * restrict format, ...);
+extern qn_string_ptr qn_str_sprintf(const char * restrict format, ...);
 extern int qn_str_snprintf(char * restrict str, qn_size size,  const char * restrict format, ...);
 
 extern qn_string_ptr qn_str_encode_base64_urlsafe(const char * restrict bin, qn_size bin_size);

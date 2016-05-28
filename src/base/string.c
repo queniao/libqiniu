@@ -117,10 +117,16 @@ void qn_str_destroy(qn_string_ptr self)
     }
 } // qn_str_destroy
 
-void qn_str_copy(qn_string_ptr self, const char * cstr, qn_size cstr_size)
+void qn_str_fill(qn_string_ptr self, const char * cstr, qn_size cstr_size)
 {
-    memcpy((void*)self->cstr, cstr, cstr_size);
-} // qn_str_copy
+    if (self->size + 1 <= cstr_size) {
+        memcpy((void*)self->cstr, cstr, self->size);
+        ((char*)self->cstr)[self->size] = '\0';
+    } else {
+        memcpy((void*)self->cstr, cstr, cstr_size);
+        ((char*)self->cstr)[cstr_size] = '\0';
+    } // if
+} // qn_str_fill
 
 qn_string_ptr qn_str_join_raw(
     const char * restrict delimiter,
@@ -322,7 +328,7 @@ qn_string_ptr qn_str_vprintf(const char * restrict format, va_list ap)
     return new_str;
 } // qn_str_vprintf
 
-qn_string_ptr qn_str_printf(const char * restrict format, ...)
+qn_string_ptr qn_str_sprintf(const char * restrict format, ...)
 {
     va_list ap;
     qn_string_ptr new_str = NULL;
