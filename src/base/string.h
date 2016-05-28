@@ -13,6 +13,7 @@ struct _QN_STRING;
 typedef struct _QN_STRING *qn_string_ptr;
 
 #define QN_STR_MAX_SIZE ((~ (qn_size)0L) - sizeof(qn_string) - 1)
+#define QN_STR_ARG_END (NULL)
 
 extern qn_size qn_str_size(const qn_string_ptr self);
 extern const char * qn_str_cstr(const qn_string_ptr self);
