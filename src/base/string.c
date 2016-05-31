@@ -62,16 +62,9 @@ int qn_str_compare_raw(const qn_string_ptr restrict s1, const char * restrict s2
     return strcmp(s1->cstr, s2);
 } // qn_str_compare_raw
 
-qn_string_ptr qn_str_allocate(qn_size size)
+static qn_string_ptr qn_str_allocate(qn_size size)
 {
-    qn_string_ptr new_str = calloc(1, sizeof(qn_string) + size + 1);
-    if (!new_str) {
-        errno = ENOMEM;
-        return NULL;
-    } // if
-    new_str->cstr = &new_str->data[0];
-    new_str->size = size;
-    return new_str;
+    return calloc(1, sizeof(qn_string) + size + 1);
 } // qn_str_allocate
 
 qn_string_ptr qn_str_create(const char * cstr, qn_size cstr_size)
@@ -123,17 +116,6 @@ void qn_str_destroy(qn_string_ptr self)
         free(self);
     }
 } // qn_str_destroy
-
-void qn_str_fill(qn_string_ptr self, const char * cstr, qn_size cstr_size)
-{
-    if (self->size + 1 <= cstr_size) {
-        memcpy((void*)self->cstr, cstr, self->size);
-        ((char*)self->cstr)[self->size] = '\0';
-    } else {
-        memcpy((void*)self->cstr, cstr, cstr_size);
-        ((char*)self->cstr)[cstr_size] = '\0';
-    } // if
-} // qn_str_fill
 
 qn_string_ptr qn_str_join_raw(
     const char * restrict delimiter,
@@ -332,6 +314,8 @@ qn_string_ptr qn_str_vprintf(const char * restrict format, va_list ap)
         qn_str_destroy(new_str);
         return NULL;
     }
+    new_str->cstr = &new_str->data[0];
+    new_str->size = printed_count;
     return new_str;
 } // qn_str_vprintf
 
