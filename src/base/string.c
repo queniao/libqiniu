@@ -380,6 +380,7 @@ int qn_str_snprintf(char * restrict str, qn_size size,  const char * restrict fo
     va_start(ap, format);
     printed_count = vsnprintf(str, size, format, ap);
     va_end(ap);
+    // TODO: Convert system errno to local errors.
     return printed_count;
 } // qn_str_snprintf
 

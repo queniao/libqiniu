@@ -180,7 +180,7 @@ void test_sprintf(void)
     
     str = qn_str_sprintf("Testing sprintf %d %s.", -123, "ABCD");
     if (!str) {
-        CU_FAIL("Cannot sprintf a new.");
+        CU_FAIL("Cannot sprintf a new string.");
         return;
     } // if
 
@@ -190,6 +190,31 @@ void test_sprintf(void)
     qn_str_destroy(str);
 } // test_sprintf
 
+void test_snprintf(void)
+{
+    int len = 0;
+    int str_len = 0;
+    char ret[] = {"Testing sprintf -123 ABCD."};
+    char buf[100] = {0};
+    
+    len = qn_str_snprintf(NULL, 0, "Testing sprintf %d %s.", -123, "ABCD");
+    if (len < 0) {
+        CU_FAIL("Cannot measure the length of formatting string.");
+        return;
+    } // if
+
+    CU_ASSERT_EQUAL(len, strlen(ret));
+
+    str_len = qn_str_snprintf(buf, sizeof(buf), "Testing sprintf %d %s.", -123, "ABCD");
+    if (str_len < 0) {
+        CU_FAIL("Cannot snprintf a new string.");
+        return;
+    } // if
+
+    CU_ASSERT_STRING_EQUAL(buf, ret);
+    CU_ASSERT_EQUAL(str_len, strlen(ret));
+} // test_snprintf
+
 CU_TestInfo test_normal_cases[] = {
     {"test_create", test_create},
     {"test_clone_raw", test_clone_raw},
@@ -197,6 +222,7 @@ CU_TestInfo test_normal_cases[] = {
     {"test_join_raw", test_join_raw},
     {"test_join", test_join},
     {"test_sprintf", test_sprintf},
+    {"test_snprintf", test_snprintf},
     CU_TEST_INFO_NULL
 };
 
