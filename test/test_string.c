@@ -227,7 +227,7 @@ CU_TestInfo test_normal_cases[] = {
 };
 
 CU_SuiteInfo suites[] = {
-    {"test_normal_cases", NULL, NULL, NULL, NULL, test_normal_cases},
+    {"test_normal_cases", NULL, NULL, test_normal_cases},
     CU_SUITE_INFO_NULL
 };
 

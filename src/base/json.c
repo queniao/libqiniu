@@ -841,7 +841,7 @@ qn_bool qn_json_unescape_to_utf8(char * cstr, qn_size * i, qn_size * m)
 #define h4 qn_json_hex_to_dec(cstr[*i+5])
 
     // Chech if all four hexidecimal characters are valid.
-    if (!ishexnumber(h1) || !ishexnumber(h2) || !ishexnumber(h3) || !ishexnumber(h4)) {
+    if (!isxdigit(h1) || !isxdigit(h2) || !isxdigit(h3) || !isxdigit(h4)) {
         qn_err_set_bad_text_input();
         return qn_false;
     } // if

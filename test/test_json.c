@@ -161,7 +161,7 @@ CU_TestInfo test_normal_cases_of_json_parsing[] = {
 };
 
 CU_SuiteInfo suites[] = {
-    {"test_normal_cases_of_json_parsing", NULL, NULL, NULL, NULL, test_normal_cases_of_json_parsing},
+    {"test_normal_cases_of_json_parsing", NULL, NULL, test_normal_cases_of_json_parsing},
     CU_SUITE_INFO_NULL
 };
 
