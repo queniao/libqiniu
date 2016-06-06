@@ -70,17 +70,26 @@ qn_dqueue_ptr qn_dqueue_create(qn_size init_capacity)
 {
     qn_dqueue_ptr new_queue = NULL;
 
-    if (init_capacity < 4) {
-        init_capacity = 4;
-    } // if
-    new_queue = calloc(1, sizeof(new_queue) + sizeof(new_queue->elements[0]) * init_capacity);
+    new_queue = calloc(1, sizeof(*new_queue));
     if (!new_queue) {
         errno = ENOMEM;
         return NULL;
     } // if
 
-    new_queue->capacity = sizeof(new_queue->elements_data) / sizeof(new_queue->elements_data[0]);
-    new_queue->elements = &new_queue->elements_data[0];
+    if (init_capacity > 4) {
+        new_queue->elements = calloc(1, sizeof(new_queue->elements[0]) * init_capacity);
+        if (!new_queue->elements) {
+            free(new_queue);
+            errno = ENOMEM;
+            return NULL;
+        } // if
+
+        new_queue->capacity = init_capacity;
+    } else {
+        new_queue->capacity = sizeof(new_queue->elements_data) / sizeof(new_queue->elements_data[0]);
+        new_queue->elements = &new_queue->elements_data[0];
+    } // if
+
     qn_dqueue_reset(new_queue);
     return new_queue;
 } // qn_dqueue_create

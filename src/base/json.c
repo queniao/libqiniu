@@ -1,5 +1,6 @@
 #include <stdlib.h>
 #include <string.h>
+#include <strings.h>
 #include <ctype.h>
 #include <math.h>
 #include <limits.h>
@@ -378,7 +379,7 @@ qn_bool qn_json_set(qn_json_ptr self, const char * key, qn_json_ptr new_child)
         return qn_false;
     } // if
 
-    qn_dqueue_push(obj_data->queue, new_child);
+    qn_dqueue_push(queue, new_child);
 
 #ifdef QN_JSON_BIG_OBJECT
     obj_data->size += 1;
@@ -464,7 +465,7 @@ void qn_json_destroy(qn_json_ptr self) {
 
             default:
                 break;
-        }
+        } // if
 
         if (self->key) {
             qn_str_destroy(self->key);
@@ -923,11 +924,12 @@ qn_json_token qn_json_scan_string(qn_json_scanner_ptr s, qn_string_ptr * txt)
     pos += 1; // 跳过终止双引号
 
     primitive_len = pos - s->pos - 2;
-    cstr = calloc(1, primitive_len + 1);
+    cstr = malloc(primitive_len + 1);
     if (!cstr) {
         qn_err_set_no_enough_memory();
         return QN_JSON_TKNERR_NO_ENOUGH_MEMORY;
     } // if
+    bzero(cstr, primitive_len + 1);
 
     memcpy(cstr, s->buf + s->pos + 1, primitive_len);
     if (m > 0) {
@@ -1247,6 +1249,7 @@ qn_bool qn_json_put_in(
 static
 qn_bool qn_json_parse_object(qn_json_parser_ptr prs)
 {
+    qn_bool ret = qn_false;
     qn_json_token tkn = QN_JSON_TKNERR_NEED_MORE_TEXT;
     qn_string_ptr txt = NULL;
     qn_json_ptr parsing_obj = qn_dqueue_last(prs->queue);
@@ -1262,6 +1265,10 @@ PARSING_NEXT_ELEMENT_IN_THE_OBJECT:
             } // if
 
             if (tkn != QN_JSON_TKN_STRING) {
+                if (txt) {
+                    qn_str_destroy(txt);
+                    txt = NULL;
+                } // if
                 qn_err_set_bad_text_input();
                 return qn_false;
             } // if
@@ -1272,6 +1279,11 @@ PARSING_NEXT_ELEMENT_IN_THE_OBJECT:
 
         case QN_JSON_PARSING_COLON:
             tkn = qn_json_scan(&prs->scanner, &txt);
+            if (txt) {
+                qn_str_destroy(txt);
+                txt = NULL;
+            } // if
+
             if (tkn != QN_JSON_TKN_COLON) {
                 qn_err_set_bad_text_input();
                 return qn_false;
@@ -1283,14 +1295,15 @@ PARSING_NEXT_ELEMENT_IN_THE_OBJECT:
             tkn = qn_json_scan(&prs->scanner, &txt);
 
             // Put the parsed element into the container.
-            if (!qn_json_put_in(prs, tkn, txt, parsing_obj)) {
+            ret = qn_json_put_in(prs, tkn, txt, parsing_obj);
+            if (txt) {
                 qn_str_destroy(txt);
                 txt = NULL;
+            } // if
+            if (!ret) {
                 return qn_false;
             } // if
 
-            qn_str_destroy(txt);
-            txt = NULL;
             parsing_obj->status = QN_JSON_PARSING_COMMA;
 
             // Go to parse the new element on the top of the stack.
@@ -1300,6 +1313,11 @@ PARSING_NEXT_ELEMENT_IN_THE_OBJECT:
 
         case QN_JSON_PARSING_COMMA:
             tkn = qn_json_scan(&prs->scanner, &txt);
+            if (txt) {
+                qn_str_destroy(txt);
+                txt = NULL;
+            } // if
+
             if (tkn == QN_JSON_TKN_CLOSE_BRACE) {
                 // The current object element has been parsed.
                 parsing_obj->status = QN_JSON_PARSING_DONE;
@@ -1404,17 +1422,21 @@ qn_bool qn_json_prs_parse(
         tkn = qn_json_scan(&prs->scanner, &txt);
         if (tkn == QN_JSON_TKN_OPEN_BRACE) {
             child = qn_json_create_object();
+            if (!child) {
+                return qn_false;
+            } // if
+
             child->status = QN_JSON_PARSING_KEY;
         } else if (tkn == QN_JSON_TKN_OPEN_BRACKET) {
             child = qn_json_create_array();
+            if (!child) {
+                return qn_false;
+            } // if
+
             child->status = QN_JSON_PARSING_VALUE;
         } else {
             // Not a valid piece of JSON text.
             qn_err_set_bad_text_input();
-            return qn_false;
-        } // if
-
-        if (!child) {
             return qn_false;
         } // if
 
@@ -1447,7 +1469,7 @@ qn_bool qn_json_prs_parse(
         } // if
 
         // Put the parsed element into the container.
-        parent = qn_dqueue_pop(prs->queue);
+        parent = qn_dqueue_last(prs->queue);
         if (parent->class == QN_JSON_OBJECT) {
             if (!qn_json_set(parent, qn_str_cstr(parent->key), child)) {
                 return qn_false;
