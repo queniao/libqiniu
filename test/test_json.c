@@ -152,11 +152,49 @@ void test_parse_object_holding_ordinary_elements(void)
     qn_json_destroy(obj);
 } // test_parse_object_holding_ordinary_elements
 
+void test_parse_object_holding_empty_complex_elements(void)
+{
+    qn_bool ret;
+    const char buf[] = {"{\"_arr\":[],\"_obj\":{}}"};
+    qn_size buf_len = strlen(buf);
+    qn_json_ptr obj = NULL;
+    qn_json_ptr elem = NULL;
+    qn_json_parser_ptr prs = NULL;
+
+    prs = qn_json_prs_create();
+    CU_ASSERT_FATAL(prs != NULL);
+
+    ret = qn_json_prs_parse(prs, buf, &buf_len, &obj);
+    qn_json_prs_destroy(prs);
+    if (!ret) {
+        CU_FAIL("Cannot parse the object holding empty complex elements.");
+        return;
+    } // if
+
+    CU_ASSERT_TRUE(qn_json_is_object(obj));
+    CU_ASSERT_TRUE(!qn_json_is_empty(obj));
+
+    elem = qn_json_get(obj, "_arr");
+
+    CU_ASSERT_TRUE(elem != NULL);
+    CU_ASSERT_TRUE(qn_json_is_array(elem));
+    CU_ASSERT_TRUE(qn_json_is_empty(elem));
+
+    elem = qn_json_get(obj, "_obj");
+
+    CU_ASSERT_TRUE(elem != NULL);
+    CU_ASSERT_TRUE(qn_json_is_object(elem));
+    CU_ASSERT_TRUE(qn_json_is_empty(elem));
+
+    qn_json_destroy(obj);
+} // test_parse_object_holding_empty_complex_elements
+
 CU_TestInfo test_normal_cases_of_json_parsing[] = {
     {"test_parse_empty_object()", test_parse_empty_object},
     {"test_parse_object_holding_one_element()", test_parse_object_holding_one_element},
     {"test_parse_object_holding_two_elements()", test_parse_object_holding_two_elements},
-    {"test_parse_object_holding_ordinary_elements", test_parse_object_holding_ordinary_elements},
+    {"test_parse_object_holding_ordinary_elements()", test_parse_object_holding_ordinary_elements},
+    {"test_parse_object_holding_empty_complex_elements()", test_parse_object_holding_empty_complex_elements},
     CU_TEST_INFO_NULL
 };
 

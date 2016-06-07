@@ -60,14 +60,21 @@ typedef enum _QN_JSON_CLASS {
     QN_JSON_OBJECT = 7
 } qn_json_class;
 
-typedef enum _QN_JSON_STATUS
+typedef enum _QN_JSON_PRS_STATUS
 {
     QN_JSON_PARSING_DONE = 0,
     QN_JSON_PARSING_KEY = 1,
     QN_JSON_PARSING_COLON = 2,
     QN_JSON_PARSING_VALUE = 3,
     QN_JSON_PARSING_COMMA = 4
-} qn_json_status;
+} qn_json_prs_status;
+
+typedef enum _QN_JSON_PRS_RESULT
+{
+    QN_JSON_PARSING_OK = 0,
+    QN_JSON_PARSING_ERROR = 1,
+    QN_JSON_PARSING_CHILD = 2
+} qn_json_prs_result;
 
 typedef struct _QN_JSON
 {
@@ -75,7 +82,7 @@ typedef struct _QN_JSON
     qn_string_ptr key;
     struct {
         qn_json_class class:3;
-        qn_json_status status:3;
+        qn_json_prs_status status:3;
     };
     union {
         qn_json_object * object;
@@ -1247,7 +1254,7 @@ qn_bool qn_json_put_in(
 } // qn_json_put_in
 
 static
-qn_bool qn_json_parse_object(qn_json_parser_ptr prs)
+qn_json_prs_result qn_json_parse_object(qn_json_parser_ptr prs)
 {
     qn_bool ret = qn_false;
     qn_json_token tkn = QN_JSON_TKNERR_NEED_MORE_TEXT;
@@ -1261,7 +1268,7 @@ PARSING_NEXT_ELEMENT_IN_THE_OBJECT:
             if (tkn == QN_JSON_TKN_CLOSE_BRACE) {
                 // The current object element has been parsed.
                 parsing_obj->status = QN_JSON_PARSING_DONE;
-                return qn_true;
+                return QN_JSON_PARSING_OK;
             } // if
 
             if (tkn != QN_JSON_TKN_STRING) {
@@ -1270,7 +1277,7 @@ PARSING_NEXT_ELEMENT_IN_THE_OBJECT:
                     txt = NULL;
                 } // if
                 qn_err_set_bad_text_input();
-                return qn_false;
+                return QN_JSON_PARSING_ERROR;
             } // if
 
             parsing_obj->key = txt;
@@ -1286,7 +1293,7 @@ PARSING_NEXT_ELEMENT_IN_THE_OBJECT:
 
             if (tkn != QN_JSON_TKN_COLON) {
                 qn_err_set_bad_text_input();
-                return qn_false;
+                return QN_JSON_PARSING_ERROR;
             } // if
 
             parsing_obj->status = QN_JSON_PARSING_VALUE;
@@ -1301,14 +1308,14 @@ PARSING_NEXT_ELEMENT_IN_THE_OBJECT:
                 txt = NULL;
             } // if
             if (!ret) {
-                return qn_false;
+                return QN_JSON_PARSING_ERROR;
             } // if
 
             parsing_obj->status = QN_JSON_PARSING_COMMA;
 
             // Go to parse the new element on the top of the stack.
             if (tkn == QN_JSON_TKN_OPEN_BRACE || tkn == QN_JSON_TKN_OPEN_BRACKET) {
-                return qn_true;
+                return QN_JSON_PARSING_CHILD;
             } // if
 
         case QN_JSON_PARSING_COMMA:
@@ -1321,11 +1328,11 @@ PARSING_NEXT_ELEMENT_IN_THE_OBJECT:
             if (tkn == QN_JSON_TKN_CLOSE_BRACE) {
                 // The current object element has been parsed.
                 parsing_obj->status = QN_JSON_PARSING_DONE;
-                return qn_true;
+                return QN_JSON_PARSING_OK;
             } // if
             if (tkn != QN_JSON_TKN_COMMA) {
                 qn_err_set_bad_text_input();
-                return qn_false;
+                return QN_JSON_PARSING_ERROR;
             } // if
 
             parsing_obj->status = QN_JSON_PARSING_KEY;
@@ -1333,15 +1340,15 @@ PARSING_NEXT_ELEMENT_IN_THE_OBJECT:
 
         default:
             assert(parsing_obj->status != QN_JSON_PARSING_DONE);
-            return qn_false;
+            return QN_JSON_PARSING_ERROR;
     } // switch
 
     goto PARSING_NEXT_ELEMENT_IN_THE_OBJECT;
-    return qn_false;
+    return QN_JSON_PARSING_ERROR;
 } // qn_json_parse_object
 
 static
-qn_bool qn_json_parse_array(qn_json_parser_ptr prs)
+qn_json_prs_result qn_json_parse_array(qn_json_parser_ptr prs)
 {
     qn_json_token tkn = QN_JSON_TKNERR_NEED_MORE_TEXT;
     qn_string_ptr txt = NULL;
@@ -1354,14 +1361,14 @@ PARSING_NEXT_ELEMENT_IN_THE_ARRAY:
             if (tkn == QN_JSON_TKN_CLOSE_BRACKET) {
                 // The current array element has been parsed.
                 parsing_arr->status = QN_JSON_PARSING_DONE;
-                return qn_true;
+                return QN_JSON_PARSING_OK;
             } // if
 
             // Put the parsed element into the container.
             if (!qn_json_put_in(prs, tkn, txt, parsing_arr)) {
                 qn_str_destroy(txt);
                 txt = NULL;
-                return qn_false;
+                return QN_JSON_PARSING_ERROR;
             } // if
 
             qn_str_destroy(txt);
@@ -1370,7 +1377,7 @@ PARSING_NEXT_ELEMENT_IN_THE_ARRAY:
 
             // Go to parse the new element on the top of the stack.
             if (tkn == QN_JSON_TKN_OPEN_BRACE || tkn == QN_JSON_TKN_OPEN_BRACKET) {
-                return qn_true;
+                return QN_JSON_PARSING_CHILD;
             } // if
 
         case QN_JSON_PARSING_COMMA:
@@ -1378,11 +1385,11 @@ PARSING_NEXT_ELEMENT_IN_THE_ARRAY:
             if (tkn == QN_JSON_TKN_CLOSE_BRACKET) {
                 // The current array element has been parsed.
                 parsing_arr->status = QN_JSON_PARSING_DONE;
-                return qn_true;
+                return QN_JSON_PARSING_OK;
             } // if
             if (tkn != QN_JSON_TKN_COMMA) {
                 qn_err_set_bad_text_input();
-                return qn_false;
+                return QN_JSON_PARSING_ERROR;
             } // if
 
             parsing_arr->status = QN_JSON_PARSING_VALUE;
@@ -1394,11 +1401,11 @@ PARSING_NEXT_ELEMENT_IN_THE_ARRAY:
                 && parsing_arr->status != QN_JSON_PARSING_VALUE
                 && parsing_arr->status != QN_JSON_PARSING_COMMA
             );
-            return qn_false;
+            return QN_JSON_PARSING_ERROR;
     } // switch
 
     goto PARSING_NEXT_ELEMENT_IN_THE_ARRAY;
-    return qn_false;
+    return QN_JSON_PARSING_ERROR;
 } // qn_json_parse_array
 
 qn_bool qn_json_prs_parse(
@@ -1409,6 +1416,7 @@ qn_bool qn_json_prs_parse(
 {
 #define qn_json_prs_stack_is_empty(prs) (qn_dqueue_is_empty(prs->queue))
 
+    qn_json_prs_result parsing_ret;
     qn_json_token tkn = QN_JSON_TKNERR_NEED_MORE_TEXT;
     qn_string_ptr txt = NULL;
     qn_json_ptr child = NULL;
@@ -1447,17 +1455,18 @@ qn_bool qn_json_prs_parse(
     while (1) {
         child = qn_dqueue_last(prs->queue);
         if (child->class == QN_JSON_OBJECT) {
-            if (!qn_json_parse_object(prs)) {
-                // Failed to parse the current object element.
-                *buf_size = prs->scanner.pos;
-                return qn_false;
-            } // if
+            parsing_ret = qn_json_parse_object(prs);
         } else {
-            if (!qn_json_parse_array(prs)) {
-                // Failed to parse the current array element.
-                *buf_size = prs->scanner.pos;
-                return qn_false;
-            } // if
+            parsing_ret = qn_json_parse_array(prs);
+        } // if
+
+        if (parsing_ret == QN_JSON_PARSING_CHILD) {
+            continue;
+        } // if
+        if (parsing_ret == QN_JSON_PARSING_ERROR) {
+            // Failed to parse the current object element.
+            *buf_size = prs->scanner.pos;
+            return qn_false;
         } // if
 
         // Pop the parsed element out of the stack.
