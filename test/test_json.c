@@ -189,12 +189,78 @@ void test_parse_object_holding_empty_complex_elements(void)
     qn_json_destroy(obj);
 } // test_parse_object_holding_empty_complex_elements
 
+void test_parse_object_holding_embedded_objects(void)
+{
+    qn_bool ret;
+    const char buf[] = {"{\"_obj\":{\"_num\":+123.456,\"_true\":true,\"_false\":false,\"_null\":null},\"_obj2\":{}}"};
+    qn_size buf_len = strlen(buf);
+    qn_json_ptr obj = NULL;
+    qn_json_ptr child_obj = NULL;
+    qn_json_ptr elem = NULL;
+    qn_number num_val = 0.0L;
+    qn_json_parser_ptr prs = NULL;
+
+    prs = qn_json_prs_create();
+    CU_ASSERT_FATAL(prs != NULL);
+
+    ret = qn_json_prs_parse(prs, buf, &buf_len, &obj);
+    qn_json_prs_destroy(prs);
+    if (!ret) {
+        CU_FAIL("Cannot parse the object holding embedded objects.");
+        return;
+    } // if
+
+    CU_ASSERT_TRUE(qn_json_is_object(obj));
+    CU_ASSERT_TRUE(!qn_json_is_empty(obj));
+
+    child_obj = qn_json_get(obj, "_obj");
+
+    CU_ASSERT_TRUE(child_obj != NULL);
+    CU_ASSERT_TRUE(qn_json_is_object(child_obj));
+    CU_ASSERT_TRUE(!qn_json_is_empty(child_obj));
+
+    elem = qn_json_get(child_obj, "_null");
+
+    CU_ASSERT_TRUE(elem != NULL);
+    CU_ASSERT_TRUE(qn_json_is_null(elem));
+
+    elem = qn_json_get(child_obj, "_false");
+
+    CU_ASSERT_TRUE(elem != NULL);
+    CU_ASSERT_TRUE(qn_json_is_boolean(elem));
+    CU_ASSERT_TRUE(qn_json_to_boolean(elem) == false);
+
+    elem = qn_json_get(child_obj, "_true");
+
+    CU_ASSERT_TRUE(elem != NULL);
+    CU_ASSERT_TRUE(qn_json_is_boolean(elem));
+    CU_ASSERT_TRUE(qn_json_to_boolean(elem) == true);
+
+    elem = qn_json_get(child_obj, "_num");
+
+    CU_ASSERT_TRUE(elem != NULL);
+    CU_ASSERT_TRUE(qn_json_is_number(elem));
+
+    num_val = qn_json_to_number(elem);
+
+    CU_ASSERT_LONG_DOUBLE_EQUAL(num_val, 123.456L, 0.001L);
+
+    child_obj = qn_json_get(obj, "_obj2");
+
+    CU_ASSERT_TRUE(child_obj != NULL);
+    CU_ASSERT_TRUE(qn_json_is_object(child_obj));
+    CU_ASSERT_TRUE(qn_json_is_empty(child_obj));
+
+    qn_json_destroy(obj);
+} // test_parse_object_holding_embedded_objects
+
 CU_TestInfo test_normal_cases_of_json_parsing[] = {
     {"test_parse_empty_object()", test_parse_empty_object},
     {"test_parse_object_holding_one_element()", test_parse_object_holding_one_element},
     {"test_parse_object_holding_two_elements()", test_parse_object_holding_two_elements},
     {"test_parse_object_holding_ordinary_elements()", test_parse_object_holding_ordinary_elements},
     {"test_parse_object_holding_empty_complex_elements()", test_parse_object_holding_empty_complex_elements},
+    {"test_parse_object_holding_embedded_objects()", test_parse_object_holding_embedded_objects},
     CU_TEST_INFO_NULL
 };
 
