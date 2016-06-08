@@ -5,6 +5,197 @@
 #define CU_ASSERT_LONG_DOUBLE_EQUAL(actual, expected, granularity) \
   { CU_assertImplementation(((fabsl((long double)(actual) - (expected)) <= fabsl((long double)(granularity)))), __LINE__, ("CU_ASSERT_LONG_DOUBLE_EQUAL(" #actual ","  #expected "," #granularity ")"), __FILE__, "", CU_FALSE); }
 
+// ---- test functions ----
+
+void test_manipulate_object(void)
+{
+    qn_json_ptr obj = NULL;
+    qn_json_ptr new_elem = NULL;
+    qn_json_ptr elem = NULL;
+    qn_string_ptr str = NULL;
+    char buf[] = {"A line for creating string element."};
+    qn_size buf_len = strlen(buf);
+
+    obj = qn_json_create_object();
+
+    CU_ASSERT_FATAL(obj != NULL);
+
+    // set a string element
+    new_elem = qn_json_create_string(buf, buf_len);
+    CU_ASSERT_FATAL(new_elem != NULL);
+
+    qn_json_set(obj, "_str", new_elem);
+    CU_ASSERT_EQUAL(qn_json_size(obj), 1);
+
+    // set a number element
+    new_elem = qn_json_create_number(-9.99L);
+    CU_ASSERT_FATAL(new_elem != NULL);
+
+    qn_json_set(obj, "_num", new_elem);
+    CU_ASSERT_EQUAL(qn_json_size(obj), 2);
+
+    // set a integer element
+    new_elem = qn_json_create_integer(256);
+    CU_ASSERT_FATAL(new_elem != NULL);
+
+    qn_json_set(obj, "_int", new_elem);
+    CU_ASSERT_EQUAL(qn_json_size(obj), 3);
+
+    // set a null element
+    new_elem = qn_json_create_null();
+    CU_ASSERT_FATAL(new_elem != NULL);
+
+    qn_json_set(obj, "_null", new_elem);
+    CU_ASSERT_EQUAL(qn_json_size(obj), 4);
+
+    // set a boolean element
+    new_elem = qn_json_create_boolean(qn_false);
+    CU_ASSERT_FATAL(new_elem != NULL);
+
+    qn_json_set(obj, "_false", new_elem);
+    CU_ASSERT_EQUAL(qn_json_size(obj), 5);
+
+    // check the null element
+    elem = qn_json_get(obj, "_null");
+    CU_ASSERT_TRUE(elem != NULL);
+    CU_ASSERT_TRUE(qn_json_is_null(elem));
+
+    qn_json_unset(obj, "_null");
+    CU_ASSERT_EQUAL(qn_json_size(obj), 4);
+
+    // check the integer element
+    elem = qn_json_get(obj, "_int");
+    CU_ASSERT_TRUE(elem != NULL);
+    CU_ASSERT_TRUE(qn_json_is_integer(elem));
+    CU_ASSERT_EQUAL(qn_json_to_integer(elem), 256);
+
+    qn_json_unset(obj, "_int");
+    CU_ASSERT_EQUAL(qn_json_size(obj), 3);
+
+    // check the number element
+    elem = qn_json_get(obj, "_num");
+    CU_ASSERT_TRUE(elem != NULL);
+    CU_ASSERT_TRUE(qn_json_is_number(elem));
+    CU_ASSERT_LONG_DOUBLE_EQUAL(qn_json_to_number(elem), -9.99L, 0.01L);
+    CU_ASSERT_EQUAL(qn_json_size(obj), 3);
+
+    // check the string element
+    elem = qn_json_get(obj, "_str");
+    CU_ASSERT_TRUE(elem != NULL);
+    CU_ASSERT_TRUE(qn_json_is_string(elem));
+
+    str = qn_json_to_string(elem);
+    CU_ASSERT_TRUE(str != NULL);
+    CU_ASSERT_TRUE(strcmp(qn_str_cstr(str), buf) == 0);
+    CU_ASSERT_EQUAL(qn_json_size(obj), 3);
+
+    qn_json_destroy(obj);
+} // test_manipulate_object
+
+void test_manipulate_array(void)
+{
+    qn_json_ptr arr = NULL;
+    qn_json_ptr new_elem = NULL;
+    qn_json_ptr elem = NULL;
+    qn_string_ptr str = NULL;
+    char buf[] = {"A line for creating string element."};
+    qn_size buf_len = strlen(buf);
+
+    arr = qn_json_create_array();
+
+    CU_ASSERT_FATAL(arr != NULL);
+
+    // unshift a string element
+    new_elem = qn_json_create_string(buf, buf_len);
+    CU_ASSERT_FATAL(new_elem != NULL);
+
+    qn_json_unshift(arr, new_elem);
+    CU_ASSERT_EQUAL(qn_json_size(arr), 1);
+
+    // push a number element
+    new_elem = qn_json_create_number(-9.99L);
+    CU_ASSERT_FATAL(new_elem != NULL);
+
+    qn_json_push(arr, new_elem);
+    CU_ASSERT_EQUAL(qn_json_size(arr), 2);
+
+    // push a integer element
+    new_elem = qn_json_create_integer(256);
+    CU_ASSERT_FATAL(new_elem != NULL);
+
+    qn_json_push(arr, new_elem);
+    CU_ASSERT_EQUAL(qn_json_size(arr), 3);
+
+    // unshift a null element
+    new_elem = qn_json_create_null();
+    CU_ASSERT_FATAL(new_elem != NULL);
+
+    qn_json_unshift(arr, new_elem);
+    CU_ASSERT_EQUAL(qn_json_size(arr), 4);
+
+    // push a boolean element
+    new_elem = qn_json_create_boolean(qn_false);
+    CU_ASSERT_FATAL(new_elem != NULL);
+
+    qn_json_push(arr, new_elem);
+    CU_ASSERT_EQUAL(qn_json_size(arr), 5);
+
+    // check the first element (null)
+    elem = qn_json_get_at(arr, 0);
+    CU_ASSERT_TRUE(elem != NULL);
+    CU_ASSERT_TRUE(qn_json_is_null(elem));
+
+    qn_json_shift(arr);
+    CU_ASSERT_EQUAL(qn_json_size(arr), 4);
+
+    // check the second element (string)
+    elem = qn_json_get_at(arr, 0);
+    CU_ASSERT_TRUE(elem != NULL);
+    CU_ASSERT_TRUE(qn_json_is_string(elem));
+
+    str = qn_json_to_string(elem);
+    CU_ASSERT_TRUE(str != NULL);
+    CU_ASSERT_TRUE(strcmp(qn_str_cstr(str), buf) == 0);
+
+    qn_json_shift(arr);
+    CU_ASSERT_EQUAL(qn_json_size(arr), 3);
+
+    // check the last element (boolean == false)
+    elem = qn_json_get_at(arr, 2);
+    CU_ASSERT_TRUE(elem != NULL);
+    CU_ASSERT_TRUE(qn_json_is_boolean(elem));
+    CU_ASSERT(qn_json_to_boolean(elem) == qn_false);
+
+    qn_json_pop(arr);
+    CU_ASSERT_EQUAL(qn_json_size(arr), 2);
+
+    // check the last element (int == 256)
+    elem = qn_json_get_at(arr, 1);
+
+    CU_ASSERT_TRUE(elem != NULL);
+    CU_ASSERT_TRUE(qn_json_is_integer(elem));
+
+    CU_ASSERT_EQUAL(qn_json_to_integer(elem), 256);
+    CU_ASSERT_EQUAL(qn_json_size(arr), 2);
+
+    // check the first element
+    elem = qn_json_get_at(arr, 0);
+
+    CU_ASSERT_TRUE(elem != NULL);
+    CU_ASSERT_TRUE(qn_json_is_number(elem));
+
+    CU_ASSERT_LONG_DOUBLE_EQUAL(qn_json_to_number(elem), -9.99L, 0.01L);
+    CU_ASSERT_EQUAL(qn_json_size(arr), 2);
+
+    qn_json_destroy(arr);
+} // test_manipulate_array
+
+CU_TestInfo test_normal_cases_of_json_manipulating[] = {
+    {"test_manipulate_object()", test_manipulate_object},
+    {"test_manipulate_array()", test_manipulate_array},
+    CU_TEST_INFO_NULL
+};
+
 // ---- test parser ----
 
 void test_parse_empty_object(void)
@@ -518,6 +709,7 @@ CU_TestInfo test_normal_cases_of_json_parsing[] = {
 };
 
 CU_SuiteInfo suites[] = {
+    {"test_normal_cases_of_json_manipulating", NULL, NULL, test_normal_cases_of_json_manipulating},
     {"test_normal_cases_of_json_parsing", NULL, NULL, test_normal_cases_of_json_parsing},
     CU_SUITE_INFO_NULL
 };

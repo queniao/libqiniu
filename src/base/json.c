@@ -632,6 +632,23 @@ qn_bool qn_json_is_null(qn_json_ptr self)
     return (self->class == QN_JSON_NULL);
 } // qn_json_is_null
 
+qn_size qn_json_size(qn_json_ptr self)
+{
+    if (self->class == QN_JSON_OBJECT) {
+#ifdef QN_JSON_BIG_OBJECT
+        return self->size;
+#else
+        return qn_dqueue_size(self->object->queue);
+#endif
+    } // if
+
+    if (self->class == QN_JSON_ARRAY) {
+        return qn_dqueue_size(self->array->queue);
+    } // if
+
+    return 0;
+} // qn_json_size
+
 qn_string_ptr qn_json_key(qn_json_ptr self)
 {
     return self->key;

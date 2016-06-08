@@ -46,6 +46,7 @@ extern qn_integer qn_json_to_integer(qn_json_ptr self);
 extern qn_number qn_json_to_number(qn_json_ptr self);
 extern qn_bool qn_json_to_boolean(qn_json_ptr self);
 
+extern qn_size qn_json_size(qn_json_ptr self);
 extern qn_string_ptr qn_json_key(qn_json_ptr self);
 extern qn_bool qn_json_is_empty(qn_json_ptr self);
 
