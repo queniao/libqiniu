@@ -20,6 +20,8 @@ extern "C"
 {
 #endif
 
+static qn_size qn_json_parsing_max_levels = 8;
+
 typedef qn_bool qn_json_boolean;
 typedef qn_string_ptr qn_json_string;
 typedef qn_integer qn_json_integer;
@@ -867,7 +869,7 @@ qn_bool qn_json_unescape_to_utf8(char * cstr, qn_size * i, qn_size * m)
 
     // Chech if all four hexidecimal characters are valid.
     if (!isxdigit(h1) || !isxdigit(h2) || !isxdigit(h3) || !isxdigit(h4)) {
-        qn_err_set_bad_text_input();
+        qn_err_json_set_bad_text_input();
         return qn_false;
     } // if
 
@@ -879,19 +881,19 @@ qn_bool qn_json_unescape_to_utf8(char * cstr, qn_size * i, qn_size * m)
     } // if
 
     if (head_code < 0xD800 || 0xDBFF < head_code) {
-        qn_err_set_bad_text_input();
+        qn_err_json_set_bad_text_input();
         return qn_false;
     } // if
 
     *i += 6;
     if (cstr[*i] != '\\' || cstr[*i+1] != 'u') {
-        qn_err_set_bad_text_input();
+        qn_err_json_set_bad_text_input();
         return qn_false;
     } // if
 
     tail_code = (h1 << 12) + (h2 << 8) + (h3 << 4) + h4;
     if (tail_code < 0xDC00 || 0xDFFF < tail_code) {
-        qn_err_set_bad_text_input();
+        qn_err_json_set_bad_text_input();
         return qn_false;
     } // if
 
@@ -1171,6 +1173,10 @@ qn_bool qn_json_put_in(
             } // if
             new_child->status = QN_JSON_PARSING_KEY;
             qn_dqueue_push(prs->queue, new_child);
+            if (qn_json_parsing_max_levels < qn_dqueue_size(prs->queue)) {
+                qn_err_json_set_too_many_parsing_levels();
+                return qn_false;
+            } // if
             return qn_true;
 
         case QN_JSON_TKN_OPEN_BRACKET:
@@ -1179,6 +1185,10 @@ qn_bool qn_json_put_in(
             } // if
             new_child->status = QN_JSON_PARSING_VALUE;
             qn_dqueue_push(prs->queue, new_child);
+            if (qn_json_parsing_max_levels < qn_dqueue_size(prs->queue)) {
+                qn_err_json_set_too_many_parsing_levels();
+                return qn_false;
+            } // if
             return qn_true;
 
         case QN_JSON_TKN_STRING:
@@ -1191,7 +1201,7 @@ qn_bool qn_json_put_in(
             integer = strtoll(qn_str_cstr(txt), &end_txt, 10);
             if (end_txt == qn_str_cstr(txt)) {
                 // 未解析
-                qn_err_set_bad_text_input();
+                qn_err_json_set_bad_text_input();
                 return qn_false;
             } // if
             if ((integer == LLONG_MAX || integer == LLONG_MIN) && errno == ERANGE) {
@@ -1208,7 +1218,7 @@ qn_bool qn_json_put_in(
             number = strtold(qn_str_cstr(txt), &end_txt);
             if (end_txt == qn_str_cstr(txt)) {
                 // 未解析
-                qn_err_set_bad_text_input();
+                qn_err_json_set_bad_text_input();
                 return qn_false;
             } // if
             if (number >= HUGE_VALL && number <= HUGE_VALL && errno == ERANGE) {
@@ -1253,7 +1263,7 @@ qn_bool qn_json_put_in(
             return qn_false;
 
         default:
-            qn_err_set_bad_text_input();
+            qn_err_json_set_bad_text_input();
             return qn_false;
     } // switch
 
@@ -1293,7 +1303,7 @@ PARSING_NEXT_ELEMENT_IN_THE_OBJECT:
                     qn_str_destroy(txt);
                     txt = NULL;
                 } // if
-                qn_err_set_bad_text_input();
+                qn_err_json_set_bad_text_input();
                 return QN_JSON_PARSING_ERROR;
             } // if
 
@@ -1309,7 +1319,7 @@ PARSING_NEXT_ELEMENT_IN_THE_OBJECT:
             } // if
 
             if (tkn != QN_JSON_TKN_COLON) {
-                qn_err_set_bad_text_input();
+                qn_err_json_set_bad_text_input();
                 return QN_JSON_PARSING_ERROR;
             } // if
 
@@ -1348,7 +1358,7 @@ PARSING_NEXT_ELEMENT_IN_THE_OBJECT:
                 return QN_JSON_PARSING_OK;
             } // if
             if (tkn != QN_JSON_TKN_COMMA) {
-                qn_err_set_bad_text_input();
+                qn_err_json_set_bad_text_input();
                 return QN_JSON_PARSING_ERROR;
             } // if
 
@@ -1405,7 +1415,7 @@ PARSING_NEXT_ELEMENT_IN_THE_ARRAY:
                 return QN_JSON_PARSING_OK;
             } // if
             if (tkn != QN_JSON_TKN_COMMA) {
-                qn_err_set_bad_text_input();
+                qn_err_json_set_bad_text_input();
                 return QN_JSON_PARSING_ERROR;
             } // if
 
@@ -1461,7 +1471,7 @@ qn_bool qn_json_prs_parse(
             child->status = QN_JSON_PARSING_VALUE;
         } else {
             // Not a valid piece of JSON text.
-            qn_err_set_bad_text_input();
+            qn_err_json_set_bad_text_input();
             return qn_false;
         } // if
 
@@ -1643,7 +1653,7 @@ qn_bool qn_json_fmt_format_string(qn_json_formatter_ptr fmt, qn_string_ptr str)
         if ((c1 & 0xE0) == 0xC0) {
             // Check if the c2 is valid.
             if ((c2 & 0xC0) != 0x80) {
-                qn_err_set_bad_text_input();
+                qn_err_json_set_bad_text_input();
                 return qn_false;
             } // if
 
@@ -1654,7 +1664,7 @@ qn_bool qn_json_fmt_format_string(qn_json_formatter_ptr fmt, qn_string_ptr str)
         } else if ((c1 & 0xF0) == 0xE0) {
             // Check if the c2 and c3 are valid.
             if (((c2 & 0xC0) != 0x80) || ((c3 & 0xC0) != 0x80)) {
-                qn_err_set_bad_text_input();
+                qn_err_json_set_bad_text_input();
                 return qn_false;
             } // if
 
@@ -1665,7 +1675,7 @@ qn_bool qn_json_fmt_format_string(qn_json_formatter_ptr fmt, qn_string_ptr str)
         } else if ((c1 & 0xF8) == 0xF0) {
             // Check if the c2 and c3 and c4 are valid.
             if (((c2 & 0xC0) != 0x80) || ((c3 & 0xC0) != 0x80) || ((c4 & 0xC0) != 0x80)) {
-                qn_err_set_bad_text_input();
+                qn_err_json_set_bad_text_input();
                 return qn_false;
             } // if
 
@@ -1676,7 +1686,7 @@ qn_bool qn_json_fmt_format_string(qn_json_formatter_ptr fmt, qn_string_ptr str)
         } // if
 
         if (0xD800 <= wch && wch <= 0xDFFF) {
-            qn_err_set_bad_text_input();
+            qn_err_json_set_bad_text_input();
             return qn_false;
         } // if
 
@@ -1840,6 +1850,13 @@ NEXT_FORMATTING_LEVEL:
     *buf_size = fmt->buf_size;
     return qn_true;
 } // qn_json_fmt_format
+
+qn_bool qn_json_set_parsing_max_levels(qn_size count)
+{
+    if (8 <= qn_json_parsing_max_levels && qn_json_parsing_max_levels < 64) {
+        qn_json_parsing_max_levels = count;
+    } // if
+} // qn_json_set_parsing_max_levels
 
 #ifdef __cplusplus
 }

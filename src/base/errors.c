@@ -15,7 +15,8 @@ enum
     QN_ERR_INVALID_ARGUMENT     = 1003,
     QN_ERR_OVERFLOW_UPPER_BOUND = 1004,
     QN_ERR_OVERFLOW_LOWER_BOUND = 1005,
-    QN_ERR_BAD_TEXT_INPUT       = 2001,
+    QN_ERR_JSON_BAD_TEXT_INPUT  = 2001,
+    QN_ERR_JSON_TOO_MANY_PARSING_LEVELS = 2002,
 };
 
 typedef qn_uint32 qn_err_enum;
@@ -35,7 +36,8 @@ static qn_error qn_errors[] = {
     {QN_ERR_INVALID_ARGUMENT, "Invalid argument is passed"},
     {QN_ERR_OVERFLOW_UPPER_BOUND, "Integer value is overflow the upper bound"},
     {QN_ERR_OVERFLOW_LOWER_BOUND, "Integer value is overflow the lower bound"},
-    {QN_ERR_BAD_TEXT_INPUT, "Bad text input is read"},
+    {QN_ERR_JSON_BAD_TEXT_INPUT, "Bad text input of a JSON string is read"},
+    {QN_ERR_JSON_TOO_MANY_PARSING_LEVELS, "Parsing too many levels in a JSON string"},
 };
 
 static
@@ -86,10 +88,15 @@ void qn_err_set_overflow_lower_bound(void)
     qn_err_code = QN_ERR_OVERFLOW_LOWER_BOUND;
 } // qn_err_set_overflow_lower_bound
 
-void qn_err_set_bad_text_input(void)
+void qn_err_json_set_bad_text_input(void)
 {
-    qn_err_code = QN_ERR_BAD_TEXT_INPUT;
-} // qn_err_set_bad_text_input
+    qn_err_code = QN_ERR_JSON_BAD_TEXT_INPUT;
+} // qn_err_json_set_bad_text_input
+
+void qn_err_json_set_too_many_parsing_levels(void)
+{
+    qn_err_code = QN_ERR_JSON_TOO_MANY_PARSING_LEVELS;
+} // qn_err_json_set_too_many_parsing_levels
 
 qn_bool qn_err_is_succeed(void)
 {
@@ -121,10 +128,15 @@ qn_bool qn_err_is_overflow_lower_bound(void)
     return (qn_err_code == QN_ERR_OVERFLOW_LOWER_BOUND);
 } // qn_err_is_overflow_lower_bound
 
-qn_bool qn_err_is_bad_text_input(void)
+qn_bool qn_err_json_is_bad_text_input(void)
 {
-    return (qn_err_code == QN_ERR_BAD_TEXT_INPUT);
-} // qn_err_is_bad_text_input
+    return (qn_err_code == QN_ERR_JSON_BAD_TEXT_INPUT);
+} // qn_err_json_is_bad_text_input
+
+qn_bool qn_err_json_is_too_many_levels_in_parsing(void)
+{
+    return (qn_err_code == QN_ERR_JSON_TOO_MANY_PARSING_LEVELS);
+} // qn_err_json_is_too_many_levels_in_parsing
 
 #ifdef __cplusplus
 }

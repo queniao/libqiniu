@@ -79,6 +79,8 @@ extern qn_json_formatter_ptr qn_json_fmt_create(void);
 extern void qn_json_fmt_destroy(qn_json_formatter_ptr fmt);
 extern qn_bool qn_json_fmt_format(qn_json_formatter_ptr fmt, qn_json_ptr root_element, const char ** restrict buf, qn_size * restrict buf_size);
 
+extern qn_bool qn_json_set_parsing_max_levels(qn_size count);
+
 #ifdef __cplusplus
 }
 #endif
