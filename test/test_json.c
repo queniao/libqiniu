@@ -17,7 +17,6 @@ void test_manipulate_object(void)
     qn_size buf_len = strlen(buf);
 
     obj = qn_json_create_object();
-
     CU_ASSERT_FATAL(obj != NULL);
 
     // set a string element
@@ -708,9 +707,110 @@ CU_TestInfo test_normal_cases_of_json_parsing[] = {
     CU_TEST_INFO_NULL
 };
 
+// ---- test formatter ----
+
+void test_format_empty_object(void)
+{
+    qn_bool ret = qn_false;
+    qn_json_ptr obj = NULL;
+    qn_json_formatter_ptr fmt = NULL;
+    const char * buf = NULL;
+    qn_size buf_size = 0;
+
+    fmt = qn_json_fmt_create();
+    CU_ASSERT_FATAL(fmt != NULL);
+
+    obj = qn_json_create_object();
+    CU_ASSERT_FATAL(obj != NULL);
+
+    ret = qn_json_fmt_format(fmt, obj, &buf, &buf_size);
+    CU_ASSERT_TRUE(ret);
+    CU_ASSERT_EQUAL_FATAL(buf_size, 2);
+    CU_ASSERT_EQUAL_FATAL(memcmp(buf, "{}", 2), 0);
+
+    qn_json_destroy(obj);
+    qn_json_fmt_destroy(fmt);
+} // test_format_empty_object
+
+void test_format_object_holding_string_element(void)
+{
+    qn_bool ret = qn_false;
+    qn_json_ptr obj = NULL;
+    qn_json_ptr str = NULL;
+    qn_json_formatter_ptr fmt = NULL;
+    const char * buf = NULL;
+    qn_size buf_size = 0;
+
+    fmt = qn_json_fmt_create();
+    CU_ASSERT_FATAL(fmt != NULL);
+
+    obj = qn_json_create_object();
+    CU_ASSERT_FATAL(obj != NULL);
+
+    str = qn_json_create_string("Normal string", 13);
+    CU_ASSERT_FATAL(str != NULL);
+
+    ret = qn_json_set(obj, "_str", str);
+    CU_ASSERT_TRUE(ret);
+
+    ret = qn_json_fmt_format(fmt, obj, &buf, &buf_size);
+    CU_ASSERT_TRUE(ret);
+    CU_ASSERT_EQUAL_FATAL(buf_size, 24);
+    CU_ASSERT_EQUAL_FATAL(memcmp(buf, "{\"_str\":\"Normal string\"}", 24), 0);
+
+    qn_json_destroy(obj);
+    qn_json_fmt_destroy(fmt);
+} // test_format_object_holding_string_element
+
+void test_format_object_holding_integer_element(void)
+{
+    qn_bool ret = qn_false;
+    qn_json_ptr obj = NULL;
+    qn_json_ptr integer = NULL;
+    qn_json_formatter_ptr fmt = NULL;
+    const char * buf = NULL;
+    qn_size buf_size = 0;
+
+    fmt = qn_json_fmt_create();
+    CU_ASSERT_FATAL(fmt != NULL);
+
+    obj = qn_json_create_object();
+    CU_ASSERT_FATAL(obj != NULL);
+
+    integer = qn_json_create_integer(-123);
+    CU_ASSERT_FATAL(integer != NULL);
+
+    ret = qn_json_set(obj, "_int1", integer);
+    CU_ASSERT_TRUE(ret);
+
+    integer = qn_json_create_integer(987);
+    CU_ASSERT_FATAL(integer != NULL);
+
+    ret = qn_json_set(obj, "_int2", integer);
+    CU_ASSERT_TRUE(ret);
+
+    ret = qn_json_fmt_format(fmt, obj, &buf, &buf_size);
+    CU_ASSERT_TRUE(ret);
+    CU_ASSERT_EQUAL_FATAL(buf_size, 26);
+    CU_ASSERT_EQUAL_FATAL(memcmp(buf, "{\"_int1\":-123,\"_int2\":987}", 26), 0);
+
+    qn_json_destroy(obj);
+    qn_json_fmt_destroy(fmt);
+} // test_format_object_holding_integer_element
+
+CU_TestInfo test_normal_cases_of_json_formatting[] = {
+    {"test_format_empty_object()", test_format_empty_object},
+    {"test_format_object_holding_string_element()", test_format_object_holding_string_element},
+    {"test_format_object_holding_integer_element()", test_format_object_holding_integer_element},
+    CU_TEST_INFO_NULL
+};
+
+// ---- test suites ----
+
 CU_SuiteInfo suites[] = {
     {"test_normal_cases_of_json_manipulating", NULL, NULL, test_normal_cases_of_json_manipulating},
     {"test_normal_cases_of_json_parsing", NULL, NULL, test_normal_cases_of_json_parsing},
+    {"test_normal_cases_of_json_formatting", NULL, NULL, test_normal_cases_of_json_formatting},
     CU_SUITE_INFO_NULL
 };
 

@@ -1846,7 +1846,7 @@ NEXT_FORMATTING_LEVEL:
         qn_json_itr_pop(fmt->iterator);
     } // while
 
-    *buf = (const char *)&fmt->buf;
+    *buf = (char *)fmt->buf;
     *buf_size = fmt->buf_size;
     return qn_true;
 } // qn_json_fmt_format
