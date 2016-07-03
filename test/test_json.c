@@ -712,7 +712,7 @@ CU_TestInfo test_normal_cases_of_json_parsing[] = {
 void test_format_empty_object(void)
 {
     qn_bool ret = qn_false;
-    qn_json_ptr obj = NULL;
+    qn_json_ptr root = NULL;
     qn_json_formatter_ptr fmt = NULL;
     const char * buf = NULL;
     qn_size buf_size = 0;
@@ -720,22 +720,22 @@ void test_format_empty_object(void)
     fmt = qn_json_fmt_create();
     CU_ASSERT_FATAL(fmt != NULL);
 
-    obj = qn_json_create_object();
-    CU_ASSERT_FATAL(obj != NULL);
+    root = qn_json_create_object();
+    CU_ASSERT_FATAL(root != NULL);
 
-    ret = qn_json_fmt_format(fmt, obj, &buf, &buf_size);
+    ret = qn_json_fmt_format(fmt, root, &buf, &buf_size);
     CU_ASSERT_TRUE(ret);
     CU_ASSERT_EQUAL_FATAL(buf_size, 2);
     CU_ASSERT_EQUAL_FATAL(memcmp(buf, "{}", 2), 0);
 
-    qn_json_destroy(obj);
+    qn_json_destroy(root);
     qn_json_fmt_destroy(fmt);
 } // test_format_empty_object
 
 void test_format_object_holding_string_element(void)
 {
     qn_bool ret = qn_false;
-    qn_json_ptr obj = NULL;
+    qn_json_ptr root = NULL;
     qn_json_ptr str = NULL;
     qn_json_formatter_ptr fmt = NULL;
     const char * buf = NULL;
@@ -744,29 +744,402 @@ void test_format_object_holding_string_element(void)
     fmt = qn_json_fmt_create();
     CU_ASSERT_FATAL(fmt != NULL);
 
-    obj = qn_json_create_object();
-    CU_ASSERT_FATAL(obj != NULL);
+    root = qn_json_create_object();
+    CU_ASSERT_FATAL(root != NULL);
 
     str = qn_json_create_string("Normal string", 13);
     CU_ASSERT_FATAL(str != NULL);
 
-    ret = qn_json_set(obj, "_str", str);
+    ret = qn_json_set(root, "_str", str);
     CU_ASSERT_TRUE(ret);
 
-    ret = qn_json_fmt_format(fmt, obj, &buf, &buf_size);
+    ret = qn_json_fmt_format(fmt, root, &buf, &buf_size);
     CU_ASSERT_TRUE(ret);
     CU_ASSERT_EQUAL_FATAL(buf_size, 24);
     CU_ASSERT_EQUAL_FATAL(memcmp(buf, "{\"_str\":\"Normal string\"}", 24), 0);
 
-    qn_json_destroy(obj);
+    qn_json_destroy(root);
     qn_json_fmt_destroy(fmt);
 } // test_format_object_holding_string_element
 
 void test_format_object_holding_integer_element(void)
 {
     qn_bool ret = qn_false;
-    qn_json_ptr obj = NULL;
+    qn_json_ptr root = NULL;
     qn_json_ptr integer = NULL;
+    qn_json_formatter_ptr fmt = NULL;
+    const char * buf = NULL;
+    qn_size buf_size = 0;
+
+    fmt = qn_json_fmt_create();
+    CU_ASSERT_FATAL(fmt != NULL);
+
+    root = qn_json_create_object();
+    CU_ASSERT_FATAL(root != NULL);
+
+    integer = qn_json_create_integer(-123);
+    CU_ASSERT_FATAL(integer != NULL);
+
+    ret = qn_json_set(root, "_int1", integer);
+    CU_ASSERT_TRUE(ret);
+
+    integer = qn_json_create_integer(987);
+    CU_ASSERT_FATAL(integer != NULL);
+
+    ret = qn_json_set(root, "_int2", integer);
+    CU_ASSERT_TRUE(ret);
+
+    ret = qn_json_fmt_format(fmt, root, &buf, &buf_size);
+    CU_ASSERT_TRUE(ret);
+    CU_ASSERT_EQUAL_FATAL(buf_size, 26);
+    CU_ASSERT_EQUAL_FATAL(memcmp(buf, "{\"_int1\":-123,\"_int2\":987}", 26), 0);
+
+    qn_json_destroy(root);
+    qn_json_fmt_destroy(fmt);
+} // test_format_object_holding_integer_element
+
+void test_format_object_holding_number_element(void)
+{
+    qn_bool ret = qn_false;
+    qn_json_ptr root = NULL;
+    qn_json_ptr number = NULL;
+    qn_json_formatter_ptr fmt = NULL;
+    const char * buf = NULL;
+    qn_size buf_size = 0;
+
+    fmt = qn_json_fmt_create();
+    CU_ASSERT_FATAL(fmt != NULL);
+
+    root = qn_json_create_object();
+    CU_ASSERT_FATAL(root != NULL);
+
+    number = qn_json_create_number(-123.123456);
+    CU_ASSERT_FATAL(number != NULL);
+
+    ret = qn_json_set(root, "_num1", number);
+    CU_ASSERT_TRUE(ret);
+
+    number = qn_json_create_number(987.987);
+    CU_ASSERT_FATAL(number != NULL);
+
+    ret = qn_json_set(root, "_num2", number);
+    CU_ASSERT_TRUE(ret);
+
+    ret = qn_json_fmt_format(fmt, root, &buf, &buf_size);
+    CU_ASSERT_TRUE(ret);
+    CU_ASSERT_EQUAL_FATAL(buf_size, 40);
+    CU_ASSERT_EQUAL_FATAL(memcmp(buf, "{\"_num1\":-123.123456,\"_num2\":987.987000}", 40), 0);
+
+    qn_json_destroy(root);
+    qn_json_fmt_destroy(fmt);
+} // test_format_object_holding_number_element
+
+void test_format_object_holding_boolean_element(void)
+{
+    qn_bool ret = qn_false;
+    qn_json_ptr root = NULL;
+    qn_json_ptr boolean = NULL;
+    qn_json_formatter_ptr fmt = NULL;
+    const char * buf = NULL;
+    qn_size buf_size = 0;
+
+    fmt = qn_json_fmt_create();
+    CU_ASSERT_FATAL(fmt != NULL);
+
+    root = qn_json_create_object();
+    CU_ASSERT_FATAL(root != NULL);
+
+    boolean = qn_json_create_boolean(qn_false);
+    CU_ASSERT_FATAL(boolean != NULL);
+
+    ret = qn_json_set(root, "_bool1", boolean);
+    CU_ASSERT_TRUE(ret);
+
+    boolean = qn_json_create_boolean(qn_true);
+    CU_ASSERT_FATAL(boolean != NULL);
+
+    ret = qn_json_set(root, "_bool2", boolean);
+    CU_ASSERT_TRUE(ret);
+
+    ret = qn_json_fmt_format(fmt, root, &buf, &buf_size);
+    CU_ASSERT_TRUE(ret);
+    CU_ASSERT_EQUAL_FATAL(buf_size, 30);
+    CU_ASSERT_EQUAL_FATAL(memcmp(buf, "{\"_bool1\":false,\"_bool2\":true}", 30), 0);
+
+    qn_json_destroy(root);
+    qn_json_fmt_destroy(fmt);
+} // test_format_object_holding_boolean_element
+
+void test_format_object_holding_null_element(void)
+{
+    qn_bool ret = qn_false;
+    qn_json_ptr root = NULL;
+    qn_json_ptr null = NULL;
+    qn_json_formatter_ptr fmt = NULL;
+    const char * buf = NULL;
+    qn_size buf_size = 0;
+
+    fmt = qn_json_fmt_create();
+    CU_ASSERT_FATAL(fmt != NULL);
+
+    root = qn_json_create_object();
+    CU_ASSERT_FATAL(root != NULL);
+
+    null = qn_json_create_null();
+    CU_ASSERT_FATAL(null != NULL);
+
+    ret = qn_json_set(root, "_null", null);
+    CU_ASSERT_TRUE(ret);
+
+    ret = qn_json_fmt_format(fmt, root, &buf, &buf_size);
+    CU_ASSERT_TRUE(ret);
+    CU_ASSERT_EQUAL_FATAL(buf_size, 14);
+    CU_ASSERT_EQUAL_FATAL(memcmp(buf, "{\"_null\":null}", 14), 0);
+
+    qn_json_destroy(root);
+    qn_json_fmt_destroy(fmt);
+} // test_format_object_holding_null_element
+
+void test_format_empty_array(void)
+{
+    qn_bool ret = qn_false;
+    qn_json_ptr root = NULL;
+    qn_json_formatter_ptr fmt = NULL;
+    const char * buf = NULL;
+    qn_size buf_size = 0;
+
+    fmt = qn_json_fmt_create();
+    CU_ASSERT_FATAL(fmt != NULL);
+
+    root = qn_json_create_array();
+    CU_ASSERT_FATAL(root != NULL);
+
+    ret = qn_json_fmt_format(fmt, root, &buf, &buf_size);
+    CU_ASSERT_TRUE(ret);
+    CU_ASSERT_EQUAL_FATAL(buf_size, 2);
+    CU_ASSERT_EQUAL_FATAL(memcmp(buf, "[]", 2), 0);
+
+    qn_json_destroy(root);
+    qn_json_fmt_destroy(fmt);
+} // test_format_empty_array
+
+void test_format_array_holding_string_element(void)
+{
+    qn_bool ret = qn_false;
+    qn_json_ptr root = NULL;
+    qn_json_ptr str = NULL;
+    qn_json_formatter_ptr fmt = NULL;
+    const char * buf = NULL;
+    qn_size buf_size = 0;
+
+    fmt = qn_json_fmt_create();
+    CU_ASSERT_FATAL(fmt != NULL);
+
+    root = qn_json_create_array();
+    CU_ASSERT_FATAL(root != NULL);
+
+    str = qn_json_create_string("Normal string", 13);
+    CU_ASSERT_FATAL(str != NULL);
+
+    ret = qn_json_push(root, str);
+    CU_ASSERT_TRUE(ret);
+
+    ret = qn_json_fmt_format(fmt, root, &buf, &buf_size);
+    CU_ASSERT_TRUE(ret);
+    CU_ASSERT_EQUAL_FATAL(buf_size, 17);
+    CU_ASSERT_EQUAL_FATAL(memcmp(buf, "[\"Normal string\"]", 17), 0);
+
+    qn_json_destroy(root);
+    qn_json_fmt_destroy(fmt);
+} // test_format_array_holding_string_element
+
+void test_format_array_holding_integer_element(void)
+{
+    qn_bool ret = qn_false;
+    qn_json_ptr root = NULL;
+    qn_json_ptr integer = NULL;
+    qn_json_formatter_ptr fmt = NULL;
+    const char * buf = NULL;
+    qn_size buf_size = 0;
+
+    fmt = qn_json_fmt_create();
+    CU_ASSERT_FATAL(fmt != NULL);
+
+    root = qn_json_create_array();
+    CU_ASSERT_FATAL(root != NULL);
+
+    integer = qn_json_create_integer(-123);
+    CU_ASSERT_FATAL(integer != NULL);
+
+    ret = qn_json_push(root, integer);
+    CU_ASSERT_TRUE(ret);
+
+    integer = qn_json_create_integer(987);
+    CU_ASSERT_FATAL(integer != NULL);
+
+    ret = qn_json_push(root, integer);
+    CU_ASSERT_TRUE(ret);
+
+    ret = qn_json_fmt_format(fmt, root, &buf, &buf_size);
+    CU_ASSERT_TRUE(ret);
+    CU_ASSERT_EQUAL_FATAL(buf_size, 10);
+    CU_ASSERT_EQUAL_FATAL(memcmp(buf, "[-123,987]", 10), 0);
+
+    qn_json_destroy(root);
+    qn_json_fmt_destroy(fmt);
+} // test_format_array_holding_integer_element
+
+void test_format_array_holding_number_element(void)
+{
+    qn_bool ret = qn_false;
+    qn_json_ptr root = NULL;
+    qn_json_ptr number = NULL;
+    qn_json_formatter_ptr fmt = NULL;
+    const char * buf = NULL;
+    qn_size buf_size = 0;
+
+    fmt = qn_json_fmt_create();
+    CU_ASSERT_FATAL(fmt != NULL);
+
+    root = qn_json_create_array();
+    CU_ASSERT_FATAL(root != NULL);
+
+    number = qn_json_create_number(-123.123456);
+    CU_ASSERT_FATAL(number != NULL);
+
+    ret = qn_json_unshift(root, number);
+    CU_ASSERT_TRUE(ret);
+
+    number = qn_json_create_number(987.987);
+    CU_ASSERT_FATAL(number != NULL);
+
+    ret = qn_json_unshift(root, number);
+    CU_ASSERT_TRUE(ret);
+
+    ret = qn_json_fmt_format(fmt, root, &buf, &buf_size);
+    CU_ASSERT_TRUE(ret);
+    CU_ASSERT_EQUAL_FATAL(buf_size, 24);
+    CU_ASSERT_EQUAL_FATAL(memcmp(buf, "[987.987000,-123.123456]", 24), 0);
+
+    qn_json_destroy(root);
+    qn_json_fmt_destroy(fmt);
+} // test_format_array_holding_number_element
+
+void test_format_array_holding_boolean_element(void)
+{
+    qn_bool ret = qn_false;
+    qn_json_ptr root = NULL;
+    qn_json_ptr boolean = NULL;
+    qn_json_formatter_ptr fmt = NULL;
+    const char * buf = NULL;
+    qn_size buf_size = 0;
+
+    fmt = qn_json_fmt_create();
+    CU_ASSERT_FATAL(fmt != NULL);
+
+    root = qn_json_create_array();
+    CU_ASSERT_FATAL(root != NULL);
+
+    boolean = qn_json_create_boolean(qn_false);
+    CU_ASSERT_FATAL(boolean != NULL);
+
+    ret = qn_json_push(root, boolean);
+    CU_ASSERT_TRUE(ret);
+
+    boolean = qn_json_create_boolean(qn_true);
+    CU_ASSERT_FATAL(boolean != NULL);
+
+    ret = qn_json_push(root, boolean);
+    CU_ASSERT_TRUE(ret);
+
+    ret = qn_json_fmt_format(fmt, root, &buf, &buf_size);
+    CU_ASSERT_TRUE(ret);
+    CU_ASSERT_EQUAL_FATAL(buf_size, 12);
+    CU_ASSERT_EQUAL_FATAL(memcmp(buf, "[false,true]", 12), 0);
+
+    qn_json_destroy(root);
+    qn_json_fmt_destroy(fmt);
+} // test_format_array_holding_boolean_element
+
+void test_format_array_holding_null_element(void)
+{
+    qn_bool ret = qn_false;
+    qn_json_ptr root = NULL;
+    qn_json_ptr null = NULL;
+    qn_json_formatter_ptr fmt = NULL;
+    const char * buf = NULL;
+    qn_size buf_size = 0;
+
+    fmt = qn_json_fmt_create();
+    CU_ASSERT_FATAL(fmt != NULL);
+
+    root = qn_json_create_array();
+    CU_ASSERT_FATAL(root != NULL);
+
+    null = qn_json_create_null();
+    CU_ASSERT_FATAL(null != NULL);
+
+    ret = qn_json_unshift(root, null);
+    CU_ASSERT_TRUE(ret);
+
+    ret = qn_json_fmt_format(fmt, root, &buf, &buf_size);
+    CU_ASSERT_TRUE(ret);
+    CU_ASSERT_EQUAL_FATAL(buf_size, 6);
+    CU_ASSERT_EQUAL_FATAL(memcmp(buf, "[null]", 6), 0);
+
+    qn_json_destroy(root);
+    qn_json_fmt_destroy(fmt);
+} // test_format_array_holding_null_element
+
+void test_format_object_holding_complex_element(void)
+{
+    qn_bool ret = qn_false;
+    qn_json_ptr root = NULL;
+    qn_json_ptr arr = NULL;
+    qn_json_ptr elem = NULL;
+    qn_json_formatter_ptr fmt = NULL;
+    const char * buf = NULL;
+    qn_size buf_size = 0;
+
+    fmt = qn_json_fmt_create();
+    CU_ASSERT_FATAL(fmt != NULL);
+
+    arr = qn_json_create_array();
+    CU_ASSERT_FATAL(arr != NULL);
+
+    elem = qn_json_create_null();
+    CU_ASSERT_FATAL(elem != NULL);
+
+    ret = qn_json_unshift(arr, elem);
+    CU_ASSERT_TRUE(ret);
+
+    root = qn_json_create_object();
+    CU_ASSERT_FATAL(root != NULL);
+
+    ret = qn_json_set(root, "_arr", arr);
+    CU_ASSERT_TRUE(ret);
+
+    elem = qn_json_create_object();
+    CU_ASSERT_FATAL(elem != NULL);
+
+    ret = qn_json_set(root, "_obj", elem);
+    CU_ASSERT_TRUE(ret);
+
+    ret = qn_json_fmt_format(fmt, root, &buf, &buf_size);
+    CU_ASSERT_TRUE(ret);
+    CU_ASSERT_EQUAL_FATAL(buf_size, 25);
+    CU_ASSERT_EQUAL_FATAL(memcmp(buf, "{\"_arr\":[null],\"_obj\":{}}", 26), 0);
+
+    qn_json_destroy(root);
+    qn_json_fmt_destroy(fmt);
+} // test_format_object_holding_complex_element
+
+void test_format_array_holding_complex_element(void)
+{
+    qn_bool ret = qn_false;
+    qn_json_ptr root = NULL;
+    qn_json_ptr obj = NULL;
+    qn_json_ptr elem = NULL;
     qn_json_formatter_ptr fmt = NULL;
     const char * buf = NULL;
     qn_size buf_size = 0;
@@ -777,31 +1150,48 @@ void test_format_object_holding_integer_element(void)
     obj = qn_json_create_object();
     CU_ASSERT_FATAL(obj != NULL);
 
-    integer = qn_json_create_integer(-123);
-    CU_ASSERT_FATAL(integer != NULL);
+    elem = qn_json_create_null();
+    CU_ASSERT_FATAL(elem != NULL);
 
-    ret = qn_json_set(obj, "_int1", integer);
+    ret = qn_json_set(obj, "_null", elem);
     CU_ASSERT_TRUE(ret);
 
-    integer = qn_json_create_integer(987);
-    CU_ASSERT_FATAL(integer != NULL);
+    root = qn_json_create_array();
+    CU_ASSERT_FATAL(root != NULL);
 
-    ret = qn_json_set(obj, "_int2", integer);
+    ret = qn_json_push(root, obj);
     CU_ASSERT_TRUE(ret);
 
-    ret = qn_json_fmt_format(fmt, obj, &buf, &buf_size);
-    CU_ASSERT_TRUE(ret);
-    CU_ASSERT_EQUAL_FATAL(buf_size, 26);
-    CU_ASSERT_EQUAL_FATAL(memcmp(buf, "{\"_int1\":-123,\"_int2\":987}", 26), 0);
+    elem = qn_json_create_array();
+    CU_ASSERT_FATAL(elem != NULL);
 
-    qn_json_destroy(obj);
+    ret = qn_json_push(root, elem);
+    CU_ASSERT_TRUE(ret);
+
+    ret = qn_json_fmt_format(fmt, root, &buf, &buf_size);
+    CU_ASSERT_TRUE(ret);
+    CU_ASSERT_EQUAL_FATAL(buf_size, 19);
+    CU_ASSERT_EQUAL_FATAL(memcmp(buf, "[{\"_null\":null},[]]", 19), 0);
+
+    qn_json_destroy(root);
     qn_json_fmt_destroy(fmt);
-} // test_format_object_holding_integer_element
+} // test_format_object_holding_complex_element
 
 CU_TestInfo test_normal_cases_of_json_formatting[] = {
     {"test_format_empty_object()", test_format_empty_object},
     {"test_format_object_holding_string_element()", test_format_object_holding_string_element},
     {"test_format_object_holding_integer_element()", test_format_object_holding_integer_element},
+    {"test_format_object_holding_number_element()", test_format_object_holding_number_element},
+    {"test_format_object_holding_boolean_element()", test_format_object_holding_boolean_element},
+    {"test_format_object_holding_null_element()", test_format_object_holding_null_element},
+    {"test_format_empty_array()", test_format_empty_array},
+    {"test_format_array_holding_string_element()", test_format_array_holding_string_element},
+    {"test_format_array_holding_integer_element()", test_format_array_holding_integer_element},
+    {"test_format_array_holding_number_element()", test_format_array_holding_number_element},
+    {"test_format_array_holding_boolean_element()", test_format_array_holding_boolean_element},
+    {"test_format_array_holding_null_element()", test_format_array_holding_null_element},
+    {"test_format_object_holding_complex_element()", test_format_object_holding_complex_element},
+    {"test_format_array_holding_complex_element()", test_format_array_holding_complex_element},
     CU_TEST_INFO_NULL
 };
 

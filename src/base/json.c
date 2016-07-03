@@ -1793,8 +1793,8 @@ qn_bool qn_json_fmt_format(
         fmt->buf[fmt->buf_size++] = '[';
     } // if
 
-    while ((parent = qn_json_itr_top(fmt->iterator))) {
 NEXT_FORMATTING_LEVEL:
+    while ((parent = qn_json_itr_top(fmt->iterator))) {
         while ((child = qn_json_itr_next(fmt->iterator))) {
             // Output the comma between each element.
             if (qn_json_itr_count(fmt->iterator) > 1 && !qn_json_fmt_putc(fmt, ',')) {
