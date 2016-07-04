@@ -585,11 +585,11 @@ qn_json_ptr qn_json_get(qn_json_ptr self, const char * key)
     return child;
 } // qn_json_get
 
-qn_json_ptr qn_json_get_at(qn_json_ptr self, qn_size n)
+qn_json_ptr qn_json_pick(qn_json_ptr self, qn_size n)
 {
     assert(self && self->class == QN_JSON_ARRAY);
     return qn_dqueue_get(self->array->queue, n);
-} // qn_json_get_at
+} // qn_json_pick
 
 qn_string_ptr qn_json_to_string(qn_json_ptr self)
 {

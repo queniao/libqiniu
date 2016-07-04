@@ -140,7 +140,7 @@ void test_manipulate_array(void)
     CU_ASSERT_EQUAL(qn_json_size(arr), 5);
 
     // check the first element (null)
-    elem = qn_json_get_at(arr, 0);
+    elem = qn_json_pick(arr, 0);
     CU_ASSERT_TRUE(elem != NULL);
     CU_ASSERT_TRUE(qn_json_is_null(elem));
 
@@ -148,7 +148,7 @@ void test_manipulate_array(void)
     CU_ASSERT_EQUAL(qn_json_size(arr), 4);
 
     // check the second element (string)
-    elem = qn_json_get_at(arr, 0);
+    elem = qn_json_pick(arr, 0);
     CU_ASSERT_TRUE(elem != NULL);
     CU_ASSERT_TRUE(qn_json_is_string(elem));
 
@@ -160,7 +160,7 @@ void test_manipulate_array(void)
     CU_ASSERT_EQUAL(qn_json_size(arr), 3);
 
     // check the last element (boolean == false)
-    elem = qn_json_get_at(arr, 2);
+    elem = qn_json_pick(arr, 2);
     CU_ASSERT_TRUE(elem != NULL);
     CU_ASSERT_TRUE(qn_json_is_boolean(elem));
     CU_ASSERT(qn_json_to_boolean(elem) == qn_false);
@@ -169,7 +169,7 @@ void test_manipulate_array(void)
     CU_ASSERT_EQUAL(qn_json_size(arr), 2);
 
     // check the last element (int == 256)
-    elem = qn_json_get_at(arr, 1);
+    elem = qn_json_pick(arr, 1);
 
     CU_ASSERT_TRUE(elem != NULL);
     CU_ASSERT_TRUE(qn_json_is_integer(elem));
@@ -178,7 +178,7 @@ void test_manipulate_array(void)
     CU_ASSERT_EQUAL(qn_json_size(arr), 2);
 
     // check the first element
-    elem = qn_json_get_at(arr, 0);
+    elem = qn_json_pick(arr, 0);
 
     CU_ASSERT_TRUE(elem != NULL);
     CU_ASSERT_TRUE(qn_json_is_number(elem));
@@ -491,7 +491,7 @@ void test_parse_array_holding_one_element(void)
     CU_ASSERT_TRUE(qn_json_is_array(arr));
     CU_ASSERT_TRUE(!qn_json_is_empty(arr));
 
-    elem = qn_json_get_at(arr, 0);
+    elem = qn_json_pick(arr, 0);
 
     CU_ASSERT_TRUE(elem != NULL);
     CU_ASSERT_TRUE(qn_json_is_string(elem));
@@ -526,7 +526,7 @@ void test_parse_array_holding_two_elements(void)
     CU_ASSERT_TRUE(qn_json_is_array(arr));
     CU_ASSERT_TRUE(!qn_json_is_empty(arr));
 
-    elem = qn_json_get_at(arr, 1);
+    elem = qn_json_pick(arr, 1);
 
     CU_ASSERT_TRUE(elem != NULL);
     CU_ASSERT_TRUE(qn_json_is_integer(elem));
@@ -560,24 +560,24 @@ void test_parse_array_holding_ordinary_elements(void)
     CU_ASSERT_TRUE(qn_json_is_array(arr));
     CU_ASSERT_TRUE(!qn_json_is_empty(arr));
 
-    elem = qn_json_get_at(arr, 3);
+    elem = qn_json_pick(arr, 3);
 
     CU_ASSERT_TRUE(elem != NULL);
     CU_ASSERT_TRUE(qn_json_is_null(elem));
 
-    elem = qn_json_get_at(arr, 2);
+    elem = qn_json_pick(arr, 2);
 
     CU_ASSERT_TRUE(elem != NULL);
     CU_ASSERT_TRUE(qn_json_is_boolean(elem));
     CU_ASSERT_TRUE(qn_json_to_boolean(elem) == false);
 
-    elem = qn_json_get_at(arr, 1);
+    elem = qn_json_pick(arr, 1);
 
     CU_ASSERT_TRUE(elem != NULL);
     CU_ASSERT_TRUE(qn_json_is_boolean(elem));
     CU_ASSERT_TRUE(qn_json_to_boolean(elem) == true);
 
-    elem = qn_json_get_at(arr, 0);
+    elem = qn_json_pick(arr, 0);
 
     CU_ASSERT_TRUE(elem != NULL);
     CU_ASSERT_TRUE(qn_json_is_number(elem));
@@ -611,13 +611,13 @@ void test_parse_array_holding_empty_complex_elements(void)
     CU_ASSERT_TRUE(qn_json_is_array(arr));
     CU_ASSERT_TRUE(!qn_json_is_empty(arr));
 
-    elem = qn_json_get_at(arr, 0);
+    elem = qn_json_pick(arr, 0);
 
     CU_ASSERT_TRUE(elem != NULL);
     CU_ASSERT_TRUE(qn_json_is_object(elem));
     CU_ASSERT_TRUE(qn_json_is_empty(elem));
 
-    elem = qn_json_get_at(arr, 1);
+    elem = qn_json_pick(arr, 1);
 
     CU_ASSERT_TRUE(elem != NULL);
     CU_ASSERT_TRUE(qn_json_is_array(elem));
@@ -650,30 +650,30 @@ void test_parse_array_holding_embedded_arrays(void)
     CU_ASSERT_TRUE(qn_json_is_array(arr));
     CU_ASSERT_TRUE(!qn_json_is_empty(arr));
 
-    child_obj = qn_json_get_at(arr, 0);
+    child_obj = qn_json_pick(arr, 0);
 
     CU_ASSERT_TRUE(child_obj != NULL);
     CU_ASSERT_TRUE(qn_json_is_array(child_obj));
     CU_ASSERT_TRUE(!qn_json_is_empty(child_obj));
 
-    elem = qn_json_get_at(child_obj, 3);
+    elem = qn_json_pick(child_obj, 3);
 
     CU_ASSERT_TRUE(elem != NULL);
     CU_ASSERT_TRUE(qn_json_is_null(elem));
 
-    elem = qn_json_get_at(child_obj, 2);
+    elem = qn_json_pick(child_obj, 2);
 
     CU_ASSERT_TRUE(elem != NULL);
     CU_ASSERT_TRUE(qn_json_is_boolean(elem));
     CU_ASSERT_TRUE(qn_json_to_boolean(elem) == false);
 
-    elem = qn_json_get_at(child_obj, 1);
+    elem = qn_json_pick(child_obj, 1);
 
     CU_ASSERT_TRUE(elem != NULL);
     CU_ASSERT_TRUE(qn_json_is_boolean(elem));
     CU_ASSERT_TRUE(qn_json_to_boolean(elem) == true);
 
-    elem = qn_json_get_at(child_obj, 0);
+    elem = qn_json_pick(child_obj, 0);
 
     CU_ASSERT_TRUE(elem != NULL);
     CU_ASSERT_TRUE(qn_json_is_number(elem));
@@ -682,7 +682,7 @@ void test_parse_array_holding_embedded_arrays(void)
 
     CU_ASSERT_LONG_DOUBLE_EQUAL(num_val, 123.456L, 0.001L);
 
-    child_obj = qn_json_get_at(arr, 1);
+    child_obj = qn_json_pick(arr, 1);
 
     CU_ASSERT_TRUE(child_obj != NULL);
     CU_ASSERT_TRUE(qn_json_is_array(child_obj));
