@@ -62,7 +62,8 @@ extern int qn_json_itr_count(qn_json_iterator_ptr self);
 extern qn_bool qn_json_itr_push(qn_json_iterator_ptr self, qn_json_ptr owner);
 extern void qn_json_itr_pop(qn_json_iterator_ptr self);
 extern qn_json_ptr qn_json_itr_top(qn_json_iterator_ptr self);
-extern qn_json_ptr qn_json_itr_next(qn_json_iterator_ptr self);
+extern qn_json_ptr qn_json_itr_next_child(qn_json_iterator_ptr self);
+extern qn_json_ptr qn_json_itr_current_child(qn_json_iterator_ptr self);
 
 struct _QN_JSON_PARSER;
 typedef struct _QN_JSON_PARSER * qn_json_parser_ptr;
@@ -75,9 +76,14 @@ extern qn_bool qn_json_prs_parse(qn_json_parser_ptr prs, const char * restrict b
 struct _QN_JSON_FORMATTER;
 typedef struct _QN_JSON_FORMATTER * qn_json_formatter_ptr;
 
+typedef enum _QN_JSON_FMT_FLAG
+{
+    QN_JSON_FMT_FIXED_BUFFER = 1
+} qn_json_fmt_flag;
+
 extern qn_json_formatter_ptr qn_json_fmt_create(void);
 extern void qn_json_fmt_destroy(qn_json_formatter_ptr fmt);
-extern qn_bool qn_json_fmt_format(qn_json_formatter_ptr fmt, qn_json_ptr root_element, const char ** restrict buf, qn_size * restrict buf_size);
+extern qn_bool qn_json_fmt_format(qn_json_formatter_ptr fmt, qn_json_ptr root_element, char * restrict buf, qn_size * restrict buf_size);
 
 extern qn_bool qn_json_set_parsing_max_levels(qn_size count);
 

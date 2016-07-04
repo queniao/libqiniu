@@ -714,8 +714,8 @@ void test_format_empty_object(void)
     qn_bool ret = qn_false;
     qn_json_ptr root = NULL;
     qn_json_formatter_ptr fmt = NULL;
-    const char * buf = NULL;
-    qn_size buf_size = 0;
+    char buf[128];
+    qn_size buf_size = sizeof(buf);
 
     fmt = qn_json_fmt_create();
     CU_ASSERT_FATAL(fmt != NULL);
@@ -723,7 +723,7 @@ void test_format_empty_object(void)
     root = qn_json_create_object();
     CU_ASSERT_FATAL(root != NULL);
 
-    ret = qn_json_fmt_format(fmt, root, &buf, &buf_size);
+    ret = qn_json_fmt_format(fmt, root, buf, &buf_size);
     CU_ASSERT_TRUE(ret);
     CU_ASSERT_EQUAL_FATAL(buf_size, 2);
     CU_ASSERT_EQUAL_FATAL(memcmp(buf, "{}", 2), 0);
@@ -738,8 +738,8 @@ void test_format_object_holding_string_element(void)
     qn_json_ptr root = NULL;
     qn_json_ptr str = NULL;
     qn_json_formatter_ptr fmt = NULL;
-    const char * buf = NULL;
-    qn_size buf_size = 0;
+    char buf[128];
+    qn_size buf_size = sizeof(buf);
 
     fmt = qn_json_fmt_create();
     CU_ASSERT_FATAL(fmt != NULL);
@@ -753,7 +753,7 @@ void test_format_object_holding_string_element(void)
     ret = qn_json_set(root, "_str", str);
     CU_ASSERT_TRUE(ret);
 
-    ret = qn_json_fmt_format(fmt, root, &buf, &buf_size);
+    ret = qn_json_fmt_format(fmt, root, buf, &buf_size);
     CU_ASSERT_TRUE(ret);
     CU_ASSERT_EQUAL_FATAL(buf_size, 24);
     CU_ASSERT_EQUAL_FATAL(memcmp(buf, "{\"_str\":\"Normal string\"}", 24), 0);
@@ -768,8 +768,8 @@ void test_format_object_holding_integer_element(void)
     qn_json_ptr root = NULL;
     qn_json_ptr integer = NULL;
     qn_json_formatter_ptr fmt = NULL;
-    const char * buf = NULL;
-    qn_size buf_size = 0;
+    char buf[128];
+    qn_size buf_size = sizeof(buf);
 
     fmt = qn_json_fmt_create();
     CU_ASSERT_FATAL(fmt != NULL);
@@ -789,7 +789,7 @@ void test_format_object_holding_integer_element(void)
     ret = qn_json_set(root, "_int2", integer);
     CU_ASSERT_TRUE(ret);
 
-    ret = qn_json_fmt_format(fmt, root, &buf, &buf_size);
+    ret = qn_json_fmt_format(fmt, root, buf, &buf_size);
     CU_ASSERT_TRUE(ret);
     CU_ASSERT_EQUAL_FATAL(buf_size, 26);
     CU_ASSERT_EQUAL_FATAL(memcmp(buf, "{\"_int1\":-123,\"_int2\":987}", 26), 0);
@@ -804,8 +804,8 @@ void test_format_object_holding_number_element(void)
     qn_json_ptr root = NULL;
     qn_json_ptr number = NULL;
     qn_json_formatter_ptr fmt = NULL;
-    const char * buf = NULL;
-    qn_size buf_size = 0;
+    char buf[128];
+    qn_size buf_size = sizeof(buf);
 
     fmt = qn_json_fmt_create();
     CU_ASSERT_FATAL(fmt != NULL);
@@ -825,7 +825,7 @@ void test_format_object_holding_number_element(void)
     ret = qn_json_set(root, "_num2", number);
     CU_ASSERT_TRUE(ret);
 
-    ret = qn_json_fmt_format(fmt, root, &buf, &buf_size);
+    ret = qn_json_fmt_format(fmt, root, buf, &buf_size);
     CU_ASSERT_TRUE(ret);
     CU_ASSERT_EQUAL_FATAL(buf_size, 40);
     CU_ASSERT_EQUAL_FATAL(memcmp(buf, "{\"_num1\":-123.123456,\"_num2\":987.987000}", 40), 0);
@@ -840,8 +840,8 @@ void test_format_object_holding_boolean_element(void)
     qn_json_ptr root = NULL;
     qn_json_ptr boolean = NULL;
     qn_json_formatter_ptr fmt = NULL;
-    const char * buf = NULL;
-    qn_size buf_size = 0;
+    char buf[128];
+    qn_size buf_size = sizeof(buf);
 
     fmt = qn_json_fmt_create();
     CU_ASSERT_FATAL(fmt != NULL);
@@ -861,7 +861,7 @@ void test_format_object_holding_boolean_element(void)
     ret = qn_json_set(root, "_bool2", boolean);
     CU_ASSERT_TRUE(ret);
 
-    ret = qn_json_fmt_format(fmt, root, &buf, &buf_size);
+    ret = qn_json_fmt_format(fmt, root, buf, &buf_size);
     CU_ASSERT_TRUE(ret);
     CU_ASSERT_EQUAL_FATAL(buf_size, 30);
     CU_ASSERT_EQUAL_FATAL(memcmp(buf, "{\"_bool1\":false,\"_bool2\":true}", 30), 0);
@@ -876,8 +876,8 @@ void test_format_object_holding_null_element(void)
     qn_json_ptr root = NULL;
     qn_json_ptr null = NULL;
     qn_json_formatter_ptr fmt = NULL;
-    const char * buf = NULL;
-    qn_size buf_size = 0;
+    char buf[128];
+    qn_size buf_size = sizeof(buf);
 
     fmt = qn_json_fmt_create();
     CU_ASSERT_FATAL(fmt != NULL);
@@ -891,7 +891,7 @@ void test_format_object_holding_null_element(void)
     ret = qn_json_set(root, "_null", null);
     CU_ASSERT_TRUE(ret);
 
-    ret = qn_json_fmt_format(fmt, root, &buf, &buf_size);
+    ret = qn_json_fmt_format(fmt, root, buf, &buf_size);
     CU_ASSERT_TRUE(ret);
     CU_ASSERT_EQUAL_FATAL(buf_size, 14);
     CU_ASSERT_EQUAL_FATAL(memcmp(buf, "{\"_null\":null}", 14), 0);
@@ -905,8 +905,8 @@ void test_format_empty_array(void)
     qn_bool ret = qn_false;
     qn_json_ptr root = NULL;
     qn_json_formatter_ptr fmt = NULL;
-    const char * buf = NULL;
-    qn_size buf_size = 0;
+    char buf[128];
+    qn_size buf_size = sizeof(buf);
 
     fmt = qn_json_fmt_create();
     CU_ASSERT_FATAL(fmt != NULL);
@@ -914,7 +914,7 @@ void test_format_empty_array(void)
     root = qn_json_create_array();
     CU_ASSERT_FATAL(root != NULL);
 
-    ret = qn_json_fmt_format(fmt, root, &buf, &buf_size);
+    ret = qn_json_fmt_format(fmt, root, buf, &buf_size);
     CU_ASSERT_TRUE(ret);
     CU_ASSERT_EQUAL_FATAL(buf_size, 2);
     CU_ASSERT_EQUAL_FATAL(memcmp(buf, "[]", 2), 0);
@@ -929,8 +929,8 @@ void test_format_array_holding_string_element(void)
     qn_json_ptr root = NULL;
     qn_json_ptr str = NULL;
     qn_json_formatter_ptr fmt = NULL;
-    const char * buf = NULL;
-    qn_size buf_size = 0;
+    char buf[128];
+    qn_size buf_size = sizeof(buf);
 
     fmt = qn_json_fmt_create();
     CU_ASSERT_FATAL(fmt != NULL);
@@ -944,7 +944,7 @@ void test_format_array_holding_string_element(void)
     ret = qn_json_push(root, str);
     CU_ASSERT_TRUE(ret);
 
-    ret = qn_json_fmt_format(fmt, root, &buf, &buf_size);
+    ret = qn_json_fmt_format(fmt, root, buf, &buf_size);
     CU_ASSERT_TRUE(ret);
     CU_ASSERT_EQUAL_FATAL(buf_size, 17);
     CU_ASSERT_EQUAL_FATAL(memcmp(buf, "[\"Normal string\"]", 17), 0);
@@ -959,8 +959,8 @@ void test_format_array_holding_integer_element(void)
     qn_json_ptr root = NULL;
     qn_json_ptr integer = NULL;
     qn_json_formatter_ptr fmt = NULL;
-    const char * buf = NULL;
-    qn_size buf_size = 0;
+    char buf[128];
+    qn_size buf_size = sizeof(buf);
 
     fmt = qn_json_fmt_create();
     CU_ASSERT_FATAL(fmt != NULL);
@@ -980,7 +980,7 @@ void test_format_array_holding_integer_element(void)
     ret = qn_json_push(root, integer);
     CU_ASSERT_TRUE(ret);
 
-    ret = qn_json_fmt_format(fmt, root, &buf, &buf_size);
+    ret = qn_json_fmt_format(fmt, root, buf, &buf_size);
     CU_ASSERT_TRUE(ret);
     CU_ASSERT_EQUAL_FATAL(buf_size, 10);
     CU_ASSERT_EQUAL_FATAL(memcmp(buf, "[-123,987]", 10), 0);
@@ -995,8 +995,8 @@ void test_format_array_holding_number_element(void)
     qn_json_ptr root = NULL;
     qn_json_ptr number = NULL;
     qn_json_formatter_ptr fmt = NULL;
-    const char * buf = NULL;
-    qn_size buf_size = 0;
+    char buf[128];
+    qn_size buf_size = sizeof(buf);
 
     fmt = qn_json_fmt_create();
     CU_ASSERT_FATAL(fmt != NULL);
@@ -1016,7 +1016,7 @@ void test_format_array_holding_number_element(void)
     ret = qn_json_unshift(root, number);
     CU_ASSERT_TRUE(ret);
 
-    ret = qn_json_fmt_format(fmt, root, &buf, &buf_size);
+    ret = qn_json_fmt_format(fmt, root, buf, &buf_size);
     CU_ASSERT_TRUE(ret);
     CU_ASSERT_EQUAL_FATAL(buf_size, 24);
     CU_ASSERT_EQUAL_FATAL(memcmp(buf, "[987.987000,-123.123456]", 24), 0);
@@ -1031,8 +1031,8 @@ void test_format_array_holding_boolean_element(void)
     qn_json_ptr root = NULL;
     qn_json_ptr boolean = NULL;
     qn_json_formatter_ptr fmt = NULL;
-    const char * buf = NULL;
-    qn_size buf_size = 0;
+    char buf[128];
+    qn_size buf_size = sizeof(buf);
 
     fmt = qn_json_fmt_create();
     CU_ASSERT_FATAL(fmt != NULL);
@@ -1052,7 +1052,7 @@ void test_format_array_holding_boolean_element(void)
     ret = qn_json_push(root, boolean);
     CU_ASSERT_TRUE(ret);
 
-    ret = qn_json_fmt_format(fmt, root, &buf, &buf_size);
+    ret = qn_json_fmt_format(fmt, root, buf, &buf_size);
     CU_ASSERT_TRUE(ret);
     CU_ASSERT_EQUAL_FATAL(buf_size, 12);
     CU_ASSERT_EQUAL_FATAL(memcmp(buf, "[false,true]", 12), 0);
@@ -1067,8 +1067,8 @@ void test_format_array_holding_null_element(void)
     qn_json_ptr root = NULL;
     qn_json_ptr null = NULL;
     qn_json_formatter_ptr fmt = NULL;
-    const char * buf = NULL;
-    qn_size buf_size = 0;
+    char buf[128];
+    qn_size buf_size = sizeof(buf);
 
     fmt = qn_json_fmt_create();
     CU_ASSERT_FATAL(fmt != NULL);
@@ -1082,7 +1082,7 @@ void test_format_array_holding_null_element(void)
     ret = qn_json_unshift(root, null);
     CU_ASSERT_TRUE(ret);
 
-    ret = qn_json_fmt_format(fmt, root, &buf, &buf_size);
+    ret = qn_json_fmt_format(fmt, root, buf, &buf_size);
     CU_ASSERT_TRUE(ret);
     CU_ASSERT_EQUAL_FATAL(buf_size, 6);
     CU_ASSERT_EQUAL_FATAL(memcmp(buf, "[null]", 6), 0);
@@ -1098,8 +1098,8 @@ void test_format_object_holding_complex_element(void)
     qn_json_ptr arr = NULL;
     qn_json_ptr elem = NULL;
     qn_json_formatter_ptr fmt = NULL;
-    const char * buf = NULL;
-    qn_size buf_size = 0;
+    char buf[128];
+    qn_size buf_size = sizeof(buf);
 
     fmt = qn_json_fmt_create();
     CU_ASSERT_FATAL(fmt != NULL);
@@ -1125,10 +1125,10 @@ void test_format_object_holding_complex_element(void)
     ret = qn_json_set(root, "_obj", elem);
     CU_ASSERT_TRUE(ret);
 
-    ret = qn_json_fmt_format(fmt, root, &buf, &buf_size);
+    ret = qn_json_fmt_format(fmt, root, buf, &buf_size);
     CU_ASSERT_TRUE(ret);
     CU_ASSERT_EQUAL_FATAL(buf_size, 25);
-    CU_ASSERT_EQUAL_FATAL(memcmp(buf, "{\"_arr\":[null],\"_obj\":{}}", 26), 0);
+    CU_ASSERT_EQUAL_FATAL(memcmp(buf, "{\"_arr\":[null],\"_obj\":{}}", 25), 0);
 
     qn_json_destroy(root);
     qn_json_fmt_destroy(fmt);
@@ -1141,8 +1141,8 @@ void test_format_array_holding_complex_element(void)
     qn_json_ptr obj = NULL;
     qn_json_ptr elem = NULL;
     qn_json_formatter_ptr fmt = NULL;
-    const char * buf = NULL;
-    qn_size buf_size = 0;
+    char buf[128];
+    qn_size buf_size = sizeof(buf);
 
     fmt = qn_json_fmt_create();
     CU_ASSERT_FATAL(fmt != NULL);
@@ -1168,7 +1168,7 @@ void test_format_array_holding_complex_element(void)
     ret = qn_json_push(root, elem);
     CU_ASSERT_TRUE(ret);
 
-    ret = qn_json_fmt_format(fmt, root, &buf, &buf_size);
+    ret = qn_json_fmt_format(fmt, root, buf, &buf_size);
     CU_ASSERT_TRUE(ret);
     CU_ASSERT_EQUAL_FATAL(buf_size, 19);
     CU_ASSERT_EQUAL_FATAL(memcmp(buf, "[{\"_null\":null},[]]", 19), 0);

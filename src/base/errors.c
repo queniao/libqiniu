@@ -15,6 +15,7 @@ enum
     QN_ERR_INVALID_ARGUMENT     = 1003,
     QN_ERR_OVERFLOW_UPPER_BOUND = 1004,
     QN_ERR_OVERFLOW_LOWER_BOUND = 1005,
+    QN_ERR_BAD_UTF8_SEQUENCE    = 1006,
     QN_ERR_JSON_BAD_TEXT_INPUT  = 2001,
     QN_ERR_JSON_TOO_MANY_PARSING_LEVELS = 2002,
 };
@@ -36,6 +37,7 @@ static qn_error qn_errors[] = {
     {QN_ERR_INVALID_ARGUMENT, "Invalid argument is passed"},
     {QN_ERR_OVERFLOW_UPPER_BOUND, "Integer value is overflow the upper bound"},
     {QN_ERR_OVERFLOW_LOWER_BOUND, "Integer value is overflow the lower bound"},
+    {QN_ERR_BAD_UTF8_SEQUENCE, "The string contains a bad UTF-8 sequence"},
     {QN_ERR_JSON_BAD_TEXT_INPUT, "Bad text input of a JSON string is read"},
     {QN_ERR_JSON_TOO_MANY_PARSING_LEVELS, "Parsing too many levels in a JSON string"},
 };
@@ -88,6 +90,11 @@ void qn_err_set_overflow_lower_bound(void)
     qn_err_code = QN_ERR_OVERFLOW_LOWER_BOUND;
 } // qn_err_set_overflow_lower_bound
 
+void qn_err_set_bad_utf8_sequence(void)
+{
+    qn_err_code = QN_ERR_BAD_UTF8_SEQUENCE;
+} // qn_err_set_bad_utf8_sequence
+
 void qn_err_json_set_bad_text_input(void)
 {
     qn_err_code = QN_ERR_JSON_BAD_TEXT_INPUT;
@@ -127,6 +134,11 @@ qn_bool qn_err_is_overflow_lower_bound(void)
 {
     return (qn_err_code == QN_ERR_OVERFLOW_LOWER_BOUND);
 } // qn_err_is_overflow_lower_bound
+
+qn_bool qn_err_is_bad_utf8_sequence(void)
+{
+    return (qn_err_code == QN_ERR_BAD_UTF8_SEQUENCE);
+} // qn_err_is_bad_utf8_sequence
 
 qn_bool qn_err_json_is_bad_text_input(void)
 {
