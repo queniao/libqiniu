@@ -1,9 +1,16 @@
+#include <openssl/hmac.h>
 #include "auth.h"
 
 #ifdef __cplusplus
 extern "C"
 {
 #endif
+
+typedef struct _QN_MAC
+{
+    qn_string_ptr access_key;
+    qn_string_ptr secret_key;
+} qn_mac;
 
 // ---- Put Policy ----
 
@@ -254,10 +261,72 @@ qn_bool qn_pp_auto_delete_after_days(qn_json_ptr pp, qn_uint32 days)
     return qn_json_set_integer(pp, "deleteAfterDays", days);
 } // qn_pp_auto_delete_after_days
 
-// ---- Authorization ----
+qn_string_ptr qn_pp_to_uptoken(qn_json_ptr pp, qn_mac_ptr mac)
+{
+    qn_string_ptr str = qn_json_format_to_string(pp);
+    if (!str) return NULL;
 
-qn_string_ptr qn_auth_make_uptoken(qn_mac_ptr mac, qn_json_ptr put_policy);
-qn_string_ptr qn_auth_make_dnurl(qn_mac_ptr mac, const qn_string_ptr url, qn_uint32 deadline);
+    return qn_mac_make_uptoken(mac, qn_str_cstr(str), qn_str_size(str));
+} // qn_pp_to_uptoken
+
+// ---- Authorization Functions ----
+
+qn_mac_ptr qn_mac_create(const char * access_key, const char * secret_key)
+{
+    qn_mac_ptr new_mac = malloc(sizeof(qn_mac_ptr));
+    if (!new_mac) return NULL;
+
+    new_mac->access_key = qn_str_clone_raw(access_key);
+    if (!new_mac->access_key) {
+        free(new_mac);
+        return NULL;
+    } // if
+
+    new_mac->secret_key = qn_str_clone_raw(secret_key);
+    if (!new_mac->secret_key) {
+        free(new_mac->secret_key);
+        free(new_mac);
+        return NULL;
+    } // if
+
+    return new_mac;
+} // qn_mac_create
+
+void qn_mac_destroy(qn_mac_ptr mac)
+{
+    if (mac) {
+        qn_str_destroy(mac->secret_key);
+        qn_str_destroy(mac->access_key);
+        free(mac);
+    } // if
+} // qn_mac_destroy
+
+qn_string_ptr qn_mac_make_uptoken(qn_mac_ptr mac, const char * pp_str, qn_size pp_str_size)
+{
+    qn_string_ptr sign = NULL;
+    qn_string_ptr encoded_pp = NULL;
+    qn_string_ptr encoded_digest = NULL;
+    char digest[EVP_MAX_MD_SIZE + 1];
+    unsigned int digest_size = sizeof(digest);
+    HMAC_CTX ctx;
+
+    encoded_pp = qn_str_encode_base64_urlsafe(pp_str, pp_str_size);
+    if (!encoded_pp) return NULL;
+
+    HMAC_CTX_init(&ctx);
+    HMAC_Init_ex(&ctx, qn_str_cstr(mac->secret_key), qn_str_size(mac->secret_key), EVP_sha1(), NULL);
+    HMAC_Update(&ctx, qn_str_cstr(encoded_pp), qn_str_size(encoded_pp));
+    HMAC_Final(&ctx, digest, &digest_size);
+    HMAC_CTX_cleanup(&ctx);
+
+    encoded_digest = qn_str_encode_base64_urlsafe(digest, digest_size);
+    sign = qn_str_join(":", mac->access_key, encoded_digest, encoded_pp);
+    qn_str_destroy(encoded_digest);
+    qn_str_destroy(encoded_pp);
+    return sign;
+} // qn_mac_make_uptoken
+
+qn_string_ptr qn_mac_make_dnurl(qn_mac_ptr mac, const qn_string_ptr url, qn_uint32 deadline);
 
 #ifdef __cplusplus
 }

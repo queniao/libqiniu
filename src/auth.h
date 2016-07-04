@@ -10,11 +10,8 @@ extern "C"
 {
 #endif
 
-typedef struct _QN_MAC
-{
-    const char * access_key;
-    const char * secret_key;
-} qn_mac, *qn_mac_ptr;
+struct _QN_MAC;
+typedef struct _QN_MAC * qn_mac_ptr;
 
 // ---- Put Policy ----
 
@@ -48,10 +45,15 @@ extern qn_bool qn_pp_key_make_from_template(qn_json_ptr pp, const qn_string_ptr 
 
 extern qn_bool qn_pp_auto_delete_after_days(qn_json_ptr pp, qn_uint32 days);
 
-// ---- Authorization ----
+extern qn_string_ptr qn_pp_to_uptoken(qn_json_ptr pp, qn_mac_ptr mac);
 
-extern qn_string_ptr qn_auth_make_uptoken(qn_mac_ptr mac, qn_json_ptr put_policy);
-extern qn_string_ptr qn_auth_make_dnurl(qn_mac_ptr mac, const qn_string_ptr url, qn_uint32 deadline);
+// ---- Authorization Functions ----
+
+extern qn_mac_ptr qn_mac_create(const char * access_key, const char * secret_key);
+extern void qn_mac_destroy(qn_mac_ptr mac);
+
+extern qn_string_ptr qn_mac_make_uptoken(qn_mac_ptr mac, const char * data, qn_size data_size);
+extern qn_string_ptr qn_mac_make_dnurl(qn_mac_ptr mac, const qn_string_ptr url, qn_uint32 deadline);
 
 #ifdef __cplusplus
 }
