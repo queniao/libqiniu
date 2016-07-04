@@ -81,6 +81,9 @@ typedef struct _QN_JSON_FORMATTER * qn_json_formatter_ptr;
 extern qn_json_formatter_ptr qn_json_fmt_create(void);
 extern void qn_json_fmt_destroy(qn_json_formatter_ptr fmt);
 extern qn_bool qn_json_fmt_format(qn_json_formatter_ptr fmt, qn_json_ptr root_element, char * restrict buf, qn_size * restrict buf_size);
+extern qn_string_ptr qn_json_format_to_string(qn_json_ptr root_element);
+
+// ---- Setting Functions ----
 
 extern qn_bool qn_json_set_parsing_max_levels(qn_size count);
 
