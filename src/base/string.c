@@ -214,7 +214,7 @@ qn_string_ptr qn_str_join_raw(
     return new_str;
 } // qn_str_join_raw
 
-qn_string_ptr qn_str_join(const char * restrict delimiter, qn_string_ptr strs[], int n)
+qn_string_ptr qn_str_ajoin(const char * restrict delimiter, const qn_string_ptr strs[], int n)
 {
     qn_string_ptr new_str = NULL;
     char * dst_pos = NULL;
@@ -275,7 +275,70 @@ qn_string_ptr qn_str_join(const char * restrict delimiter, qn_string_ptr strs[],
     new_str->size = QN_STR_MAX_SIZE - remainder_capacity;
     new_str->cstr = &new_str->data[0];
     return new_str;
+} // qn_str_ajoin
+
+qn_string_ptr qn_str_join(const char * restrict delimiter, const qn_string_ptr str1, const qn_string_ptr str2, ...)
+{
+    va_list ap;
+    qn_string_ptr new_str = NULL;
+    va_start(ap, str2);
+    new_str = qn_str_vjoin(delimiter, str1, str2, ap);
+    va_end(ap);
+    return new_str;
 } // qn_str_join
+
+qn_string_ptr qn_str_vjoin(const char * restrict delimiter, const qn_string_ptr str1, const qn_string_ptr str2, va_list ap)
+{
+    va_list cp;
+    qn_string_ptr new_str = NULL;
+    qn_string_ptr str = NULL;
+    qn_size total_size = 0;
+    qn_size deli_size = strlen(delimiter);
+    int n = 0;
+    char * pos = NULL;
+
+    if (!str1) return NULL;
+    if (!str2) return qn_str_duplicate(str1);
+
+    total_size = str1->size + deli_size + str2->size;
+
+    va_copy(cp, ap);
+    while ((str = va_arg(cp, qn_string_ptr))) {
+        total_size += deli_size + str->size;
+        n += 1;
+    } // while
+    va_end(cp);
+
+    new_str = qn_str_allocate(total_size);
+    if (!new_str) {
+        errno = ENOMEM;
+        return NULL;
+    } // if
+
+    pos = &new_str->data[0];
+
+    memcpy(pos, str1->cstr, str1->size);
+    pos += str1->size;
+    memcpy(pos, delimiter, deli_size);
+    pos += deli_size;
+    memcpy(pos, str2->cstr, str2->size);
+    pos += str2->size;
+
+    if (n > 0) {
+        va_copy(cp, ap);
+        while ((str = va_arg(cp, qn_string_ptr))) {
+            memcpy(pos, delimiter, deli_size);
+            pos += deli_size;
+            memcpy(pos, str->cstr, str->size);
+            pos += str->size;
+        } // while
+        va_end(cp);
+    } // if
+
+    new_str->cstr = &new_str->data[0];
+    new_str->size = total_size;
+    return new_str; 
+} // qn_str_vjoin
 
 qn_string_ptr qn_str_vprintf(const char * restrict format, va_list ap)
 {

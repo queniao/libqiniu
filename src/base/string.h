@@ -62,9 +62,20 @@ extern qn_string_ptr qn_str_join_raw(const char * restrict delimiter, const char
 //==    ENOMEM      No enough memory for allocating buffer space.
 //==    EINVALID    The delimiter is NULL, or no string objects is passed.
 //==    EOVERFLOW   The size of the joined string would overflow the max string size(QN_STR_MAX_SIZE).
-extern qn_string_ptr qn_str_join(const char * restrict delimiter, qn_string_ptr strs[], int n);
+extern qn_string_ptr qn_str_ajoin(const char * restrict delimiter, const qn_string_ptr strs[], int n);
 
-#define qn_str_concat(strs, n) qn_str_join("", strs, n)
+extern qn_string_ptr qn_str_join(const char * restrict delimiter, const qn_string_ptr str1, const qn_string_ptr str2, ...);
+extern qn_string_ptr qn_str_vjoin(const char * restrict delimiter, const qn_string_ptr str1, const qn_string_ptr str2, va_list ap);
+
+static inline qn_string_ptr qn_str_aconcat(const qn_string_ptr strs[], int n)
+{
+    return qn_str_ajoin("", strs, n);
+} // qn_str_aconcat
+
+static inline qn_string_ptr qn_str_vconcat(const qn_string_ptr str1, const qn_string_ptr str2, va_list ap)
+{
+    return qn_str_vjoin("", str1, str2, ap);
+} // qn_str_vconcat
 
 extern qn_string_ptr qn_str_vprintf(const char * restrict format, va_list ap);
 extern qn_string_ptr qn_str_sprintf(const char * restrict format, ...);
