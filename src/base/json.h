@@ -43,13 +43,13 @@ extern qn_bool qn_json_is_number(qn_json_ptr self);
 extern qn_bool qn_json_is_boolean(qn_json_ptr self);
 extern qn_bool qn_json_is_null(qn_json_ptr self);
 
-extern qn_string_ptr qn_json_to_string(qn_json_ptr self);
+extern qn_string qn_json_to_string(qn_json_ptr self);
 extern qn_integer qn_json_to_integer(qn_json_ptr self);
 extern qn_number qn_json_to_number(qn_json_ptr self);
 extern qn_bool qn_json_to_boolean(qn_json_ptr self);
 
 extern qn_size qn_json_size(qn_json_ptr self);
-extern qn_string_ptr qn_json_key(qn_json_ptr self);
+extern qn_string qn_json_key(qn_json_ptr self);
 extern qn_bool qn_json_is_empty(qn_json_ptr self);
 
 struct _QN_JSON_ITERATOR;
@@ -81,7 +81,7 @@ typedef struct _QN_JSON_FORMATTER * qn_json_formatter_ptr;
 extern qn_json_formatter_ptr qn_json_fmt_create(void);
 extern void qn_json_fmt_destroy(qn_json_formatter_ptr fmt);
 extern qn_bool qn_json_fmt_format(qn_json_formatter_ptr fmt, qn_json_ptr root_element, char * restrict buf, qn_size * restrict buf_size);
-extern qn_string_ptr qn_json_format_to_string(qn_json_ptr root_element);
+extern qn_string qn_json_format_to_string(qn_json_ptr root_element);
 
 // ---- Setting Functions ----
 
@@ -89,7 +89,7 @@ extern qn_bool qn_json_set_parsing_max_levels(qn_size count);
 
 // ---- Wrapper Functions ----
 
-static inline qn_bool qn_json_set_string(qn_json_ptr self, const char * key, qn_string_ptr val)
+static inline qn_bool qn_json_set_string(qn_json_ptr self, const char * key, qn_string val)
 {
     qn_json_ptr elem = qn_json_create_string(qn_str_cstr(val), qn_str_size(val));
     if (!elem) return qn_false;
@@ -131,7 +131,7 @@ static inline qn_bool qn_json_set_null(qn_json_ptr self, const char * key)
     return qn_json_set(self, key, elem);
 } // qn_json_set_null
 
-static inline qn_bool qn_json_push_string(qn_json_ptr self, qn_string_ptr val)
+static inline qn_bool qn_json_push_string(qn_json_ptr self, qn_string val)
 {
     qn_json_ptr elem = qn_json_create_string(qn_str_cstr(val), qn_str_size(val));
     if (!elem) return qn_false;
@@ -173,7 +173,7 @@ static inline qn_bool qn_json_push_null(qn_json_ptr self)
     return qn_json_push(self, elem);
 } // qn_json_push_null
 
-static inline qn_bool qn_json_unshift_string(qn_json_ptr self, qn_string_ptr val)
+static inline qn_bool qn_json_unshift_string(qn_json_ptr self, qn_string val)
 {
     qn_json_ptr elem = qn_json_create_string(qn_str_cstr(val), qn_str_size(val));
     if (!elem) return qn_false;
@@ -215,7 +215,7 @@ static inline qn_bool qn_json_unshift_null(qn_json_ptr self)
     return qn_json_unshift(self, elem);
 } // qn_json_unshift_null
 
-static inline qn_string_ptr qn_json_get_string(qn_json_ptr self, const char * key, qn_string_ptr default_val)
+static inline qn_string qn_json_get_string(qn_json_ptr self, const char * key, qn_string default_val)
 {
     qn_json_ptr elem = qn_json_get(self, key);
     if (!elem || !qn_json_is_string(elem)) return default_val;
@@ -250,7 +250,7 @@ static inline qn_bool qn_json_get_boolean(qn_json_ptr self, const char * key, qn
     return qn_json_to_boolean(elem);
 } // qn_json_get_boolean
 
-static inline qn_string_ptr qn_json_pick_string(qn_json_ptr self, int n, qn_string_ptr default_val)
+static inline qn_string qn_json_pick_string(qn_json_ptr self, int n, qn_string default_val)
 {
     qn_json_ptr elem = qn_json_pick(self, n);
     if (!elem || !qn_json_is_string(elem)) return default_val;

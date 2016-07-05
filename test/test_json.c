@@ -12,7 +12,7 @@ void test_manipulate_object(void)
     qn_json_ptr obj = NULL;
     qn_json_ptr new_elem = NULL;
     qn_json_ptr elem = NULL;
-    qn_string_ptr str = NULL;
+    qn_string str = NULL;
     char buf[] = {"A line for creating string element."};
     qn_size buf_len = strlen(buf);
 
@@ -96,7 +96,7 @@ void test_manipulate_array(void)
     qn_json_ptr arr = NULL;
     qn_json_ptr new_elem = NULL;
     qn_json_ptr elem = NULL;
-    qn_string_ptr str = NULL;
+    qn_string str = NULL;
     char buf[] = {"A line for creating string element."};
     qn_size buf_len = strlen(buf);
 
@@ -228,7 +228,7 @@ void test_parse_object_holding_one_element(void)
     qn_size buf_len = strlen(buf);
     qn_json_ptr obj = NULL;
     qn_json_ptr elem = NULL;
-    qn_string_ptr str = NULL;
+    qn_string str = NULL;
     qn_json_parser_ptr prs = NULL;
 
     prs = qn_json_prs_create();
@@ -475,7 +475,7 @@ void test_parse_array_holding_one_element(void)
     qn_size buf_len = strlen(buf);
     qn_json_ptr arr = NULL;
     qn_json_ptr elem = NULL;
-    qn_string_ptr str = NULL;
+    qn_string str = NULL;
     qn_json_parser_ptr prs = NULL;
 
     prs = qn_json_prs_create();

@@ -23,7 +23,7 @@ extern "C"
 static qn_size qn_json_parsing_max_levels = 8;
 
 typedef qn_bool qn_json_boolean;
-typedef qn_string_ptr qn_json_string;
+typedef qn_string qn_json_string;
 typedef qn_integer qn_json_integer;
 typedef qn_number qn_json_number;
 typedef qn_uint32 qn_json_hash;
@@ -92,7 +92,7 @@ typedef enum _QN_JSON_PRS_RESULT
 typedef struct _QN_JSON
 {
     qn_json_hash hash;
-    qn_string_ptr key;
+    qn_string key;
     struct {
         qn_json_class class:3;
         qn_json_prs_status status:3;
@@ -203,15 +203,14 @@ qn_json_hash qn_json_obj_calculate_hash(const char * cstr)
     return hash;
 } // qn_json_obj_calculate_hash
 
-static
-qn_json_ptr qn_json_obj_find(qn_dqueue_ptr queue, qn_json_hash hash, const char * key, qn_size * pos)
+static qn_json_ptr qn_json_obj_find(qn_dqueue_ptr queue, qn_json_hash hash, const char * key, qn_size * pos)
 {
     qn_size i = 0;
     qn_json_ptr ce = NULL;
 
     for (i = 0; i < qn_dqueue_size(queue); i += 1) {
         ce = qn_dqueue_get(queue, i);
-        if (ce->hash == hash && (qn_str_compare_raw(ce->key, key)) == 0) {
+        if (ce->hash == hash && (qn_str_compare(ce->key, key)) == 0) {
             *pos = i;
             return ce;
         } // if
@@ -257,7 +256,7 @@ qn_json_ptr qn_json_create_string(const char * cstr, qn_size cstr_size)
     } // if
 
     new_str->class = QN_JSON_STRING;
-    new_str->string = qn_str_create(cstr, cstr_size);
+    new_str->string = qn_str_clone(cstr, cstr_size);
     if (!new_str->string) {
         return NULL;
     } // if
@@ -399,7 +398,7 @@ qn_bool qn_json_set(qn_json_ptr self, const char * key, qn_json_ptr new_child)
     } // if
 
     new_child->hash = hash;
-    new_child->key = qn_str_clone_raw(key);
+    new_child->key = qn_str_duplicate(key);
     if (!new_child->key) {
         return qn_false;
     } // if
@@ -591,7 +590,7 @@ qn_json_ptr qn_json_pick(qn_json_ptr self, qn_size n)
     return qn_dqueue_get(self->array->queue, n);
 } // qn_json_pick
 
-qn_string_ptr qn_json_to_string(qn_json_ptr self)
+qn_string qn_json_to_string(qn_json_ptr self)
 {
     assert(self && self->class == QN_JSON_STRING);
     return self->string;
@@ -667,7 +666,7 @@ qn_size qn_json_size(qn_json_ptr self)
     return 0;
 } // qn_json_size
 
-qn_string_ptr qn_json_key(qn_json_ptr self)
+qn_string qn_json_key(qn_json_ptr self)
 {
     return self->key;
 } // qh_json_key
@@ -964,9 +963,9 @@ qn_bool qn_json_unescape_to_utf8(char * cstr, qn_size * i, qn_size * m)
 } // qn_json_unescape_to_utf8
 
 static
-qn_json_token qn_json_scan_string(qn_json_scanner_ptr s, qn_string_ptr * txt)
+qn_json_token qn_json_scan_string(qn_json_scanner_ptr s, qn_string * txt)
 {
-    qn_string_ptr new_str = NULL;
+    qn_string new_str = NULL;
     char * cstr = NULL;
     qn_size primitive_len = 0;
     qn_size i = 0;
@@ -1026,7 +1025,7 @@ qn_json_token qn_json_scan_string(qn_json_scanner_ptr s, qn_string_ptr * txt)
         m = primitive_len;
     } // if
 
-    new_str = qn_str_create(cstr, m);
+    new_str = qn_str_clone(cstr, m);
     free(cstr);
 
     if (!new_str) {
@@ -1039,9 +1038,9 @@ qn_json_token qn_json_scan_string(qn_json_scanner_ptr s, qn_string_ptr * txt)
 } // qn_json_scan_string
 
 static
-qn_json_token qn_json_scan_number(qn_json_scanner_ptr s, qn_string_ptr * txt)
+qn_json_token qn_json_scan_number(qn_json_scanner_ptr s, qn_string * txt)
 {
-    qn_string_ptr new_str = NULL;
+    qn_string new_str = NULL;
     qn_json_token tkn = QN_JSON_TKN_INTEGER;
     qn_size primitive_len = 0;
     qn_size pos = s->pos + 1; // 跳过已经被识别的首字符
@@ -1059,7 +1058,7 @@ qn_json_token qn_json_scan_number(qn_json_scanner_ptr s, qn_string_ptr * txt)
     } // if
 
     primitive_len = pos - s->pos;
-    new_str = qn_str_create(s->buf + s->pos, primitive_len);
+    new_str = qn_str_clone(s->buf + s->pos, primitive_len);
     if (!new_str) {
         qn_err_set_no_enough_memory();
         return QN_JSON_TKNERR_NO_ENOUGH_MEMORY;
@@ -1071,7 +1070,7 @@ qn_json_token qn_json_scan_number(qn_json_scanner_ptr s, qn_string_ptr * txt)
 } // qn_json_scan_number
 
 static
-qn_json_token qn_json_scan(qn_json_scanner_ptr s, qn_string_ptr * txt)
+qn_json_token qn_json_scan(qn_json_scanner_ptr s, qn_string * txt)
 {
     qn_size pos = s->pos;
 
@@ -1192,7 +1191,7 @@ static
 qn_bool qn_json_put_in(
     qn_json_parser_ptr prs,
     qn_json_token tkn,
-    qn_string_ptr txt,
+    qn_string txt,
     qn_json_ptr parent)
 {
     qn_json_integer integer = 0L;
@@ -1319,7 +1318,7 @@ qn_json_prs_result qn_json_parse_object(qn_json_parser_ptr prs)
 {
     qn_bool ret = qn_false;
     qn_json_token tkn = QN_JSON_TKNERR_NEED_MORE_TEXT;
-    qn_string_ptr txt = NULL;
+    qn_string txt = NULL;
     qn_json_ptr parsing_obj = qn_dqueue_last(prs->queue);
 
 PARSING_NEXT_ELEMENT_IN_THE_OBJECT:
@@ -1412,7 +1411,7 @@ static
 qn_json_prs_result qn_json_parse_array(qn_json_parser_ptr prs)
 {
     qn_json_token tkn = QN_JSON_TKNERR_NEED_MORE_TEXT;
-    qn_string_ptr txt = NULL;
+    qn_string txt = NULL;
     qn_json_ptr parsing_arr = qn_dqueue_last(prs->queue);
 
 PARSING_NEXT_ELEMENT_IN_THE_ARRAY:
@@ -1479,7 +1478,7 @@ qn_bool qn_json_prs_parse(
 
     qn_json_prs_result parsing_ret;
     qn_json_token tkn = QN_JSON_TKNERR_NEED_MORE_TEXT;
-    qn_string_ptr txt = NULL;
+    qn_string txt = NULL;
     qn_json_ptr child = NULL;
     qn_json_ptr parent = NULL;
 
@@ -1568,7 +1567,7 @@ typedef struct _QN_JSON_FORMATTER {
     qn_size buf_pages;
     qn_size buf_page_size;
 
-    qn_string_ptr string;
+    qn_string string;
     qn_size string_pos;
 
     qn_json_iterator_ptr iterator;
@@ -1891,9 +1890,9 @@ qn_bool qn_json_fmt_format(
     return qn_true;
 } // qn_json_fmt_format
 
-qn_string_ptr qn_json_format_to_string(qn_json_ptr root)
+qn_string qn_json_format_to_string(qn_json_ptr root)
 {
-    qn_string_ptr new_str = NULL;
+    qn_string new_str = NULL;
     qn_json_formatter_ptr fmt = NULL;
     char * buf = NULL;
     char * new_buf = NULL;
@@ -1938,7 +1937,7 @@ qn_string_ptr qn_json_format_to_string(qn_json_ptr root)
     final_size += size;
     qn_json_fmt_destroy(fmt);
 
-    return qn_str_create(buf, final_size);
+    return qn_str_clone(buf, final_size);
 } // qn_json_format_to_string
 
 // ---- Setting Functions ----
