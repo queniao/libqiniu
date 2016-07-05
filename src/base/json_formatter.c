@@ -211,7 +211,11 @@ qn_bool qn_json_fmt_format_ordinary(qn_json_formatter_ptr fmt)
             break;
 
         case QN_JSON_NUMBER:
+#ifndef QN_CFG_BIG_NUMBERS
+            ret = qn_str_snprintf(fmt->buf + fmt->buf_size, (fmt->buf_capacity - fmt->buf_size) - 1, "%lf", fmt->val.number);
+#else
             ret = qn_str_snprintf(fmt->buf + fmt->buf_size, (fmt->buf_capacity - fmt->buf_size) - 1, "%Lf", fmt->val.number);
+#endif
             break;
 
         case QN_JSON_BOOLEAN:
