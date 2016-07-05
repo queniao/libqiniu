@@ -30,6 +30,11 @@ static inline int qn_str_compare(const qn_string restrict s1, const qn_string re
     return posix_strcmp(s1, s2);
 }
 
+static inline int qn_str_compare_raw(const qn_string restrict s1, const char * restrict s2)
+{
+    return posix_strcmp(s1, s2);
+}
+
 extern qn_string qn_str_duplicate(const char * s);
 extern qn_string qn_str_clone(const char * s, int sz);
 

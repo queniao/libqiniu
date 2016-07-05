@@ -1,4 +1,5 @@
 #include <openssl/hmac.h>
+#include "base/json_formatter.h"
 #include "auth.h"
 
 #ifdef __cplusplus
@@ -55,11 +56,7 @@ qn_bool qn_pp_set_deadline(qn_json_ptr pp, qn_uint32 deadline)
 
 qn_bool qn_pp_dont_overwrite(qn_json_ptr pp)
 {
-    qn_json_ptr mode = qn_json_create_integer(1);
-    if (!mode) {
-        return qn_false;
-    } // if
-    return qn_json_set(pp, "insertOnly", mode);
+    return qn_json_set_integer(pp, "insertOnly", 1);
 } // qn_pp_dont_overwrite
 
 qn_bool qn_pp_return_to(qn_json_ptr pp, const qn_string url, const qn_string body)
