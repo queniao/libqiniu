@@ -7,8 +7,8 @@
 #include <errno.h>
 #include <assert.h>
 
-#include "base/errors.h"
-#include "base/json_parser.h"
+#include "qiniu/base/errors.h"
+#include "qiniu/base/json_parser.h"
 
 #ifdef __cplusplus
 extern "C"
@@ -759,7 +759,7 @@ qn_size qn_json_prs_get_max_levels(void)
     return qn_json_prs_max_levels;
 }
 
-qn_bool qn_json_prs_set_max_levels(qn_size count)
+void qn_json_prs_set_max_levels(qn_size count)
 {
     if (4 <= qn_json_prs_max_levels && qn_json_prs_max_levels < 64) {
         qn_json_prs_max_levels = count;

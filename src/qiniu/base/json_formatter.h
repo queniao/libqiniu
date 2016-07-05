@@ -1,7 +1,7 @@
 #ifndef __QN_JSON_FORMATTER_H__
 #define __QN_JSON_FORMATTER_H__
 
-#include "base/json.h"
+#include "qiniu/base/json.h"
 
 #ifdef __cplusplus
 extern "C"

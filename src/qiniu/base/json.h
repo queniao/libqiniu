@@ -3,8 +3,8 @@
 
 #include <string.h>
 
-#include "base/basic_types.h"
-#include "base/string.h"
+#include "qiniu/base/basic_types.h"
+#include "qiniu/base/string.h"
 
 #ifdef __cplusplus
 extern "C"

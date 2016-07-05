@@ -3,7 +3,7 @@
 
 #include <assert.h>
 
-#include "base/basic_types.h"
+#include "qiniu/base/basic_types.h"
 
 #ifdef __cplusplus
 extern "C"

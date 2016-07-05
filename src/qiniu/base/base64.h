@@ -1,7 +1,7 @@
 #ifndef __QN_BASE64_H__
 #define __QN_BASE64_H__ 1
 
-#include "base/basic_types.h"
+#include "qiniu/base/basic_types.h"
 
 #ifdef __cplusplus
 extern "C"

@@ -1,9 +1,9 @@
 #ifndef __QN_AUTH_H__
 #define __QN_AUTH_H__
 
-#include "base/basic_types.h"
-#include "base/string.h"
-#include "base/json.h"
+#include "qiniu/base/basic_types.h"
+#include "qiniu/base/string.h"
+#include "qiniu/base/json.h"
 
 #ifdef __cplusplus
 extern "C"

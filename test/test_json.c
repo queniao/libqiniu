@@ -1,8 +1,8 @@
 #include <CUnit/Basic.h>
 
-#include "base/json.h"
-#include "base/json_parser.h"
-#include "base/json_formatter.h"
+#include "qiniu/base/json.h"
+#include "qiniu/base/json_parser.h"
+#include "qiniu/base/json_formatter.h"
 
 #define CU_ASSERT_LONG_DOUBLE_EQUAL(actual, expected, granularity) \
   { CU_assertImplementation(((fabsl((long double)(actual) - (expected)) <= fabsl((long double)(granularity)))), __LINE__, ("CU_ASSERT_LONG_DOUBLE_EQUAL(" #actual ","  #expected "," #granularity ")"), __FILE__, "", CU_FALSE); }
@@ -13,7 +13,6 @@ void test_manipulate_object(void)
 {
     qn_bool ret = qn_false;
     qn_json_ptr obj = NULL;
-    qn_json_ptr elem = NULL;
     qn_string str = NULL;
     char buf[] = {"A line for creating string element."};
     qn_size buf_len = strlen(buf);
@@ -73,7 +72,6 @@ void test_manipulate_array(void)
 {
     qn_bool ret = qn_false;
     qn_json_ptr arr = NULL;
-    qn_json_ptr elem = NULL;
     qn_string str = NULL;
     char buf[] = {"A line for creating string element."};
     qn_size buf_len = strlen(buf);
@@ -201,7 +199,6 @@ void test_parse_object_holding_two_elements(void)
     const char buf[] = {"{\"trivial\":\"This is a trivial element.\",\"int\":-123}"};
     qn_size buf_len = strlen(buf);
     qn_json_ptr obj = NULL;
-    qn_integer val = 0;
     qn_json_parser_ptr prs = NULL;
 
     prs = qn_json_prs_create();
@@ -228,7 +225,6 @@ void test_parse_object_holding_ordinary_elements(void)
     const char buf[] = {"{\"_num\":+123.456,\"_true\":true,\"_false\":false,\"_null\":null}"};
     qn_size buf_len = strlen(buf);
     qn_json_ptr obj = NULL;
-    qn_number num_val = 0.0L;
     qn_json_parser_ptr prs = NULL;
 
     prs = qn_json_prs_create();
@@ -295,7 +291,6 @@ void test_parse_object_holding_embedded_objects(void)
     qn_size buf_len = strlen(buf);
     qn_json_ptr obj = NULL;
     qn_json_ptr child = NULL;
-    qn_number num_val = 0.0L;
     qn_json_parser_ptr prs = NULL;
 
     prs = qn_json_prs_create();
@@ -481,8 +476,6 @@ void test_parse_array_holding_embedded_arrays(void)
     qn_size buf_len = strlen(buf);
     qn_json_ptr arr = NULL;
     qn_json_ptr child = NULL;
-    qn_json_ptr elem = NULL;
-    qn_number num_val = 0.0L;
     qn_json_parser_ptr prs = NULL;
 
     prs = qn_json_prs_create();
@@ -562,7 +555,6 @@ void test_format_object_holding_string_element(void)
 {
     qn_bool ret = qn_false;
     qn_json_ptr root = NULL;
-    qn_json_ptr str = NULL;
     qn_json_formatter_ptr fmt = NULL;
     char buf[128];
     qn_size buf_size = sizeof(buf);

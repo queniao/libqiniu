@@ -1,7 +1,7 @@
 #ifndef __QN_JSON_PARSER_H__
 #define __QN_JSON_PARSER_H__
 
-#include "base/json.h"
+#include "qiniu/base/json.h"
 
 #ifdef __cplusplus
 extern "C"
@@ -18,7 +18,7 @@ extern void qn_json_prs_destroy(qn_json_parser_ptr prs);
 extern void qn_json_prs_reset(qn_json_parser_ptr prs);
 extern qn_bool qn_json_prs_parse(qn_json_parser_ptr prs, const char * restrict buf, qn_size * restrict buf_size, qn_json_ptr * root_element);
 
-extern qn_bool qn_json_prs_set_max_levels(qn_size count);
+extern void qn_json_prs_set_max_levels(qn_size count);
 
 #ifdef __cplusplus
 }

@@ -1,6 +1,6 @@
 #include <stdlib.h>
 
-#include "base/errors.h"
+#include "qiniu/base/errors.h"
 
 #ifdef __cplusplus
 extern "C"

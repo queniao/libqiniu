@@ -1,5 +1,5 @@
-#include "base/errors.h"
-#include "base/json_formatter.h"
+#include "qiniu/base/errors.h"
+#include "qiniu/base/json_formatter.h"
 
 #ifdef __cplusplus
 extern "C"
@@ -358,7 +358,6 @@ qn_bool qn_json_fmt_format(qn_json_formatter_ptr fmt, qn_json_ptr root, char * r
 
 qn_string qn_json_format_to_string(qn_json_ptr root)
 {
-    qn_string new_str = NULL;
     qn_json_formatter_ptr fmt = NULL;
     char * buf = NULL;
     char * new_buf = NULL;

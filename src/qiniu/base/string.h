@@ -4,7 +4,7 @@
 #include <stdarg.h>
 #include <stdlib.h>
 #include <string.h>
-#include "base/basic_types.h"
+#include "qiniu/base/basic_types.h"
 
 #define posix_strlen strlen
 #define posix_strcmp strcmp

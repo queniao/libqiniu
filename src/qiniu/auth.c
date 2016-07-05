@@ -1,6 +1,6 @@
 #include <openssl/hmac.h>
-#include "base/json_formatter.h"
-#include "auth.h"
+#include "qiniu/base/json_formatter.h"
+#include "qiniu/auth.h"
 
 #ifdef __cplusplus
 extern "C"

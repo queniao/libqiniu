@@ -1,8 +1,8 @@
 #include <assert.h>
 
-#include "base/string.h"
-#include "base/json.h"
-#include "base/errors.h"
+#include "qiniu/base/string.h"
+#include "qiniu/base/json.h"
+#include "qiniu/base/errors.h"
 
 #ifdef __cplusplus
 extern "C"
@@ -96,7 +96,6 @@ static qn_bool qn_json_obj_augment(qn_json_object_ptr obj)
 
 static qn_bool qn_json_obj_set(qn_json_object_ptr obj, const char * key, qn_json_ptr new_elem)
 {
-    qn_json_ptr elem = NULL;
     qn_json_hash hash = 0;
     qn_size pos = 0;
 

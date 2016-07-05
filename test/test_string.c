@@ -1,6 +1,6 @@
 #include <CUnit/Basic.h>
 
-#include "base/string.h"
+#include "qiniu/base/string.h"
 
 // ---- test creation & destruction ----
 

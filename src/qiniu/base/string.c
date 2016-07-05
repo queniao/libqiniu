@@ -4,9 +4,9 @@
 
 #include <assert.h>
 
-#include "base/string.h"
-#include "base/base64.h"
-#include "base/errors.h"
+#include "qiniu/base/string.h"
+#include "qiniu/base/base64.h"
+#include "qiniu/base/errors.h"
 
 #ifdef __cplusplus
 extern "C"
@@ -170,7 +170,7 @@ qn_string qn_str_sprintf(const char * restrict format, ...)
 #if defined(_MSC_VER)
 
 #if (_MSC_VER < 1400)
-#error The MSVC compiler's version is lower then VC++ 2005.
+#error The version of the MSVC is lower then VC++ 2005.
 #endif
 
 int qn_str_snprintf(char * restrict str, int size,  const char * restrict format, ...)

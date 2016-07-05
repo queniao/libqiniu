@@ -1,7 +1,7 @@
 #include <stdlib.h>
 #include <assert.h>
 
-#include "base/base64.h"
+#include "qiniu/base/base64.h"
 
 #ifdef __cplusplus
 extern "C"
