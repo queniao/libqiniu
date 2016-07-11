@@ -332,7 +332,8 @@ typedef enum _QN_JSON_PRS_RESULT
 
 typedef struct _QN_JSON_PRS_LEVEL
 {
-    qn_json_ptr elem;
+    qn_json_class class;
+    qn_json_variant elem;
     qn_string key;
     qn_json_prs_status status;
 } qn_json_prs_level, *qn_json_prs_level_ptr;
@@ -364,7 +365,12 @@ void qn_json_prs_destroy(qn_json_parser_ptr prs)
 {
     if (prs) {
         while (prs->size > 0) {
-            qn_json_destroy(prs->lvl[--prs->size].elem);
+            prs->size -= 1;
+            if (prs->lvl[prs->size].class == QN_JSON_OBJECT) {
+                qn_json_destroy_object(prs->lvl[prs->size].elem.object);
+            } else {
+                qn_json_destroy_array(prs->lvl[prs->size].elem.array);
+            }
         } // while
         if (prs->lvl != &prs->init_lvl[0]) {
             free(prs->lvl);
@@ -377,7 +383,12 @@ void qn_json_prs_reset(qn_json_parser_ptr prs)
 {
     if (prs) {
         while (prs->size > 0) {
-            qn_json_destroy(prs->lvl[--prs->size].elem);
+            prs->size -= 1;
+            if (prs->lvl[prs->size].class == QN_JSON_OBJECT) {
+                qn_json_destroy_object(prs->lvl[prs->size].elem.object);
+            } else {
+                qn_json_destroy_array(prs->lvl[prs->size].elem.array);
+            }
         } // while
     }
 }
@@ -398,9 +409,10 @@ static qn_bool qn_json_prs_augment(qn_json_parser_ptr prs)
     return qn_true;
 }
 
-static qn_bool qn_json_prs_push(qn_json_parser_ptr prs, qn_json_ptr elem, qn_json_prs_status status)
+static qn_bool qn_json_prs_push(qn_json_parser_ptr prs, qn_json_class cls, qn_json_variant elem, qn_json_prs_status status)
 {
     if (prs->size == prs->cap && !qn_json_prs_augment(prs)) return qn_false;
+    prs->lvl[prs->size].class = cls;
     prs->lvl[prs->size].elem = elem;
     prs->lvl[prs->size].key = NULL;
     prs->lvl[prs->size].status = status;
@@ -427,7 +439,9 @@ static qn_bool qn_json_prs_put_in(qn_json_parser_ptr prs, qn_json_token tkn, qn_
 {
     qn_integer integer = 0L;
     qn_number number = 0.0L;
-    qn_json_ptr new_elem = NULL;
+    qn_json_variant new_elem;
+    qn_json_object_ptr new_obj = NULL;
+    qn_json_array_ptr new_arr = NULL;
     char * end_txt = NULL;
 
     switch (tkn) {
@@ -436,14 +450,16 @@ static qn_bool qn_json_prs_put_in(qn_json_parser_ptr prs, qn_json_token tkn, qn_
                 qn_err_json_set_too_many_parsing_levels();
                 return qn_false;
             } // if
-            if (qn_json_is_object(lvl->elem)) {
-                if (! (new_elem = qn_json_create_and_set_object(lvl->elem, lvl->key))) return qn_false;
-                if (!qn_json_prs_push(prs, new_elem, QN_JSON_PARSING_KEY)) return qn_false;
+            if (lvl->class == QN_JSON_OBJECT) {
+                if (! (new_obj = qn_json_create_and_set_object(lvl->elem.object, lvl->key))) return qn_false;
+                new_elem.object = new_obj;
+                if (!qn_json_prs_push(prs, QN_JSON_OBJECT, new_elem, QN_JSON_PARSING_KEY)) return qn_false;
                 qn_str_destroy(lvl->key);
                 lvl->key = NULL;
             } else {
-                if (! (new_elem = qn_json_create_and_push_object(lvl->elem)) ) return qn_false;
-                if (!qn_json_prs_push(prs, new_elem, QN_JSON_PARSING_KEY)) return qn_false;
+                if (! (new_obj = qn_json_create_and_push_object(lvl->elem.array)) ) return qn_false;
+                new_elem.object = new_obj;
+                if (!qn_json_prs_push(prs, QN_JSON_OBJECT, new_elem, QN_JSON_PARSING_KEY)) return qn_false;
             }
             return qn_true;
 
@@ -452,25 +468,27 @@ static qn_bool qn_json_prs_put_in(qn_json_parser_ptr prs, qn_json_token tkn, qn_
                 qn_err_json_set_too_many_parsing_levels();
                 return qn_false;
             } // if
-            if (qn_json_is_object(lvl->elem)) {
-                if (! (new_elem = qn_json_create_and_set_array(lvl->elem, lvl->key))) return qn_false;
-                if (!qn_json_prs_push(prs, new_elem, QN_JSON_PARSING_VALUE)) return qn_false;
+            if (lvl->class == QN_JSON_OBJECT) {
+                if (! (new_arr = qn_json_create_and_set_array(lvl->elem.object, lvl->key))) return qn_false;
+                new_elem.array = new_arr;
+                if (!qn_json_prs_push(prs, QN_JSON_ARRAY, new_elem, QN_JSON_PARSING_VALUE)) return qn_false;
                 qn_str_destroy(lvl->key);
                 lvl->key = NULL;
             } else {
-                if (! (new_elem = qn_json_create_and_push_array(lvl->elem)) ) return qn_false;
-                if (!qn_json_prs_push(prs, new_elem, QN_JSON_PARSING_VALUE)) return qn_false;
+                if (! (new_arr = qn_json_create_and_push_array(lvl->elem.array)) ) return qn_false;
+                new_elem.array = new_arr;
+                if (!qn_json_prs_push(prs, QN_JSON_ARRAY, new_elem, QN_JSON_PARSING_VALUE)) return qn_false;
             }
             return qn_true;
 
         case QN_JSON_TKN_STRING:
-            if (qn_json_is_object(lvl->elem)) {
-                if (!qn_json_set_string(lvl->elem, lvl->key, txt)) return qn_false;
+            if (lvl->class == QN_JSON_OBJECT) {
+                if (!qn_json_set_string(lvl->elem.object, lvl->key, txt)) return qn_false;
                 qn_str_destroy(lvl->key);
                 lvl->key = NULL;
                 return qn_true;
             }
-            return qn_json_push_string(lvl->elem, txt);
+            return qn_json_push_string(lvl->elem.array, txt);
 
         case QN_JSON_TKN_INTEGER:
             integer = strtoll(qn_str_cstr(txt), &end_txt, 10);
@@ -482,13 +500,13 @@ static qn_bool qn_json_prs_put_in(qn_json_parser_ptr prs, qn_json_token tkn, qn_
                 qn_err_set_overflow_upper_bound();
                 return qn_false;
             } // if
-            if (qn_json_is_object(lvl->elem)) {
-                if (!qn_json_set_integer(lvl->elem, lvl->key, integer)) return qn_false;
+            if (lvl->class == QN_JSON_OBJECT) {
+                if (!qn_json_set_integer(lvl->elem.object, lvl->key, integer)) return qn_false;
                 qn_str_destroy(lvl->key);
                 lvl->key = NULL;
                 return qn_true;
             }
-            return qn_json_push_integer(lvl->elem, integer);
+            return qn_json_push_integer(lvl->elem.array, integer);
 
         case QN_JSON_TKN_NUMBER:
             number = strtold(qn_str_cstr(txt), &end_txt);
@@ -504,40 +522,40 @@ static qn_bool qn_json_prs_put_in(qn_json_parser_ptr prs, qn_json_token tkn, qn_
                 qn_err_set_overflow_lower_bound();
                 return qn_false;
             } // if
-            if (qn_json_is_object(lvl->elem)) {
-                if (!qn_json_set_number(lvl->elem, lvl->key, number)) return qn_false;
+            if (lvl->class == QN_JSON_OBJECT) {
+                if (!qn_json_set_number(lvl->elem.object, lvl->key, number)) return qn_false;
                 qn_str_destroy(lvl->key);
                 lvl->key = NULL;
                 return qn_true;
             }
-            return qn_json_push_number(lvl->elem, number);
+            return qn_json_push_number(lvl->elem.array, number);
 
         case QN_JSON_TKN_TRUE:
-            if (qn_json_is_object(lvl->elem)) {
-                if (!qn_json_set_boolean(lvl->elem, lvl->key, qn_true)) return qn_false;
+            if (lvl->class == QN_JSON_OBJECT) {
+                if (!qn_json_set_boolean(lvl->elem.object, lvl->key, qn_true)) return qn_false;
                 qn_str_destroy(lvl->key);
                 lvl->key = NULL;
                 return qn_true;
             }
-            return qn_json_push_boolean(lvl->elem, qn_true);
+            return qn_json_push_boolean(lvl->elem.array, qn_true);
 
         case QN_JSON_TKN_FALSE:
-            if (qn_json_is_object(lvl->elem)) {
-                if (!qn_json_set_boolean(lvl->elem, lvl->key, qn_false)) return qn_false;
+            if (lvl->class == QN_JSON_OBJECT) {
+                if (!qn_json_set_boolean(lvl->elem.object, lvl->key, qn_false)) return qn_false;
                 qn_str_destroy(lvl->key);
                 lvl->key = NULL;
                 return qn_true;
             }
-            return qn_json_push_boolean(lvl->elem, qn_false);
+            return qn_json_push_boolean(lvl->elem.array, qn_false);
 
         case QN_JSON_TKN_NULL:
-            if (qn_json_is_object(lvl->elem)) {
-                if (!qn_json_set_null(lvl->elem, lvl->key)) return qn_false;
+            if (lvl->class == QN_JSON_OBJECT) {
+                if (!qn_json_set_null(lvl->elem.object, lvl->key)) return qn_false;
                 qn_str_destroy(lvl->key);
                 lvl->key = NULL;
                 return qn_true;
             }
-            return qn_json_push_boolean(lvl->elem, qn_false);
+            return qn_json_push_boolean(lvl->elem.array, qn_false);
 
         case QN_JSON_TKNERR_NEED_MORE_TEXT:
             qn_err_set_try_again();
@@ -701,13 +719,39 @@ PARSING_NEXT_ELEMENT_IN_THE_ARRAY:
     return QN_JSON_PARSING_ERROR;
 }
 
-qn_bool qn_json_prs_parse(qn_json_parser_ptr prs, const char * restrict buf, qn_size * restrict buf_size, qn_json_ptr * root)
+static qn_bool qn_json_prs_parse(qn_json_parser_ptr prs, const char * restrict buf, qn_size * restrict buf_size, qn_json_variant_ptr elem)
 {
     qn_json_prs_result parsing_ret;
+    qn_json_prs_level_ptr lvl = NULL;
+
+    while (1) {
+        lvl = qn_json_prs_top(prs);
+        if (lvl->class == QN_JSON_OBJECT) {
+            parsing_ret = qn_json_parse_object(prs, lvl);
+        } else {
+            parsing_ret = qn_json_parse_array(prs, lvl);
+        } // if
+
+        if (parsing_ret == QN_JSON_PARSING_CHILD) continue;
+        if (parsing_ret == QN_JSON_PARSING_ERROR) {
+            // Failed to parse the current element.
+            *buf_size = prs->scanner.pos;
+            return qn_false;
+        } // if
+
+        // Pop the parsed element out of the stack.
+        *elem = lvl->elem;
+        qn_json_prs_pop(prs);
+        if (qn_json_prs_is_empty(prs)) break; // And it is the root element.
+    } // while
+    return qn_true;
+}
+
+qn_bool qn_json_prs_parse_object(qn_json_parser_ptr prs, const char * restrict buf, qn_size * restrict buf_size, qn_json_object_ptr * root)
+{
     qn_json_token tkn = QN_JSON_TKNERR_NEED_MORE_TEXT;
     qn_string txt = NULL;
-    qn_json_ptr elem = NULL;
-    qn_json_prs_level_ptr lvl = NULL;
+    qn_json_variant elem;
 
     prs->scanner.buf = buf;
     prs->scanner.buf_size = *buf_size;
@@ -716,11 +760,14 @@ qn_bool qn_json_prs_parse(qn_json_parser_ptr prs, const char * restrict buf, qn_
     if (qn_json_prs_is_empty(prs)) {
         tkn = qn_json_scan(&prs->scanner, &txt);
         if (tkn == QN_JSON_TKN_OPEN_BRACE) {
-            if (! (elem = qn_json_create_object()) ) return qn_false;
-            if (!qn_json_prs_push(prs, elem, QN_JSON_PARSING_KEY)) return qn_false;
-        } else if (tkn == QN_JSON_TKN_OPEN_BRACKET) {
-            if (! (elem = qn_json_create_array()) ) return qn_false;
-            if (!qn_json_prs_push(prs, elem, QN_JSON_PARSING_VALUE)) return qn_false;
+            if (! (elem.object = qn_json_create_object()) ) {
+                free(txt);
+                return qn_false;
+            }
+            if (!qn_json_prs_push(prs, QN_JSON_OBJECT, elem, QN_JSON_PARSING_KEY)) {
+                free(txt);
+                return qn_false;
+            }
         } else {
             // Not a valid piece of JSON text.
             qn_err_json_set_bad_text_input();
@@ -728,29 +775,45 @@ qn_bool qn_json_prs_parse(qn_json_parser_ptr prs, const char * restrict buf, qn_
         } // if
     } // if
 
-    while (1) {
-        lvl = qn_json_prs_top(prs);
-        if (qn_json_is_object(lvl->elem)) {
-            parsing_ret = qn_json_parse_object(prs, lvl);
-        } else {
-            parsing_ret = qn_json_parse_array(prs, lvl);
-        } // if
-
-        if (parsing_ret == QN_JSON_PARSING_CHILD) continue;
-        if (parsing_ret == QN_JSON_PARSING_ERROR) {
-            // Failed to parse the current object element.
-            *buf_size = prs->scanner.pos;
-            return qn_false;
-        } // if
-
-        // Pop the parsed element out of the stack.
-        qn_json_prs_pop(prs);
-        elem = lvl->elem;
-        if (qn_json_prs_is_empty(prs)) break; // And it is the root element.
-    } // while
+    if (!qn_json_prs_parse(prs, buf, buf_size, &elem)) return qn_false;
 
     *buf_size = prs->scanner.pos;
-    *root = elem;
+    *root = elem.object;
+    return qn_true;
+}
+
+qn_bool qn_json_prs_parse_array(qn_json_parser_ptr prs, const char * restrict buf, qn_size * restrict buf_size, qn_json_array_ptr * root)
+{
+    qn_json_token tkn = QN_JSON_TKNERR_NEED_MORE_TEXT;
+    qn_string txt = NULL;
+    qn_json_variant elem;
+
+    prs->scanner.buf = buf;
+    prs->scanner.buf_size = *buf_size;
+    prs->scanner.pos = 0;
+
+    if (qn_json_prs_is_empty(prs)) {
+        tkn = qn_json_scan(&prs->scanner, &txt);
+        if (tkn == QN_JSON_TKN_OPEN_BRACKET) {
+            if (! (elem.array = qn_json_create_array()) ) {
+                free(txt);
+                return qn_false;
+            }
+            if (!qn_json_prs_push(prs, QN_JSON_ARRAY, elem, QN_JSON_PARSING_VALUE)) {
+                free(txt);
+                return qn_false;
+            }
+        } else {
+            // Not a valid piece of JSON text.
+            qn_err_json_set_bad_text_input();
+            return qn_false;
+        } // if
+    } // if
+
+    if (!qn_json_prs_parse(prs, buf, buf_size, &elem)) return qn_false;
+
+    *buf_size = prs->scanner.pos;
+    *root = elem.array;
     return qn_true;
 }
 

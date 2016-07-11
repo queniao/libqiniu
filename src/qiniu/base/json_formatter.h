@@ -15,8 +15,11 @@ typedef struct _QN_JSON_FORMATTER * qn_json_formatter_ptr;
 
 extern qn_json_formatter_ptr qn_json_fmt_create(void);
 extern void qn_json_fmt_destroy(qn_json_formatter_ptr fmt);
-extern qn_bool qn_json_fmt_format(qn_json_formatter_ptr fmt, qn_json_ptr root_element, char * restrict buf, qn_size * restrict buf_size);
-extern qn_string qn_json_format_to_string(qn_json_ptr root_element);
+
+extern qn_bool qn_json_fmt_format_object(qn_json_formatter_ptr fmt, qn_json_object_ptr root, char * restrict buf, qn_size * restrict buf_size);
+extern qn_bool qn_json_fmt_format_array(qn_json_formatter_ptr fmt, qn_json_array_ptr root, char * restrict buf, qn_size * restrict buf_size);
+extern qn_string qn_json_object_to_string(qn_json_object_ptr root);
+extern qn_string qn_json_array_to_string(qn_json_array_ptr root);
 
 #ifdef __cplusplus
 }
