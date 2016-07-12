@@ -26,7 +26,7 @@ void test_manipulate_object(void)
     CU_ASSERT_EQUAL(qn_json_size_object(obj_root), 1);
 
     // set a number element
-    ret = qn_json_set_number(obj_root, "_num",-9.99L);
+    ret = qn_json_set_number(obj_root, "_num", -9.99L);
     CU_ASSERT_TRUE(ret);
     CU_ASSERT_EQUAL(qn_json_size_object(obj_root), 2);
 
@@ -64,6 +64,15 @@ void test_manipulate_object(void)
     CU_ASSERT_TRUE(str != NULL);
     CU_ASSERT_TRUE(strcmp(qn_str_cstr(str), buf) == 0);
     CU_ASSERT_EQUAL(qn_json_size_object(obj_root), 3);
+
+    qn_json_unset(obj_root, "_false");
+    CU_ASSERT_EQUAL(qn_json_size_object(obj_root), 2);
+
+    qn_json_unset(obj_root, "_str");
+    CU_ASSERT_EQUAL(qn_json_size_object(obj_root), 1);
+
+    qn_json_unset(obj_root, "_num");
+    CU_ASSERT_EQUAL(qn_json_size_object(obj_root), 0);
 
     qn_json_destroy_object(obj_root);
 }

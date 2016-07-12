@@ -13,14 +13,9 @@ typedef unsigned short int qn_json_pos;
 
 // ---- Inplementation of object of JSON ----
 
-typedef struct _QN_JSON_OBJ_INDEX
-{
-    qn_json_hash hash;
-    qn_json_pos pos;
-} qn_json_obj_index;
-
 typedef struct _QN_JSON_OBJ_ITEM
 {
+    qn_json_hash hash;
     qn_string key;
     qn_json_class class;
     qn_json_variant elem;
@@ -28,12 +23,10 @@ typedef struct _QN_JSON_OBJ_ITEM
 
 typedef struct _QN_JSON_OBJECT
 {
-    qn_json_obj_index * idx;
     qn_json_obj_item * itm;
     qn_json_pos cnt;
     qn_json_pos cap;
 
-    qn_json_obj_index init_idx[2];
     qn_json_obj_item init_itm[2];
 } qn_json_object;
 
@@ -56,9 +49,8 @@ qn_json_object_ptr qn_json_create_object(void)
         return NULL;
     }
 
-    new_obj->idx = &new_obj->init_idx[0];
     new_obj->itm = &new_obj->init_itm[0];
-    new_obj->cap = sizeof(new_obj->init_idx) / sizeof(new_obj->init_idx[0]);
+    new_obj->cap = sizeof(new_obj->init_itm) / sizeof(new_obj->init_itm[0]);
     return new_obj;
 }
 
@@ -75,23 +67,20 @@ void qn_json_destroy_object(qn_json_object_ptr obj)
         } // switch
         free(obj->itm[i].key);
     } // for
-    if (obj->idx != &obj->init_idx[0]) {
-        free(obj->idx);
-    } // if
     if (obj->itm != &obj->init_itm[0]) {
         free(obj->itm);
     } // if
     free(obj);
 }
 
-static qn_json_pos qn_json_obj_bsearch(qn_json_obj_index * idx, qn_json_pos cnt, qn_json_hash hash)
+static qn_json_pos qn_json_obj_bsearch(qn_json_obj_item * itm, qn_json_pos cnt, qn_json_hash hash)
 {
     qn_json_pos begin = 0;
     qn_json_pos end = cnt;
     qn_json_pos mid = 0;
     while (begin < end) {
         mid = begin + ((end - begin) / 2);
-        if (idx[mid].hash < hash) {
+        if (itm[mid].hash < hash) {
             begin = mid + 1;
         } else {
             end = mid;
@@ -100,43 +89,29 @@ static qn_json_pos qn_json_obj_bsearch(qn_json_obj_index * idx, qn_json_pos cnt,
     return begin;
 }
 
-static qn_json_pos qn_json_obj_find(qn_json_object_ptr obj, qn_json_hash hash, const char * key)
+static qn_json_pos qn_json_obj_find(qn_json_object_ptr obj, qn_json_hash hash, const char * key, int * existent)
 {
     qn_json_pos i = 0;
 
-    i = qn_json_obj_bsearch(obj->idx, obj->cnt, hash);
-    while (i < obj->cnt && obj->idx[i].hash == hash && qn_str_compare_raw(obj->itm[ obj->idx[i].pos ].key, key) != 0) {
+    i = qn_json_obj_bsearch(obj->itm, obj->cnt, hash);
+    while (i < obj->cnt && obj->itm[i].hash == hash && (*existent = qn_str_compare_raw(obj->itm[i].key, key)) != 0) {
         i += 1;
     } // while
-    return obj->idx[i].pos;
+    return i;
 }
 
 static qn_bool qn_json_obj_augment(qn_json_object_ptr obj)
 {
     qn_json_pos new_cap = obj->cap * 2;
-    qn_json_obj_index * new_idx = NULL;
-    qn_json_obj_item * new_itm = NULL;
-
-    new_idx = calloc(1, sizeof(qn_json_obj_index) * new_cap);
-    if (!new_idx) {
-        qn_err_set_no_enough_memory();
-        return qn_false;
-    } // if
-
-    new_itm = calloc(1, sizeof(qn_json_obj_item) * new_cap);
+    qn_json_obj_item * new_itm = calloc(1, sizeof(qn_json_obj_item) * new_cap);
     if (!new_itm) {
-        free(new_idx);
         qn_err_set_no_enough_memory();
         return qn_false;
     } // if
-
-    memcpy(new_idx, obj->idx, sizeof(qn_json_obj_index) * obj->cnt);
-    if (obj->idx != &obj->init_idx[0]) free(obj->idx);
 
     memcpy(new_itm, obj->itm, sizeof(qn_json_obj_item) * obj->cnt);
     if (obj->itm != &obj->init_itm[0]) free(obj->itm);
 
-    obj->idx = new_idx;
     obj->itm = new_itm;
     obj->cap = new_cap;
     return qn_true;
@@ -146,10 +121,11 @@ static qn_bool qn_json_obj_set(qn_json_object_ptr obj, const char * key, qn_json
 {
     qn_json_hash hash = 0;
     qn_size pos = 0;
+    int existent = -2;
 
     hash = qn_json_obj_calculate_hash(key);
-    pos = qn_json_obj_find(obj, hash, key);
-    if (pos != obj->cnt) {
+    pos = qn_json_obj_find(obj, hash, key, &existent);
+    if (existent == 0) {
         // There is an element according to the given key.
         if (obj->itm[pos].class == QN_JSON_OBJECT) {
             qn_json_destroy_object(obj->itm[pos].elem.object);
@@ -165,14 +141,12 @@ static qn_bool qn_json_obj_set(qn_json_object_ptr obj, const char * key, qn_json
 
     if ((obj->cap - obj->cnt) <= 0 && !qn_json_obj_augment(obj)) return qn_false;
 
-    if (!(obj->itm[obj->cnt].key = qn_str_duplicate(key))) return qn_false;
-    obj->itm[obj->cnt].class = cls;
-    obj->itm[obj->cnt].elem = new_elem;
+    if (pos < obj->cnt) memmove(&obj->itm[pos+1], &obj->itm[pos], sizeof(qn_json_obj_item) * (obj->cnt - pos));
 
-    pos = qn_json_obj_bsearch(obj->idx, obj->cnt, hash);
-    if (pos < obj->cnt) memmove(&obj->idx[pos+1], &obj->idx[pos], sizeof(qn_json_obj_index) * (obj->cnt - pos));
-    obj->idx[pos].hash = hash;
-    obj->idx[pos].pos = obj->cnt;
+    if (!(obj->itm[pos].key = qn_str_duplicate(key))) return qn_false;
+    obj->itm[pos].hash = hash;
+    obj->itm[pos].class = cls;
+    obj->itm[pos].elem = new_elem;
 
     obj->cnt += 1;
     return qn_true;
@@ -362,38 +336,44 @@ qn_size qn_json_size_array(qn_json_array_ptr arr)
 
 qn_json_object_ptr qn_json_get_object(qn_json_object_ptr obj, const char * key, qn_json_object_ptr default_val)
 {
-    qn_json_pos pos = qn_json_obj_find(obj, qn_json_obj_calculate_hash(key), key);
-    return (pos == obj->cnt || obj->itm[pos].class != QN_JSON_OBJECT) ? default_val : obj->itm[pos].elem.object;
+    int existent = -2;
+    qn_json_pos pos = qn_json_obj_find(obj, qn_json_obj_calculate_hash(key), key, &existent);
+    return (existent != 0 || obj->itm[pos].class != QN_JSON_OBJECT) ? default_val : obj->itm[pos].elem.object;
 }
 
 qn_json_array_ptr qn_json_get_array(qn_json_object_ptr obj, const char * key, qn_json_array_ptr default_val)
 {
-    qn_json_pos pos = qn_json_obj_find(obj, qn_json_obj_calculate_hash(key), key);
-    return (pos == obj->cnt || obj->itm[pos].class != QN_JSON_ARRAY) ? default_val : obj->itm[pos].elem.array;
+    int existent = -2;
+    qn_json_pos pos = qn_json_obj_find(obj, qn_json_obj_calculate_hash(key), key, &existent);
+    return (existent != 0 || obj->itm[pos].class != QN_JSON_ARRAY) ? default_val : obj->itm[pos].elem.array;
 }
 
 qn_string qn_json_get_string(qn_json_object_ptr obj, const char * key, qn_string default_val)
 {
-    qn_json_pos pos = qn_json_obj_find(obj, qn_json_obj_calculate_hash(key), key);
-    return (pos == obj->cnt || obj->itm[pos].class != QN_JSON_STRING) ? default_val : obj->itm[pos].elem.string;
+    int existent = -2;
+    qn_json_pos pos = qn_json_obj_find(obj, qn_json_obj_calculate_hash(key), key, &existent);
+    return (existent != 0 || obj->itm[pos].class != QN_JSON_STRING) ? default_val : obj->itm[pos].elem.string;
 }
 
 qn_integer qn_json_get_integer(qn_json_object_ptr obj, const char * key, qn_integer default_val)
 {
-    qn_json_pos pos = qn_json_obj_find(obj, qn_json_obj_calculate_hash(key), key);
-    return (pos == obj->cnt || obj->itm[pos].class != QN_JSON_INTEGER) ? default_val : obj->itm[pos].elem.integer;
+    int existent = -2;
+    qn_json_pos pos = qn_json_obj_find(obj, qn_json_obj_calculate_hash(key), key, &existent);
+    return (existent != 0 || obj->itm[pos].class != QN_JSON_INTEGER) ? default_val : obj->itm[pos].elem.integer;
 }
 
 qn_number qn_json_get_number(qn_json_object_ptr obj, const char * key, qn_number default_val)
 {
-    qn_json_pos pos = qn_json_obj_find(obj, qn_json_obj_calculate_hash(key), key);
-    return (pos == obj->cnt || obj->itm[pos].class != QN_JSON_NUMBER) ? default_val : obj->itm[pos].elem.number;
+    int existent = -2;
+    qn_json_pos pos = qn_json_obj_find(obj, qn_json_obj_calculate_hash(key), key, &existent);
+    return (existent != 0 || obj->itm[pos].class != QN_JSON_NUMBER) ? default_val : obj->itm[pos].elem.number;
 }
 
 qn_bool qn_json_get_boolean(qn_json_object_ptr obj, const char * key, qn_bool default_val)
 {
-    qn_json_pos pos = qn_json_obj_find(obj, qn_json_obj_calculate_hash(key), key);
-    return (pos == obj->cnt || obj->itm[pos].class != QN_JSON_BOOLEAN) ? default_val : obj->itm[pos].elem.boolean;
+    int existent = -2;
+    qn_json_pos pos = qn_json_obj_find(obj, qn_json_obj_calculate_hash(key), key, &existent);
+    return (existent != 0 || obj->itm[pos].class != QN_JSON_BOOLEAN) ? default_val : obj->itm[pos].elem.boolean;
 }
 
 qn_json_object_ptr qn_json_pick_object(qn_json_array_ptr arr, int n, qn_json_object_ptr default_val)
@@ -476,26 +456,22 @@ qn_bool qn_json_set_null(qn_json_object_ptr obj, const char * key)
 
 void qn_json_unset(qn_json_object_ptr obj, const char * key)
 {
-    qn_json_hash hash = 0;
     qn_json_pos pos = 0;
-    qn_json_pos i = 0;
+    int existent = -2;
 
     if (obj->cnt == 0) return;
 
-    hash = qn_json_obj_calculate_hash(key);
-    pos = qn_json_obj_find(obj, hash, key);
-    if (pos == obj->cnt) return; // There is no element according to the given key.
+    pos = qn_json_obj_find(obj, qn_json_obj_calculate_hash(key), key, &existent);
+    if (existent != 0) return; // There is no element according to the given key.
 
-    if (obj->itm[pos].class == QN_JSON_OBJECT) {
-        qn_json_destroy_object(obj->itm[pos].elem.object);
-    } else if (obj->itm[pos].class == QN_JSON_ARRAY) {
-        qn_json_destroy_array(obj->itm[pos].elem.array);
+    switch (obj->itm[pos].class) {
+        case QN_JSON_OBJECT: qn_json_destroy_object(obj->itm[pos].elem.object); break;
+        case QN_JSON_ARRAY: qn_json_destroy_array(obj->itm[pos].elem.array); break;
+        case QN_JSON_STRING: qn_str_destroy(obj->itm[pos].elem.string); break;
+        default: break;
     }
     free((void*)obj->itm[pos].key);
-
-    for (i = pos; i + 1 < obj->cnt; i += 1) {
-        obj->itm[i] = obj->itm[i + 1];
-    } // for
+    memmove(&obj->itm[pos], &obj->itm[pos+1], sizeof(qn_json_obj_item) * (obj->cnt - pos - 1));
     obj->cnt -= 1;
 }
 
