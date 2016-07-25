@@ -8,6 +8,7 @@
 
 #define posix_strlen strlen
 #define posix_strcmp strcmp
+#define posix_strchr strchr
 
 #ifdef __cplusplus
 extern "C"
@@ -28,6 +29,11 @@ static inline int qn_str_size(const qn_string s)
 static inline int qn_str_compare(const qn_string restrict s1, const qn_string restrict s2)
 {
     return posix_strcmp(s1, s2);
+}
+
+static inline const qn_string qn_str_find_char(const qn_string restrict s, int c)
+{
+    return (const qn_string)posix_strchr(s, c);
 }
 
 static inline int qn_str_compare_raw(const qn_string restrict s1, const char * restrict s2)

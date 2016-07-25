@@ -28,12 +28,12 @@ qn_json_object_ptr qn_pp_create(const qn_string bucket, const qn_string key, qn_
         } // if
     } // if
     return pp;
-} // qn_pp_create
+}
 
 void qn_pp_destroy(qn_json_object_ptr pp)
 {
     qn_json_destroy_object(pp);
-} // qn_pp_destroy
+}
 
 qn_bool qn_pp_set_scope(qn_json_object_ptr pp, const qn_string bucket, const qn_string key)
 {
@@ -47,17 +47,17 @@ qn_bool qn_pp_set_scope(qn_json_object_ptr pp, const qn_string bucket, const qn_
         scope = bucket;
     } // if
     return qn_json_set_string(pp, "scope", scope);
-} // qn_pp_set_scope
+}
 
 qn_bool qn_pp_set_deadline(qn_json_object_ptr pp, qn_uint32 deadline)
 {
     return qn_json_set_integer(pp, "deadline", deadline);
-} // qn_pp_set_deadline
+}
 
 qn_bool qn_pp_dont_overwrite(qn_json_object_ptr pp)
 {
     return qn_json_set_integer(pp, "insertOnly", 1);
-} // qn_pp_dont_overwrite
+}
 
 qn_bool qn_pp_return_to(qn_json_object_ptr pp, const qn_string url, const qn_string body)
 {
@@ -68,7 +68,7 @@ qn_bool qn_pp_return_to(qn_json_object_ptr pp, const qn_string url, const qn_str
         return qn_json_set_string(pp, "returnBody", body);
     } // if
     return qn_true;
-} // qn_pp_return_to
+}
 
 qn_bool qn_pp_callback_to(qn_json_object_ptr pp, const qn_string url, const qn_string host_name)
 {
@@ -79,7 +79,7 @@ qn_bool qn_pp_callback_to(qn_json_object_ptr pp, const qn_string url, const qn_s
         return qn_json_set_string(pp, "callbackHost", host_name);
     } // if
     return qn_true;
-} // qn_pp_callback_to
+}
 
 qn_bool qn_pp_callback_with_body(qn_json_object_ptr pp, const qn_string body, const qn_string mime_type)
 {
@@ -90,7 +90,7 @@ qn_bool qn_pp_callback_with_body(qn_json_object_ptr pp, const qn_string body, co
         return qn_json_set_string(pp, "callbackBodyType", mime_type);
     } // if
     return qn_true;
-} // qn_pp_callback_with_body
+}
 
 qn_bool qn_pp_pfop_set_commands(qn_json_object_ptr pp, const qn_string pipeline, const qn_string cmd1, const qn_string cmd2, ...)
 {
@@ -114,7 +114,7 @@ qn_bool qn_pp_pfop_set_commands(qn_json_object_ptr pp, const qn_string pipeline,
         ret = qn_json_set_string(pp, "persistentPipeline", pipeline);
     } // if
     return ret;
-} // qn_pp_pfop_set_commands
+}
 
 qn_bool qn_pp_pfop_set_command_list(qn_json_object_ptr pp, const qn_string pipeline, const qn_string cmds[], int cmd_count)
 {
@@ -135,17 +135,17 @@ qn_bool qn_pp_pfop_set_command_list(qn_json_object_ptr pp, const qn_string pipel
         ret = qn_json_set_string(pp, "persistentPipeline", pipeline);
     } // if
     return ret;
-} // qn_pp_pfop_set_command_list
+}
 
 qn_bool qn_pp_pfop_notify_to(qn_json_object_ptr pp, const qn_string mime_type)
 {
     return qn_json_set_string(pp, "persistentNotifyUrl", mime_type);
-} // qn_pp_pfop_notify_to
+}
 
 qn_bool qn_pp_mime_enable_auto_detecting(qn_json_object_ptr pp)
 {
     return qn_json_set_integer(pp, "detectMime", 1);
-} // qn_pp_mime_enable_auto_detecting
+}
 
 qn_bool qn_pp_mime_allow(qn_json_object_ptr pp, const qn_string mime1, const qn_string mime2, ...)
 {
@@ -166,7 +166,7 @@ qn_bool qn_pp_mime_allow(qn_json_object_ptr pp, const qn_string mime1, const qn_
     ret = qn_json_set_string(pp, "mimeLimit", mime_str);
     qn_str_destroy(mime_str);
     return ret;
-} // qn_pp_mime_allow
+}
 
 qn_bool qn_pp_mime_allow_list(qn_json_object_ptr pp, const qn_string mime_list[], int mime_count)
 {
@@ -183,7 +183,7 @@ qn_bool qn_pp_mime_allow_list(qn_json_object_ptr pp, const qn_string mime_list[]
     ret = qn_json_set_string(pp, "mimeLimit", mime_str);
     qn_str_destroy(mime_str);
     return ret;
-} // qn_pp_mime_allow_list
+}
 
 qn_bool qn_pp_mime_deny(qn_json_object_ptr pp, const qn_string mime1, const qn_string mime2, ...)
 {
@@ -209,7 +209,7 @@ qn_bool qn_pp_mime_deny(qn_json_object_ptr pp, const qn_string mime1, const qn_s
     ret = qn_json_set_string(pp, "mimeLimit", deny_mime_str);
     qn_str_destroy(deny_mime_str);
     return ret;
-} // qn_pp_mime_deny
+}
 
 qn_bool qn_pp_mime_deny_list(qn_json_object_ptr pp, const qn_string mime_list[], int mime_count)
 {
@@ -231,32 +231,32 @@ qn_bool qn_pp_mime_deny_list(qn_json_object_ptr pp, const qn_string mime_list[],
     ret = qn_json_set_string(pp, "mimeLimit", deny_mime_str);
     qn_str_destroy(deny_mime_str);
     return ret;
-} // qn_pp_mime_deny_list
+}
 
 qn_bool qn_pp_fsize_set_minimum(qn_json_object_ptr pp, qn_uint32 min_size)
 {
     return qn_json_set_integer(pp, "fsizeMin", min_size);
-} // qn_pp_fsize_set_minimum
+}
 
 qn_bool qn_pp_fsize_set_maximum(qn_json_object_ptr pp, qn_uint32 max_size)
 {
     return qn_json_set_integer(pp, "fsizeLimit", max_size);
-} // qn_pp_fsize_set_maximum
+}
 
 qn_bool qn_pp_key_enable_fetching_from_callback_response(qn_json_object_ptr pp)
 {
     return qn_json_set_integer(pp, "callbackFetchKey", 1);
-} // qn_pp_key_enable_fetching_from_callback_response
+}
 
 qn_bool qn_pp_key_make_from_template(qn_json_object_ptr pp, const qn_string key_template)
 {
     return qn_json_set_string(pp, "saveKey", key_template);
-} // qn_pp_key_make_from_template
+}
 
 qn_bool qn_pp_auto_delete_after_days(qn_json_object_ptr pp, qn_uint32 days)
 {
     return qn_json_set_integer(pp, "deleteAfterDays", days);
-} // qn_pp_auto_delete_after_days
+}
 
 qn_string qn_pp_to_uptoken(qn_json_object_ptr pp, qn_mac_ptr mac)
 {
@@ -264,7 +264,7 @@ qn_string qn_pp_to_uptoken(qn_json_object_ptr pp, qn_mac_ptr mac)
     if (!str) return NULL;
 
     return qn_mac_make_uptoken(mac, qn_str_cstr(str), qn_str_size(str));
-} // qn_pp_to_uptoken
+}
 
 // ---- Authorization Functions ----
 
@@ -287,7 +287,7 @@ qn_mac_ptr qn_mac_create(const char * access_key, const char * secret_key)
     } // if
 
     return new_mac;
-} // qn_mac_create
+}
 
 void qn_mac_destroy(qn_mac_ptr mac)
 {
@@ -296,7 +296,7 @@ void qn_mac_destroy(qn_mac_ptr mac)
         qn_str_destroy(mac->access_key);
         free(mac);
     } // if
-} // qn_mac_destroy
+}
 
 qn_string qn_mac_make_uptoken(qn_mac_ptr mac, const char * pp_str, qn_size pp_str_size)
 {
@@ -317,13 +317,42 @@ qn_string qn_mac_make_uptoken(qn_mac_ptr mac, const char * pp_str, qn_size pp_st
     HMAC_CTX_cleanup(&ctx);
 
     encoded_digest = qn_str_encode_base64_urlsafe(digest, digest_size);
-    sign = qn_str_join(":", mac->access_key, encoded_digest, encoded_pp);
+    sign = qn_str_join_3(":", mac->access_key, encoded_digest, encoded_pp);
     qn_str_destroy(encoded_digest);
     qn_str_destroy(encoded_pp);
     return sign;
-} // qn_mac_make_uptoken
+}
 
-qn_string qn_mac_make_dnurl(qn_mac_ptr mac, const qn_string url, qn_uint32 deadline);
+qn_string qn_mac_make_dnurl(qn_mac_ptr mac, const qn_string url, qn_uint32 deadline)
+{
+    qn_string url_with_deadline = NULL;
+    qn_string url_with_token = NULL;
+    qn_string encoded_digest = NULL;
+    char digest[EVP_MAX_MD_SIZE + 1];
+    unsigned int digest_size = sizeof(digest);
+    HMAC_CTX ctx;
+
+    // TODO: Invoke qn_str_encode_url() on passed url before making download token.
+
+    if (qn_str_find_char(url, '?') == NULL) {
+        url_with_deadline = qn_str_sprintf("%s?e=%d", url, deadline);
+    } else {
+        url_with_deadline = qn_str_sprintf("%s&e=%d", url, deadline);
+    }
+    if (!url_with_deadline) return NULL;
+
+    HMAC_CTX_init(&ctx);
+    HMAC_Init_ex(&ctx, qn_str_cstr(mac->secret_key), qn_str_size(mac->secret_key), EVP_sha1(), NULL);
+    HMAC_Update(&ctx, (const unsigned char *)qn_str_cstr(url_with_deadline), qn_str_size(url_with_deadline));
+    HMAC_Final(&ctx, (unsigned char *)digest, &digest_size);
+    HMAC_CTX_cleanup(&ctx);
+
+    encoded_digest = qn_str_encode_base64_urlsafe(digest, digest_size);
+    url_with_token = qn_str_sprintf("%s&token=%s:%s", url_with_deadline, qn_str_cstr(mac->access_key), encoded_digest);
+    qn_str_destroy(encoded_digest);
+    qn_str_destroy(url_with_deadline);
+    return url_with_token;
+}
 
 #ifdef __cplusplus
 }

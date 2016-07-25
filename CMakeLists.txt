@@ -11,4 +11,5 @@ add_library (qiniu STATIC ${SOURCE_FILES})
 list (APPEND CMAKE_C_FLAGS "--std=c99 -Wall")
 
 add_subdirectory (test)
+add_subdirectory (demo)
 #add_test (NAME test_json COMMAND test/test_json)
