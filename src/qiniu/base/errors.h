@@ -17,6 +17,7 @@ extern void qn_err_set_invalid_argument(void);
 extern void qn_err_set_overflow_upper_bound(void);
 extern void qn_err_set_overflow_lower_bound(void);
 extern void qn_err_set_bad_utf8_sequence(void);
+extern void qn_err_set_no_enough_buffer(void);
 
 extern void qn_err_json_set_bad_text_input(void);
 extern void qn_err_json_set_too_many_parsing_levels(void);
@@ -28,6 +29,7 @@ extern qn_bool qn_err_is_invalid_argument(void);
 extern qn_bool qn_err_is_overflow_upper_bound(void);
 extern qn_bool qn_err_is_overflow_lower_bound(void);
 extern qn_bool qn_err_is_bad_utf8_sequence(void);
+extern qn_bool qn_err_is_no_enough_buffer(void);
 
 extern qn_bool qn_err_json_is_bad_text_input(void);
 extern qn_bool qn_err_json_is_too_many_pasring_levels(void);

@@ -1,6 +1,7 @@
 #include <openssl/hmac.h>
 #include "qiniu/base/json_formatter.h"
 #include "qiniu/auth.h"
+#include "qiniu/base/errors.h"
 
 #ifdef __cplusplus
 extern "C"
@@ -328,17 +329,57 @@ qn_string qn_mac_make_dnurl(qn_mac_ptr mac, const qn_string url, qn_uint32 deadl
     qn_string url_with_deadline = NULL;
     qn_string url_with_token = NULL;
     qn_string encoded_digest = NULL;
+    char * buf = NULL;
+    const char * begin = NULL;
+    const char * end = NULL;
+    const char * url_begin = qn_str_cstr(url);
+    int url_size = qn_str_size(url);
+    int buf_size = 0;
     char digest[EVP_MAX_MD_SIZE + 1];
     unsigned int digest_size = sizeof(digest);
     HMAC_CTX ctx;
 
-    // TODO: Invoke qn_str_encode_url() on passed url before making download token.
+    begin = qn_str_find_substring(url, "://");
+    if (!begin) {
+        qn_err_set_invalid_argument();
+        return NULL;
+    } // if
+    begin += 3;
 
-    if (qn_str_find_char(url, '?') == NULL) {
-        url_with_deadline = qn_str_sprintf("%s?e=%d", url, deadline);
+    end = qn_str_find_char(begin, '/');
+    if (!end) {
+        qn_err_set_invalid_argument();
+        return NULL;
+    } // if
+    begin = end + 1;
+
+    end = qn_str_find_char(end, '?');
+    if (!end) end = url + url_size;
+
+    buf_size = qn_str_percent_encode_in_buffer(NULL, 0, begin, end - begin);
+    if (buf_size > (end - begin)) {
+        // Need to percent encode the path of the url.
+        buf = malloc(buf_size + 1);
+        if (!buf) {
+            qn_err_set_no_enough_memory();
+            return NULL;
+        } // if
+        buf[buf_size + 1] = '\0';
+
+        qn_str_percent_encode_in_buffer(buf, buf_size, begin, end - begin);
+        if (*end == '?') {
+            url_with_deadline = qn_str_sprintf("%.*s%.*s%.*s&e=%d", begin - url_begin, url_begin, buf_size, buf, url_size - (end - url_begin), end, deadline);
+        } else {
+            url_with_deadline = qn_str_sprintf("%.*s%.*s?e=%d", begin - url_begin, url_begin, buf_size, buf, deadline);
+        } // if
+        free(buf);
     } else {
-        url_with_deadline = qn_str_sprintf("%s&e=%d", url, deadline);
-    }
+        if (*end == '?') {
+            url_with_deadline = qn_str_sprintf("%.*s&e=%d", url_size, url, deadline);
+        } else {
+            url_with_deadline = qn_str_sprintf("%.*s?e=%d", url_size, url, deadline);
+        }
+    } // if
     if (!url_with_deadline) return NULL;
 
     HMAC_CTX_init(&ctx);

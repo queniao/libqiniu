@@ -9,6 +9,7 @@
 #define posix_strlen strlen
 #define posix_strcmp strcmp
 #define posix_strchr strchr
+#define posix_strstr strstr
 
 #ifdef __cplusplus
 extern "C"
@@ -31,9 +32,20 @@ static inline int qn_str_compare(const qn_string restrict s1, const qn_string re
     return posix_strcmp(s1, s2);
 }
 
-static inline const qn_string qn_str_find_char(const qn_string restrict s, int c)
+static inline const char * qn_str_find_char(const char * restrict s, int c)
 {
     return (const qn_string)posix_strchr(s, c);
+}
+
+static inline const char * qn_str_find_char_or_null(const char * restrict s, int c)
+{
+    const char * pos = posix_strchr(s, c);
+    return (const qn_string) ((pos) ? pos : (s + posix_strlen(s)));
+}
+
+static inline const qn_string qn_str_find_substring(const char * restrict s, const char * restrict sub)
+{
+    return (const qn_string)posix_strstr(s, sub);
 }
 
 static inline int qn_str_compare_raw(const qn_string restrict s1, const char * restrict s2)
@@ -104,10 +116,13 @@ static inline qn_string qn_str_concat_3(const qn_string s1, const qn_string s2, 
 
 extern qn_string qn_str_vprintf(const char * restrict format, va_list ap);
 extern qn_string qn_str_sprintf(const char * restrict format, ...);
-extern int qn_str_snprintf(char * restrict str, int size,  const char * restrict format, ...);
+extern int qn_str_snprintf(char * restrict buf, int buf_size, const char * restrict format, ...);
 
 extern qn_string qn_str_encode_base64_urlsafe(const char * restrict bin, int bin_size);
 extern qn_string qn_str_decode_base64_urlsafe(const char * restrict str, int str_size);
+
+extern int qn_str_percent_encode_in_buffer(char * restrict buf, int buf_size, const char * restrict bin, int bin_size);
+extern qn_string qn_str_percent_encode(const char * restrict bin, int bin_size);
 
 #ifdef __cplusplus
 }

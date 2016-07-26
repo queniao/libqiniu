@@ -247,6 +247,87 @@ qn_string qn_str_decode_base64_urlsafe(const char * restrict str, int str_size)
     return new_str;
 } // qn_str_decode_base64_urlsafe
 
+const char qn_str_hex_map[] = {'0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'A', 'B', 'C', 'D', 'E', 'F'};
+
+static inline qn_bool qn_str_need_to_percent_encode(int c)
+{
+    if ('a' <= c) {
+        if (c <= 'z' || c == '~') {
+            return qn_false;
+        }
+        // { | } DEL or chars > 127
+        return qn_true;
+    } // if
+
+    if (c <= '9') {
+        if ('0' <= c || c =='.' || c == '-') {
+            return qn_false;
+        } // if
+        return qn_true;
+    } // if
+
+    if ('A' <= c) {
+        if (c <= 'Z' || c == '_') {
+            return qn_false;
+        }
+    } // if
+    return qn_true;
+}
+
+int qn_str_percent_encode_in_buffer(char * restrict buf, int buf_size, const char * restrict bin, int bin_size)
+{
+    int i = 0;
+    int m = 0;
+    int ret = 0;
+
+    if (!buf || buf_size <= 0) {
+        for (i = 0; i < bin_size; i += 1) {
+            ret += qn_str_need_to_percent_encode(bin[i]) ? 3 : 1;
+        } // for
+        return ret;
+    } else if (buf_size < bin_size) {
+        qn_err_set_no_enough_buffer();
+        return -1;
+    } // if
+
+    for (i = 0; i < bin_size; i += 1) {
+        if (qn_str_need_to_percent_encode(bin[i])) {
+            if (m + 3 > buf_size) {
+                qn_err_set_no_enough_buffer();
+                return -1;
+            } // if
+
+            buf[m++] = '%';
+            buf[m++] = qn_str_hex_map[(bin[i] >> 4) & 0xF];
+            buf[m++] = qn_str_hex_map[bin[i] & 0xF];
+        } else {
+            if (m + 1 > buf_size) {
+                qn_err_set_no_enough_buffer();
+                return -1;
+            } // if
+
+            buf[m++] = bin[i];
+        }
+    } // for
+    return m;
+}
+
+qn_string qn_str_percent_encode(const char * restrict bin, int bin_size)
+{
+    qn_string new_str = NULL;
+    int buf_size = qn_str_percent_encode_in_buffer(NULL, 0, bin, bin_size);
+
+    new_str = malloc(buf_size + 1);
+    if (!new_str) {
+        qn_err_set_no_enough_memory();
+        return NULL;
+    }
+    new_str[buf_size + 1] = '\0';
+    qn_str_percent_encode_in_buffer(new_str, buf_size, bin, bin_size);
+    return new_str;
+}
+
 #ifdef __cplusplus
 }
 #endif
+
