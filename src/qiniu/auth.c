@@ -299,7 +299,7 @@ void qn_mac_destroy(qn_mac_ptr mac)
     } // if
 }
 
-qn_string qn_mac_make_uptoken(qn_mac_ptr mac, const char * pp_str, qn_size pp_str_size)
+qn_string qn_mac_make_uptoken(qn_mac_ptr mac, const char * restrict pp_str, qn_size pp_str_size)
 {
     qn_string sign = NULL;
     qn_string encoded_pp = NULL;
@@ -324,6 +324,48 @@ qn_string qn_mac_make_uptoken(qn_mac_ptr mac, const char * pp_str, qn_size pp_st
     return sign;
 }
 
+qn_string qn_mac_make_acctoken(qn_mac_ptr mac, const qn_string url, const char * restrict body, qn_size body_size)
+{
+    qn_string encoded_digest = NULL;
+    qn_string acctoken = NULL;
+    const char * begin = NULL;
+    char digest[EVP_MAX_MD_SIZE + 1];
+    unsigned int digest_size = sizeof(digest);
+    HMAC_CTX ctx;
+
+    begin = qn_str_find_substring(qn_str_cstr(url), "://");
+    if (!begin) {
+        qn_err_set_invalid_argument();
+        return NULL;
+    } // if
+    begin += 3;
+
+    begin = qn_str_find_char(begin, '/');
+    if (!begin) {
+        qn_err_set_invalid_argument();
+        return NULL;
+    } // if
+
+    HMAC_CTX_init(&ctx);
+    HMAC_Init_ex(&ctx, qn_str_cstr(mac->secret_key), qn_str_size(mac->secret_key), EVP_sha1(), NULL);
+    HMAC_Update(&ctx, (const unsigned char *)begin, qn_str_size(url) - (begin - qn_str_cstr(url)));
+    HMAC_Update(&ctx, (const unsigned char *)"\n", 1);
+
+    if (body && body_size > 0) {
+        HMAC_Update(&ctx, (const unsigned char *)body, body_size);
+    } // if
+
+    HMAC_Final(&ctx, (unsigned char *)digest, &digest_size);
+    HMAC_CTX_cleanup(&ctx);
+
+    encoded_digest = qn_str_encode_base64_urlsafe(digest, digest_size);
+    if (!encoded_digest) return NULL;
+
+    acctoken = qn_str_join_2(":", mac->access_key, encoded_digest);
+    qn_str_destroy(encoded_digest);
+    return acctoken;
+}
+
 qn_string qn_mac_make_dnurl(qn_mac_ptr mac, const qn_string url, qn_uint32 deadline)
 {
     qn_string url_with_deadline = NULL;
@@ -339,7 +381,7 @@ qn_string qn_mac_make_dnurl(qn_mac_ptr mac, const qn_string url, qn_uint32 deadl
     unsigned int digest_size = sizeof(digest);
     HMAC_CTX ctx;
 
-    begin = qn_str_find_substring(url, "://");
+    begin = qn_str_find_substring(qn_str_cstr(url), "://");
     if (!begin) {
         qn_err_set_invalid_argument();
         return NULL;
@@ -354,7 +396,7 @@ qn_string qn_mac_make_dnurl(qn_mac_ptr mac, const qn_string url, qn_uint32 deadl
     begin = end + 1;
 
     end = qn_str_find_char(end, '?');
-    if (!end) end = url + url_size;
+    if (!end) end = qn_str_cstr(url) + url_size;
 
     buf_size = qn_str_percent_encode_in_buffer(NULL, 0, begin, end - begin);
     if (buf_size > (end - begin)) {
@@ -375,9 +417,9 @@ qn_string qn_mac_make_dnurl(qn_mac_ptr mac, const qn_string url, qn_uint32 deadl
         free(buf);
     } else {
         if (*end == '?') {
-            url_with_deadline = qn_str_sprintf("%.*s&e=%d", url_size, url, deadline);
+            url_with_deadline = qn_str_sprintf("%.*s&e=%d", url_size, qn_str_cstr(url), deadline);
         } else {
-            url_with_deadline = qn_str_sprintf("%.*s?e=%d", url_size, url, deadline);
+            url_with_deadline = qn_str_sprintf("%.*s?e=%d", url_size, qn_str_cstr(url), deadline);
         }
     } // if
     if (!url_with_deadline) return NULL;
@@ -389,6 +431,11 @@ qn_string qn_mac_make_dnurl(qn_mac_ptr mac, const qn_string url, qn_uint32 deadl
     HMAC_CTX_cleanup(&ctx);
 
     encoded_digest = qn_str_encode_base64_urlsafe(digest, digest_size);
+    if (!encoded_digest) {
+        qn_str_destroy(url_with_deadline);
+        return NULL;
+    } // if
+
     url_with_token = qn_str_sprintf("%s&token=%s:%s", url_with_deadline, qn_str_cstr(mac->access_key), encoded_digest);
     qn_str_destroy(encoded_digest);
     qn_str_destroy(url_with_deadline);
