@@ -1,6 +1,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
+#include <ctype.h>
 
 #include <assert.h>
 
@@ -260,7 +261,7 @@ static inline qn_bool qn_str_need_to_percent_encode(int c)
     } // if
 
     if (c <= '9') {
-        if ('0' <= c || c =='.' || c == '-') {
+        if ('0' <= c || c == '.' || c == '-') {
             return qn_false;
         } // if
         return qn_true;
@@ -282,7 +283,15 @@ int qn_str_percent_encode_in_buffer(char * restrict buf, int buf_size, const cha
 
     if (!buf || buf_size <= 0) {
         for (i = 0; i < bin_size; i += 1) {
-            ret += qn_str_need_to_percent_encode(bin[i]) ? 3 : 1;
+            if (qn_str_need_to_percent_encode(bin[i])) {
+                if (bin[i] == '%' && (i + 2 < bin_size) && isxdigit(bin[i+1]) && isxdigit(bin[i+2])) {
+                    ret += 1;
+                } else {
+                    ret += 3;
+                } // if
+            } else {
+                ret += 1;
+            } // if
         } // for
         return ret;
     } else if (buf_size < bin_size) {
@@ -292,14 +301,23 @@ int qn_str_percent_encode_in_buffer(char * restrict buf, int buf_size, const cha
 
     for (i = 0; i < bin_size; i += 1) {
         if (qn_str_need_to_percent_encode(bin[i])) {
-            if (m + 3 > buf_size) {
-                qn_err_set_no_enough_buffer();
-                return -1;
-            } // if
+            if (bin[i] == '%' && (i + 2 < bin_size) && isxdigit(bin[i+1]) && isxdigit(bin[i+2])) {
+                    if (m + 1 > buf_size) {
+                        qn_err_set_no_enough_buffer();
+                        return -1;
+                    } // if
 
-            buf[m++] = '%';
-            buf[m++] = qn_str_hex_map[(bin[i] >> 4) & 0xF];
-            buf[m++] = qn_str_hex_map[bin[i] & 0xF];
+                    buf[m++] = bin[i];
+            } else {
+                if (m + 3 > buf_size) {
+                    qn_err_set_no_enough_buffer();
+                    return -1;
+                } // if
+
+                buf[m++] = '%';
+                buf[m++] = qn_str_hex_map[(bin[i] >> 4) & 0xF];
+                buf[m++] = qn_str_hex_map[bin[i] & 0xF];
+            } // if
         } else {
             if (m + 1 > buf_size) {
                 qn_err_set_no_enough_buffer();
