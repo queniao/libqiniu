@@ -35,15 +35,56 @@ typedef enum _QN_JSON_TOKEN
     QN_JSON_TKN_INPUT_END,
     QN_JSON_TKNERR_MALFORMED_TEXT,
     QN_JSON_TKNERR_NEED_MORE_TEXT,
-    QN_JSON_TKNERR_NO_ENOUGH_MEMORY
+    QN_JSON_TKNERR_TEXT_TOO_LONG
 } qn_json_token;
+
+typedef enum
+{
+    QN_JSON_TKNSTS_STR_CHAR,
+    QN_JSON_TKNSTS_STR_ESCAPE_BACKSLASH,
+    QN_JSON_TKNSTS_STR_ESCAPE_U,
+    QN_JSON_TKNSTS_STR_ESCAPE_C1,
+    QN_JSON_TKNSTS_STR_ESCAPE_C2,
+    QN_JSON_TKNSTS_STR_ESCAPE_C3,
+    QN_JSON_TKNSTS_STR_ESCAPE_C4,
+
+    QN_JSON_TKNSTS_NUM_SIGN,
+    QN_JSON_TKNSTS_NUM_INT_DIGITAL,
+    QN_JSON_TKNSTS_NUM_DEC_POINT,
+    QN_JSON_TKNSTS_NUM_DEC_DIGITAL,
+
+    QN_JSON_TKNSTS_TRUE_T,
+    QN_JSON_TKNSTS_TRUE_R,
+    QN_JSON_TKNSTS_TRUE_U,
+
+    QN_JSON_TKNSTS_FALSE_F,
+    QN_JSON_TKNSTS_FALSE_A,
+    QN_JSON_TKNSTS_FALSE_L,
+    QN_JSON_TKNSTS_FALSE_S,
+
+    QN_JSON_TKNSTS_NULL_N,
+    QN_JSON_TKNSTS_NULL_U,
+    QN_JSON_TKNSTS_NULL_L1
+} qn_json_tkn_status;
+
+struct _QN_JSON_SCANNER;
+typedef struct _QN_JSON_SCANNER * qn_json_scanner_ptr; 
+
+typedef qn_json_token (*qn_json_tkn_scanner)(qn_json_scanner_ptr s, qn_string * txt);
 
 typedef struct _QN_JSON_SCANNER
 {
     const char * buf;
     qn_size buf_size;
     qn_size pos;
-} qn_json_scanner, *qn_json_scanner_ptr;
+
+    char txt[1024];
+    qn_size txt_pos;
+    qn_size txt_size;
+
+    qn_json_tkn_scanner tkn_scanner;
+    qn_json_tkn_status tkn_sts;
+} qn_json_scanner;
 
 static inline qn_uint32 qn_json_hex_to_dec(const char ch)
 {
@@ -59,48 +100,44 @@ static inline qn_uint32 qn_json_hex_to_dec(const char ch)
     return 0;
 }
 
-static qn_bool qn_json_unescape_to_utf8(char * cstr, qn_size * i, qn_size * m)
+#define h1 qn_json_hex_to_dec(cstr[i+2])
+#define h2 qn_json_hex_to_dec(cstr[i+3])
+#define h3 qn_json_hex_to_dec(cstr[i+4])
+#define h4 qn_json_hex_to_dec(cstr[i+5])
+
+static qn_bool qn_json_unescape_to_ascii(char * cstr, qn_size * m)
 {
-    qn_uint32 head_code = 0;
-    qn_uint32 tail_code = 0;
-    qn_uint32 wch = 0;
-
-#define h1 qn_json_hex_to_dec(cstr[*i+2])
-#define h2 qn_json_hex_to_dec(cstr[*i+3])
-#define h3 qn_json_hex_to_dec(cstr[*i+4])
-#define h4 qn_json_hex_to_dec(cstr[*i+5])
-
-    // Chech if all four hexidecimal characters are valid.
-    if (!isxdigit(h1) || !isxdigit(h2) || !isxdigit(h3) || !isxdigit(h4)) {
-        qn_err_json_set_bad_text_input();
-        return qn_false;
-    } // if
+    qn_uint32 head_code;
+    qn_size i = 0;
 
     head_code = (h1 << 12) + (h2 << 8) + (h3 << 4) + h4;
     if (head_code <= 127) {
-        *i += 6;
         cstr[*m++] = head_code & 0x7F;
         return qn_true;
     } // if
+    return qn_false;
+}
 
+static qn_bool qn_json_unescape_to_utf8(char * cstr, qn_size * m)
+{
+    qn_uint32 head_code;
+    qn_uint32 tail_code;
+    qn_uint32 wch;
+    qn_size i = 0;
+
+    head_code = (h1 << 12) + (h2 << 8) + (h3 << 4) + h4;
     if (head_code < 0xD800 || 0xDBFF < head_code) {
         qn_err_json_set_bad_text_input();
         return qn_false;
     } // if
 
-    *i += 6;
-    if (cstr[*i] != '\\' || cstr[*i+1] != 'u') {
-        qn_err_json_set_bad_text_input();
-        return qn_false;
-    } // if
-
+    i += 6;
     tail_code = (h1 << 12) + (h2 << 8) + (h3 << 4) + h4;
     if (tail_code < 0xDC00 || 0xDFFF < tail_code) {
         qn_err_json_set_bad_text_input();
         return qn_false;
     } // if
 
-    *i += 6;
     wch = ((head_code - 0xD800) << 10) + (tail_code - 0xDC00) + 0x10000;
     if (0x80 <= wch && wch <= 0x07FF) {
         // From : 00000000 00000yyy yyzzzzzz
@@ -125,188 +162,320 @@ static qn_bool qn_json_unescape_to_utf8(char * cstr, qn_size * i, qn_size * m)
         *m += 4;
     } // if
     return qn_true;
-
-#undef h1
-#undef h2
-#undef h3
-#undef h4
 }
+
+#undef h4
+#undef h3
+#undef h2
+#undef h1
 
 static qn_json_token qn_json_scan_string(qn_json_scanner_ptr s, qn_string * txt)
 {
-    qn_string new_str = NULL;
-    char * cstr = NULL;
-    qn_size primitive_len = 0;
-    qn_size i = 0;
-    qn_size m = 0;
-    qn_size pos = s->pos + 1; // 跳过起始双引号
+    char ch;
 
-    for (; pos < s->buf_size; pos += 1) {
-        if (s->buf[pos] == '\\') { m += 1; continue; }
-        if (s->buf[pos] == '"' && s->buf[pos - 1] != '\\') { break; }
-    } // for
-    if (pos == s->buf_size) {
-        return QN_JSON_TKNERR_NEED_MORE_TEXT;
-    } // if
-
-    pos += 1; // 跳过终止双引号
-
-    primitive_len = pos - s->pos - 2;
-    cstr = malloc(primitive_len + 1);
-    if (!cstr) {
-        qn_err_set_no_enough_memory();
-        return QN_JSON_TKNERR_NO_ENOUGH_MEMORY;
-    } // if
-    bzero(cstr, primitive_len + 1);
-
-    memcpy(cstr, s->buf + s->pos + 1, primitive_len);
-    if (m > 0) {
-        // 处理转义码
-        i = 0;
-        m = 0;
-        while (i < primitive_len) {
-            if (cstr[i] == '\\') {
-                switch (cstr[i+1]) {
-                    case 't': cstr[m++] = '\t'; i += 2; break;
-                    case 'n': cstr[m++] = '\n'; i += 2; break;
-                    case 'r': cstr[m++] = '\r'; i += 2; break;
-                    case 'f': cstr[m++] = '\f'; i += 2; break;
-                    case 'v': cstr[m++] = '\v'; i += 2; break;
-                    case 'b': cstr[m++] = '\b'; i += 2; break;
-                    case 'u':
-                        if (!qn_json_unescape_to_utf8(cstr, &i, &m)) {
-                            return qn_false;
-                        } // if
+    do {
+        switch (s->tkn_sts) {
+            case QN_JSON_TKNSTS_STR_CHAR:
+                do {
+                    ch = s->txt[s->txt_size++] = s->buf[s->pos++];
+                    if (s->txt_size == sizeof(s->txt) - 1) return QN_JSON_TKNERR_TEXT_TOO_LONG;
+                    if (ch == '\\') {
+                        s->txt_pos = s->txt_size - 1;
+                        s->tkn_sts = QN_JSON_TKNSTS_STR_ESCAPE_BACKSLASH;
                         break;
+                    } else if (ch == '"') {
+                        s->tkn_scanner = NULL;
+                        s->txt[--s->txt_size] = '\0';
+                        *txt = s->txt;
+                        return QN_JSON_TKN_STRING;
+                    } // if
+                } while (s->pos < s->buf_size);
+                break;
 
-                    default:
-                        // Process cases '"', '\\', '/', and other characters.
-                        cstr[m++] = cstr[i+1];
-                        i += 2;
-                        break;
-                } // switch
-            } else {
-                cstr[m++] = cstr[i++];
-            } // if
-        } // while
-        cstr[m] = '\0';
-    } else {
-        m = primitive_len;
-    } // if
+            case QN_JSON_TKNSTS_STR_ESCAPE_BACKSLASH:
+                ch = s->buf[s->pos++];
+                if (ch == 'u') {
+                    s->txt[s->txt_size++] = ch;
+                    if (s->txt_size == sizeof(s->txt) - 1) return QN_JSON_TKNERR_TEXT_TOO_LONG;
+                    s->tkn_sts = QN_JSON_TKNSTS_STR_ESCAPE_C1;
+                } else {
+                    if (ch == 't') {
+                        s->txt[s->txt_pos] = '\t';
+                    } else if (ch == 'n') {
+                        s->txt[s->txt_pos] = '\n';
+                    } else if (ch == 'r') {
+                        s->txt[s->txt_pos] = '\r';
+                    } else if (ch == 'f') {
+                        s->txt[s->txt_pos] = '\f';
+                    } else if (ch == 'v') {
+                        s->txt[s->txt_pos] = '\v';
+                    } else if (ch == 'b') {
+                        s->txt[s->txt_pos] = '\b';
+                    } else {
+                        s->txt[s->txt_pos] = ch;
+                    } // if
+                    s->tkn_sts = QN_JSON_TKNSTS_STR_CHAR;
+                } // if
+                break;
 
-    new_str = qn_str_clone(cstr, m);
-    free(cstr);
+            case QN_JSON_TKNSTS_STR_ESCAPE_C1:
+                ch = s->txt[s->txt_size++] = s->buf[s->pos++];
+                if (!isxdigit(ch)) return QN_JSON_TKNERR_MALFORMED_TEXT;
+                if (s->txt_size == sizeof(s->txt) - 1) return QN_JSON_TKNERR_TEXT_TOO_LONG;
+                s->tkn_sts = QN_JSON_TKNSTS_STR_ESCAPE_C2;
+                break;
 
-    if (!new_str) {
-        return QN_JSON_TKNERR_NO_ENOUGH_MEMORY;
-    } // if
+            case QN_JSON_TKNSTS_STR_ESCAPE_C2:
+                ch = s->txt[s->txt_size++] = s->buf[s->pos++];
+                if (!isxdigit(ch)) return QN_JSON_TKNERR_MALFORMED_TEXT;
+                if (s->txt_size == sizeof(s->txt) - 1) return QN_JSON_TKNERR_TEXT_TOO_LONG;
+                s->tkn_sts = QN_JSON_TKNSTS_STR_ESCAPE_C3;
+                break;
 
-    *txt = new_str;
-    s->pos = pos;
-    return QN_JSON_TKN_STRING;
+            case QN_JSON_TKNSTS_STR_ESCAPE_C3:
+                ch = s->txt[s->txt_size++] = s->buf[s->pos++];
+                if (!isxdigit(ch)) return QN_JSON_TKNERR_MALFORMED_TEXT;
+                if (s->txt_size == sizeof(s->txt) - 1) return QN_JSON_TKNERR_TEXT_TOO_LONG;
+                if (s->txt_size - s->txt_pos == 6) {
+                    if (qn_json_unescape_to_ascii(&s->txt[s->txt_pos], &s->txt_pos)) {
+                        s->txt_size = s->txt_pos;
+                        s->tkn_sts = QN_JSON_TKNSTS_STR_CHAR;
+                    } else {
+                        s->tkn_sts = QN_JSON_TKNSTS_STR_ESCAPE_C4;
+                    } // if
+                } else {
+                    if (qn_json_unescape_to_utf8(&s->txt[s->txt_pos], &s->txt_pos)) {
+                        s->txt_size = s->txt_pos;
+                        s->tkn_sts = QN_JSON_TKNSTS_STR_CHAR;
+                    } else {
+                        return QN_JSON_TKNERR_MALFORMED_TEXT;
+                    } // if
+                } // if
+                break;
+
+            case QN_JSON_TKNSTS_STR_ESCAPE_C4:
+                ch = s->txt[s->txt_size++] = s->buf[s->pos++];
+                if (ch != '\\') return QN_JSON_TKNERR_MALFORMED_TEXT;
+                if (s->txt_size == sizeof(s->txt) - 1) return QN_JSON_TKNERR_TEXT_TOO_LONG;
+                s->tkn_sts = QN_JSON_TKNSTS_STR_ESCAPE_BACKSLASH;
+                break;
+
+            default:
+                exit(1);
+        } // switch
+    } while (s->pos < s->buf_size);
+    s->tkn_scanner = &qn_json_scan_string;
+    return QN_JSON_TKNERR_NEED_MORE_TEXT;
 }
 
 static qn_json_token qn_json_scan_number(qn_json_scanner_ptr s, qn_string * txt)
 {
-    qn_string new_str = NULL;
-    qn_json_token tkn = QN_JSON_TKN_INTEGER;
-    qn_size primitive_len = 0;
-    qn_size pos = s->pos + 1; // 跳过已经被识别的首字符
+    char ch;
 
-    for (; pos < s->buf_size; pos += 1) {
-        if (s->buf[pos] == '.') {
-            if (tkn == QN_JSON_TKN_NUMBER) { break; }
-            tkn = QN_JSON_TKN_NUMBER;
-            continue;
-        } // if
-        if (s->buf[pos] < '0' || s->buf[pos] > '9') { break; }
-    } // for
-    if (pos == s->buf_size) {
-        return QN_JSON_TKNERR_NEED_MORE_TEXT;
-    } // if
+    switch (s->tkn_sts) {
+        case QN_JSON_TKNSTS_NUM_SIGN:
+            ch = s->txt[s->txt_size++] = s->buf[s->pos++];
+            if (!isdigit(ch)) return QN_JSON_TKNERR_MALFORMED_TEXT;
+            s->tkn_sts = QN_JSON_TKNSTS_NUM_INT_DIGITAL;
+            if (s->pos == s->buf_size) break;
 
-    primitive_len = pos - s->pos;
-    new_str = qn_str_clone(s->buf + s->pos, primitive_len);
-    if (!new_str) {
-        qn_err_set_no_enough_memory();
-        return QN_JSON_TKNERR_NO_ENOUGH_MEMORY;
-    } // if
+        case QN_JSON_TKNSTS_NUM_INT_DIGITAL:
+            while (1) {
+                ch = s->txt[s->txt_size++] = s->buf[s->pos++];
+                if (s->txt_size == sizeof(s->txt) - 1) return QN_JSON_TKNERR_TEXT_TOO_LONG;
+                if (isdigit(ch)) {
+                    if (s->pos == s->buf_size) {
+                        s->tkn_scanner = &qn_json_scan_number;
+                        return QN_JSON_TKNERR_NEED_MORE_TEXT;
+                    } // if
+                    continue;
+                } else if (ch == '.') {
+                    s->tkn_sts = QN_JSON_TKNSTS_NUM_DEC_POINT;
+                    break;
+                } else {
+                    s->pos -= 1;
+                    s->txt[s->txt_size] = '\0';
+                    s->tkn_scanner = NULL;
+                    *txt = s->txt;
+                    return QN_JSON_TKN_INTEGER;
+                } // if
+            } // while
 
-    *txt = new_str;
-    s->pos = pos;
-    return tkn;
+        case QN_JSON_TKNSTS_NUM_DEC_POINT:
+            ch = s->txt[s->txt_size++] = s->buf[s->pos++];
+            if (s->txt_size == sizeof(s->txt) - 1) return QN_JSON_TKNERR_TEXT_TOO_LONG;
+            if (!isdigit(ch)) return QN_JSON_TKNERR_MALFORMED_TEXT;
+            s->tkn_sts = QN_JSON_TKNSTS_NUM_DEC_DIGITAL;
+            if (s->pos == s->buf_size) break;
+
+        case QN_JSON_TKNSTS_NUM_DEC_DIGITAL:
+            while (1) {
+                ch = s->txt[s->txt_size++] = s->buf[s->pos++];
+                if (s->txt_size == sizeof(s->txt) - 1) return QN_JSON_TKNERR_TEXT_TOO_LONG;
+                if (isdigit(ch)) {
+                    if (s->pos == s->buf_size) {
+                        s->tkn_scanner = &qn_json_scan_number;
+                        return QN_JSON_TKNERR_NEED_MORE_TEXT;
+                    } // if
+                    continue;
+                } else {
+                    s->pos -= 1;
+                    s->txt[s->txt_size] = '\0';
+                    s->tkn_scanner = NULL;
+                    *txt = s->txt;
+                    return QN_JSON_TKN_NUMBER;
+                } // if
+            } // while
+
+        default:
+            exit(1);
+    } // switch
+    s->tkn_scanner = &qn_json_scan_number;
+    return QN_JSON_TKNERR_NEED_MORE_TEXT;
+}
+
+static qn_json_token qn_json_scan_true(qn_json_scanner_ptr s, qn_string * txt)
+{
+    char ch;
+    switch (s->tkn_sts) {
+        case QN_JSON_TKNSTS_TRUE_T:
+            ch = s->buf[s->pos++];
+            if (ch != 'r' && ch != 'R') return QN_JSON_TKNERR_MALFORMED_TEXT;
+            s->tkn_sts = QN_JSON_TKNSTS_TRUE_R;
+            if (s->pos == s->buf_size) break;
+
+        case QN_JSON_TKNSTS_TRUE_R:
+            ch = s->buf[s->pos++];
+            if (ch != 'u' && ch != 'U') return QN_JSON_TKNERR_MALFORMED_TEXT;
+            s->tkn_sts = QN_JSON_TKNSTS_TRUE_U;
+            if (s->pos == s->buf_size) break;
+
+        case QN_JSON_TKNSTS_TRUE_U:
+            ch = s->buf[s->pos++];
+            if (ch != 'e' && ch != 'E') return QN_JSON_TKNERR_MALFORMED_TEXT;
+            s->tkn_scanner = NULL;
+            return QN_JSON_TKN_TRUE;
+
+        default:
+            exit(1);
+    } // switch
+    s->tkn_scanner = &qn_json_scan_true;
+    return QN_JSON_TKNERR_NEED_MORE_TEXT;
+}
+
+static qn_json_token qn_json_scan_false(qn_json_scanner_ptr s, qn_string * txt)
+{
+    char ch;
+    switch (s->tkn_sts) {
+        case QN_JSON_TKNSTS_FALSE_F:
+            ch = s->buf[s->pos++];
+            if (ch != 'a' && ch != 'A') return QN_JSON_TKNERR_MALFORMED_TEXT;
+            s->tkn_sts = QN_JSON_TKNSTS_FALSE_A;
+            if (s->pos == s->buf_size) break;
+
+        case QN_JSON_TKNSTS_FALSE_A:
+            ch = s->buf[s->pos++];
+            if (ch != 'l' && ch != 'L') return QN_JSON_TKNERR_MALFORMED_TEXT;
+            s->tkn_sts = QN_JSON_TKNSTS_FALSE_L;
+            if (s->pos == s->buf_size) break;
+
+        case QN_JSON_TKNSTS_FALSE_L:
+            ch = s->buf[s->pos++];
+            if (ch != 's' && ch != 'S') return QN_JSON_TKNERR_MALFORMED_TEXT;
+            s->tkn_sts = QN_JSON_TKNSTS_FALSE_S;
+            if (s->pos == s->buf_size) break;
+
+        case QN_JSON_TKNSTS_FALSE_S:
+            ch = s->buf[s->pos++];
+            if (ch != 'e' && ch != 'E') return QN_JSON_TKNERR_MALFORMED_TEXT;
+            s->tkn_scanner = NULL;
+            return QN_JSON_TKN_FALSE;
+
+        default:
+            exit(1);
+    } // switch
+    s->tkn_scanner = &qn_json_scan_false;
+    return QN_JSON_TKNERR_NEED_MORE_TEXT;
+}
+
+static qn_json_token qn_json_scan_null(qn_json_scanner_ptr s, qn_string * txt)
+{
+    char ch;
+    switch (s->tkn_sts) {
+        case QN_JSON_TKNSTS_NULL_N:
+            ch = s->buf[s->pos++];
+            if (ch != 'u' && ch != 'U') return QN_JSON_TKNERR_MALFORMED_TEXT;
+            s->tkn_sts = QN_JSON_TKNSTS_NULL_U;
+            if (s->pos == s->buf_size) break;
+
+        case QN_JSON_TKNSTS_NULL_U:
+            ch = s->buf[s->pos++];
+            if (ch != 'l' && ch != 'L') return QN_JSON_TKNERR_MALFORMED_TEXT;
+            s->tkn_sts = QN_JSON_TKNSTS_NULL_L1;
+            if (s->pos == s->buf_size) break;
+
+        case QN_JSON_TKNSTS_NULL_L1:
+            ch = s->buf[s->pos++];
+            if (ch != 'l' && ch != 'L') return QN_JSON_TKNERR_MALFORMED_TEXT;
+            s->tkn_scanner = NULL;
+            return QN_JSON_TKN_NULL;
+
+        default:
+            exit(1);
+    } // switch
+    s->tkn_scanner = &qn_json_scan_null;
+    return QN_JSON_TKNERR_NEED_MORE_TEXT;
 }
 
 static qn_json_token qn_json_scan(qn_json_scanner_ptr s, qn_string * txt)
 {
-    qn_size pos = s->pos;
+    if (!s->tkn_scanner) {
+        while (isspace(s->buf[s->pos])) {
+            if (++s->pos == s->buf_size) return QN_JSON_TKNERR_NEED_MORE_TEXT;
+        } // while
 
-    for (; pos < s->buf_size && isspace(s->buf[pos]); pos += 1) {
-        // do nothing
-    } // for
-    if (pos == s->buf_size) {
-        s->pos = pos;
-        return QN_JSON_TKNERR_NEED_MORE_TEXT;
+        // Here s->pos must be pointing to the first nonspace character.
+        switch (s->buf[s->pos++]) {
+            case ':': return QN_JSON_TKN_COLON;
+            case ',': return QN_JSON_TKN_COMMA;
+            case '{': return QN_JSON_TKN_OPEN_BRACE;
+            case '}': return QN_JSON_TKN_CLOSE_BRACE;
+            case '[': return QN_JSON_TKN_OPEN_BRACKET;
+            case ']': return QN_JSON_TKN_CLOSE_BRACKET;
+
+            case '"':
+                s->tkn_sts = QN_JSON_TKNSTS_STR_CHAR;
+                s->txt_size = 0;
+                return qn_json_scan_string(s, txt);
+
+            case '+': case '-':
+                s->tkn_sts = QN_JSON_TKNSTS_NUM_SIGN;
+                s->txt_size = 0;
+                s->txt[s->txt_size++] = s->buf[s->pos - 1];
+                return qn_json_scan_number(s, txt);
+
+            case '0': case '1': case '2': case '3': case '4':
+            case '5': case '6': case '7': case '8': case '9':
+                s->tkn_sts = QN_JSON_TKNSTS_NUM_INT_DIGITAL;
+                s->txt_size = 0;
+                s->txt[s->txt_size++] = s->buf[s->pos - 1];
+                return qn_json_scan_number(s, txt);
+
+            case 't': case 'T':
+                s->tkn_sts = QN_JSON_TKNSTS_TRUE_T;
+                return qn_json_scan_true(s, txt);
+
+            case 'f': case 'F':
+                s->tkn_sts = QN_JSON_TKNSTS_FALSE_F;
+                return qn_json_scan_false(s, txt);
+
+            case 'n': case 'N':
+                s->tkn_sts = QN_JSON_TKNSTS_NULL_N;
+                return qn_json_scan_null(s, txt);
+        } // switch
+    } else {
+        return (*s->tkn_scanner)(s, txt);
     } // if
-
-    // 此处 s->pos 应指向第一个非空白符的字符
-    switch (s->buf[pos]) {
-        case ':': s->pos = pos + 1; return QN_JSON_TKN_COLON;
-        case ',': s->pos = pos + 1; return QN_JSON_TKN_COMMA;
-        case '{': s->pos = pos + 1; return QN_JSON_TKN_OPEN_BRACE;
-        case '}': s->pos = pos + 1; return QN_JSON_TKN_CLOSE_BRACE;
-        case '[': s->pos = pos + 1; return QN_JSON_TKN_OPEN_BRACKET;
-        case ']': s->pos = pos + 1; return QN_JSON_TKN_CLOSE_BRACKET;
-
-        case '"':
-            s->pos = pos;
-            return qn_json_scan_string(s, txt);
-
-        case '+': case '-':
-        case '0': case '1': case '2': case '3': case '4':
-        case '5': case '6': case '7': case '8': case '9':
-            s->pos = pos;
-            return qn_json_scan_number(s, txt);
-
-        case 't': case 'T':
-            if (pos + 4 <= s->buf_size) {
-                if (strncmp(s->buf + pos, "true", 4) == 0) {
-                    s->pos = pos + 4;
-                    return QN_JSON_TKN_TRUE;
-                } // if
-                if (strncmp(s->buf + pos, "TRUE", 4) == 0) {
-                    s->pos = pos + 4;
-                    return QN_JSON_TKN_TRUE;
-                } // if
-            } // if
-            break;
-
-        case 'f': case 'F':
-            if (pos + 5 <= s->buf_size) {
-                if (strncmp(s->buf + pos, "false", 5) == 0) {
-                    s->pos = pos + 5;
-                    return QN_JSON_TKN_FALSE;
-                } // if
-                if (strncmp(s->buf + pos, "FALSE", 5) == 0) {
-                    s->pos = pos + 5;
-                    return QN_JSON_TKN_FALSE;
-                } // if
-            } // if
-            break;
-
-        case 'n': case 'N':
-            if (pos + 4 <= s->buf_size) {
-                if (strncmp(s->buf + pos, "null", 4) == 0) {
-                    s->pos = pos + 4;
-                    return QN_JSON_TKN_NULL;
-                } // if
-                if (strncmp(s->buf + pos, "NULL", 4) == 0) {
-                    s->pos = pos + 4;
-                    return QN_JSON_TKN_NULL;
-                } // if
-            } // if
-            break;
-    } // switch
     return QN_JSON_TKNERR_MALFORMED_TEXT;
 }
 
@@ -561,10 +730,6 @@ static qn_bool qn_json_prs_put_in(qn_json_parser_ptr prs, qn_json_token tkn, qn_
             qn_err_set_try_again();
             return qn_false;
 
-        case QN_JSON_TKNERR_NO_ENOUGH_MEMORY:
-            qn_err_set_no_enough_memory();
-            return qn_false;
-
         default:
             qn_err_json_set_bad_text_input();
             return qn_false;
@@ -589,24 +754,15 @@ PARSING_NEXT_ELEMENT_IN_THE_OBJECT:
             } // if
 
             if (tkn != QN_JSON_TKN_STRING) {
-                if (txt) {
-                    qn_str_destroy(txt);
-                    txt = NULL;
-                } // if
                 qn_err_json_set_bad_text_input();
                 return QN_JSON_PARSING_ERROR;
             } // if
 
-            lvl->key = txt;
-            txt = NULL;
+            lvl->key = qn_str_duplicate(txt);
             lvl->status = QN_JSON_PARSING_COLON;
 
         case QN_JSON_PARSING_COLON:
             tkn = qn_json_scan(&prs->scanner, &txt);
-            if (txt) {
-                qn_str_destroy(txt);
-                txt = NULL;
-            } // if
 
             if (tkn != QN_JSON_TKN_COLON) {
                 qn_err_json_set_bad_text_input();
@@ -620,10 +776,6 @@ PARSING_NEXT_ELEMENT_IN_THE_OBJECT:
 
             // Put the parsed element into the container.
             ret = qn_json_prs_put_in(prs, tkn, txt, lvl);
-            if (txt) {
-                qn_str_destroy(txt);
-                txt = NULL;
-            } // if
             if (!ret) return QN_JSON_PARSING_ERROR;
 
             lvl->status = QN_JSON_PARSING_COMMA;
@@ -633,10 +785,6 @@ PARSING_NEXT_ELEMENT_IN_THE_OBJECT:
 
         case QN_JSON_PARSING_COMMA:
             tkn = qn_json_scan(&prs->scanner, &txt);
-            if (txt) {
-                qn_str_destroy(txt);
-                txt = NULL;
-            } // if
 
             if (tkn == QN_JSON_TKN_CLOSE_BRACE) {
                 // The current object element has been parsed.
@@ -677,13 +825,9 @@ PARSING_NEXT_ELEMENT_IN_THE_ARRAY:
 
             // Put the parsed element into the container.
             if (!qn_json_prs_put_in(prs, tkn, txt, lvl)) {
-                qn_str_destroy(txt);
-                txt = NULL;
                 return QN_JSON_PARSING_ERROR;
             } // if
 
-            qn_str_destroy(txt);
-            txt = NULL;
             lvl->status = QN_JSON_PARSING_COMMA;
 
             // Go to parse the new element on the top of the stack.
