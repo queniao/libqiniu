@@ -160,6 +160,9 @@ static qn_bool qn_json_unescape_to_utf8(char * cstr, qn_size * m)
         cstr[*m+2] = 0x80 | ((wch >> 6) & 0x3F);
         cstr[*m+3] = 0x80 | (wch & 0x3F);
         *m += 4;
+    } else {
+        qn_err_json_set_bad_text_input();
+        return qn_false;
     } // if
     return qn_true;
 }
@@ -276,6 +279,7 @@ static qn_json_token qn_json_scan_number(qn_json_scanner_ptr s, char ** txt, qn_
     switch (s->tkn_sts) {
         case QN_JSON_TKNSTS_NUM_SIGN:
             ch = s->txt[s->txt_size++] = s->buf[s->buf_pos++];
+            // Since the sign is the first character of a number, don't need to check whether it's to long.
             if (!isdigit(ch)) return QN_JSON_TKNERR_MALFORMED_TEXT;
             s->tkn_sts = QN_JSON_TKNSTS_NUM_INT_DIGITAL;
             if (s->buf_pos == s->buf_size) break;
@@ -305,8 +309,8 @@ static qn_json_token qn_json_scan_number(qn_json_scanner_ptr s, char ** txt, qn_
 
         case QN_JSON_TKNSTS_NUM_DEC_POINT:
             ch = s->txt[s->txt_size++] = s->buf[s->buf_pos++];
-            if (s->txt_size == sizeof(s->txt) - 1) return QN_JSON_TKNERR_TEXT_TOO_LONG;
             if (!isdigit(ch)) return QN_JSON_TKNERR_MALFORMED_TEXT;
+            if (s->txt_size == sizeof(s->txt) - 1) return QN_JSON_TKNERR_TEXT_TOO_LONG;
             s->tkn_sts = QN_JSON_TKNSTS_NUM_DEC_DIGITAL;
             if (s->buf_pos == s->buf_size) break;
 
