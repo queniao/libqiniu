@@ -160,7 +160,7 @@ void test_parse_empty_object(void)
     prs = qn_json_prs_create();
     CU_ASSERT_FATAL(prs != NULL);
 
-    ret = qn_json_prs_parse_object(prs, buf, &buf_len, &obj_root);
+    ret = qn_json_prs_parse_object(prs, buf, buf_len, &obj_root);
     qn_json_prs_destroy(prs);
     if (!ret) {
         CU_FAIL("Cannot parse the empty object.");
@@ -184,7 +184,7 @@ void test_parse_object_holding_one_element(void)
     prs = qn_json_prs_create();
     CU_ASSERT_FATAL(prs != NULL);
 
-    ret = qn_json_prs_parse_object(prs, buf, &buf_len, &obj_root);
+    ret = qn_json_prs_parse_object(prs, buf, buf_len, &obj_root);
     qn_json_prs_destroy(prs);
     if (!ret) {
         CU_FAIL("Cannot parse the object holding one element.");
@@ -211,7 +211,7 @@ void test_parse_object_holding_two_elements(void)
     prs = qn_json_prs_create();
     CU_ASSERT_FATAL(prs != NULL);
 
-    ret = qn_json_prs_parse_object(prs, buf, &buf_len, &obj_root);
+    ret = qn_json_prs_parse_object(prs, buf, buf_len, &obj_root);
     qn_json_prs_destroy(prs);
     if (!ret) {
         CU_FAIL("Cannot parse the object holding two elements.");
@@ -236,7 +236,7 @@ void test_parse_object_holding_ordinary_elements(void)
     prs = qn_json_prs_create();
     CU_ASSERT_FATAL(prs != NULL);
 
-    ret = qn_json_prs_parse_object(prs, buf, &buf_len, &obj_root);
+    ret = qn_json_prs_parse_object(prs, buf, buf_len, &obj_root);
     qn_json_prs_destroy(prs);
     if (!ret) {
         CU_FAIL("Cannot parse the object holding ordinary elements.");
@@ -265,7 +265,7 @@ void test_parse_object_holding_empty_complex_elements(void)
     prs = qn_json_prs_create();
     CU_ASSERT_FATAL(prs != NULL);
 
-    ret = qn_json_prs_parse_object(prs, buf, &buf_len, &obj_root);
+    ret = qn_json_prs_parse_object(prs, buf, buf_len, &obj_root);
     qn_json_prs_destroy(prs);
     if (!ret) {
         CU_FAIL("Cannot parse the object holding empty complex elements.");
@@ -299,7 +299,7 @@ void test_parse_object_holding_embedded_objects(void)
     prs = qn_json_prs_create();
     CU_ASSERT_FATAL(prs != NULL);
 
-    ret = qn_json_prs_parse_object(prs, buf, &buf_len, &obj_root);
+    ret = qn_json_prs_parse_object(prs, buf, buf_len, &obj_root);
     qn_json_prs_destroy(prs);
     if (!ret) {
         CU_FAIL("Cannot parse the object holding embedded objects.");
@@ -337,7 +337,7 @@ void test_parse_empty_array(void)
     prs = qn_json_prs_create();
     CU_ASSERT_FATAL(prs != NULL);
 
-    ret = qn_json_prs_parse_array(prs, buf, &buf_len, &arr_root);
+    ret = qn_json_prs_parse_array(prs, buf, buf_len, &arr_root);
     qn_json_prs_destroy(prs);
     if (!ret) {
         CU_FAIL("Cannot parse the empty array.");
@@ -361,7 +361,7 @@ void test_parse_array_holding_one_element(void)
     prs = qn_json_prs_create();
     CU_ASSERT_FATAL(prs != NULL);
 
-    ret = qn_json_prs_parse_array(prs, buf, &buf_len, &arr_root);
+    ret = qn_json_prs_parse_array(prs, buf, buf_len, &arr_root);
     qn_json_prs_destroy(prs);
     if (!ret) {
         CU_FAIL("Cannot parse the array holding one element.");
@@ -388,7 +388,7 @@ void test_parse_array_holding_two_elements(void)
     prs = qn_json_prs_create();
     CU_ASSERT_FATAL(prs != NULL);
 
-    ret = qn_json_prs_parse_array(prs, buf, &buf_len, &arr_root);
+    ret = qn_json_prs_parse_array(prs, buf, buf_len, &arr_root);
     qn_json_prs_destroy(prs);
     if (!ret) {
         CU_FAIL("Cannot parse the array holding two elements.");
@@ -412,7 +412,7 @@ void test_parse_array_holding_ordinary_elements(void)
     prs = qn_json_prs_create();
     CU_ASSERT_FATAL(prs != NULL);
 
-    ret = qn_json_prs_parse_array(prs, buf, &buf_len, &arr_root);
+    ret = qn_json_prs_parse_array(prs, buf, buf_len, &arr_root);
     qn_json_prs_destroy(prs);
     if (!ret) {
         CU_FAIL("Cannot parse the array holding ordinary elements.");
@@ -441,7 +441,7 @@ void test_parse_array_holding_empty_complex_elements(void)
     prs = qn_json_prs_create();
     CU_ASSERT_FATAL(prs != NULL);
 
-    ret = qn_json_prs_parse_array(prs, buf, &buf_len, &arr_root);
+    ret = qn_json_prs_parse_array(prs, buf, buf_len, &arr_root);
     qn_json_prs_destroy(prs);
     if (!ret) {
         CU_FAIL("Cannot parse the array holding empty complex elements.");
@@ -475,7 +475,7 @@ void test_parse_array_holding_embedded_arrays(void)
     prs = qn_json_prs_create();
     CU_ASSERT_FATAL(prs != NULL);
 
-    ret = qn_json_prs_parse_array(prs, buf, &buf_len, &arr_root);
+    ret = qn_json_prs_parse_array(prs, buf, buf_len, &arr_root);
     qn_json_prs_destroy(prs);
     if (!ret) {
         CU_FAIL("Cannot parse the array holding embedded arrays.");
