@@ -70,7 +70,7 @@ typedef enum
 struct _QN_JSON_SCANNER;
 typedef struct _QN_JSON_SCANNER * qn_json_scanner_ptr; 
 
-typedef qn_json_token (*qn_json_tkn_scanner)(qn_json_scanner_ptr s, qn_string * txt);
+typedef qn_json_token (*qn_json_tkn_scanner)(qn_json_scanner_ptr s, char ** txt, qn_size * txt_size);
 
 typedef struct _QN_JSON_SCANNER
 {
@@ -169,7 +169,7 @@ static qn_bool qn_json_unescape_to_utf8(char * cstr, qn_size * m)
 #undef h2
 #undef h1
 
-static qn_json_token qn_json_scan_string(qn_json_scanner_ptr s, qn_string * txt)
+static qn_json_token qn_json_scan_string(qn_json_scanner_ptr s, char ** txt, qn_size * txt_size)
 {
     char ch;
 
@@ -187,6 +187,7 @@ static qn_json_token qn_json_scan_string(qn_json_scanner_ptr s, qn_string * txt)
                         s->tkn_scanner = NULL;
                         s->txt[--s->txt_size] = '\0';
                         *txt = s->txt;
+                        *txt_size = s->txt_size;
                         return QN_JSON_TKN_STRING;
                     } // if
                 } while (s->buf_pos < s->buf_size);
@@ -268,7 +269,7 @@ static qn_json_token qn_json_scan_string(qn_json_scanner_ptr s, qn_string * txt)
     return QN_JSON_TKNERR_NEED_MORE_TEXT;
 }
 
-static qn_json_token qn_json_scan_number(qn_json_scanner_ptr s, qn_string * txt)
+static qn_json_token qn_json_scan_number(qn_json_scanner_ptr s, char ** txt, qn_size * txt_size)
 {
     char ch;
 
@@ -297,6 +298,7 @@ static qn_json_token qn_json_scan_number(qn_json_scanner_ptr s, qn_string * txt)
                     s->txt[s->txt_size] = '\0';
                     s->tkn_scanner = NULL;
                     *txt = s->txt;
+                    *txt_size = s->txt_size;
                     return QN_JSON_TKN_INTEGER;
                 } // if
             } // while
@@ -323,6 +325,7 @@ static qn_json_token qn_json_scan_number(qn_json_scanner_ptr s, qn_string * txt)
                     s->txt[s->txt_size] = '\0';
                     s->tkn_scanner = NULL;
                     *txt = s->txt;
+                    *txt_size = s->txt_size;
                     return QN_JSON_TKN_NUMBER;
                 } // if
             } // while
@@ -334,7 +337,7 @@ static qn_json_token qn_json_scan_number(qn_json_scanner_ptr s, qn_string * txt)
     return QN_JSON_TKNERR_NEED_MORE_TEXT;
 }
 
-static qn_json_token qn_json_scan_true(qn_json_scanner_ptr s, qn_string * txt)
+static qn_json_token qn_json_scan_true(qn_json_scanner_ptr s, char ** txt, qn_size * txt_size)
 {
     char ch;
     switch (s->tkn_sts) {
@@ -363,7 +366,7 @@ static qn_json_token qn_json_scan_true(qn_json_scanner_ptr s, qn_string * txt)
     return QN_JSON_TKNERR_NEED_MORE_TEXT;
 }
 
-static qn_json_token qn_json_scan_false(qn_json_scanner_ptr s, qn_string * txt)
+static qn_json_token qn_json_scan_false(qn_json_scanner_ptr s, char ** txt, qn_size * txt_size)
 {
     char ch;
     switch (s->tkn_sts) {
@@ -398,7 +401,7 @@ static qn_json_token qn_json_scan_false(qn_json_scanner_ptr s, qn_string * txt)
     return QN_JSON_TKNERR_NEED_MORE_TEXT;
 }
 
-static qn_json_token qn_json_scan_null(qn_json_scanner_ptr s, qn_string * txt)
+static qn_json_token qn_json_scan_null(qn_json_scanner_ptr s, char ** txt, qn_size * txt_size)
 {
     char ch;
     switch (s->tkn_sts) {
@@ -427,7 +430,7 @@ static qn_json_token qn_json_scan_null(qn_json_scanner_ptr s, qn_string * txt)
     return QN_JSON_TKNERR_NEED_MORE_TEXT;
 }
 
-static qn_json_token qn_json_scan(qn_json_scanner_ptr s, qn_string * txt)
+static qn_json_token qn_json_scan(qn_json_scanner_ptr s, char ** txt, qn_size * txt_size)
 {
     if (!s->tkn_scanner) {
         while (isspace(s->buf[s->buf_pos])) {
@@ -446,35 +449,35 @@ static qn_json_token qn_json_scan(qn_json_scanner_ptr s, qn_string * txt)
             case '"':
                 s->tkn_sts = QN_JSON_TKNSTS_STR_CHAR;
                 s->txt_size = 0;
-                return qn_json_scan_string(s, txt);
+                return qn_json_scan_string(s, txt, txt_size);
 
             case '+': case '-':
                 s->tkn_sts = QN_JSON_TKNSTS_NUM_SIGN;
                 s->txt_size = 0;
                 s->txt[s->txt_size++] = s->buf[s->buf_pos - 1];
-                return qn_json_scan_number(s, txt);
+                return qn_json_scan_number(s, txt, txt_size);
 
             case '0': case '1': case '2': case '3': case '4':
             case '5': case '6': case '7': case '8': case '9':
                 s->tkn_sts = QN_JSON_TKNSTS_NUM_INT_DIGITAL;
                 s->txt_size = 0;
                 s->txt[s->txt_size++] = s->buf[s->buf_pos - 1];
-                return qn_json_scan_number(s, txt);
+                return qn_json_scan_number(s, txt, txt_size);
 
             case 't': case 'T':
                 s->tkn_sts = QN_JSON_TKNSTS_TRUE_T;
-                return qn_json_scan_true(s, txt);
+                return qn_json_scan_true(s, txt, txt_size);
 
             case 'f': case 'F':
                 s->tkn_sts = QN_JSON_TKNSTS_FALSE_F;
-                return qn_json_scan_false(s, txt);
+                return qn_json_scan_false(s, txt, txt_size);
 
             case 'n': case 'N':
                 s->tkn_sts = QN_JSON_TKNSTS_NULL_N;
-                return qn_json_scan_null(s, txt);
+                return qn_json_scan_null(s, txt, txt_size);
         } // switch
     } else {
-        return (*s->tkn_scanner)(s, txt);
+        return (*s->tkn_scanner)(s, txt, txt_size);
     } // if
     return QN_JSON_TKNERR_MALFORMED_TEXT;
 }
@@ -604,7 +607,7 @@ static inline qn_bool qn_json_prs_is_empty(qn_json_parser_ptr prs)
     return (prs->size == 0);
 }
 
-static qn_bool qn_json_prs_put_in(qn_json_parser_ptr prs, qn_json_token tkn, qn_string txt, qn_json_prs_level_ptr lvl)
+static qn_bool qn_json_prs_put_in(qn_json_parser_ptr prs, qn_json_token tkn, char * txt, qn_size txt_size, qn_json_prs_level_ptr lvl)
 {
     qn_integer integer = 0L;
     qn_number number = 0.0L;
@@ -652,16 +655,16 @@ static qn_bool qn_json_prs_put_in(qn_json_parser_ptr prs, qn_json_token tkn, qn_
 
         case QN_JSON_TKN_STRING:
             if (lvl->class == QN_JSON_OBJECT) {
-                if (!qn_json_set_string(lvl->elem.object, lvl->key, txt)) return qn_false;
+                if (!qn_json_set_string_raw(lvl->elem.object, lvl->key, txt, txt_size)) return qn_false;
                 qn_str_destroy(lvl->key);
                 lvl->key = NULL;
                 return qn_true;
             }
-            return qn_json_push_string(lvl->elem.array, txt);
+            return qn_json_push_string_raw(lvl->elem.array, txt, txt_size);
 
         case QN_JSON_TKN_INTEGER:
-            integer = strtoll(qn_str_cstr(txt), &end_txt, 10);
-            if (end_txt == qn_str_cstr(txt)) {
+            integer = strtoll(txt, &end_txt, 10);
+            if (end_txt == txt) {
                 qn_err_json_set_bad_text_input();
                 return qn_false;
             } // if
@@ -678,8 +681,8 @@ static qn_bool qn_json_prs_put_in(qn_json_parser_ptr prs, qn_json_token tkn, qn_
             return qn_json_push_integer(lvl->elem.array, integer);
 
         case QN_JSON_TKN_NUMBER:
-            number = strtold(qn_str_cstr(txt), &end_txt);
-            if (end_txt == qn_str_cstr(txt)) {
+            number = strtold(txt, &end_txt);
+            if (end_txt == txt) {
                 qn_err_json_set_bad_text_input();
                 return qn_false;
             } // if
@@ -741,12 +744,13 @@ static qn_json_prs_result qn_json_parse_object(qn_json_parser_ptr prs, qn_json_p
 {
     qn_bool ret = qn_false;
     qn_json_token tkn = QN_JSON_TKNERR_NEED_MORE_TEXT;
-    qn_string txt = NULL;
+    char * txt = NULL;
+    qn_size txt_size;
 
 PARSING_NEXT_ELEMENT_IN_THE_OBJECT:
     switch (lvl->status) {
         case QN_JSON_PARSING_KEY:
-            tkn = qn_json_scan(&prs->scanner, &txt);
+            tkn = qn_json_scan(&prs->scanner, &txt, &txt_size);
             if (tkn == QN_JSON_TKN_CLOSE_BRACE) {
                 // The current object element has been parsed.
                 lvl->status = QN_JSON_PARSING_DONE;
@@ -758,11 +762,11 @@ PARSING_NEXT_ELEMENT_IN_THE_OBJECT:
                 return QN_JSON_PARSING_ERROR;
             } // if
 
-            lvl->key = qn_str_duplicate(txt);
+            lvl->key = qn_str_clone(txt, txt_size);
             lvl->status = QN_JSON_PARSING_COLON;
 
         case QN_JSON_PARSING_COLON:
-            tkn = qn_json_scan(&prs->scanner, &txt);
+            tkn = qn_json_scan(&prs->scanner, &txt, &txt_size);
 
             if (tkn != QN_JSON_TKN_COLON) {
                 qn_err_json_set_bad_text_input();
@@ -772,10 +776,10 @@ PARSING_NEXT_ELEMENT_IN_THE_OBJECT:
             lvl->status = QN_JSON_PARSING_VALUE;
 
         case QN_JSON_PARSING_VALUE:
-            tkn = qn_json_scan(&prs->scanner, &txt);
+            tkn = qn_json_scan(&prs->scanner, &txt, &txt_size);
 
             // Put the parsed element into the container.
-            ret = qn_json_prs_put_in(prs, tkn, txt, lvl);
+            ret = qn_json_prs_put_in(prs, tkn, txt, txt_size, lvl);
             if (!ret) return QN_JSON_PARSING_ERROR;
 
             lvl->status = QN_JSON_PARSING_COMMA;
@@ -784,7 +788,7 @@ PARSING_NEXT_ELEMENT_IN_THE_OBJECT:
             if (tkn == QN_JSON_TKN_OPEN_BRACE || tkn == QN_JSON_TKN_OPEN_BRACKET) return QN_JSON_PARSING_CHILD;
 
         case QN_JSON_PARSING_COMMA:
-            tkn = qn_json_scan(&prs->scanner, &txt);
+            tkn = qn_json_scan(&prs->scanner, &txt, &txt_size);
 
             if (tkn == QN_JSON_TKN_CLOSE_BRACE) {
                 // The current object element has been parsed.
@@ -811,12 +815,13 @@ PARSING_NEXT_ELEMENT_IN_THE_OBJECT:
 static qn_json_prs_result qn_json_parse_array(qn_json_parser_ptr prs, qn_json_prs_level_ptr lvl)
 {
     qn_json_token tkn = QN_JSON_TKNERR_NEED_MORE_TEXT;
-    qn_string txt = NULL;
+    char * txt = NULL;
+    qn_size txt_size;
 
 PARSING_NEXT_ELEMENT_IN_THE_ARRAY:
     switch (lvl->status) {
         case QN_JSON_PARSING_VALUE:
-            tkn = qn_json_scan(&prs->scanner, &txt);
+            tkn = qn_json_scan(&prs->scanner, &txt, &txt_size);
             if (tkn == QN_JSON_TKN_CLOSE_BRACKET) {
                 // The current array element has been parsed.
                 lvl->status = QN_JSON_PARSING_DONE;
@@ -824,7 +829,7 @@ PARSING_NEXT_ELEMENT_IN_THE_ARRAY:
             } // if
 
             // Put the parsed element into the container.
-            if (!qn_json_prs_put_in(prs, tkn, txt, lvl)) {
+            if (!qn_json_prs_put_in(prs, tkn, txt, txt_size, lvl)) {
                 return QN_JSON_PARSING_ERROR;
             } // if
 
@@ -836,7 +841,7 @@ PARSING_NEXT_ELEMENT_IN_THE_ARRAY:
             } // if
 
         case QN_JSON_PARSING_COMMA:
-            tkn = qn_json_scan(&prs->scanner, &txt);
+            tkn = qn_json_scan(&prs->scanner, &txt, &txt_size);
             if (tkn == QN_JSON_TKN_CLOSE_BRACKET) {
                 // The current array element has been parsed.
                 lvl->status = QN_JSON_PARSING_DONE;
@@ -894,7 +899,8 @@ static qn_bool qn_json_prs_parse(qn_json_parser_ptr prs, const char * restrict b
 qn_bool qn_json_prs_parse_object(qn_json_parser_ptr prs, const char * restrict buf, qn_size * restrict buf_size, qn_json_object_ptr * root)
 {
     qn_json_token tkn = QN_JSON_TKNERR_NEED_MORE_TEXT;
-    qn_string txt = NULL;
+    char * txt = NULL;
+    qn_size txt_size;
     qn_json_variant elem;
 
     prs->scanner.buf = buf;
@@ -902,14 +908,12 @@ qn_bool qn_json_prs_parse_object(qn_json_parser_ptr prs, const char * restrict b
     prs->scanner.buf_pos = 0;
 
     if (qn_json_prs_is_empty(prs)) {
-        tkn = qn_json_scan(&prs->scanner, &txt);
+        tkn = qn_json_scan(&prs->scanner, &txt, &txt_size);
         if (tkn == QN_JSON_TKN_OPEN_BRACE) {
             if (! (elem.object = qn_json_create_object()) ) {
-                free(txt);
                 return qn_false;
             }
             if (!qn_json_prs_push(prs, QN_JSON_OBJECT, elem, QN_JSON_PARSING_KEY)) {
-                free(txt);
                 return qn_false;
             }
         } else {
@@ -929,7 +933,8 @@ qn_bool qn_json_prs_parse_object(qn_json_parser_ptr prs, const char * restrict b
 qn_bool qn_json_prs_parse_array(qn_json_parser_ptr prs, const char * restrict buf, qn_size * restrict buf_size, qn_json_array_ptr * root)
 {
     qn_json_token tkn = QN_JSON_TKNERR_NEED_MORE_TEXT;
-    qn_string txt = NULL;
+    char * txt = NULL;
+    qn_size txt_size;
     qn_json_variant elem;
 
     prs->scanner.buf = buf;
@@ -937,14 +942,12 @@ qn_bool qn_json_prs_parse_array(qn_json_parser_ptr prs, const char * restrict bu
     prs->scanner.buf_pos = 0;
 
     if (qn_json_prs_is_empty(prs)) {
-        tkn = qn_json_scan(&prs->scanner, &txt);
+        tkn = qn_json_scan(&prs->scanner, &txt, &txt_size);
         if (tkn == QN_JSON_TKN_OPEN_BRACKET) {
             if (! (elem.array = qn_json_create_array()) ) {
-                free(txt);
                 return qn_false;
             }
             if (!qn_json_prs_push(prs, QN_JSON_ARRAY, elem, QN_JSON_PARSING_VALUE)) {
-                free(txt);
                 return qn_false;
             }
         } else {
