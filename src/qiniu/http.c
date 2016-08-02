@@ -19,8 +19,6 @@ typedef struct _QN_HTTP_BODY_JSON
     qn_json_object_ptr * obj;
     qn_json_array_ptr * arr;
     qn_json_parser_ptr prs;
-    int buf_size;
-    char buf[4096];
 } qn_http_body_json;
 
 qn_http_body_json_ptr qn_http_body_json_create(void)
@@ -47,14 +45,12 @@ void qn_http_body_json_destroy(qn_http_body_json_ptr writer)
 
 void qn_http_body_json_prepare_for_object(qn_http_body_json_ptr writer, qn_json_object_ptr * obj)
 {
-    writer->buf_size = 0;
     writer->obj = obj;
     writer->arr = NULL;
 }
 
 void qn_http_body_json_prepare_for_array(qn_http_body_json_ptr writer, qn_json_array_ptr * arr)
 {
-    writer->buf_size = 0;
     writer->obj = NULL;
     writer->arr = arr;
 }
@@ -62,39 +58,15 @@ void qn_http_body_json_prepare_for_array(qn_http_body_json_ptr writer, qn_json_a
 int qn_http_body_json_write(void * user_data, char * in_buf, int in_buf_size)
 {
     qn_http_body_json_ptr writer = (qn_http_body_json_ptr) user_data;
-    char * rem_buf = in_buf;
-    int rem_size = in_buf_size;
-    int unused_size = 0;
-    qn_size copy_size = 0;
-    qn_size buf_size = 0;
-
-    while (rem_size > 0) {
-        unused_size = sizeof(writer->buf) - writer->buf_size;
-        copy_size = (rem_size <= unused_size) ? rem_size : unused_size;
-
-        memcpy(writer->buf + writer->buf_size, rem_buf, copy_size);
-        writer->buf_size += copy_size;
-        rem_buf += copy_size;
-        rem_size -= copy_size;
-
-        buf_size = writer->buf_size;
-        if (writer->obj) {
-            if (!qn_json_prs_parse_object(writer->prs, writer->buf, &buf_size, writer->obj)) {
-                return -1;
-            } // if
-        } else {
-            if (!qn_json_prs_parse_array(writer->prs, writer->buf, &buf_size, writer->arr)) {
-                return -1;
-            } // if
+    if (writer->obj) {
+        if (!qn_json_prs_parse_object(writer->prs, in_buf, in_buf_size, writer->obj)) {
+            return -1;
         } // if
-
-        if (buf_size < writer->buf_size) {
-            memmove(writer->buf, writer->buf + buf_size, writer->buf_size - buf_size);   
-            writer->buf_size = writer->buf_size - buf_size;
-        } else {
-            writer->buf_size = 0;
+    } else {
+        if (!qn_json_prs_parse_array(writer->prs, in_buf, in_buf_size, writer->arr)) {
+            return -1;
         } // if
-    } // while
+    } // if
     return 0;
 }
 
