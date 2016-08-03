@@ -36,6 +36,7 @@ extern void qn_http_req_reset(qn_http_request_ptr req);
 extern qn_string qn_http_req_get_header(qn_http_request_ptr req, const qn_string header);
 extern qn_bool qn_http_req_set_header_with_values(qn_http_request_ptr req, const qn_string header, const qn_string val1, const qn_string val2, ...);
 extern qn_bool qn_http_req_set_header(qn_http_request_ptr req, const qn_string header, const qn_string value);
+extern qn_bool qn_http_req_set_header_raw(qn_http_request_ptr req, const char * hdr, int hdr_size, const char * val, int val_size);
 extern void qn_http_req_unset_header(qn_http_request_ptr req, const qn_string header);
 
 extern void qn_http_req_set_body_reader(qn_http_request_ptr req, void * body_reader, qn_http_body_reader body_reader_callback, qn_size body_size);
@@ -54,6 +55,7 @@ extern int qn_http_resp_get_writer_retcode(qn_http_response_ptr resp);
 
 extern qn_string qn_http_resp_get_header(qn_http_response_ptr resp, const qn_string header);
 extern qn_bool qn_http_resp_set_header(qn_http_response_ptr resp, const qn_string header, const qn_string value);
+extern qn_bool qn_http_resp_set_header_raw(qn_http_response_ptr resp, const char * hdr, int hdr_size, const char * val, int val_size);
 extern void qn_http_resp_unset_header(qn_http_response_ptr resp, const qn_string header);
 
 extern void qn_http_resp_set_body_writer(qn_http_response_ptr resp, void * writer, qn_http_body_writer writer_callback);

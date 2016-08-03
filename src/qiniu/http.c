@@ -1,4 +1,5 @@
 #include <stdarg.h>
+#include <strings.h>
 #include <curl/curl.h>
 
 #include "qiniu/base/string.h"
@@ -121,7 +122,7 @@ static qn_bool qn_http_htable_augment(qn_http_htable_ptr htbl)
     return qn_true;
 }
 
-static qn_http_htable_pos qn_http_htable_bsearch(qn_http_htable_ptr htbl, const qn_string hdr, qn_size hdr_size)
+static qn_http_htable_pos qn_http_htable_bsearch(qn_http_htable_ptr htbl, const char * hdr, qn_size hdr_size)
 {
     qn_http_htable_pos begin = 0;
     qn_http_htable_pos end = htbl->cnt;
@@ -129,7 +130,7 @@ static qn_http_htable_pos qn_http_htable_bsearch(qn_http_htable_ptr htbl, const 
 
     while (begin < end) {
         mid = begin + ((end - begin) / 2);
-        if (strncmp(htbl->entries[mid], hdr, hdr_size) < 0) {
+        if (strncasecmp(htbl->entries[mid], hdr, hdr_size) < 0) {
             begin = mid + 1;
         } else {
             end = mid;
@@ -138,20 +139,20 @@ static qn_http_htable_pos qn_http_htable_bsearch(qn_http_htable_ptr htbl, const 
     return begin;
 }
 
-static qn_bool qn_http_htable_set(qn_http_htable_ptr htbl, const qn_string hdr, const qn_string val)
+static qn_bool qn_http_htable_set_raw(qn_http_htable_ptr htbl, const char * hdr, int hdr_size, const char * val, int val_size)
 {
     qn_string new_val = NULL;
     qn_http_htable_pos pos = 0;
 
     if (htbl->cnt == htbl->cap && !qn_http_htable_augment(htbl)) return qn_false;
 
-    new_val = qn_str_sprintf("%s: %s", hdr, val);
+    new_val = qn_str_sprintf("%*s: %*s", hdr_size, hdr, val_size, val);
     if (!new_val) {
         qn_err_set_no_enough_memory();
         return qn_false;
-    } // if
+    }
 
-    pos = qn_http_htable_bsearch(htbl, hdr, qn_str_size(hdr));
+    pos = qn_http_htable_bsearch(htbl, hdr, hdr_size);
     if (pos < htbl->cnt) {
         qn_str_destroy(htbl->entries[pos]);
         htbl->entries[pos] = new_val;
@@ -163,9 +164,14 @@ static qn_bool qn_http_htable_set(qn_http_htable_ptr htbl, const qn_string hdr, 
     return qn_true;
 }
 
+static qn_bool qn_http_htable_set(qn_http_htable_ptr htbl, const qn_string hdr, const qn_string val)
+{
+    return qn_http_htable_set_raw(htbl, qn_str_cstr(hdr), qn_str_size(hdr), qn_str_cstr(val), qn_str_size(val));
+}
+
 static inline void qn_http_htable_unset(qn_http_htable_ptr htbl, const qn_string hdr)
 {
-    qn_http_htable_pos pos = qn_http_htable_bsearch(htbl, hdr, qn_str_size(hdr));
+    qn_http_htable_pos pos = qn_http_htable_bsearch(htbl, qn_str_cstr(hdr), qn_str_size(hdr));
     if (pos < htbl->cnt) {
         qn_str_destroy(htbl->entries[pos]);
         htbl->cnt -= 1;
@@ -175,13 +181,13 @@ static inline void qn_http_htable_unset(qn_http_htable_ptr htbl, const qn_string
 static inline const qn_string qn_http_htable_get(qn_http_htable_ptr htbl, const qn_string hdr)
 {
     qn_size hdr_size = qn_str_size(hdr);
-    qn_http_htable_pos pos = qn_http_htable_bsearch(htbl, hdr, hdr_size);
+    qn_http_htable_pos pos = qn_http_htable_bsearch(htbl, qn_str_cstr(hdr), hdr_size);
     return (pos < htbl->cnt) ? htbl->entries[pos] + hdr_size + 2 : NULL;
 }
 
 static inline const qn_string qn_http_htable_get_entry(qn_http_htable_ptr htbl, const qn_string hdr)
 {
-    qn_http_htable_pos pos = qn_http_htable_bsearch(htbl, hdr, qn_str_size(hdr));
+    qn_http_htable_pos pos = qn_http_htable_bsearch(htbl, qn_str_cstr(hdr), qn_str_size(hdr));
     return (pos < htbl->cnt) ? htbl->entries[pos] : NULL;
 }
 
@@ -272,7 +278,12 @@ qn_bool qn_http_req_set_header_with_values(qn_http_request_ptr req, const qn_str
 
 qn_bool qn_http_req_set_header(qn_http_request_ptr req, const qn_string hdr, const qn_string val)
 {
-    return qn_http_htable_set(&req->headers, hdr, val);
+    return qn_http_htable_set_raw(&req->headers, qn_str_cstr(hdr), qn_str_size(hdr), qn_str_cstr(val), qn_str_size(val));
+}
+
+qn_bool qn_http_req_set_header_raw(qn_http_request_ptr req, const char * hdr, int hdr_size, const char * val, int val_size)
+{
+    return qn_http_htable_set_raw(&req->headers, hdr, hdr_size, val, val_size);
 }
 
 void qn_http_req_unset_header(qn_http_request_ptr req, const qn_string hdr)
@@ -348,7 +359,12 @@ qn_string qn_http_resp_get_header(qn_http_response_ptr resp, const qn_string hdr
 
 qn_bool qn_http_resp_set_header(qn_http_response_ptr resp, const qn_string hdr, const qn_string val)
 {
-    return qn_http_htable_set(&resp->headers, hdr, val);
+    return qn_http_htable_set_raw(&resp->headers, qn_str_cstr(hdr), qn_str_size(hdr), qn_str_cstr(val), qn_str_size(val));
+}
+
+qn_bool qn_http_resp_set_header_raw(qn_http_response_ptr resp, const char * hdr, int hdr_size, const char * val, int val_size)
+{
+    return qn_http_htable_set_raw(&resp->headers, hdr, hdr_size, val, val_size);
 }
 
 void qn_http_resp_unset_header(qn_http_response_ptr resp, const qn_string hdr)
