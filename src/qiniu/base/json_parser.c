@@ -911,7 +911,9 @@ qn_bool qn_json_prs_parse_object(qn_json_parser_ptr prs, const char * restrict b
     if (qn_json_prs_is_empty(prs)) {
         tkn = qn_json_scan(&prs->scanner, &txt, &txt_size);
         if (tkn == QN_JSON_TKN_OPEN_BRACE) {
-            if (! (prs->elem.object = qn_json_create_object()) ) {
+            if (*root) {
+                prs->elem.object = *root;
+            } else if (! (prs->elem.object = qn_json_create_object()) ) {
                 return qn_false;
             }
             if (!qn_json_prs_push(prs, QN_JSON_OBJECT, prs->elem, QN_JSON_PARSING_KEY)) {
@@ -942,7 +944,9 @@ qn_bool qn_json_prs_parse_array(qn_json_parser_ptr prs, const char * restrict bu
     if (qn_json_prs_is_empty(prs)) {
         tkn = qn_json_scan(&prs->scanner, &txt, &txt_size);
         if (tkn == QN_JSON_TKN_OPEN_BRACKET) {
-            if (! (prs->elem.array = qn_json_create_array()) ) {
+            if (*root) {
+                prs->elem.array = *root;
+            } else if (! (prs->elem.array = qn_json_create_array()) ) {
                 return qn_false;
             }
             if (!qn_json_prs_push(prs, QN_JSON_ARRAY, prs->elem, QN_JSON_PARSING_VALUE)) {
