@@ -19,6 +19,7 @@ enum
     QN_ERR_NO_ENOUGH_BUFFER     = 1007,
     QN_ERR_JSON_BAD_TEXT_INPUT  = 2001,
     QN_ERR_JSON_TOO_MANY_PARSING_LEVELS = 2002,
+    QN_ERR_HTTP_INVALID_HEADER_SYNTAX = 3001,
 };
 
 typedef qn_uint32 qn_err_enum;
@@ -41,7 +42,8 @@ static qn_error qn_errors[] = {
     {QN_ERR_BAD_UTF8_SEQUENCE, "The string contains a bad UTF-8 sequence"},
     {QN_ERR_NO_ENOUGH_BUFFER, "No enough buffer"},
     {QN_ERR_JSON_BAD_TEXT_INPUT, "Bad text input of a JSON string is read"},
-    {QN_ERR_JSON_TOO_MANY_PARSING_LEVELS, "Parsing too many levels in a JSON string"},
+    {QN_ERR_JSON_TOO_MANY_PARSING_LEVELS, "Parsing too many levels in a piece of JSON text"},
+    {QN_ERR_HTTP_INVALID_HEADER_SYNTAX, "Invalid HTTP header syntax"},
 };
 
 static int qn_err_compare(const void * key, const void * item)
@@ -111,6 +113,11 @@ void qn_err_json_set_too_many_parsing_levels(void)
     qn_err_code = QN_ERR_JSON_TOO_MANY_PARSING_LEVELS;
 }
 
+void qn_err_http_set_invalid_header_syntax(void)
+{
+    qn_err_code = QN_ERR_HTTP_INVALID_HEADER_SYNTAX;
+}
+
 qn_bool qn_err_is_succeed(void)
 {
     return (qn_err_code == QN_ERR_SUCCEED);
@@ -159,6 +166,11 @@ qn_bool qn_err_json_is_bad_text_input(void)
 qn_bool qn_err_json_is_too_many_levels_in_parsing(void)
 {
     return (qn_err_code == QN_ERR_JSON_TOO_MANY_PARSING_LEVELS);
+}
+
+qn_bool qn_err_http_is_invalid_header_syntax(void)
+{
+    return (qn_err_code == QN_ERR_HTTP_INVALID_HEADER_SYNTAX);
 }
 
 #ifdef __cplusplus
