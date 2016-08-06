@@ -17,6 +17,22 @@ extern qn_http_header_ptr qn_http_hdr_create(void);
 extern void qn_http_hdr_destroy(qn_http_header_ptr hdr);
 extern void qn_http_hdr_reset(qn_http_header_ptr hdr);
 
+extern qn_size qn_http_hdr_size(qn_http_header_ptr hdr);
+
+extern qn_string qn_http_hdr_get_entry_raw(qn_http_header_ptr hdr, const char * key, qn_size key_size);
+
+static inline qn_string qn_http_hdr_get_entry(qn_http_header_ptr hdr, const qn_string key)
+{
+    return qn_http_hdr_get_entry_raw(hdr, qn_str_cstr(key), qn_str_size(key));
+}
+
+extern qn_bool qn_http_hdr_get_raw(qn_http_header_ptr hdr, const char * key, qn_size key_size, const char ** val, qn_size * val_size);
+
+static inline qn_bool qn_http_hdr_get(qn_http_header_ptr hdr, const qn_string key, const char ** val, qn_size * val_size)
+{
+    return qn_http_hdr_get_raw(hdr, qn_str_cstr(key), qn_str_size(key), val, val_size);
+}
+
 extern qn_bool qn_http_hdr_set_raw(qn_http_header_ptr hdr, const char * key, qn_size key_size, const char * val, qn_size val_size);
 
 static inline qn_bool qn_http_hdr_set(qn_http_header_ptr hdr, const qn_string key, const qn_string val)

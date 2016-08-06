@@ -10,13 +10,13 @@ extern "C"
 
 // ---- Definition of HTTP header ----
 
-typedef unsigned short qn_http_header_pos;
+typedef unsigned short qn_http_hdr_pos;
 
 typedef struct _QN_HTTP_HEADER
 {
     qn_string * entries;
-    qn_http_header_pos cnt;
-    qn_http_header_pos cap;
+    qn_http_hdr_pos cnt;
+    qn_http_hdr_pos cap;
 } qn_http_header;
 
 qn_http_header_ptr qn_http_hdr_create(void)
@@ -52,9 +52,47 @@ void qn_http_hdr_reset(qn_http_header_ptr hdr)
     while (hdr->cnt > 0) qn_str_destroy(hdr->entries[--hdr->cnt]);
 }
 
+qn_size qn_http_hdr_size(qn_http_header_ptr hdr)
+{
+    return hdr->cnt;
+}
+
+static qn_http_hdr_pos qn_http_hdr_bsearch(qn_http_header_ptr hdr, const char * key, qn_size key_size)
+{
+    qn_http_hdr_pos begin = 0;
+    qn_http_hdr_pos end = hdr->cnt;
+    qn_http_hdr_pos mid = 0;
+
+    while (begin < end) {
+        mid = begin + ((end - begin) / 2);
+        if (strncasecmp(hdr->entries[mid], key, key_size) < 0) {
+            begin = mid + 1;
+        } else {
+            end = mid;
+        } // if
+    } // while
+    return begin;
+}
+
+qn_string qn_http_hdr_get_entry_raw(qn_http_header_ptr hdr, const char * key, qn_size key_size)
+{
+    qn_http_hdr_pos pos = qn_http_hdr_bsearch(hdr, key, key_size);
+    if (pos == hdr->cnt) return NULL;
+    return hdr->entries[pos];
+}
+
+qn_bool qn_http_hdr_get_raw(qn_http_header_ptr hdr, const char * key, qn_size key_size, const char ** val, qn_size * val_size)
+{
+    qn_http_hdr_pos pos = qn_http_hdr_bsearch(hdr, key, key_size);
+    if (pos == hdr->cnt) return qn_false;
+    *val = strchr(qn_str_cstr(hdr->entries[pos]), ':') + 2;
+    *val_size = qn_str_size(hdr->entries[pos]) - (*val - qn_str_cstr(hdr->entries[pos]));
+    return qn_true;
+}
+
 static qn_bool qn_http_hdr_augment(qn_http_header_ptr hdr)
 {
-    qn_http_header_pos new_cap = hdr->cap + (hdr->cap >> 1); // 1.5 times
+    qn_http_hdr_pos new_cap = hdr->cap + (hdr->cap >> 1); // 1.5 times
     qn_string * new_entries = calloc(new_cap, sizeof(qn_string));
     if (!new_entries) {
         qn_err_set_no_enough_memory();
@@ -68,31 +106,14 @@ static qn_bool qn_http_hdr_augment(qn_http_header_ptr hdr)
     return qn_true;
 }
 
-static qn_http_header_pos qn_http_hdr_bsearch(qn_http_header_ptr hdr, const char * key, qn_size key_size)
-{
-    qn_http_header_pos begin = 0;
-    qn_http_header_pos end = hdr->cnt;
-    qn_http_header_pos mid = 0;
-
-    while (begin < end) {
-        mid = begin + ((end - begin) / 2);
-        if (strncasecmp(hdr->entries[mid], key, key_size) < 0) {
-            begin = mid + 1;
-        } else {
-            end = mid;
-        } // if
-    } // while
-    return begin;
-}
-
 qn_bool qn_http_hdr_set_raw(qn_http_header_ptr hdr, const char * key, qn_size key_size, const char * val, qn_size val_size)
 {
     qn_string new_val = NULL;
-    qn_http_header_pos pos = 0;
+    qn_http_hdr_pos pos = 0;
 
     if (hdr->cnt == hdr->cap && !qn_http_hdr_augment(hdr)) return qn_false;
 
-    new_val = qn_str_sprintf("%*s: %*s", key_size, key, val_size, val);
+    new_val = qn_str_sprintf("%.*s: %.*s", key_size, key, val_size, val);
     if (!new_val) {
         qn_err_set_no_enough_memory();
         return qn_false;
@@ -112,7 +133,7 @@ qn_bool qn_http_hdr_set_raw(qn_http_header_ptr hdr, const char * key, qn_size ke
 
 void qn_http_hdr_unset_raw(qn_http_header_ptr hdr, const char * key, qn_size key_size)
 {
-    qn_http_header_pos pos = qn_http_hdr_bsearch(hdr, key, key_size);
+    qn_http_hdr_pos pos = qn_http_hdr_bsearch(hdr, key, key_size);
     if (pos < hdr->cnt) {
         qn_str_destroy(hdr->entries[pos]);
         hdr->cnt -= 1;
@@ -124,7 +145,7 @@ void qn_http_hdr_unset_raw(qn_http_header_ptr hdr, const char * key, qn_size key
 typedef struct _QN_HTTP_HDR_ITERATOR
 {
     qn_http_header_ptr hdr;
-    qn_http_header_pos pos;
+    qn_http_hdr_pos pos;
 } qn_http_hdr_iterator;
 
 qn_http_hdr_iterator_ptr qn_http_hdr_itr_create(qn_http_header_ptr hdr)
@@ -156,11 +177,12 @@ qn_bool qn_http_hdr_itr_next_pair_raw(qn_http_hdr_iterator_ptr itr, const char *
     qn_string entry;
 
     if (itr->pos == itr->hdr->cnt) return qn_false;
+    entry = itr->hdr->entries[itr->pos++];
 
-    *key = qn_str_cstr(entry = itr->hdr->entries[itr->pos++]);
-    *key_size = strchr(*key, ':') - *key;
+    *key = qn_str_cstr(entry);
+    *val = strchr(*key, ':') + 2;
 
-    *val = *key + 2;
+    *key_size = *val - *key - 2;
     *val_size = qn_str_size(entry) - *key_size - 2;
     return qn_true;
 }

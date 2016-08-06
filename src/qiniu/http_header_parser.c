@@ -135,9 +135,9 @@ static qn_http_hdr_token qn_http_hdr_prs_scan_colon(qn_http_hdr_scanner_ptr s, c
     while (s->buf_pos < s->buf_size) {
         ch = s->buf[s->buf_pos];
         if (ch == '\n') return QN_HTTP_HDR_TKN_LINEFEED;
+        s->buf_pos += 1;
         if (ch == ':') return QN_HTTP_HDR_TKN_COLON;
         if (!isspace(ch)) return QN_HTTP_HDR_TKN_UNKNOWN;
-        s->buf_pos += 1;
     } // while
     return QN_HTTP_HDR_TKNERR_NEED_MORE_TEXT;
 }
@@ -159,8 +159,8 @@ static qn_http_hdr_token qn_http_hdr_prs_scan_value(qn_http_hdr_scanner_ptr s, c
     while (s->buf_pos < s->buf_size) {
         ch = s->buf[s->buf_pos];
         if (ch == '\n') {
-            end = s->buf_pos;
-            while (isspace(s->buf[end])) end -= 1;
+            end = s->buf_pos - 1;
+            while (isspace(s->buf[end - 1])) end -= 1;
             if (s->txt_size == 0) {
                 *txt = s->buf + begin;
                 *txt_size = end - begin;
