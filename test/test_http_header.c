@@ -73,6 +73,43 @@ void test_parsing_single_entry_with_single_value(void)
     qn_http_hdr_destroy(hdr);
 }
 
+void test_parsing_single_entry_with_multi_value(void)
+{
+    qn_bool ret = qn_false;
+    char buf[] = {"Accept: text/plain; application/json\r\n\r\n"};
+    int buf_size = sizeof(buf);
+    qn_string entry = NULL;
+    const char * key = NULL;
+    const char * val = NULL;
+    qn_size val_size = 0;
+    qn_http_hdr_parser_ptr prs = NULL;
+    qn_http_header_ptr hdr = NULL;
+
+    prs = qn_http_hdr_prs_create();
+    if (!prs) {
+        CU_FAIL("Cannot create a new HTTP header parser.");
+        return;
+    } // if
+
+    ret = qn_http_hdr_prs_parse(prs, buf, &buf_size, &hdr);
+    qn_http_hdr_prs_destroy(prs);
+
+    CU_ASSERT_TRUE(ret);
+    CU_ASSERT_EQUAL(qn_http_hdr_size(hdr), 1);
+
+    key = "Accept";
+    entry = qn_http_hdr_get_entry_raw(hdr, key, strlen(key));
+    CU_ASSERT_NOT_EQUAL(qn_str_cstr(entry), NULL);
+    CU_ASSERT_STRING_EQUAL(qn_str_cstr(entry), "Accept: text/plain; application/json");
+
+    ret = qn_http_hdr_get_raw(hdr, key, strlen(key), &val, &val_size);
+    CU_ASSERT_TRUE(ret);
+    CU_ASSERT_EQUAL(val_size, 28);
+    CU_ASSERT_STRING_EQUAL(val, "text/plain; application/json");
+
+    qn_http_hdr_destroy(hdr);
+}
+
 void test_parsing_single_entry_with_leading_and_tailing_spaces(void)
 {
     qn_bool ret = qn_false;
@@ -181,6 +218,7 @@ CU_TestInfo test_normal_cases[] = {
     {"test_manipulating_headers", test_manipulating_headers},
     {"test_parsing_single_entry_with_single_value", test_parsing_single_entry_with_single_value},
     {"test_parsing_single_entry_with_leading_and_tailing_spaces", test_parsing_single_entry_with_leading_and_tailing_spaces},
+    {"test_parsing_single_entry_with_multi_value", test_parsing_single_entry_with_multi_value},
     {"test_parsing_multi_entries_with_single_value", test_parsing_multi_entries_with_single_value},
     CU_TEST_INFO_NULL
 };
