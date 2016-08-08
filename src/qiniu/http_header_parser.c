@@ -173,6 +173,7 @@ static qn_http_hdr_token qn_http_hdr_prs_scan_value(qn_http_hdr_scanner_ptr s, c
                 *txt_size = s->txt_size;
                 s->txt_size = 0;
             } // if
+            s->buf_pos += 1; // Consume the '\n' character
             return QN_HTTP_HDR_TKN_VALUE;
         } // if
         s->buf_pos += 1;

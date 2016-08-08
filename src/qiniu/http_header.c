@@ -57,15 +57,24 @@ qn_size qn_http_hdr_size(qn_http_header_ptr hdr)
     return hdr->cnt;
 }
 
-static qn_http_hdr_pos qn_http_hdr_bsearch(qn_http_header_ptr hdr, const char * key, qn_size key_size)
+static qn_http_hdr_pos qn_http_hdr_bsearch(qn_http_header_ptr hdr, const char * key, qn_size key_size, int * ord)
 {
+    qn_http_hdr_pos mid_key_size;
     qn_http_hdr_pos begin = 0;
     qn_http_hdr_pos end = hdr->cnt;
     qn_http_hdr_pos mid = 0;
 
     while (begin < end) {
         mid = begin + ((end - begin) / 2);
-        if (strncasecmp(hdr->entries[mid], key, key_size) < 0) {
+        mid_key_size = strchr(hdr->entries[mid], ':') - hdr->entries[mid];
+        if (mid_key_size < key_size) {
+            *ord = -1;
+        } else if (mid_key_size > key_size) {
+            *ord = 1;
+        } else {
+            *ord = strncasecmp(hdr->entries[mid], key, key_size);
+        } // if
+        if (*ord < 0) {
             begin = mid + 1;
         } else {
             end = mid;
@@ -76,14 +85,16 @@ static qn_http_hdr_pos qn_http_hdr_bsearch(qn_http_header_ptr hdr, const char * 
 
 qn_string qn_http_hdr_get_entry_raw(qn_http_header_ptr hdr, const char * key, qn_size key_size)
 {
-    qn_http_hdr_pos pos = qn_http_hdr_bsearch(hdr, key, key_size);
+    int ord;
+    qn_http_hdr_pos pos = qn_http_hdr_bsearch(hdr, key, key_size, &ord);
     if (pos == hdr->cnt) return NULL;
     return hdr->entries[pos];
 }
 
 qn_bool qn_http_hdr_get_raw(qn_http_header_ptr hdr, const char * key, qn_size key_size, const char ** val, qn_size * val_size)
 {
-    qn_http_hdr_pos pos = qn_http_hdr_bsearch(hdr, key, key_size);
+    int ord;
+    qn_http_hdr_pos pos = qn_http_hdr_bsearch(hdr, key, key_size, &ord);
     if (pos == hdr->cnt) return qn_false;
     *val = strchr(qn_str_cstr(hdr->entries[pos]), ':') + 2;
     *val_size = qn_str_size(hdr->entries[pos]) - (*val - qn_str_cstr(hdr->entries[pos]));
@@ -108,6 +119,7 @@ static qn_bool qn_http_hdr_augment(qn_http_header_ptr hdr)
 
 qn_bool qn_http_hdr_set_raw(qn_http_header_ptr hdr, const char * key, qn_size key_size, const char * val, qn_size val_size)
 {
+    int ord;
     qn_string new_val = NULL;
     qn_http_hdr_pos pos = 0;
 
@@ -119,8 +131,8 @@ qn_bool qn_http_hdr_set_raw(qn_http_header_ptr hdr, const char * key, qn_size ke
         return qn_false;
     }
 
-    pos = qn_http_hdr_bsearch(hdr, key, key_size);
-    if (pos < hdr->cnt) {
+    pos = qn_http_hdr_bsearch(hdr, key, key_size, &ord);
+    if (pos < hdr->cnt && ord == 0) {
         qn_str_destroy(hdr->entries[pos]);
         hdr->entries[pos] = new_val;
     } else {
@@ -133,7 +145,8 @@ qn_bool qn_http_hdr_set_raw(qn_http_header_ptr hdr, const char * key, qn_size ke
 
 void qn_http_hdr_unset_raw(qn_http_header_ptr hdr, const char * key, qn_size key_size)
 {
-    qn_http_hdr_pos pos = qn_http_hdr_bsearch(hdr, key, key_size);
+    int ord;
+    qn_http_hdr_pos pos = qn_http_hdr_bsearch(hdr, key, key_size, &ord);
     if (pos < hdr->cnt) {
         qn_str_destroy(hdr->entries[pos]);
         hdr->cnt -= 1;

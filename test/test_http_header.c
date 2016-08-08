@@ -73,9 +73,115 @@ void test_parsing_single_entry_with_single_value(void)
     qn_http_hdr_destroy(hdr);
 }
 
+void test_parsing_single_entry_with_leading_and_tailing_spaces(void)
+{
+    qn_bool ret = qn_false;
+    char buf[] = {"    Content-Length    :  1024   \r\n\r\n"};
+    int buf_size = sizeof(buf);
+    qn_string entry = NULL;
+    const char * key = NULL;
+    const char * val = NULL;
+    qn_size val_size = 0;
+    qn_http_hdr_parser_ptr prs = NULL;
+    qn_http_header_ptr hdr = NULL;
+
+    prs = qn_http_hdr_prs_create();
+    if (!prs) {
+        CU_FAIL("Cannot create a new HTTP header parser.");
+        return;
+    } // if
+
+    ret = qn_http_hdr_prs_parse(prs, buf, &buf_size, &hdr);
+    qn_http_hdr_prs_destroy(prs);
+
+    CU_ASSERT_TRUE(ret);
+    CU_ASSERT_EQUAL(qn_http_hdr_size(hdr), 1);
+
+    key = "Content-Length";
+    entry = qn_http_hdr_get_entry_raw(hdr, key, strlen(key));
+    CU_ASSERT_NOT_EQUAL(qn_str_cstr(entry), NULL);
+    CU_ASSERT_STRING_EQUAL(qn_str_cstr(entry), "Content-Length: 1024");
+
+    ret = qn_http_hdr_get_raw(hdr, key, strlen(key), &val, &val_size);
+    CU_ASSERT_TRUE(ret);
+    CU_ASSERT_EQUAL(val_size, 4);
+    CU_ASSERT_STRING_EQUAL(val, "1024");
+
+    qn_http_hdr_destroy(hdr);
+}
+
+void test_parsing_multi_entries_with_single_value(void)
+{
+    qn_bool ret = qn_false;
+    char buf[] = {"Content-Length: 747\r\n    Age: 1  \r\nA:123\r\nA11:zz\r\n\r\n"};
+    int buf_size = sizeof(buf);
+    qn_string entry = NULL;
+    const char * key = NULL;
+    const char * val = NULL;
+    qn_size val_size = 0;
+    qn_http_hdr_parser_ptr prs = NULL;
+    qn_http_header_ptr hdr = NULL;
+
+    prs = qn_http_hdr_prs_create();
+    if (!prs) {
+        CU_FAIL("Cannot create a new HTTP header parser.");
+        return;
+    } // if
+
+    ret = qn_http_hdr_prs_parse(prs, buf, &buf_size, &hdr);
+    qn_http_hdr_prs_destroy(prs);
+
+    CU_ASSERT_TRUE(ret);
+    CU_ASSERT_EQUAL(qn_http_hdr_size(hdr), 4);
+
+    key = "Content-Length";
+    entry = qn_http_hdr_get_entry_raw(hdr, key, strlen(key));
+    CU_ASSERT_NOT_EQUAL(qn_str_cstr(entry), NULL);
+    CU_ASSERT_STRING_EQUAL(qn_str_cstr(entry), "Content-Length: 747");
+
+    ret = qn_http_hdr_get_raw(hdr, key, strlen(key), &val, &val_size);
+    CU_ASSERT_TRUE(ret);
+    CU_ASSERT_EQUAL(val_size, 3);
+    CU_ASSERT_STRING_EQUAL(val, "747");
+
+    key = "Age";
+    entry = qn_http_hdr_get_entry_raw(hdr, key, strlen(key));
+    CU_ASSERT_NOT_EQUAL(qn_str_cstr(entry), NULL);
+    CU_ASSERT_STRING_EQUAL(qn_str_cstr(entry), "Age: 1");
+
+    ret = qn_http_hdr_get_raw(hdr, key, strlen(key), &val, &val_size);
+    CU_ASSERT_TRUE(ret);
+    CU_ASSERT_EQUAL(val_size, 1);
+    CU_ASSERT_STRING_EQUAL(val, "1");
+
+    key = "A";
+    entry = qn_http_hdr_get_entry_raw(hdr, key, strlen(key));
+    CU_ASSERT_NOT_EQUAL(qn_str_cstr(entry), NULL);
+    CU_ASSERT_STRING_EQUAL(qn_str_cstr(entry), "A: 123");
+
+    ret = qn_http_hdr_get_raw(hdr, key, strlen(key), &val, &val_size);
+    CU_ASSERT_TRUE(ret);
+    CU_ASSERT_EQUAL(val_size, 3);
+    CU_ASSERT_STRING_EQUAL(val, "123");
+
+    key = "A11";
+    entry = qn_http_hdr_get_entry_raw(hdr, key, strlen(key));
+    CU_ASSERT_NOT_EQUAL(qn_str_cstr(entry), NULL);
+    CU_ASSERT_STRING_EQUAL(qn_str_cstr(entry), "A11: zz");
+
+    ret = qn_http_hdr_get_raw(hdr, key, strlen(key), &val, &val_size);
+    CU_ASSERT_TRUE(ret);
+    CU_ASSERT_EQUAL(val_size, 2);
+    CU_ASSERT_STRING_EQUAL(val, "zz");
+
+    qn_http_hdr_destroy(hdr);
+}
+
 CU_TestInfo test_normal_cases[] = {
     {"test_manipulating_headers", test_manipulating_headers},
     {"test_parsing_single_entry_with_single_value", test_parsing_single_entry_with_single_value},
+    {"test_parsing_single_entry_with_leading_and_tailing_spaces", test_parsing_single_entry_with_leading_and_tailing_spaces},
+    {"test_parsing_multi_entries_with_single_value", test_parsing_multi_entries_with_single_value},
     CU_TEST_INFO_NULL
 };
 
