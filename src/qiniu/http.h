@@ -33,7 +33,13 @@ extern qn_http_request_ptr qn_http_req_create(void);
 extern void qn_http_req_destroy(qn_http_request_ptr req);
 extern void qn_http_req_reset(qn_http_request_ptr req);
 
-extern qn_string qn_http_req_get_header(qn_http_request_ptr req, const qn_string header);
+extern qn_bool qn_http_req_get_header_raw(qn_http_request_ptr req, const char * hdr, qn_size hdr_size, const char ** val, qn_size * val_size);
+
+static inline qn_bool qn_http_req_get_header(qn_http_request_ptr req, const qn_string hdr, const char ** val, qn_size * val_size)
+{
+    return qn_http_req_get_header_raw(req, qn_str_cstr(hdr), qn_str_size(hdr), val, val_size);
+}
+
 extern qn_bool qn_http_req_set_header_with_values(qn_http_request_ptr req, const qn_string header, const qn_string val1, const qn_string val2, ...);
 extern qn_bool qn_http_req_set_header(qn_http_request_ptr req, const qn_string header, const qn_string value);
 extern qn_bool qn_http_req_set_header_raw(qn_http_request_ptr req, const char * hdr, int hdr_size, const char * val, int val_size);
@@ -53,7 +59,13 @@ extern void qn_http_resp_reset(qn_http_response_ptr resp);
 extern int qn_http_resp_get_code(qn_http_response_ptr resp);
 extern int qn_http_resp_get_writer_retcode(qn_http_response_ptr resp);
 
-extern qn_string qn_http_resp_get_header(qn_http_response_ptr resp, const qn_string header);
+extern qn_bool qn_http_resp_get_header_raw(qn_http_response_ptr resp, const char * hdr, qn_size hdr_size, const char ** val, qn_size * val_size);
+
+static inline qn_bool qn_http_resp_get_header(qn_http_response_ptr resp, const qn_string hdr, const char ** val, qn_size * val_size)
+{
+    return qn_http_resp_get_header_raw(resp, qn_str_cstr(hdr), qn_str_size(hdr), val, val_size);
+}
+
 extern qn_bool qn_http_resp_set_header(qn_http_response_ptr resp, const qn_string header, const qn_string value);
 extern qn_bool qn_http_resp_set_header_raw(qn_http_response_ptr resp, const char * hdr, int hdr_size, const char * val, int val_size);
 extern void qn_http_resp_unset_header(qn_http_response_ptr resp, const qn_string header);

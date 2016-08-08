@@ -6,6 +6,7 @@
 #include "qiniu/base/json.h"
 #include "qiniu/base/json_parser.h"
 #include "qiniu/base/errors.h"
+#include "qiniu/http_header.h"
 #include "qiniu/http.h"
 
 #ifdef __cplusplus
@@ -71,152 +72,13 @@ int qn_http_body_json_write(void * user_data, char * in_buf, int in_buf_size)
     return 0;
 }
 
-// ---- Definition of header table ----
-
-typedef unsigned short qn_http_htable_pos;
-
-typedef struct _QN_HTTP_HTABLE
-{
-    qn_string * entries;
-    qn_http_htable_pos cnt;
-    qn_http_htable_pos cap;
-} qn_http_htable, *qn_http_htable_ptr;
-
-static void qn_http_htable_reset(qn_http_htable_ptr htbl)
-{
-    while (htbl->cnt > 0) qn_str_destroy(htbl->entries[--htbl->cnt]);
-}
-
-static qn_bool qn_http_htable_init(qn_http_htable_ptr htbl)
-{
-    htbl->entries = calloc(8, sizeof(qn_string));
-    if (!htbl->entries) {
-        qn_err_set_no_enough_memory();
-        return qn_false;
-    } // if
-
-    htbl->cnt = 0;
-    htbl->cap = 8;
-    return qn_true;
-}
-
-static inline void qn_http_htable_clean(qn_http_htable_ptr htbl)
-{
-    qn_http_htable_reset(htbl);
-    free(htbl->entries);
-}
-
-static qn_bool qn_http_htable_augment(qn_http_htable_ptr htbl)
-{
-    qn_http_htable_pos new_cap = htbl->cap + (htbl->cap >> 1); // 1.5 times
-    qn_string * new_entries = calloc(8, sizeof(qn_string));
-    if (!new_entries) {
-        qn_err_set_no_enough_memory();
-        return qn_false;
-    } // if
-
-    memcpy(new_entries, htbl->entries, sizeof(qn_string) * htbl->cnt);
-    free(htbl->entries);
-    htbl->entries = new_entries;
-    htbl->cap = new_cap;
-    return qn_true;
-}
-
-static qn_http_htable_pos qn_http_htable_bsearch(qn_http_htable_ptr htbl, const char * hdr, qn_size hdr_size)
-{
-    qn_http_htable_pos begin = 0;
-    qn_http_htable_pos end = htbl->cnt;
-    qn_http_htable_pos mid = 0;
-
-    while (begin < end) {
-        mid = begin + ((end - begin) / 2);
-        if (strncasecmp(htbl->entries[mid], hdr, hdr_size) < 0) {
-            begin = mid + 1;
-        } else {
-            end = mid;
-        } // if
-    } // while
-    return begin;
-}
-
-static qn_bool qn_http_htable_set_raw(qn_http_htable_ptr htbl, const char * hdr, int hdr_size, const char * val, int val_size)
-{
-    qn_string new_val = NULL;
-    qn_http_htable_pos pos = 0;
-
-    if (htbl->cnt == htbl->cap && !qn_http_htable_augment(htbl)) return qn_false;
-
-    new_val = qn_str_sprintf("%*s: %*s", hdr_size, hdr, val_size, val);
-    if (!new_val) {
-        qn_err_set_no_enough_memory();
-        return qn_false;
-    }
-
-    pos = qn_http_htable_bsearch(htbl, hdr, hdr_size);
-    if (pos < htbl->cnt) {
-        qn_str_destroy(htbl->entries[pos]);
-        htbl->entries[pos] = new_val;
-    } else {
-        memmove(&htbl->entries[pos+1], &htbl->entries[pos], sizeof(qn_string) * (htbl->cnt - pos));
-        htbl->entries[pos] = new_val;
-        htbl->cnt += 1;
-    } // if
-    return qn_true;
-}
-
-static qn_bool qn_http_htable_set(qn_http_htable_ptr htbl, const qn_string hdr, const qn_string val)
-{
-    return qn_http_htable_set_raw(htbl, qn_str_cstr(hdr), qn_str_size(hdr), qn_str_cstr(val), qn_str_size(val));
-}
-
-static inline void qn_http_htable_unset(qn_http_htable_ptr htbl, const qn_string hdr)
-{
-    qn_http_htable_pos pos = qn_http_htable_bsearch(htbl, qn_str_cstr(hdr), qn_str_size(hdr));
-    if (pos < htbl->cnt) {
-        qn_str_destroy(htbl->entries[pos]);
-        htbl->cnt -= 1;
-    } // if
-}
-
-static inline const qn_string qn_http_htable_get(qn_http_htable_ptr htbl, const qn_string hdr)
-{
-    qn_size hdr_size = qn_str_size(hdr);
-    qn_http_htable_pos pos = qn_http_htable_bsearch(htbl, qn_str_cstr(hdr), hdr_size);
-    return (pos < htbl->cnt) ? htbl->entries[pos] + hdr_size + 2 : NULL;
-}
-
-static inline const qn_string qn_http_htable_get_entry(qn_http_htable_ptr htbl, const qn_string hdr)
-{
-    qn_http_htable_pos pos = qn_http_htable_bsearch(htbl, qn_str_cstr(hdr), qn_str_size(hdr));
-    return (pos < htbl->cnt) ? htbl->entries[pos] : NULL;
-}
-
-typedef struct _QN_HTTP_HEADER_TABLE_ITERATOR
-{
-    qn_http_htable_ptr htbl;
-    qn_http_htable_pos pos;
-} qn_http_htable_iterator, *qn_http_htable_iterator_ptr;
-
-static inline qn_http_htable_iterator qn_http_htable_make_iterator(qn_http_htable_ptr htbl)
-{
-    qn_http_htable_iterator new_itr;
-    new_itr.htbl = htbl;
-    new_itr.pos = 0;
-    return new_itr;
-}
-
-static inline const qn_string qn_http_htable_next_entry(qn_http_htable_iterator_ptr itr)
-{
-    return (itr->pos < itr->htbl->cnt) ? itr->htbl->entries[itr->pos++] : NULL;
-}
-
 // ---- Definition of HTTP request ----
 
 typedef struct _QN_HTTP_REQUEST
 {
     int body_reader_retcode;
 
-    qn_http_htable headers;
+    qn_http_header_ptr hdr;
 
     void * body_reader;
     qn_http_body_reader body_reader_callback;
@@ -233,7 +95,8 @@ qn_http_request_ptr qn_http_req_create(void)
         return NULL;
     } // if
 
-    if (!qn_http_htable_init(&new_req->headers)) {
+    new_req->hdr = qn_http_hdr_create();
+    if (!new_req->hdr) {
         free(new_req);
         return NULL;
     } // if
@@ -243,7 +106,7 @@ qn_http_request_ptr qn_http_req_create(void)
 void qn_http_req_destroy(qn_http_request_ptr req)
 {
     if (req) {
-        qn_http_htable_clean(&req->headers);
+        qn_http_hdr_destroy(req->hdr);
         free(req);
     } // if
 }
@@ -252,12 +115,12 @@ void qn_http_req_reset(qn_http_request_ptr req)
 {
     req->body_reader = NULL;
     req->body_reader_callback = NULL;
-    qn_http_htable_reset(&req->headers);
+    qn_http_hdr_reset(req->hdr);
 }
 
-qn_string qn_http_req_get_header(qn_http_request_ptr req, const qn_string hdr)
+qn_bool qn_http_req_get_header_raw(qn_http_request_ptr req, const char * hdr, qn_size hdr_size, const char ** val, qn_size * val_size)
 {
-    return qn_http_htable_get(&req->headers, hdr);
+    return qn_http_hdr_get_raw(req->hdr, hdr, hdr_size, val, val_size);
 }
 
 qn_bool qn_http_req_set_header_with_values(qn_http_request_ptr req, const qn_string hdr, const qn_string val1, const qn_string val2, ...)
@@ -271,24 +134,24 @@ qn_bool qn_http_req_set_header_with_values(qn_http_request_ptr req, const qn_str
     va_end(ap);
     if (!new_val) return qn_false;
 
-    ret = qn_http_htable_set(&req->headers, hdr, new_val);
+    ret = qn_http_hdr_set(req->hdr, hdr, new_val);
     qn_str_destroy(new_val);
     return ret;
 }
 
 qn_bool qn_http_req_set_header(qn_http_request_ptr req, const qn_string hdr, const qn_string val)
 {
-    return qn_http_htable_set_raw(&req->headers, qn_str_cstr(hdr), qn_str_size(hdr), qn_str_cstr(val), qn_str_size(val));
+    return qn_http_hdr_set_raw(req->hdr, qn_str_cstr(hdr), qn_str_size(hdr), qn_str_cstr(val), qn_str_size(val));
 }
 
 qn_bool qn_http_req_set_header_raw(qn_http_request_ptr req, const char * hdr, int hdr_size, const char * val, int val_size)
 {
-    return qn_http_htable_set_raw(&req->headers, hdr, hdr_size, val, val_size);
+    return qn_http_hdr_set_raw(req->hdr, hdr, hdr_size, val, val_size);
 }
 
 void qn_http_req_unset_header(qn_http_request_ptr req, const qn_string hdr)
 {
-    qn_http_htable_unset(&req->headers, hdr);
+    qn_http_hdr_unset(req->hdr, hdr);
 }
 
 void qn_http_req_set_body_reader(qn_http_request_ptr req, void * body_reader, qn_http_body_reader body_reader_callback, qn_size body_size)
@@ -305,7 +168,7 @@ typedef struct _QN_HTTP_RESPONSE
     int http_code;
     int body_writer_retcode;
 
-    qn_http_htable headers;
+    qn_http_header_ptr hdr;
     void * body_writer;
     qn_http_body_writer body_writer_callback;
 } qn_http_response;
@@ -320,7 +183,8 @@ qn_http_response_ptr qn_http_resp_create(void)
         return NULL;
     } // if
 
-    if (!qn_http_htable_init(&new_resp->headers)) {
+    new_resp->hdr =  qn_http_hdr_create();
+    if (!new_resp->hdr) {
         free(new_resp);
         return NULL;
     } // if
@@ -330,7 +194,7 @@ qn_http_response_ptr qn_http_resp_create(void)
 void qn_http_resp_destroy(qn_http_response_ptr resp)
 {
     if (resp) {
-        qn_http_htable_clean(&resp->headers);
+        qn_http_hdr_destroy(resp->hdr);
         free(resp);
     } // if
 }
@@ -339,7 +203,7 @@ void qn_http_resp_reset(qn_http_response_ptr resp)
 {
     resp->body_writer = NULL;
     resp->body_writer_callback = NULL;
-    qn_http_htable_reset(&resp->headers);
+    qn_http_hdr_reset(resp->hdr);
 }
 
 int qn_http_resp_get_code(qn_http_response_ptr resp)
@@ -352,24 +216,24 @@ int qn_http_resp_get_writer_retcode(qn_http_response_ptr resp)
     return resp->body_writer_retcode;
 }
 
-qn_string qn_http_resp_get_header(qn_http_response_ptr resp, const qn_string hdr)
+qn_bool qn_http_resp_get_header_raw(qn_http_response_ptr resp, const char * hdr, qn_size hdr_size, const char ** val, qn_size * val_size)
 {
-    return qn_http_htable_get(&resp->headers, hdr);
+    return qn_http_hdr_get_raw(resp->hdr, hdr, hdr_size, val, val_size);
 }
 
 qn_bool qn_http_resp_set_header(qn_http_response_ptr resp, const qn_string hdr, const qn_string val)
 {
-    return qn_http_htable_set_raw(&resp->headers, qn_str_cstr(hdr), qn_str_size(hdr), qn_str_cstr(val), qn_str_size(val));
+    return qn_http_hdr_set_raw(resp->hdr, qn_str_cstr(hdr), qn_str_size(hdr), qn_str_cstr(val), qn_str_size(val));
 }
 
 qn_bool qn_http_resp_set_header_raw(qn_http_response_ptr resp, const char * hdr, int hdr_size, const char * val, int val_size)
 {
-    return qn_http_htable_set_raw(&resp->headers, hdr, hdr_size, val, val_size);
+    return qn_http_hdr_set_raw(resp->hdr, hdr, hdr_size, val, val_size);
 }
 
 void qn_http_resp_unset_header(qn_http_response_ptr resp, const qn_string hdr)
 {
-    qn_http_htable_unset(&resp->headers, hdr);
+    qn_http_hdr_unset(resp->hdr, hdr);
 }
 
 void qn_http_resp_set_body_writer(qn_http_response_ptr resp, void * body_writer, qn_http_body_writer body_writer_callback)
@@ -421,9 +285,7 @@ static size_t qn_http_conn_body_reader(char * ptr, size_t size, size_t nmemb, vo
 {
     qn_http_request_ptr req = (qn_http_request_ptr) user_data;
     req->body_reader_retcode = req->body_reader_callback(req->body_reader, ptr, size * nmemb);
-    if (req->body_reader_retcode != 0) {
-        return 0;
-    } // if
+    if (req->body_reader_retcode != 0) return 0;
     return size * nmemb;
 }
 
@@ -431,9 +293,7 @@ static size_t qn_http_conn_body_writer(char * ptr, size_t size, size_t nmemb, vo
 {
     qn_http_response_ptr resp = (qn_http_response_ptr) user_data;
     resp->body_writer_retcode = resp->body_writer_callback(resp->body_writer, ptr, size * nmemb);
-    if (resp->body_writer_retcode != 0) {
-        return 0;
-    } // if
+    if (resp->body_writer_retcode != 0) return 0;
     return size * nmemb;
 }
 
@@ -443,7 +303,7 @@ static qn_bool qn_http_conn_do_request(qn_http_connection_ptr conn, qn_http_requ
     struct curl_slist * headers = NULL;
     struct curl_slist * headers2 = NULL;
     qn_string entry = NULL;
-    qn_http_htable_iterator itr;
+    qn_http_hdr_iterator_ptr itr;
 
     if (resp->body_writer_callback) {
         curl_easy_setopt(conn->curl, CURLOPT_WRITEFUNCTION, qn_http_conn_body_writer);
@@ -456,16 +316,27 @@ static qn_bool qn_http_conn_do_request(qn_http_connection_ptr conn, qn_http_requ
         return qn_false;
     } // if
 
-    itr = qn_http_htable_make_iterator(&req->headers);
-    while ((entry = qn_http_htable_next_entry(&itr))) {
-        headers2 = curl_slist_append(headers, entry);
-
-        if (!headers2) {
+    if (qn_http_hdr_size(req->hdr) > 0) {
+        itr = qn_http_hdr_itr_create(req->hdr);
+        if (!itr) {
             curl_slist_free_all(headers);
             return qn_false;
         } // if
-        headers = headers2;
-    } // while
+
+        while ((entry = qn_http_hdr_itr_next_entry(itr))) {
+            headers2 = curl_slist_append(headers, entry);
+
+            if (!headers2) {
+                curl_slist_free_all(headers);
+                qn_http_hdr_itr_destroy(itr);
+                return qn_false;
+            } // if
+            headers = headers2;
+        } // while
+
+        qn_http_hdr_itr_destroy(itr);
+    } // if
+
     curl_easy_setopt(conn->curl, CURLOPT_HTTPHEADER, headers);
 
     curl_code = curl_easy_perform(conn->curl);
