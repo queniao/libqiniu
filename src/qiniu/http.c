@@ -7,6 +7,7 @@
 #include "qiniu/base/json_parser.h"
 #include "qiniu/base/errors.h"
 #include "qiniu/http_header.h"
+#include "qiniu/http_header_parser.h"
 #include "qiniu/http.h"
 
 #ifdef __cplusplus
@@ -70,6 +71,57 @@ int qn_http_body_json_write(void * user_data, char * in_buf, int in_buf_size)
         } // if
     } // if
     return 0;
+}
+
+typedef struct _QN_HTTP_HEADER_WRITER
+{
+    qn_http_header_ptr hdr;
+    qn_http_hdr_parser_ptr prs;
+} qn_http_header_writer;
+
+qn_http_header_writer_ptr qn_http_header_writer_create(void)
+{
+    qn_http_header_writer_ptr new_writer = calloc(1, sizeof(qn_http_header_writer));
+    if (!new_writer) {
+        qn_err_set_no_enough_memory();
+        return NULL;
+    } // if
+
+    new_writer->prs = qn_http_hdr_prs_create();
+    if (!new_writer->prs) {
+        free(new_writer);
+        return NULL;
+    } // if
+    return new_writer;
+}
+
+void qn_http_header_writer_destroy(qn_http_header_writer_ptr writer)
+{
+    if (writer) {
+        qn_http_hdr_prs_destroy(writer->prs);
+        free(writer);
+    } // if
+}
+
+void qn_http_header_writer_prepare(qn_http_header_writer_ptr writer, qn_http_header_ptr hdr)
+{
+    qn_http_hdr_prs_reset(writer->prs);
+    writer->hdr = hdr;
+}
+
+int qn_http_header_writer_callback(void * user_data, char * buf, int buf_size)
+{
+    int size = buf_size;
+    qn_http_header_writer_ptr writer = (qn_http_header_writer_ptr) user_data;
+
+    if (!qn_http_hdr_prs_parse(writer->prs, buf, &size, &writer->hdr)) {
+        if (qn_err_is_try_again()) {
+            return buf_size;
+        } // if
+        // TODO: Return an appropriate code.
+        return -1;
+    } // if
+    return buf_size;
 }
 
 // ---- Definition of HTTP request ----
