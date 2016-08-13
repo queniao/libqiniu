@@ -13,7 +13,7 @@ typedef struct _QN_STORAGE
     qn_http_request_ptr req;
     qn_http_response_ptr resp;
     qn_http_connection_ptr conn;
-    qn_http_body_json_ptr resp_json_body;
+    qn_http_json_writer_ptr resp_json_wrt;
     qn_json_object_ptr obj_body;
     qn_json_array_ptr arr_body;
 } qn_storage;
@@ -49,8 +49,8 @@ qn_storage_ptr qn_stor_mn_create(void)
         return NULL;
     } // if
 
-    new_stor->resp_json_body = qn_http_body_json_create();
-    if (!new_stor->resp_json_body) {
+    new_stor->resp_json_wrt = qn_http_json_wrt_create();
+    if (!new_stor->resp_json_wrt) {
         qn_http_conn_destroy(new_stor->conn);
         qn_http_resp_destroy(new_stor->resp);
         qn_http_req_destroy(new_stor->req);
@@ -117,8 +117,8 @@ qn_bool qn_stor_mn_stat(qn_storage_ptr stor, const char * restrict bucket, const
         stor->obj_body = NULL;
     } // if
 
-    qn_http_body_json_prepare_for_object(stor->resp_json_body, &stor->obj_body);
-    qn_http_resp_set_body_writer(stor->resp, stor->resp_json_body, &qn_http_body_json_write);
+    qn_http_json_wrt_prepare_for_object(stor->resp_json_wrt, &stor->obj_body);
+    qn_http_resp_set_data_writer(stor->resp, stor->resp_json_wrt, &qn_http_json_wrt_callback);
 
     ret = qn_http_conn_get(stor->conn, url, stor->req, stor->resp);
     qn_str_destroy(url);

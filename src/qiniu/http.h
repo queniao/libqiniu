@@ -13,17 +13,17 @@ extern "C"
 // ---- Declaration of body reader and writer
 
 typedef int (*qn_http_body_reader)(void * reader, char * buf, int size);
-typedef int (*qn_http_body_writer)(void * writer, char * buf, int size);
+typedef int (*qn_http_data_writer)(void * writer, char * buf, int size);
 
-struct _QN_HTTP_BODY_JSON;
-typedef struct _QN_HTTP_BODY_JSON * qn_http_body_json_ptr;
+struct _QN_HTTP_JSON_WRITER;
+typedef struct _QN_HTTP_JSON_WRITER * qn_http_json_writer_ptr;
 
-extern qn_http_body_json_ptr qn_http_body_json_create(void);
-extern void qn_http_body_json_destroy(qn_http_body_json_ptr writer_data);
+extern qn_http_json_writer_ptr qn_http_json_wrt_create(void);
+extern void qn_http_json_wrt_destroy(qn_http_json_writer_ptr writer);
 
-extern void qn_http_body_json_prepare_for_object(qn_http_body_json_ptr writer, qn_json_object_ptr * obj);
-extern void qn_http_body_json_prepare_for_array(qn_http_body_json_ptr writer, qn_json_array_ptr * arr);
-extern int qn_http_body_json_write(void * writer, char * buf, int buf_size);
+extern void qn_http_json_wrt_prepare_for_object(qn_http_json_writer_ptr writer, qn_json_object_ptr * obj);
+extern void qn_http_json_wrt_prepare_for_array(qn_http_json_writer_ptr writer, qn_json_array_ptr * arr);
+extern int qn_http_json_wrt_callback(void * writer, char * buf, int buf_size);
 
 struct _QN_HTTP_HEADER_WRITER;
 typedef struct _QN_HTTP_HEADER_WRITER * qn_http_header_writer_ptr;
@@ -80,7 +80,7 @@ extern qn_bool qn_http_resp_set_header(qn_http_response_ptr resp, const qn_strin
 extern qn_bool qn_http_resp_set_header_raw(qn_http_response_ptr resp, const char * hdr, int hdr_size, const char * val, int val_size);
 extern void qn_http_resp_unset_header(qn_http_response_ptr resp, const qn_string header);
 
-extern void qn_http_resp_set_body_writer(qn_http_response_ptr resp, void * writer, qn_http_body_writer writer_callback);
+extern void qn_http_resp_set_data_writer(qn_http_response_ptr resp, void * writer, qn_http_data_writer writer_callback);
 
 // ---- Declaration of HTTP connection ----
 

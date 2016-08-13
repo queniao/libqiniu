@@ -17,16 +17,16 @@ extern "C"
 
 // ---- Definition of body reader and writer ----
 
-typedef struct _QN_HTTP_BODY_JSON
+typedef struct _QN_HTTP_JSON_WRITER
 {
     qn_json_object_ptr * obj;
     qn_json_array_ptr * arr;
     qn_json_parser_ptr prs;
-} qn_http_body_json;
+} qn_http_json_writer;
 
-qn_http_body_json_ptr qn_http_body_json_create(void)
+qn_http_json_writer_ptr qn_http_json_wrt_create(void)
 {
-    qn_http_body_json_ptr new_body = malloc(sizeof(qn_http_body_json));
+    qn_http_json_writer_ptr new_body = malloc(sizeof(qn_http_json_writer));
     if (!new_body) {
         qn_err_set_no_enough_memory();
         return NULL;
@@ -40,33 +40,33 @@ qn_http_body_json_ptr qn_http_body_json_create(void)
     return new_body;
 }
 
-void qn_http_body_json_destroy(qn_http_body_json_ptr writer)
+void qn_http_json_wrt_destroy(qn_http_json_writer_ptr writer)
 {
     qn_json_prs_destroy(writer->prs);
     free(writer);
 }
 
-void qn_http_body_json_prepare_for_object(qn_http_body_json_ptr writer, qn_json_object_ptr * obj)
+void qn_http_json_wrt_prepare_for_object(qn_http_json_writer_ptr writer, qn_json_object_ptr * obj)
 {
     writer->obj = obj;
     writer->arr = NULL;
 }
 
-void qn_http_body_json_prepare_for_array(qn_http_body_json_ptr writer, qn_json_array_ptr * arr)
+void qn_http_json_wrt_prepare_for_array(qn_http_json_writer_ptr writer, qn_json_array_ptr * arr)
 {
     writer->obj = NULL;
     writer->arr = arr;
 }
 
-int qn_http_body_json_write(void * user_data, char * in_buf, int in_buf_size)
+int qn_http_json_wrt_callback(void * user_data, char * in_buf, int in_buf_size)
 {
-    qn_http_body_json_ptr writer = (qn_http_body_json_ptr) user_data;
-    if (writer->obj) {
-        if (!qn_json_prs_parse_object(writer->prs, in_buf, in_buf_size, writer->obj)) {
+    qn_http_json_writer_ptr w = (qn_http_json_writer_ptr) user_data;
+    if (w->obj) {
+        if (!qn_json_prs_parse_object(w->prs, in_buf, in_buf_size, w->obj)) {
             return -1;
         } // if
     } else {
-        if (!qn_json_prs_parse_array(writer->prs, in_buf, in_buf_size, writer->arr)) {
+        if (!qn_json_prs_parse_array(w->prs, in_buf, in_buf_size, w->arr)) {
             return -1;
         } // if
     } // if
@@ -218,11 +218,11 @@ void qn_http_req_set_body_reader(qn_http_request_ptr req, void * body_reader, qn
 typedef struct _QN_HTTP_RESPONSE
 {
     int http_code;
-    int body_writer_retcode;
+    int data_parser_retcode;
 
     qn_http_header_ptr hdr;
-    void * body_writer;
-    qn_http_body_writer body_writer_callback;
+    void * data_writer;
+    qn_http_data_writer data_writer_callback;
 } qn_http_response;
 
 qn_http_response_ptr qn_http_resp_create(void)
@@ -253,8 +253,8 @@ void qn_http_resp_destroy(qn_http_response_ptr resp)
 
 void qn_http_resp_reset(qn_http_response_ptr resp)
 {
-    resp->body_writer = NULL;
-    resp->body_writer_callback = NULL;
+    resp->data_writer = NULL;
+    resp->data_writer_callback = NULL;
     qn_http_hdr_reset(resp->hdr);
 }
 
@@ -265,7 +265,7 @@ int qn_http_resp_get_code(qn_http_response_ptr resp)
 
 int qn_http_resp_get_writer_retcode(qn_http_response_ptr resp)
 {
-    return resp->body_writer_retcode;
+    return resp->data_parser_retcode;
 }
 
 qn_bool qn_http_resp_get_header_raw(qn_http_response_ptr resp, const char * hdr, qn_size hdr_size, const char ** val, qn_size * val_size)
@@ -288,10 +288,10 @@ void qn_http_resp_unset_header(qn_http_response_ptr resp, const qn_string hdr)
     qn_http_hdr_unset(resp->hdr, hdr);
 }
 
-void qn_http_resp_set_body_writer(qn_http_response_ptr resp, void * body_writer, qn_http_body_writer body_writer_callback)
+void qn_http_resp_set_data_writer(qn_http_response_ptr resp, void * data_writer, qn_http_data_writer data_writer_callback)
 {
-    resp->body_writer = body_writer;
-    resp->body_writer_callback = body_writer_callback;
+    resp->data_writer = data_writer;
+    resp->data_writer_callback = data_writer_callback;
 }
 
 // ---- Definition of HTTP connection ----
@@ -341,11 +341,11 @@ static size_t qn_http_conn_body_reader(char * ptr, size_t size, size_t nmemb, vo
     return size * nmemb;
 }
 
-static size_t qn_http_conn_body_writer(char * ptr, size_t size, size_t nmemb, void * user_data)
+static size_t qn_http_conn_data_parser(char * ptr, size_t size, size_t nmemb, void * user_data)
 {
     qn_http_response_ptr resp = (qn_http_response_ptr) user_data;
-    resp->body_writer_retcode = resp->body_writer_callback(resp->body_writer, ptr, size * nmemb);
-    if (resp->body_writer_retcode != 0) return 0;
+    resp->data_parser_retcode = resp->data_writer_callback(resp->data_writer, ptr, size * nmemb);
+    if (resp->data_parser_retcode != 0) return 0;
     return size * nmemb;
 }
 
@@ -357,8 +357,8 @@ static qn_bool qn_http_conn_do_request(qn_http_connection_ptr conn, qn_http_requ
     qn_string entry = NULL;
     qn_http_hdr_iterator_ptr itr;
 
-    if (resp->body_writer_callback) {
-        curl_easy_setopt(conn->curl, CURLOPT_WRITEFUNCTION, qn_http_conn_body_writer);
+    if (resp->data_writer_callback) {
+        curl_easy_setopt(conn->curl, CURLOPT_WRITEFUNCTION, qn_http_conn_data_parser);
         curl_easy_setopt(conn->curl, CURLOPT_WRITEDATA, resp);
     } // if
 
