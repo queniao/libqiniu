@@ -15,6 +15,8 @@ extern "C"
 typedef int (*qn_http_body_reader)(void * reader, char * buf, int size);
 typedef int (*qn_http_data_writer)(void * writer, char * buf, int size);
 
+// ----
+
 struct _QN_HTTP_JSON_WRITER;
 typedef struct _QN_HTTP_JSON_WRITER * qn_http_json_writer_ptr;
 
@@ -25,6 +27,8 @@ extern void qn_http_json_wrt_prepare_for_object(qn_http_json_writer_ptr writer, 
 extern void qn_http_json_wrt_prepare_for_array(qn_http_json_writer_ptr writer, qn_json_array_ptr * arr);
 extern int qn_http_json_wrt_callback(void * writer, char * buf, int buf_size);
 
+// ----
+
 struct _QN_HTTP_HDR_WRITER;
 typedef struct _QN_HTTP_HDR_WRITER * qn_http_hdr_writer_ptr;
 
@@ -33,6 +37,18 @@ extern void qn_http_hdr_wrt_destroy(qn_http_hdr_writer_ptr writer);
 
 extern void qn_http_hdr_wrt_prepare(qn_http_hdr_writer_ptr writer, qn_http_header_ptr hdr);
 extern int qn_http_hdr_wrt_callback(void * writer, char * buf, int buf_size);
+
+// ----
+
+struct _QN_HTTP_RPC_WRITER;
+typedef struct _QN_HTTP_RPC_WRITER * qn_http_rpc_writer_ptr;
+
+extern qn_http_rpc_writer_ptr qn_http_rpc_wrt_create(void);
+extern void qn_http_rpc_wrt_destroy(qn_http_rpc_writer_ptr writer);
+
+extern void qn_http_rpc_wrt_prepare_for_object(qn_http_rpc_writer_ptr writer, qn_http_header_ptr hdr, qn_json_object_ptr * obj);
+extern void qn_http_rpc_wrt_prepare_for_array(qn_http_rpc_writer_ptr writer, qn_http_header_ptr hdr, qn_json_array_ptr * arr);
+extern int qn_http_rpc_wrt_callback(void * writer, char * buf, int buf_size);
 
 // ---- Declaration of HTTP request ----
 

@@ -58,20 +58,26 @@ void qn_http_json_wrt_prepare_for_array(qn_http_json_writer_ptr writer, qn_json_
     writer->arr = arr;
 }
 
-int qn_http_json_wrt_callback(void * user_data, char * in_buf, int in_buf_size)
+int qn_http_json_wrt_callback(void * user_data, char * buf, int buf_size)
 {
+    int size = buf_size;
     qn_http_json_writer_ptr w = (qn_http_json_writer_ptr) user_data;
     if (w->obj) {
-        if (!qn_json_prs_parse_object(w->prs, in_buf, in_buf_size, w->obj)) {
+        if (!qn_json_prs_parse_object(w->prs, buf, size, w->obj)) {
+            if (qn_err_is_try_again()) return size;
             return -1;
         } // if
     } else {
-        if (!qn_json_prs_parse_array(w->prs, in_buf, in_buf_size, w->arr)) {
+        if (!qn_json_prs_parse_array(w->prs, buf, size, w->arr)) {
+            if (qn_err_is_try_again()) return size;
             return -1;
         } // if
     } // if
-    return 0;
+    qn_err_set_succeed();
+    return buf_size;
 }
+
+// ----
 
 typedef struct _QN_HTTP_HDR_WRITER
 {
@@ -113,15 +119,99 @@ int qn_http_hdr_wrt_callback(void * user_data, char * buf, int buf_size)
 {
     int size = buf_size;
     qn_http_hdr_writer_ptr writer = (qn_http_hdr_writer_ptr) user_data;
-
     if (!qn_http_hdr_prs_parse(writer->prs, buf, &size, &writer->hdr)) {
-        if (qn_err_is_try_again()) {
-            return buf_size;
-        } // if
-        // TODO: Return an appropriate code.
+        if (qn_err_is_try_again()) return buf_size;
         return -1;
     } // if
-    return buf_size;
+    qn_err_set_succeed();
+    return size;
+}
+
+// ----
+
+enum
+{
+    QN_HTTP_RPC_WRT_PARSING_DONE = 0,
+    QN_HTTP_RPC_WRT_PARSING_HEADER,
+    QN_HTTP_RPC_WRT_PARSING_JSON
+};
+
+typedef struct _QN_HTTP_RPC_WRITER
+{
+    int sts;
+    qn_http_hdr_writer_ptr hdr_writer;
+    qn_http_json_writer_ptr json_writer;
+} qn_http_rpc_writer;
+
+qn_http_rpc_writer_ptr qn_http_rpc_wrt_create(void)
+{
+    qn_http_rpc_writer_ptr new_writer = calloc(1, sizeof(qn_http_rpc_writer));
+    if (!new_writer) {
+        qn_err_set_no_enough_memory();
+        return NULL;
+    } // if
+
+    new_writer->hdr_writer = qn_http_hdr_wrt_create();
+    if (!new_writer->hdr_writer) {
+        free(new_writer);
+        return NULL;
+    } // if
+
+    new_writer->json_writer = qn_http_json_wrt_create();
+    if (!new_writer->json_writer) {
+        qn_http_hdr_wrt_destroy(new_writer->hdr_writer);
+        free(new_writer);
+        return NULL;
+    } // if
+    return new_writer;
+}
+
+void qn_http_rpc_wrt_destroy(qn_http_rpc_writer_ptr writer)
+{
+    if (writer) {
+        qn_http_hdr_wrt_destroy(writer->hdr_writer);
+        qn_http_json_wrt_destroy(writer->json_writer);
+        free(writer);
+    } // if
+}
+
+void qn_http_rpc_wrt_prepare_for_object(qn_http_rpc_writer_ptr writer, qn_http_header_ptr hdr, qn_json_object_ptr * obj)
+{
+    qn_http_hdr_wrt_prepare(writer->hdr_writer, hdr);
+    qn_http_json_wrt_prepare_for_object(writer->json_writer, obj);
+    writer->sts = QN_HTTP_RPC_WRT_PARSING_HEADER;
+}
+
+void qn_http_rpc_wrt_prepare_for_array(qn_http_rpc_writer_ptr writer, qn_http_header_ptr hdr, qn_json_array_ptr * arr)
+{
+    qn_http_hdr_wrt_prepare(writer->hdr_writer, hdr);
+    qn_http_json_wrt_prepare_for_array(writer->json_writer, arr);
+    writer->sts = QN_HTTP_RPC_WRT_PARSING_HEADER;
+}
+
+int qn_http_rpc_wrt_callback(void * user_data, char * buf, int buf_size)
+{
+    int ret = 0;
+    int proc_size = 0;
+    qn_http_rpc_writer_ptr writer = (qn_http_rpc_writer_ptr) user_data;
+
+    switch (writer->sts) {
+        case QN_HTTP_RPC_WRT_PARSING_HEADER:
+            proc_size += (ret = qn_http_hdr_wrt_callback(writer->hdr_writer, buf, buf_size));
+            if (ret < 0) return proc_size;
+            if (qn_err_is_succeed()) writer->sts = QN_HTTP_RPC_WRT_PARSING_JSON;
+            if (ret == buf_size) return buf_size;
+
+        case QN_HTTP_RPC_WRT_PARSING_JSON:
+            proc_size += (ret = qn_http_json_wrt_callback(writer->json_writer, buf + ret, buf_size - ret));
+            if (ret < 0) return proc_size;
+            if (qn_err_is_succeed()) writer->sts = QN_HTTP_RPC_WRT_PARSING_DONE;
+        
+        case QN_HTTP_RPC_WRT_PARSING_DONE:
+            qn_err_set_succeed();
+            return buf_size;
+    } // if
+    return -1;
 }
 
 // ---- Definition of HTTP request ----
