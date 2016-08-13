@@ -898,14 +898,14 @@ static qn_bool qn_json_prs_parse(qn_json_parser_ptr prs)
     return qn_true;
 }
 
-qn_bool qn_json_prs_parse_object(qn_json_parser_ptr prs, const char * restrict buf, qn_size buf_size, qn_json_object_ptr * root)
+qn_bool qn_json_prs_parse_object(qn_json_parser_ptr prs, const char * restrict buf, qn_size * buf_size, qn_json_object_ptr * root)
 {
     qn_json_token tkn = QN_JSON_TKNERR_NEED_MORE_TEXT;
     char * txt = NULL;
     qn_size txt_size;
 
     prs->scanner.buf = buf;
-    prs->scanner.buf_size = buf_size;
+    prs->scanner.buf_size = *buf_size;
     prs->scanner.buf_pos = 0;
 
     if (qn_json_prs_is_empty(prs)) {
@@ -926,17 +926,18 @@ qn_bool qn_json_prs_parse_object(qn_json_parser_ptr prs, const char * restrict b
 
     if (!qn_json_prs_parse(prs)) return qn_false;
     *root = prs->elem.object;
+    *buf_size = prs->scanner.buf_pos;
     return qn_true;
 }
 
-qn_bool qn_json_prs_parse_array(qn_json_parser_ptr prs, const char * restrict buf, qn_size buf_size, qn_json_array_ptr * root)
+qn_bool qn_json_prs_parse_array(qn_json_parser_ptr prs, const char * restrict buf, qn_size * buf_size, qn_json_array_ptr * root)
 {
     qn_json_token tkn = QN_JSON_TKNERR_NEED_MORE_TEXT;
     char * txt = NULL;
     qn_size txt_size;
 
     prs->scanner.buf = buf;
-    prs->scanner.buf_size = buf_size;
+    prs->scanner.buf_size = *buf_size;
     prs->scanner.buf_pos = 0;
 
     if (qn_json_prs_is_empty(prs)) {
@@ -957,6 +958,7 @@ qn_bool qn_json_prs_parse_array(qn_json_parser_ptr prs, const char * restrict bu
 
     if (!qn_json_prs_parse(prs)) return qn_false;
     *root = prs->elem.array;
+    *buf_size = prs->scanner.buf_pos;
     return qn_true;
 }
 

@@ -16,8 +16,8 @@ typedef struct _QN_JSON_PARSER * qn_json_parser_ptr;
 extern qn_json_parser_ptr qn_json_prs_create(void);
 extern void qn_json_prs_destroy(qn_json_parser_ptr prs);
 extern void qn_json_prs_reset(qn_json_parser_ptr prs);
-extern qn_bool qn_json_prs_parse_object(qn_json_parser_ptr prs, const char * restrict buf, qn_size buf_size, qn_json_object_ptr * root);
-extern qn_bool qn_json_prs_parse_array(qn_json_parser_ptr prs, const char * restrict buf, qn_size buf_size, qn_json_array_ptr * root);
+extern qn_bool qn_json_prs_parse_object(qn_json_parser_ptr prs, const char * restrict buf, qn_size * buf_size, qn_json_object_ptr * root);
+extern qn_bool qn_json_prs_parse_array(qn_json_parser_ptr prs, const char * restrict buf, qn_size * buf_size, qn_json_array_ptr * root);
 
 extern void qn_json_prs_set_max_levels(qn_size count);
 
