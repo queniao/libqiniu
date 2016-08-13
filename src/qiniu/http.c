@@ -73,15 +73,15 @@ int qn_http_json_wrt_callback(void * user_data, char * in_buf, int in_buf_size)
     return 0;
 }
 
-typedef struct _QN_HTTP_HEADER_WRITER
+typedef struct _QN_HTTP_HDR_WRITER
 {
     qn_http_header_ptr hdr;
     qn_http_hdr_parser_ptr prs;
-} qn_http_header_writer;
+} qn_http_hdr_writer;
 
-qn_http_header_writer_ptr qn_http_header_writer_create(void)
+qn_http_hdr_writer_ptr qn_http_hdr_wrt_create(void)
 {
-    qn_http_header_writer_ptr new_writer = calloc(1, sizeof(qn_http_header_writer));
+    qn_http_hdr_writer_ptr new_writer = calloc(1, sizeof(qn_http_hdr_writer));
     if (!new_writer) {
         qn_err_set_no_enough_memory();
         return NULL;
@@ -95,7 +95,7 @@ qn_http_header_writer_ptr qn_http_header_writer_create(void)
     return new_writer;
 }
 
-void qn_http_header_writer_destroy(qn_http_header_writer_ptr writer)
+void qn_http_hdr_wrt_destroy(qn_http_hdr_writer_ptr writer)
 {
     if (writer) {
         qn_http_hdr_prs_destroy(writer->prs);
@@ -103,16 +103,16 @@ void qn_http_header_writer_destroy(qn_http_header_writer_ptr writer)
     } // if
 }
 
-void qn_http_header_writer_prepare(qn_http_header_writer_ptr writer, qn_http_header_ptr hdr)
+void qn_http_hdr_wrt_prepare(qn_http_hdr_writer_ptr writer, qn_http_header_ptr hdr)
 {
     qn_http_hdr_prs_reset(writer->prs);
     writer->hdr = hdr;
 }
 
-int qn_http_header_writer_callback(void * user_data, char * buf, int buf_size)
+int qn_http_hdr_wrt_callback(void * user_data, char * buf, int buf_size)
 {
     int size = buf_size;
-    qn_http_header_writer_ptr writer = (qn_http_header_writer_ptr) user_data;
+    qn_http_hdr_writer_ptr writer = (qn_http_hdr_writer_ptr) user_data;
 
     if (!qn_http_hdr_prs_parse(writer->prs, buf, &size, &writer->hdr)) {
         if (qn_err_is_try_again()) {
