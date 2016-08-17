@@ -60,15 +60,15 @@ void qn_http_json_wrt_prepare_for_array(qn_http_json_writer_ptr writer, qn_json_
 
 int qn_http_json_wrt_callback(void * user_data, char * buf, int buf_size)
 {
-    int size = buf_size;
+    qn_size size = buf_size;
     qn_http_json_writer_ptr w = (qn_http_json_writer_ptr) user_data;
     if (w->obj) {
-        if (!qn_json_prs_parse_object(w->prs, buf, size, w->obj)) {
+        if (!qn_json_prs_parse_object(w->prs, buf, &size, w->obj)) {
             if (qn_err_is_try_again()) return size;
             return -1;
         } // if
     } else {
-        if (!qn_json_prs_parse_array(w->prs, buf, size, w->arr)) {
+        if (!qn_json_prs_parse_array(w->prs, buf, &size, w->arr)) {
             if (qn_err_is_try_again()) return size;
             return -1;
         } // if
