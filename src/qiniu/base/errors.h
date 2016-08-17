@@ -24,6 +24,11 @@ extern void qn_err_json_set_too_many_parsing_levels(void);
 
 extern void qn_err_http_set_invalid_header_syntax(void);
 
+extern void qn_err_etag_set_initializing_context_failed(void);
+extern void qn_err_etag_set_updating_context_failed(void);
+extern void qn_err_etag_set_updating_block_failed(void);
+extern void qn_err_etag_set_making_digest_failed(void);
+
 extern qn_bool qn_err_is_succeed(void);
 extern qn_bool qn_err_is_no_enough_memory(void);
 extern qn_bool qn_err_is_try_again(void);
@@ -37,6 +42,11 @@ extern qn_bool qn_err_json_is_bad_text_input(void);
 extern qn_bool qn_err_json_is_too_many_pasring_levels(void);
 
 extern qn_bool qn_err_http_is_invalid_header_syntax(void);
+
+extern qn_bool qn_err_etag_is_initializing_context_failed(void);
+extern qn_bool qn_err_etag_is_updating_context_failed(void);
+extern qn_bool qn_err_etag_is_updating_block_failed(void);
+extern qn_bool qn_err_etag_is_making_digest_failed(void);
 
 #ifdef __cplusplus
 }
