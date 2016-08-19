@@ -20,11 +20,12 @@ typedef unsigned short int qn_etag_pos;
 #define QN_ETAG_BLK_MAX_COUNT 2
 #endif
 
-#define QN_ETAG_ALLOCATION_MAX_COUNT ((QN_ETAG_BLK_MAX_COUNT + sizeof(qn_etag_alloc) - 1) / (sizeof(qn_etag_alloc) * 8))
+#define QN_ETAG_ALLOCATION_MAX_BITS (sizeof(qn_etag_alloc) * 8)
+#define QN_ETAG_ALLOCATION_MAX_COUNT ((int)((QN_ETAG_BLK_MAX_COUNT + QN_ETAG_ALLOCATION_MAX_BITS - 1) / QN_ETAG_ALLOCATION_MAX_BITS))
 
-#define QN_ETAG_ALLOC_RESET(alloc, num) (alloc[QN_ETAG_ALLOCATION_MAX_COUNT / num] &= ~((qn_etag_alloc)0x1L << (QN_ETAG_ALLOCATION_MAX_COUNT % num)))
-#define QN_ETAG_ALLOC_SET(alloc, num) (alloc[QN_ETAG_ALLOCATION_MAX_COUNT / num] |= ((qn_etag_alloc)0x1L << (QN_ETAG_ALLOCATION_MAX_COUNT % num)))
-#define QN_ETAG_ALLOC_IS_SET(alloc, num) (alloc[QN_ETAG_ALLOCATION_MAX_COUNT / num] &= ((qn_etag_alloc)0x1L << (QN_ETAG_ALLOCATION_MAX_COUNT % num)))
+#define QN_ETAG_ALLOC_RESET(alloc, num) (alloc[(int)(num / QN_ETAG_ALLOCATION_MAX_BITS)] &= ~((qn_etag_alloc)0x1L << (num % QN_ETAG_ALLOCATION_MAX_BITS)))
+#define QN_ETAG_ALLOC_SET(alloc, num) (alloc[(int)(num / QN_ETAG_ALLOCATION_MAX_BITS)] |= ((qn_etag_alloc)0x1L << (num % QN_ETAG_ALLOCATION_MAX_BITS)))
+#define QN_ETAG_ALLOC_IS_SET(alloc, num) (alloc[(int)(num / QN_ETAG_ALLOCATION_MAX_BITS)] & ((qn_etag_alloc)0x1L << (num % QN_ETAG_ALLOCATION_MAX_BITS)))
 
 typedef struct _QN_ETAG_BLOCK
 {
@@ -95,7 +96,7 @@ static qn_bool qn_etag_ctx_merge_blocks(qn_etag_context_ptr ctx)
             qn_err_etag_set_making_digest_failed();
             return qn_false;
         } // if
-        if (SHA1_Update(&ctx->blks[ctx->begin].sha1_ctx, digest, sizeof(digest)) == 0) {
+        if (SHA1_Update(&ctx->sha1_ctx, digest, sizeof(digest)) == 0) {
             qn_err_etag_set_updating_context_failed();
             return qn_false;
         } // if
@@ -105,8 +106,10 @@ static qn_bool qn_etag_ctx_merge_blocks(qn_etag_context_ptr ctx)
             b = 0x1L;
             i += 1;
             if (i == QN_ETAG_ALLOCATION_MAX_COUNT) i = 0;
+        } else {
+            b <<= 1;
         } // if
-        if (--ctx->begin == QN_ETAG_BLK_MAX_COUNT) ctx->begin = 0;
+        if (++ctx->begin == QN_ETAG_BLK_MAX_COUNT) ctx->begin = 0;
         ctx->unused += 1;
     } // while
     return qn_true;
@@ -115,6 +118,10 @@ static qn_bool qn_etag_ctx_merge_blocks(qn_etag_context_ptr ctx)
 qn_bool qn_etag_ctx_init(qn_etag_context_ptr ctx)
 {
     if (SHA1_Init(&ctx->sha1_ctx) == 0) {
+        qn_err_etag_set_initializing_context_failed();
+        return qn_false;
+    } // if
+    if (SHA1_Init(&ctx->blks[0].sha1_ctx) == 0) {
         qn_err_etag_set_initializing_context_failed();
         return qn_false;
     } // if
@@ -171,7 +178,7 @@ qn_string qn_etag_ctx_final(qn_etag_context_ptr ctx)
         } // if
     } else {
         // Multi-blocks case
-        if (!qn_etag_ctx_merge_blocks(ctx)) return NULL;
+        if (ctx->unused < QN_ETAG_BLK_MAX_COUNT) return NULL;
 
         digest_data[0] = 0x96;
         if (SHA1_Final(&digest_data[1], &ctx->sha1_ctx) == 0) {
@@ -187,9 +194,14 @@ qn_bool qn_etag_ctx_allocate_block(qn_etag_context_ptr ctx, qn_etag_block_ptr * 
 {
     if (ctx->unused == 0) return qn_false;
 
+    if (SHA1_Init(&ctx->blks[ctx->end].sha1_ctx) == 0) {
+        qn_err_etag_set_initializing_block_failed();
+        return qn_false;
+    } // if
+    
     *blk = &ctx->blks[ctx->end];
     QN_ETAG_ALLOC_RESET(ctx->allocs, ctx->end);
-    if (++ctx->end > QN_ETAG_BLK_MAX_COUNT) {
+    if (++ctx->end >= QN_ETAG_BLK_MAX_COUNT) {
         ctx->end = 0;
     } // if
 
@@ -203,7 +215,7 @@ qn_bool qn_etag_ctx_commit_block(qn_etag_context_ptr ctx, qn_etag_block_ptr blk)
     int pos = blk - &ctx->blks[0];
     QN_ETAG_ALLOC_SET(ctx->allocs, pos);
     if ((ctx->flags & QN_ETAG_FLAG_MULTI_BLOCKS) == 0) {
-        if (ctx->unused < QN_ETAG_BLK_MAX_COUNT - 1) {
+        if (ctx->unused == QN_ETAG_BLK_MAX_COUNT - 1 && pos == 0) {
             return qn_true;
         } else {
             ctx->flags |= QN_ETAG_FLAG_MULTI_BLOCKS;

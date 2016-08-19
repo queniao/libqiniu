@@ -26,6 +26,7 @@ extern void qn_err_http_set_invalid_header_syntax(void);
 
 extern void qn_err_etag_set_initializing_context_failed(void);
 extern void qn_err_etag_set_updating_context_failed(void);
+extern void qn_err_etag_set_initializing_block_failed(void);
 extern void qn_err_etag_set_updating_block_failed(void);
 extern void qn_err_etag_set_making_digest_failed(void);
 
@@ -45,6 +46,7 @@ extern qn_bool qn_err_http_is_invalid_header_syntax(void);
 
 extern qn_bool qn_err_etag_is_initializing_context_failed(void);
 extern qn_bool qn_err_etag_is_updating_context_failed(void);
+extern qn_bool qn_err_etag_is_initializing_block_failed(void);
 extern qn_bool qn_err_etag_is_updating_block_failed(void);
 extern qn_bool qn_err_etag_is_making_digest_failed(void);
 

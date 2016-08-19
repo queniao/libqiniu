@@ -22,8 +22,9 @@ enum
     QN_ERR_HTTP_INVALID_HEADER_SYNTAX = 3001,
     QN_ERR_ETAG_INITIALIZING_CONTEXT_FAILED = 4001,
     QN_ERR_ETAG_UPDATING_CONTEXT_FAILED = 4002,
-    QN_ERR_ETAG_UPDATING_BLOCK_FAILED = 4003,
-    QN_ERR_ETAG_MAKING_DIGEST_FAILED = 4004
+    QN_ERR_ETAG_INITIALIZING_BLOCK_FAILED = 4003,
+    QN_ERR_ETAG_UPDATING_BLOCK_FAILED = 4004,
+    QN_ERR_ETAG_MAKING_DIGEST_FAILED = 4005
 };
 
 typedef qn_uint32 qn_err_enum;
@@ -50,6 +51,7 @@ static qn_error qn_errors[] = {
     {QN_ERR_HTTP_INVALID_HEADER_SYNTAX, "Invalid HTTP header syntax"},
     {QN_ERR_ETAG_INITIALIZING_CONTEXT_FAILED, "Failed in initializing context for qetag calculation"},
     {QN_ERR_ETAG_UPDATING_CONTEXT_FAILED, "Failed in updating context for qetag calculation"},
+    {QN_ERR_ETAG_INITIALIZING_BLOCK_FAILED, "Failed in initializing block for qetag calculation"},
     {QN_ERR_ETAG_UPDATING_BLOCK_FAILED, "Failed in updating block for qetag calculation"},
     {QN_ERR_ETAG_MAKING_DIGEST_FAILED, "Failed in making digest for qetag calculation"}
 };
@@ -136,6 +138,11 @@ void qn_err_etag_set_updating_context_failed(void)
     qn_err_code = QN_ERR_ETAG_UPDATING_CONTEXT_FAILED;
 }
 
+void qn_err_etag_set_initializing_block_failed(void)
+{
+    qn_err_code = QN_ERR_ETAG_INITIALIZING_BLOCK_FAILED;
+}
+
 void qn_err_etag_set_updating_block_failed(void)
 {
     qn_err_code = QN_ERR_ETAG_UPDATING_BLOCK_FAILED;
@@ -211,6 +218,11 @@ qn_bool qn_err_etag_is_initializing_context_failed(void)
 qn_bool qn_err_etag_is_updating_context_failed(void)
 {
     return (qn_err_code == QN_ERR_ETAG_UPDATING_CONTEXT_FAILED);
+}
+
+qn_bool qn_err_etag_is_initializing_block_failed(void)
+{
+    return (qn_err_code == QN_ERR_ETAG_INITIALIZING_BLOCK_FAILED);
 }
 
 qn_bool qn_err_etag_is_updating_block_failed(void)
