@@ -33,8 +33,8 @@ extern qn_bool qn_etag_ctx_commit_block(qn_etag_context_ptr ctx, qn_etag_block_p
 
 // ----
 
-extern qn_bool qn_etag_digest_file(const char * fname, char ** digest);
-extern qn_bool qn_etag_digest_buffer(const char * buf, int buf_size, char ** digest);
+extern qn_string qn_etag_digest_file(const char * fname);
+extern qn_string qn_etag_digest_buffer(char * buf, int buf_size);
 
 #ifdef __cplusplus
 }

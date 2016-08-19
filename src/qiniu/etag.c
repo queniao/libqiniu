@@ -13,8 +13,13 @@ extern "C"
 typedef unsigned int qn_etag_alloc;
 typedef unsigned short int qn_etag_pos;
 
-#define QN_ETAG_BLK_MAX_COUNT 16
 #define QN_ETAG_BLK_MAX_SIZE (1 << 22)
+
+#if (!defined(QN_ETAG_BLK_MAX_COUNT) || QN_ETAG_BLK_MAX_COUNT < 2)
+#undef QN_ETAG_BLK_MAX_COUNT
+#define QN_ETAG_BLK_MAX_COUNT 2
+#endif
+
 #define QN_ETAG_ALLOCATION_MAX_COUNT ((QN_ETAG_BLK_MAX_COUNT + sizeof(qn_etag_alloc) - 1) / (sizeof(qn_etag_alloc) * 8))
 
 #define QN_ETAG_ALLOC_RESET(alloc, num) (alloc[QN_ETAG_ALLOCATION_MAX_COUNT / num] &= ~((qn_etag_alloc)0x1L << (QN_ETAG_ALLOCATION_MAX_COUNT % num)))
@@ -209,8 +214,19 @@ qn_bool qn_etag_ctx_commit_block(qn_etag_context_ptr ctx, qn_etag_block_ptr blk)
 
 // ----
 
-extern qn_bool qn_etag_digest_file(const char * fname, char ** digest);
-extern qn_bool qn_etag_digest_buffer(const char * buf, int buf_size, char ** digest);
+extern qn_string qn_etag_digest_file(const char * fname);
+
+qn_string qn_etag_digest_buffer(char * buf, int buf_size)
+{
+    qn_string digest;
+    qn_etag_context_ptr ctx = qn_etag_ctx_create();
+    if (!ctx) return NULL;
+
+    if (!qn_etag_ctx_update(ctx, buf, buf_size)) return NULL;
+    digest = qn_etag_ctx_final(ctx);
+    qn_etag_ctx_destroy(ctx);
+    return digest;
+}
 
 #ifdef __cplusplus
 }
