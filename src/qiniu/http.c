@@ -60,158 +60,21 @@ void qn_http_json_wrt_prepare_for_array(qn_http_json_writer_ptr writer, qn_json_
 
 int qn_http_json_wrt_callback(void * user_data, char * buf, int buf_size)
 {
-    int size = buf_size;
+    qn_size size = buf_size;
     qn_http_json_writer_ptr w = (qn_http_json_writer_ptr) user_data;
     if (w->obj) {
-        if (!qn_json_prs_parse_object(w->prs, buf, size, w->obj)) {
-            if (qn_err_is_try_again()) return size;
+        if (!qn_json_prs_parse_object(w->prs, buf, &size, w->obj)) {
+            if (qn_err_is_try_again()) return buf_size;
             return -1;
         } // if
     } else {
-        if (!qn_json_prs_parse_array(w->prs, buf, size, w->arr)) {
-            if (qn_err_is_try_again()) return size;
+        if (!qn_json_prs_parse_array(w->prs, buf, &size, w->arr)) {
+            if (qn_err_is_try_again()) return buf_size;
             return -1;
         } // if
     } // if
     qn_err_set_succeed();
     return buf_size;
-}
-
-// ----
-
-typedef struct _QN_HTTP_HDR_WRITER
-{
-    qn_http_header_ptr hdr;
-    qn_http_hdr_parser_ptr prs;
-} qn_http_hdr_writer;
-
-qn_http_hdr_writer_ptr qn_http_hdr_wrt_create(void)
-{
-    qn_http_hdr_writer_ptr new_writer = calloc(1, sizeof(qn_http_hdr_writer));
-    if (!new_writer) {
-        qn_err_set_no_enough_memory();
-        return NULL;
-    } // if
-
-    new_writer->prs = qn_http_hdr_prs_create();
-    if (!new_writer->prs) {
-        free(new_writer);
-        return NULL;
-    } // if
-    return new_writer;
-}
-
-void qn_http_hdr_wrt_destroy(qn_http_hdr_writer_ptr writer)
-{
-    if (writer) {
-        qn_http_hdr_prs_destroy(writer->prs);
-        free(writer);
-    } // if
-}
-
-void qn_http_hdr_wrt_prepare(qn_http_hdr_writer_ptr writer, qn_http_header_ptr hdr)
-{
-    qn_http_hdr_prs_reset(writer->prs);
-    writer->hdr = hdr;
-}
-
-int qn_http_hdr_wrt_callback(void * user_data, char * buf, int buf_size)
-{
-    int size = buf_size;
-    qn_http_hdr_writer_ptr writer = (qn_http_hdr_writer_ptr) user_data;
-    if (!qn_http_hdr_prs_parse(writer->prs, buf, &size, &writer->hdr)) {
-        if (qn_err_is_try_again()) return buf_size;
-        return -1;
-    } // if
-    qn_err_set_succeed();
-    return size;
-}
-
-// ----
-
-enum
-{
-    QN_HTTP_RPC_WRT_PARSING_DONE = 0,
-    QN_HTTP_RPC_WRT_PARSING_HEADER,
-    QN_HTTP_RPC_WRT_PARSING_JSON
-};
-
-typedef struct _QN_HTTP_RPC_WRITER
-{
-    int sts;
-    qn_http_hdr_writer_ptr hdr_writer;
-    qn_http_json_writer_ptr json_writer;
-} qn_http_rpc_writer;
-
-qn_http_rpc_writer_ptr qn_http_rpc_wrt_create(void)
-{
-    qn_http_rpc_writer_ptr new_writer = calloc(1, sizeof(qn_http_rpc_writer));
-    if (!new_writer) {
-        qn_err_set_no_enough_memory();
-        return NULL;
-    } // if
-
-    new_writer->hdr_writer = qn_http_hdr_wrt_create();
-    if (!new_writer->hdr_writer) {
-        free(new_writer);
-        return NULL;
-    } // if
-
-    new_writer->json_writer = qn_http_json_wrt_create();
-    if (!new_writer->json_writer) {
-        qn_http_hdr_wrt_destroy(new_writer->hdr_writer);
-        free(new_writer);
-        return NULL;
-    } // if
-    return new_writer;
-}
-
-void qn_http_rpc_wrt_destroy(qn_http_rpc_writer_ptr writer)
-{
-    if (writer) {
-        qn_http_hdr_wrt_destroy(writer->hdr_writer);
-        qn_http_json_wrt_destroy(writer->json_writer);
-        free(writer);
-    } // if
-}
-
-void qn_http_rpc_wrt_prepare_for_object(qn_http_rpc_writer_ptr writer, qn_http_header_ptr hdr, qn_json_object_ptr * obj)
-{
-    qn_http_hdr_wrt_prepare(writer->hdr_writer, hdr);
-    qn_http_json_wrt_prepare_for_object(writer->json_writer, obj);
-    writer->sts = QN_HTTP_RPC_WRT_PARSING_HEADER;
-}
-
-void qn_http_rpc_wrt_prepare_for_array(qn_http_rpc_writer_ptr writer, qn_http_header_ptr hdr, qn_json_array_ptr * arr)
-{
-    qn_http_hdr_wrt_prepare(writer->hdr_writer, hdr);
-    qn_http_json_wrt_prepare_for_array(writer->json_writer, arr);
-    writer->sts = QN_HTTP_RPC_WRT_PARSING_HEADER;
-}
-
-int qn_http_rpc_wrt_callback(void * user_data, char * buf, int buf_size)
-{
-    int ret = 0;
-    int proc_size = 0;
-    qn_http_rpc_writer_ptr writer = (qn_http_rpc_writer_ptr) user_data;
-
-    switch (writer->sts) {
-        case QN_HTTP_RPC_WRT_PARSING_HEADER:
-            proc_size += (ret = qn_http_hdr_wrt_callback(writer->hdr_writer, buf, buf_size));
-            if (ret < 0) return proc_size;
-            if (qn_err_is_succeed()) writer->sts = QN_HTTP_RPC_WRT_PARSING_JSON;
-            if (ret == buf_size) return buf_size;
-
-        case QN_HTTP_RPC_WRT_PARSING_JSON:
-            proc_size += (ret = qn_http_json_wrt_callback(writer->json_writer, buf + ret, buf_size - ret));
-            if (ret < 0) return proc_size;
-            if (qn_err_is_succeed()) writer->sts = QN_HTTP_RPC_WRT_PARSING_DONE;
-        
-        case QN_HTTP_RPC_WRT_PARSING_DONE:
-            qn_err_set_succeed();
-            return buf_size;
-    } // if
-    return -1;
 }
 
 // ---- Definition of HTTP request ----
@@ -223,7 +86,7 @@ typedef struct _QN_HTTP_REQUEST
     qn_http_header_ptr hdr;
 
     void * body_reader;
-    qn_http_body_reader body_reader_callback;
+    qn_http_body_reader_callback body_reader_callback;
     qn_size body_size;
 } qn_http_request;
 
@@ -296,7 +159,7 @@ void qn_http_req_unset_header(qn_http_request_ptr req, const qn_string hdr)
     qn_http_hdr_unset(req->hdr, hdr);
 }
 
-void qn_http_req_set_body_reader(qn_http_request_ptr req, void * body_reader, qn_http_body_reader body_reader_callback, qn_size body_size)
+void qn_http_req_set_body_reader(qn_http_request_ptr req, void * body_reader, qn_http_body_reader_callback body_reader_callback, qn_size body_size)
 {
     req->body_reader = body_reader;
     req->body_reader_callback = body_reader_callback;
@@ -305,14 +168,25 @@ void qn_http_req_set_body_reader(qn_http_request_ptr req, void * body_reader, qn
 
 // ---- Definition of HTTP response ----
 
+enum
+{
+    QN_HTTP_RESP_WRT_PARSING_HEADER = 0,
+    QN_HTTP_RESP_WRT_PARSING_BODY,
+    QN_HTTP_RESP_WRT_PARSING_DONE,
+    QN_HTTP_RESP_WRT_PARSING_ERROR
+};
+
 typedef struct _QN_HTTP_RESPONSE
 {
+    int wrt_sts;
     int http_code;
     int data_parser_retcode;
 
     qn_http_header_ptr hdr;
-    void * data_writer;
-    qn_http_data_writer data_writer_callback;
+    qn_http_hdr_parser_ptr hdr_prs;
+
+    void * body_writer;
+    qn_http_data_writer_callback body_writer_callback;
 } qn_http_response;
 
 qn_http_response_ptr qn_http_resp_create(void)
@@ -325,8 +199,15 @@ qn_http_response_ptr qn_http_resp_create(void)
         return NULL;
     } // if
 
-    new_resp->hdr =  qn_http_hdr_create();
+    new_resp->hdr = qn_http_hdr_create();
     if (!new_resp->hdr) {
+        free(new_resp);
+        return NULL;
+    } // if
+
+    new_resp->hdr_prs = qn_http_hdr_prs_create();
+    if (!new_resp->hdr_prs) {
+        qn_http_hdr_destroy(new_resp->hdr);
         free(new_resp);
         return NULL;
     } // if
@@ -336,6 +217,7 @@ qn_http_response_ptr qn_http_resp_create(void)
 void qn_http_resp_destroy(qn_http_response_ptr resp)
 {
     if (resp) {
+        qn_http_hdr_prs_destroy(resp->hdr_prs);
         qn_http_hdr_destroy(resp->hdr);
         free(resp);
     } // if
@@ -343,8 +225,9 @@ void qn_http_resp_destroy(qn_http_response_ptr resp)
 
 void qn_http_resp_reset(qn_http_response_ptr resp)
 {
-    resp->data_writer = NULL;
-    resp->data_writer_callback = NULL;
+    resp->wrt_sts = QN_HTTP_RESP_WRT_PARSING_HEADER;
+    resp->body_writer = NULL;
+    resp->body_writer_callback = NULL;
     qn_http_hdr_reset(resp->hdr);
 }
 
@@ -378,10 +261,43 @@ void qn_http_resp_unset_header(qn_http_response_ptr resp, const qn_string hdr)
     qn_http_hdr_unset(resp->hdr, hdr);
 }
 
-void qn_http_resp_set_data_writer(qn_http_response_ptr resp, void * data_writer, qn_http_data_writer data_writer_callback)
+void qn_http_resp_set_data_writer(qn_http_response_ptr resp, void * body_writer, qn_http_data_writer_callback body_writer_callback)
 {
-    resp->data_writer = data_writer;
-    resp->data_writer_callback = data_writer_callback;
+    resp->body_writer = body_writer;
+    resp->body_writer_callback = body_writer_callback;
+}
+
+static int qn_http_resp_wrt_callback(void * user_data, char * buf, int buf_size)
+{
+    int ret = 0;
+    qn_http_response_ptr resp = (qn_http_response_ptr) user_data;
+
+    // **NOTE**: If the writing is done, or encounter an error, always return the buf_size for consuming all data received.
+    switch (resp->wrt_sts) {
+        case QN_HTTP_RESP_WRT_PARSING_HEADER:
+            ret = buf_size;
+            if (!qn_http_hdr_prs_parse(resp->hdr_prs, buf, &ret, &resp->hdr)) {
+                if (!qn_err_is_try_again()) resp->wrt_sts = QN_HTTP_RESP_WRT_PARSING_ERROR;
+                return buf_size;
+            } // if
+            resp->wrt_sts = QN_HTTP_RESP_WRT_PARSING_BODY;
+            if (ret == buf_size) return buf_size;
+
+        case QN_HTTP_RESP_WRT_PARSING_BODY:
+            ret = resp->body_writer_callback(resp->body_writer, buf + ret, buf_size - ret);
+            if (ret < 0) {
+                if (qn_err_is_try_again()) return buf_size;
+                resp->wrt_sts = QN_HTTP_RESP_WRT_PARSING_ERROR;
+            } else if (qn_err_is_succeed()) {
+                resp->wrt_sts = QN_HTTP_RESP_WRT_PARSING_DONE;
+            } // if
+            return buf_size;
+        
+        case QN_HTTP_RESP_WRT_PARSING_DONE:
+        case QN_HTTP_RESP_WRT_PARSING_ERROR:
+            return buf_size;
+    } // if
+    return -1;
 }
 
 // ---- Definition of HTTP connection ----
@@ -431,13 +347,15 @@ static size_t qn_http_conn_body_reader(char * ptr, size_t size, size_t nmemb, vo
     return size * nmemb;
 }
 
+/*
 static size_t qn_http_conn_data_parser(char * ptr, size_t size, size_t nmemb, void * user_data)
 {
     qn_http_response_ptr resp = (qn_http_response_ptr) user_data;
-    resp->data_parser_retcode = resp->data_writer_callback(resp->data_writer, ptr, size * nmemb);
+    resp->data_parser_retcode = qn_http_resp_wrt_callback(resp->resp_writer, ptr, size * nmemb);
     if (resp->data_parser_retcode != 0) return 0;
     return size * nmemb;
 }
+*/
 
 static qn_bool qn_http_conn_do_request(qn_http_connection_ptr conn, qn_http_request_ptr req, qn_http_response_ptr resp)
 {
@@ -447,10 +365,8 @@ static qn_bool qn_http_conn_do_request(qn_http_connection_ptr conn, qn_http_requ
     qn_string entry = NULL;
     qn_http_hdr_iterator_ptr itr;
 
-    if (resp->data_writer_callback) {
-        curl_easy_setopt(conn->curl, CURLOPT_WRITEFUNCTION, qn_http_conn_data_parser);
-        curl_easy_setopt(conn->curl, CURLOPT_WRITEDATA, resp);
-    } // if
+    curl_easy_setopt(conn->curl, CURLOPT_WRITEFUNCTION, qn_http_resp_wrt_callback);
+    curl_easy_setopt(conn->curl, CURLOPT_WRITEDATA, resp);
 
     headers = curl_slist_append(NULL, "Expect:");
     if (!headers) {

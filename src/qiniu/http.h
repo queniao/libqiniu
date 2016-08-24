@@ -12,8 +12,8 @@ extern "C"
 
 // ---- Declaration of body reader and writer
 
-typedef int (*qn_http_body_reader)(void * reader, char * buf, int size);
-typedef int (*qn_http_data_writer)(void * writer, char * buf, int size);
+typedef int (*qn_http_body_reader_callback)(void * reader, char * buf, int size);
+typedef int (*qn_http_data_writer_callback)(void * writer, char * buf, int size);
 
 // ----
 
@@ -26,29 +26,6 @@ extern void qn_http_json_wrt_destroy(qn_http_json_writer_ptr writer);
 extern void qn_http_json_wrt_prepare_for_object(qn_http_json_writer_ptr writer, qn_json_object_ptr * obj);
 extern void qn_http_json_wrt_prepare_for_array(qn_http_json_writer_ptr writer, qn_json_array_ptr * arr);
 extern int qn_http_json_wrt_callback(void * writer, char * buf, int buf_size);
-
-// ----
-
-struct _QN_HTTP_HDR_WRITER;
-typedef struct _QN_HTTP_HDR_WRITER * qn_http_hdr_writer_ptr;
-
-extern qn_http_hdr_writer_ptr qn_http_hdr_wrt_create(void);
-extern void qn_http_hdr_wrt_destroy(qn_http_hdr_writer_ptr writer);
-
-extern void qn_http_hdr_wrt_prepare(qn_http_hdr_writer_ptr writer, qn_http_header_ptr hdr);
-extern int qn_http_hdr_wrt_callback(void * writer, char * buf, int buf_size);
-
-// ----
-
-struct _QN_HTTP_RPC_WRITER;
-typedef struct _QN_HTTP_RPC_WRITER * qn_http_rpc_writer_ptr;
-
-extern qn_http_rpc_writer_ptr qn_http_rpc_wrt_create(void);
-extern void qn_http_rpc_wrt_destroy(qn_http_rpc_writer_ptr writer);
-
-extern void qn_http_rpc_wrt_prepare_for_object(qn_http_rpc_writer_ptr writer, qn_http_header_ptr hdr, qn_json_object_ptr * obj);
-extern void qn_http_rpc_wrt_prepare_for_array(qn_http_rpc_writer_ptr writer, qn_http_header_ptr hdr, qn_json_array_ptr * arr);
-extern int qn_http_rpc_wrt_callback(void * writer, char * buf, int buf_size);
 
 // ---- Declaration of HTTP request ----
 
@@ -71,7 +48,7 @@ extern qn_bool qn_http_req_set_header(qn_http_request_ptr req, const qn_string h
 extern qn_bool qn_http_req_set_header_raw(qn_http_request_ptr req, const char * hdr, int hdr_size, const char * val, int val_size);
 extern void qn_http_req_unset_header(qn_http_request_ptr req, const qn_string header);
 
-extern void qn_http_req_set_body_reader(qn_http_request_ptr req, void * body_reader, qn_http_body_reader body_reader_callback, qn_size body_size);
+extern void qn_http_req_set_body_reader(qn_http_request_ptr req, void * body_reader, qn_http_body_reader_callback body_reader_callback, qn_size body_size);
 
 // ---- Declaration of HTTP response ----
 
@@ -96,7 +73,7 @@ extern qn_bool qn_http_resp_set_header(qn_http_response_ptr resp, const qn_strin
 extern qn_bool qn_http_resp_set_header_raw(qn_http_response_ptr resp, const char * hdr, int hdr_size, const char * val, int val_size);
 extern void qn_http_resp_unset_header(qn_http_response_ptr resp, const qn_string header);
 
-extern void qn_http_resp_set_data_writer(qn_http_response_ptr resp, void * writer, qn_http_data_writer writer_callback);
+extern void qn_http_resp_set_data_writer(qn_http_response_ptr resp, void * body_writer, qn_http_data_writer_callback body_writer_callback);
 
 // ---- Declaration of HTTP connection ----
 
