@@ -1,9 +1,24 @@
 #include <CUnit/Basic.h> 
 
 #include "qiniu/base/string.h"
-#include "qiniu/etag.h"
+#include "qiniu/etag.c"
 
-// ---- test functions ----
+// ---- test extern functions ----
+
+void test_context_create_and_destroy(void)
+{
+    qn_etag_context_ptr new_ctx = qn_etag_ctx_create();
+    CU_ASSERT_PTR_NOT_NULL(new_ctx);
+
+    qn_etag_ctx_destroy(new_ctx);
+}
+
+CU_TestInfo test_normal_cases_of_extern_functions[] = {
+    {"test_context_create_and_destroy()", test_context_create_and_destroy},
+    CU_TEST_INFO_NULL
+};
+
+// ----
 
 void test_buffer_size_equals_zero_byte(void)
 {
@@ -152,6 +167,7 @@ CU_TestInfo test_normal_cases_of_buffer_etags[] = {
 // ---- test suites ----
 
 CU_SuiteInfo suites[] = {
+    {"test_normal_cases_of_extern_functions", NULL, NULL, test_normal_cases_of_extern_functions},
     {"test_normal_cases_of_buffer_etags", NULL, NULL, test_normal_cases_of_buffer_etags},
     CU_SUITE_INFO_NULL
 };

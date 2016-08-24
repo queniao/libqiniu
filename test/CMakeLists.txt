@@ -24,6 +24,5 @@ target_link_libraries (test_http_header cunit)
 add_executable (test_etag test_etag.c
     ../src/qiniu/base/errors.c
     ../src/qiniu/base/base64.c
-    ../src/qiniu/base/string.c
-    ../src/qiniu/etag.c)
+    ../src/qiniu/base/string.c)
 target_link_libraries (test_etag cunit crypto)
