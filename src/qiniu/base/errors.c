@@ -23,7 +23,11 @@ enum
 
     QN_ERR_HTTP_INVALID_HEADER_SYNTAX = 3001,
 
-    QN_ERR_FI_STATING_FILE_INFO_FAILED = 11001
+    QN_ERR_FL_OPENING_FILE_FAILED = 11001,
+    QN_ERR_FL_DUPLICATING_FILE_FAILED = 11002,
+    QN_ERR_FL_READING_FILE_FAILED = 11003,
+    QN_ERR_FL_SEEKING_FILE_FAILED = 11004,
+    QN_ERR_FL_INFO_STATING_FILE_INFO_FAILED = 11101
 };
 
 typedef qn_uint32 qn_err_enum;
@@ -48,7 +52,11 @@ static qn_error qn_errors[] = {
     {QN_ERR_JSON_BAD_TEXT_INPUT, "Bad text input of a JSON string is read"},
     {QN_ERR_JSON_TOO_MANY_PARSING_LEVELS, "Parsing too many levels in a piece of JSON text"},
     {QN_ERR_HTTP_INVALID_HEADER_SYNTAX, "Invalid HTTP header syntax"},
-    {QN_ERR_FI_STATING_FILE_INFO_FAILED, "Stating file infomation failed"}
+    {QN_ERR_FL_OPENING_FILE_FAILED, "Opening file failed"},
+    {QN_ERR_FL_DUPLICATING_FILE_FAILED, "Duplicating file failed"},
+    {QN_ERR_FL_READING_FILE_FAILED, "Reading file failed"},
+    {QN_ERR_FL_SEEKING_FILE_FAILED, "Seeking file failed"},
+    {QN_ERR_FL_INFO_STATING_FILE_INFO_FAILED, "Stating file infomation failed"}
 };
 
 static int qn_err_compare(const void * key, const void * item)
@@ -123,10 +131,32 @@ void qn_err_http_set_invalid_header_syntax(void)
     qn_err_code = QN_ERR_HTTP_INVALID_HEADER_SYNTAX;
 }
 
-void qn_err_fi_set_stating_file_info_failed(void)
+void qn_err_fl_set_opening_file_failed(void)
 {
-    qn_err_code = QN_ERR_FI_STATING_FILE_INFO_FAILED;
+    qn_err_code = QN_ERR_FL_OPENING_FILE_FAILED;
 }
+
+void qn_err_fl_set_duplicating_file_failed(void)
+{
+    qn_err_code = QN_ERR_FL_DUPLICATING_FILE_FAILED;
+}
+
+void qn_err_fl_set_reading_file_failed(void)
+{
+    qn_err_code = QN_ERR_FL_READING_FILE_FAILED;
+}
+
+void qn_err_fl_set_seeking_file_failed(void)
+{
+    qn_err_code = QN_ERR_FL_SEEKING_FILE_FAILED;
+}
+
+void qn_err_fl_info_set_stating_file_info_failed(void)
+{
+    qn_err_code = QN_ERR_FL_INFO_STATING_FILE_INFO_FAILED;
+}
+
+// ----
 
 qn_bool qn_err_is_succeed(void)
 {
@@ -183,9 +213,29 @@ qn_bool qn_err_http_is_invalid_header_syntax(void)
     return (qn_err_code == QN_ERR_HTTP_INVALID_HEADER_SYNTAX);
 }
 
-qn_bool qn_err_fi_is_stating_file_info_failed(void)
+qn_bool qn_err_fl_is_opening_file_failed(void)
 {
-    return (qn_err_code == QN_ERR_FI_STATING_FILE_INFO_FAILED);
+    return (qn_err_code == QN_ERR_FL_OPENING_FILE_FAILED);
+}
+
+qn_bool qn_err_fl_is_duplicating_file_failed(void)
+{
+    return (qn_err_code == QN_ERR_FL_DUPLICATING_FILE_FAILED);
+}
+
+qn_bool qn_err_fl_is_reading_file_failed(void)
+{
+    return (qn_err_code == QN_ERR_FL_READING_FILE_FAILED);
+}
+
+qn_bool qn_err_fl_is_seeking_file_failed(void)
+{
+    return (qn_err_code == QN_ERR_FL_SEEKING_FILE_FAILED);
+}
+
+qn_bool qn_err_fl_info_is_stating_file_info_failed(void)
+{
+    return (qn_err_code == QN_ERR_FL_INFO_STATING_FILE_INFO_FAILED);
 }
 
 #ifdef __cplusplus

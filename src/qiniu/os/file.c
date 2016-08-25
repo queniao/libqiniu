@@ -8,15 +8,15 @@ extern "C"
 
 // ---- Definition of file info ----
 
-typedef struct _QN_FILE_INFO
+typedef struct _QN_FL_INFO
 {
     qn_string fname;
     qn_fsize fsize;
 } qn_file_info;
 
-qn_file_info_ptr qn_fi_create(void)
+qn_fl_info_ptr qn_fl_info_create(void)
 {
-    qn_file_info_ptr new_fi = calloc(1, sizeof(qn_file_info));
+    qn_fl_info_ptr new_fi = calloc(1, sizeof(qn_file_info));
     if (!new_fi) {
         qn_err_set_no_enough_memory();
         return NULL;
@@ -24,19 +24,19 @@ qn_file_info_ptr qn_fi_create(void)
     return new_fi;
 }
 
-void qn_fi_destroy(qn_file_info_ptr fi)
+void qn_fl_info_destroy(qn_fl_info_ptr fi)
 {
     if (fi) {
         free(fi);
     } // fi
 }
 
-qn_fsize qn_fi_file_size(qn_file_info_ptr fi)
+qn_fsize qn_fl_info_fsize(qn_fl_info_ptr fi)
 {
     return fi->fsize;
 }
 
-qn_string qn_fi_file_name(qn_file_info_ptr fi)
+qn_string qn_fl_info_fname(qn_fl_info_ptr fi)
 {
     return fi->fname;
 }
@@ -45,32 +45,210 @@ qn_string qn_fi_file_name(qn_file_info_ptr fi)
 
 #else
 
+#include <sys/stat.h>
+#include <fcntl.h>
+#include <unistd.h>
+
+// ---- Definition of file depends on operating system ----
+
+struct _QN_FILE
+{
+    int fd;
+} qn_file;
+
+qn_file_ptr qn_fl_open(const char * fname, qn_fl_open_extra_ptr extra)
+{
+    qn_file_ptr new_file = calloc(1, sizeof(qn_file));
+    if (!new_file) {
+        qn_err_set_no_enough_memory();
+        return NULL;
+    } // if
+
+    new_file->fd = open(fname, 0);
+    if (new_file->fd < 0) {
+        qn_err_fl_set_opening_file_failed();
+        free(new_file);
+        return NULL;
+    } // if
+    return new_file;
+}
+
+qn_file_ptr qn_fl_duplicate(qn_file_ptr fl)
+{
+    qn_file_ptr new_file = calloc(1, sizeof(qn_file));
+    if (!new_file) {
+        qn_err_set_no_enough_memory();
+        return NULL;
+    } // if
+    
+    new_file->fd = dup(fl->fd);
+    if (new_file->fd < 0) {
+        qn_err_fl_set_duplicating_file_failed();
+        free(new_file);
+        return NULL;
+    } // if
+    return new_file;
+}
+
+void qn_fl_close(qn_file_ptr fl)
+{
+    if (fl) {
+        close(fl->fd);
+        free(fl);
+    } // if
+}
+
+qn_bool qn_fl_read(qn_file_ptr fl, char * buf, int * buf_size)
+{
+    ssize_t ret;
+
+    ret = read(fl->fd, buf, *buf_size); 
+    if (ret < 0) {
+        qn_err_fl_set_reading_file_failed();
+        return qn_false;
+    } // if
+    return qn_true;
+}
+
+qn_bool qn_fl_seek(qn_file_ptr fl, qn_fsize offset)
+{
+    if (lseek(fl->fd, offset, SEEK_SET) < 0) {
+        qn_err_fl_set_seeking_file_failed();
+        return qn_false;
+    } // if
+    return qn_true;
+}
+
+int qn_fl_reader_callback(void * user_data, char * buf, int size)
+{
+    int buf_size = size;
+    qn_file_ptr fl = (qn_file_ptr) user_data;
+    if (!qn_fl_read(fl, buf, &buf_size)) {
+        return -1;
+    } // if
+    return buf_size;
+}
+
 // ---- Definition of file info depends on operating system ----
 
-#include <sys/stat.h>
-
-qn_file_info_ptr qn_fi_stat_raw(const char * fname)
+qn_fl_info_ptr qn_fl_info_stat_raw(const char * fname)
 {
     struct stat st;
 
-    qn_file_info_ptr fi = qn_fi_create();
+    qn_fl_info_ptr fi = qn_fl_info_create();
     if (!fi) return NULL;
 
     if (stat(fname, &st) < 0) {
-        qn_fi_destroy(fi);
-        qn_err_fi_set_stating_file_info_failed();
+        qn_fl_info_destroy(fi);
+        qn_err_fl_info_set_stating_file_info_failed();
         return NULL;
     } // if
 
     fi->fname = qn_str_duplicate(fname);
     if (!fi->fname) {
-        qn_fi_destroy(fi);
+        qn_fl_info_destroy(fi);
         return NULL;
     } // if
 
     fi->fsize = st.st_size;
 
     return fi;
+}
+
+// ---- Definition of file section depends on operating system ----
+
+typedef struct _QN_FL_SECTION
+{
+    qn_file_ptr file;
+
+    qn_fsize offset;
+    qn_fsize max_size;
+    qn_fsize pos;
+} qn_fl_section;
+
+qn_fl_section_ptr qn_fl_sec_create(qn_file_ptr fl)
+{
+    qn_fl_section_ptr new_section = calloc(1, sizeof(qn_fl_section));
+    if (!new_section) {
+        qn_err_set_no_enough_memory();
+        return NULL;
+    } // if
+
+#if defined(_XOPEN_SOURCE) && (_XOPEN_SOURCE >= 500)
+    new_section->file = fl;
+#else
+    new_section->file = qn_fl_duplicate(fl);
+#endif
+
+    if (!qn_fl_sec_reset(new_section, 0, 0)) {
+        free(new_section);
+        return NULL;
+    } // if
+    return new_section;
+}
+
+void qn_fl_sec_destroy(qn_fl_section_ptr fs)
+{
+    if (fs) {
+#if defined(_XOPEN_SOURCE) && (_XOPEN_SOURCE >= 500)
+#else
+        qn_fl_close(fs->file);
+#endif
+        free(fs);
+    } // if
+}
+
+qn_bool qn_fl_sec_reset(qn_fl_section_ptr fs, qn_fsize offset, qn_fsize max_size)
+{
+    fs->offset = offset;
+    fs->max_size = max_size;
+    fs->pos = 0;
+
+#if defined(_XOPEN_SOURCE) && (_XOPEN_SOURCE >= 500)
+#else
+    if (!qn_fl_seek(fs->file, fs->offset)) {
+        return qn_false;
+    } // if
+#endif
+
+    return qn_true;
+}
+
+qn_bool qn_fl_sec_read(qn_fl_section_ptr fs, char * buf, int * buf_size)
+{
+    ssize_t ret;
+    size_t read_size;
+
+    if (fs->pos == fs->max_size) {
+        *buf_size = 0;
+        return qn_true;
+    } // if
+
+    read_size = (*buf_size <= (fs->max_size - fs->pos)) ? *buf_size : (fs->max_size - fs->pos);
+
+#if defined(_XOPEN_SOURCE) && (_XOPEN_SOURCE >= 500)
+    ret = pread(fs->file->fd, buf, read_size, fs->offset + fs->pos);
+#else
+    ret = read(fs->file->fd, buf, read_size); 
+#endif
+
+    if (ret < 0) {
+        qn_err_fl_set_reading_file_failed();
+        return qn_false;
+    } // if
+    fs->pos += ret;
+    *buf_size = ret;
+    return qn_true;
+}
+
+int qn_fl_sec_reader_callback(void * user_data, char * buf, int size)
+{
+    int buf_size = size;
+    qn_fl_section_ptr fs = (qn_fl_section_ptr) user_data;
+    if (!qn_fl_sec_read(fs, buf, &buf_size)) {
+        return -1;
+    } // if
+    return buf_size;
 }
 
 #endif
