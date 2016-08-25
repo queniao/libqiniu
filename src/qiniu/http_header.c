@@ -67,12 +67,13 @@ static qn_http_hdr_pos qn_http_hdr_bsearch(qn_http_header_ptr hdr, const char * 
     while (begin < end) {
         mid = begin + ((end - begin) / 2);
         mid_key_size = strchr(hdr->entries[mid], ':') - hdr->entries[mid];
-        if (mid_key_size < key_size) {
-            *ord = -1;
-        } else if (mid_key_size > key_size) {
-            *ord = 1;
-        } else {
-            *ord = strncasecmp(hdr->entries[mid], key, key_size);
+        *ord = strncasecmp(hdr->entries[mid], key, (mid_key_size < key_size ? mid_key_size : key_size));
+        if (*ord == 0) {
+            if (mid_key_size < key_size) {
+                *ord = -1;
+            } else if (mid_key_size > key_size) {
+                *ord = 1;
+            } // if
         } // if
         if (*ord < 0) {
             begin = mid + 1;
