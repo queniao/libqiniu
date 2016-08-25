@@ -10,6 +10,8 @@ int main(int argc, char * argv[])
     qn_string stat_ret = NULL;
     qn_storage_ptr stor = NULL;
     qn_stor_query_extra ext;
+    qn_http_hdr_iterator_ptr hdr_itr;
+    qn_string hdr_ent;
 
     if (argc < 4) {
         printf("Usage: qdnurl <ACCESS_KEY> <SECRET_KEY> <BUCKET> <KEY>\n");
@@ -33,6 +35,11 @@ int main(int argc, char * argv[])
         printf("Cannot stat the `%s:%s` file.\n", bucket, key);
         return 2;
     } // if
+
+    hdr_itr = qn_stor_resp_get_header_iterator(stor);
+    while ((hdr_ent = qn_http_hdr_itr_next_entry(hdr_itr))) {
+        printf("%s\n", qn_str_cstr(hdr_ent));
+    } // while
 
     stat_ret = qn_json_object_to_string(qn_stor_get_object_body(stor));
     if (!stat_ret) {

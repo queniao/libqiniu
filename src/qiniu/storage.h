@@ -17,7 +17,7 @@ extern qn_storage_ptr qn_stor_mn_create(void);
 extern void qn_stor_mn_destroy(qn_storage_ptr stor);
 
 extern qn_json_object_ptr qn_stor_get_object_body(qn_storage_ptr stor);
-extern qn_http_hdr_iterator_ptr qn_stor_get_header_iterator(qn_storage_ptr stor);
+extern qn_http_hdr_iterator_ptr qn_stor_resp_get_header_iterator(qn_storage_ptr stor);
 
 typedef struct _QN_STOR_QUERY_EXTRA
 {
