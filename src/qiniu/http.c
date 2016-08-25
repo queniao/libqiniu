@@ -1,5 +1,6 @@
 #include <stdarg.h>
 #include <strings.h>
+#include <ctype.h>
 #include <curl/curl.h>
 
 #include "qiniu/base/string.h"
@@ -170,23 +171,23 @@ void qn_http_req_set_body_reader(qn_http_request_ptr req, void * body_reader, qn
 
 enum
 {
-    QN_HTTP_RESP_WRT_PARSING_HEADER = 0,
-    QN_HTTP_RESP_WRT_PARSING_BODY,
+    QN_HTTP_RESP_WRT_PARSING_BODY = 0,
     QN_HTTP_RESP_WRT_PARSING_DONE,
     QN_HTTP_RESP_WRT_PARSING_ERROR
 };
 
 typedef struct _QN_HTTP_RESPONSE
 {
-    int wrt_sts;
+    int body_wrt_sts;
+    int body_wrt_code;
+    void * body_wrt;
+    qn_http_data_writer_callback body_wrt_cb;
+
     int http_code;
-    int data_parser_retcode;
+    qn_string http_ver;
+    qn_string http_msg;
 
     qn_http_header_ptr hdr;
-    qn_http_hdr_parser_ptr hdr_prs;
-
-    void * body_writer;
-    qn_http_data_writer_callback body_writer_callback;
 } qn_http_response;
 
 qn_http_response_ptr qn_http_resp_create(void)
@@ -205,19 +206,14 @@ qn_http_response_ptr qn_http_resp_create(void)
         return NULL;
     } // if
 
-    new_resp->hdr_prs = qn_http_hdr_prs_create();
-    if (!new_resp->hdr_prs) {
-        qn_http_hdr_destroy(new_resp->hdr);
-        free(new_resp);
-        return NULL;
-    } // if
     return new_resp;
 }
 
 void qn_http_resp_destroy(qn_http_response_ptr resp)
 {
     if (resp) {
-        qn_http_hdr_prs_destroy(resp->hdr_prs);
+        qn_str_destroy(resp->http_ver);
+        qn_str_destroy(resp->http_msg);
         qn_http_hdr_destroy(resp->hdr);
         free(resp);
     } // if
@@ -225,9 +221,16 @@ void qn_http_resp_destroy(qn_http_response_ptr resp)
 
 void qn_http_resp_reset(qn_http_response_ptr resp)
 {
-    resp->wrt_sts = QN_HTTP_RESP_WRT_PARSING_HEADER;
-    resp->body_writer = NULL;
-    resp->body_writer_callback = NULL;
+    qn_str_destroy(resp->http_ver);
+    resp->http_ver = NULL;
+    qn_str_destroy(resp->http_msg);
+    resp->http_msg = NULL;
+
+    resp->body_wrt_sts = QN_HTTP_RESP_WRT_PARSING_BODY;
+    resp->http_code = 0;
+    resp->body_wrt = NULL;
+    resp->body_wrt_cb = NULL;
+
     qn_http_hdr_reset(resp->hdr);
 }
 
@@ -238,7 +241,12 @@ int qn_http_resp_get_code(qn_http_response_ptr resp)
 
 int qn_http_resp_get_writer_retcode(qn_http_response_ptr resp)
 {
-    return resp->data_parser_retcode;
+    return resp->body_wrt_code;
+}
+
+qn_http_hdr_iterator_ptr qn_http_resp_get_header_iterator(qn_http_response_ptr resp)
+{
+    return qn_http_hdr_itr_create(resp->hdr);
 }
 
 qn_bool qn_http_resp_get_header_raw(qn_http_response_ptr resp, const char * hdr, qn_size hdr_size, const char ** val, qn_size * val_size)
@@ -261,35 +269,91 @@ void qn_http_resp_unset_header(qn_http_response_ptr resp, const qn_string hdr)
     qn_http_hdr_unset(resp->hdr, hdr);
 }
 
-void qn_http_resp_set_data_writer(qn_http_response_ptr resp, void * body_writer, qn_http_data_writer_callback body_writer_callback)
+void qn_http_resp_set_data_writer(qn_http_response_ptr resp, void * body_wrt, qn_http_data_writer_callback body_wrt_cb)
 {
-    resp->body_writer = body_writer;
-    resp->body_writer_callback = body_writer_callback;
+    resp->body_wrt = body_wrt;
+    resp->body_wrt_cb = body_wrt_cb;
 }
 
-static int qn_http_resp_wrt_callback(void * user_data, char * buf, int buf_size)
+static size_t qn_http_resp_hdr_wrt_callback(char * buf, size_t size, size_t nitems, void * user_data)
 {
-    int ret = 0;
     qn_http_response_ptr resp = (qn_http_response_ptr) user_data;
+    size_t buf_size = size * nitems;
+    int i;
+    char * begin;
+    char * end;
+    char * val_begin;
+    char * val_end;
+
+    if (resp->http_code == 0) {
+        // Parse response status line.
+        begin = strchr(buf, '/');
+
+        // ---- http version
+        if (!begin) return 0;
+        begin += 1;
+        end = strchr(begin, ' ');
+        if (!end) return 0;
+
+        resp->http_ver = qn_str_clone(begin, end - begin);
+        if (!resp->http_ver) return 0;
+
+        // ---- http code
+        begin = end + 1;
+        end = strchr(begin, ' ');
+        if (!end) return 0;
+
+        for (i = 0; i < end - begin; i += 1) {
+            if (!isdigit(begin[i])) return 0;
+            resp->http_code = resp->http_code * 10 + (begin[i] - '0');
+        } // for
+
+        // ---- http message
+        begin = end + 1;
+        end = buf + buf_size;
+        if (end[-1] != '\n') return 0;
+        end -= (end[-2] == '\r') ? 2 : 1;
+
+        resp->http_msg = qn_str_clone(begin, end - begin);
+        if (!resp->http_msg) return 0;
+    } else {
+        // Parse response headers.
+        begin = buf;
+        end = strchr(begin, ':');
+
+        if (!end) {
+            if ((begin[0] == '\r' && begin[1] == '\n') || begin[0] == '\n') return buf_size;
+            return 0;
+        } // if
+
+        while (isspace(begin[0])) begin += 1;
+        while (isspace(end[-1])) end -= 1;
+
+        val_begin = end + 1;
+        val_end = buf + buf_size;
+        val_end -= (val_end[-2] == '\r') ? 2 : 1;
+        while (isspace(val_begin[0])) val_begin += 1;
+        while (isspace(val_end[-1])) val_end -= 1;
+
+        if (!qn_http_hdr_set_raw(resp->hdr, begin, end - begin, val_begin, val_end - val_begin)) return 0;
+    } // if
+    return buf_size;
+}
+
+static size_t qn_http_resp_body_wrt_callback(char * buf, size_t size, size_t nitems, void * user_data)
+{
+    qn_http_response_ptr resp = (qn_http_response_ptr) user_data;
+    size_t buf_size = size * nitems;
 
     // **NOTE**: If the writing is done, or encounter an error, always return the buf_size for consuming all data received.
-    switch (resp->wrt_sts) {
-        case QN_HTTP_RESP_WRT_PARSING_HEADER:
-            ret = buf_size;
-            if (!qn_http_hdr_prs_parse(resp->hdr_prs, buf, &ret, &resp->hdr)) {
-                if (!qn_err_is_try_again()) resp->wrt_sts = QN_HTTP_RESP_WRT_PARSING_ERROR;
-                return buf_size;
-            } // if
-            resp->wrt_sts = QN_HTTP_RESP_WRT_PARSING_BODY;
-            if (ret == buf_size) return buf_size;
-
+    switch (resp->body_wrt_sts) {
         case QN_HTTP_RESP_WRT_PARSING_BODY:
-            ret = resp->body_writer_callback(resp->body_writer, buf + ret, buf_size - ret);
-            if (ret < 0) {
+            resp->body_wrt_code = resp->body_wrt_cb(resp->body_wrt, buf, buf_size);
+            if (resp->body_wrt_code < 0) {
                 if (qn_err_is_try_again()) return buf_size;
-                resp->wrt_sts = QN_HTTP_RESP_WRT_PARSING_ERROR;
+                resp->body_wrt_sts = QN_HTTP_RESP_WRT_PARSING_ERROR;
             } else if (qn_err_is_succeed()) {
-                resp->wrt_sts = QN_HTTP_RESP_WRT_PARSING_DONE;
+                resp->body_wrt_sts = QN_HTTP_RESP_WRT_PARSING_DONE;
             } // if
             return buf_size;
         
@@ -297,7 +361,7 @@ static int qn_http_resp_wrt_callback(void * user_data, char * buf, int buf_size)
         case QN_HTTP_RESP_WRT_PARSING_ERROR:
             return buf_size;
     } // if
-    return -1;
+    return 0;
 }
 
 // ---- Definition of HTTP connection ----
@@ -347,16 +411,6 @@ static size_t qn_http_conn_body_reader(char * ptr, size_t size, size_t nmemb, vo
     return size * nmemb;
 }
 
-/*
-static size_t qn_http_conn_data_parser(char * ptr, size_t size, size_t nmemb, void * user_data)
-{
-    qn_http_response_ptr resp = (qn_http_response_ptr) user_data;
-    resp->data_parser_retcode = qn_http_resp_wrt_callback(resp->resp_writer, ptr, size * nmemb);
-    if (resp->data_parser_retcode != 0) return 0;
-    return size * nmemb;
-}
-*/
-
 static qn_bool qn_http_conn_do_request(qn_http_connection_ptr conn, qn_http_request_ptr req, qn_http_response_ptr resp)
 {
     CURLcode curl_code;
@@ -365,7 +419,10 @@ static qn_bool qn_http_conn_do_request(qn_http_connection_ptr conn, qn_http_requ
     qn_string entry = NULL;
     qn_http_hdr_iterator_ptr itr;
 
-    curl_easy_setopt(conn->curl, CURLOPT_WRITEFUNCTION, qn_http_resp_wrt_callback);
+    curl_easy_setopt(conn->curl, CURLOPT_HEADERFUNCTION, qn_http_resp_hdr_wrt_callback);
+    curl_easy_setopt(conn->curl, CURLOPT_HEADERDATA, resp);
+
+    curl_easy_setopt(conn->curl, CURLOPT_WRITEFUNCTION, qn_http_resp_body_wrt_callback);
     curl_easy_setopt(conn->curl, CURLOPT_WRITEDATA, resp);
 
     headers = curl_slist_append(NULL, "Expect:");

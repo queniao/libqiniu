@@ -78,6 +78,11 @@ qn_json_object_ptr qn_stor_get_object_body(qn_storage_ptr stor)
     return stor->obj_body;
 }
 
+qn_http_hdr_iterator_ptr qn_stor_get_header_iterator(qn_storage_ptr stor)
+{
+    return qn_http_resp_get_header_iterator(stor->resp);
+}
+
 qn_bool qn_stor_mn_stat(qn_storage_ptr stor, const char * restrict bucket, const char * restrict key, const qn_stor_query_extra_ptr ext)
 {
     qn_bool ret = qn_false;

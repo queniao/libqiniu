@@ -62,6 +62,7 @@ extern void qn_http_resp_reset(qn_http_response_ptr resp);
 extern int qn_http_resp_get_code(qn_http_response_ptr resp);
 extern int qn_http_resp_get_writer_retcode(qn_http_response_ptr resp);
 
+extern qn_http_hdr_iterator_ptr qn_http_resp_get_header_iterator(qn_http_response_ptr resp);
 extern qn_bool qn_http_resp_get_header_raw(qn_http_response_ptr resp, const char * hdr, qn_size hdr_size, const char ** val, qn_size * val_size);
 
 static inline qn_bool qn_http_resp_get_header(qn_http_response_ptr resp, const qn_string hdr, const char ** val, qn_size * val_size)
