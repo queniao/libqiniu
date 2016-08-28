@@ -12,8 +12,8 @@ extern "C"
 
 // ---- Declaration of body reader and writer
 
-typedef int (*qn_http_body_reader_callback)(void * reader, char * buf, int size);
-typedef int (*qn_http_data_writer_callback)(void * writer, char * buf, int size);
+typedef qn_size (*qn_http_body_reader_callback)(void * reader, char * buf, qn_size size);
+typedef qn_size (*qn_http_data_writer_callback)(void * writer, char * buf, qn_size size);
 
 // ----
 
@@ -25,7 +25,7 @@ extern void qn_http_json_wrt_destroy(qn_http_json_writer_ptr writer);
 
 extern void qn_http_json_wrt_prepare_for_object(qn_http_json_writer_ptr writer, qn_json_object_ptr * obj);
 extern void qn_http_json_wrt_prepare_for_array(qn_http_json_writer_ptr writer, qn_json_array_ptr * arr);
-extern int qn_http_json_wrt_callback(void * writer, char * buf, int buf_size);
+extern qn_size qn_http_json_wrt_callback(void * writer, char * buf, qn_size buf_size);
 
 // ---- Declaration of HTTP request ----
 

@@ -98,7 +98,7 @@ void qn_fl_close(qn_file_ptr fl)
     } // if
 }
 
-qn_bool qn_fl_read(qn_file_ptr fl, char * buf, int * buf_size)
+qn_bool qn_fl_read(qn_file_ptr fl, char * buf, qn_size * buf_size)
 {
     ssize_t ret;
 
@@ -119,12 +119,12 @@ qn_bool qn_fl_seek(qn_file_ptr fl, qn_fsize offset)
     return qn_true;
 }
 
-int qn_fl_reader_callback(void * user_data, char * buf, int size)
+qn_size qn_fl_reader_callback(void * user_data, char * buf, qn_size size)
 {
-    int buf_size = size;
+    qn_size buf_size = size;
     qn_file_ptr fl = (qn_file_ptr) user_data;
     if (!qn_fl_read(fl, buf, &buf_size)) {
-        return -1;
+        return 0;
     } // if
     return buf_size;
 }
@@ -163,7 +163,7 @@ typedef struct _QN_FL_SECTION
 
     qn_fsize offset;
     qn_fsize max_size;
-    qn_fsize pos;
+    qn_fsize rem_size;
 } qn_fl_section;
 
 qn_fl_section_ptr qn_fl_sec_create(qn_file_ptr fl)
@@ -202,7 +202,7 @@ qn_bool qn_fl_sec_reset(qn_fl_section_ptr fs, qn_fsize offset, qn_fsize max_size
 {
     fs->offset = offset;
     fs->max_size = max_size;
-    fs->pos = 0;
+    fs->rem_size = max_size;
 
 #if defined(_XOPEN_SOURCE) && (_XOPEN_SOURCE >= 500)
 #else
@@ -214,20 +214,20 @@ qn_bool qn_fl_sec_reset(qn_fl_section_ptr fs, qn_fsize offset, qn_fsize max_size
     return qn_true;
 }
 
-qn_bool qn_fl_sec_read(qn_fl_section_ptr fs, char * buf, int * buf_size)
+qn_bool qn_fl_sec_read(qn_fl_section_ptr fs, char * buf, qn_size * buf_size)
 {
     ssize_t ret;
     size_t read_size;
 
-    if (fs->pos == fs->max_size) {
+    if (fs->rem_size == 0) {
         *buf_size = 0;
         return qn_true;
     } // if
 
-    read_size = (*buf_size <= (fs->max_size - fs->pos)) ? *buf_size : (fs->max_size - fs->pos);
+    read_size = (*buf_size < fs->rem_size) ? *buf_size : fs->rem_size;
 
 #if defined(_XOPEN_SOURCE) && (_XOPEN_SOURCE >= 500)
-    ret = pread(fs->file->fd, buf, read_size, fs->offset + fs->pos);
+    ret = pread(fs->file->fd, buf, read_size, fs->offset + (fs->max_size - fs->rem_size));
 #else
     ret = read(fs->file->fd, buf, read_size); 
 #endif
@@ -236,17 +236,17 @@ qn_bool qn_fl_sec_read(qn_fl_section_ptr fs, char * buf, int * buf_size)
         qn_err_fl_set_reading_file_failed();
         return qn_false;
     } // if
-    fs->pos += ret;
+    fs->rem_size -= ret;
     *buf_size = ret;
     return qn_true;
 }
 
-int qn_fl_sec_reader_callback(void * user_data, char * buf, int size)
+qn_size qn_fl_sec_reader_callback(void * user_data, char * buf, qn_size size)
 {
-    int buf_size = size;
+    qn_size buf_size = size;
     qn_fl_section_ptr fs = (qn_fl_section_ptr) user_data;
     if (!qn_fl_sec_read(fs, buf, &buf_size)) {
-        return -1;
+        return 0;
     } // if
     return buf_size;
 }

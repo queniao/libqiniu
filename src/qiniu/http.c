@@ -59,19 +59,19 @@ void qn_http_json_wrt_prepare_for_array(qn_http_json_writer_ptr writer, qn_json_
     writer->arr = arr;
 }
 
-int qn_http_json_wrt_callback(void * user_data, char * buf, int buf_size)
+qn_size qn_http_json_wrt_callback(void * user_data, char * buf, qn_size buf_size)
 {
     qn_size size = buf_size;
     qn_http_json_writer_ptr w = (qn_http_json_writer_ptr) user_data;
     if (w->obj) {
         if (!qn_json_prs_parse_object(w->prs, buf, &size, w->obj)) {
             if (qn_err_is_try_again()) return buf_size;
-            return -1;
+            return 0;
         } // if
     } else {
         if (!qn_json_prs_parse_array(w->prs, buf, &size, w->arr)) {
             if (qn_err_is_try_again()) return buf_size;
-            return -1;
+            return 0;
         } // if
     } // if
     qn_err_set_succeed();
@@ -82,7 +82,7 @@ int qn_http_json_wrt_callback(void * user_data, char * buf, int buf_size)
 
 typedef struct _QN_HTTP_REQUEST
 {
-    int body_reader_retcode;
+    qn_size body_reader_retcode;
 
     qn_http_header_ptr hdr;
 
@@ -349,7 +349,7 @@ static size_t qn_http_resp_body_wrt_callback(char * buf, size_t size, size_t nit
     switch (resp->body_wrt_sts) {
         case QN_HTTP_RESP_WRT_PARSING_BODY:
             resp->body_wrt_code = resp->body_wrt_cb(resp->body_wrt, buf, buf_size);
-            if (resp->body_wrt_code < 0) {
+            if (resp->body_wrt_code == 0) {
                 if (qn_err_is_try_again()) return buf_size;
                 resp->body_wrt_sts = QN_HTTP_RESP_WRT_PARSING_ERROR;
             } else if (qn_err_is_succeed()) {
@@ -407,8 +407,7 @@ static size_t qn_http_conn_body_reader(char * ptr, size_t size, size_t nmemb, vo
 {
     qn_http_request_ptr req = (qn_http_request_ptr) user_data;
     req->body_reader_retcode = req->body_reader_callback(req->body_reader, ptr, size * nmemb);
-    if (req->body_reader_retcode != 0) return 0;
-    return size * nmemb;
+    return req->body_reader_retcode;
 }
 
 static qn_bool qn_http_conn_do_request(qn_http_connection_ptr conn, qn_http_request_ptr req, qn_http_response_ptr resp)

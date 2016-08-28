@@ -33,8 +33,10 @@ extern qn_file_ptr qn_fl_open(const char * fname, qn_fl_open_extra_ptr extra);
 extern qn_file_ptr qn_fl_duplicate(qn_file_ptr fl);
 extern void qn_fl_close(qn_file_ptr fl);
 
-extern qn_bool qn_fl_read(qn_file_ptr fl, char * buf, int * buf_size);
+extern qn_bool qn_fl_read(qn_file_ptr fl, char * buf, qn_size * buf_size);
 extern qn_bool qn_fl_seek(qn_file_ptr fl, qn_fsize offset);
+
+extern qn_size qn_fl_reader_callback(void * user_data, char * buf, qn_size size);
 
 // ----
 
@@ -63,9 +65,9 @@ extern qn_fl_section_ptr qn_fl_sec_create(qn_file_ptr fl);
 extern void qn_fl_sec_destroy(qn_fl_section_ptr fs);
 extern qn_bool qn_fl_sec_reset(qn_fl_section_ptr fs, qn_fsize offset, qn_fsize max_size);
 
-extern qn_bool qn_fl_sec_read(qn_fl_section_ptr fs, char * buf, int * buf_size);
+extern qn_bool qn_fl_sec_read(qn_fl_section_ptr fs, char * buf, qn_size * buf_size);
 
-extern int qn_fl_sec_reader_callback(void * user_data, char * buf, int size);
+extern qn_size qn_fl_sec_reader_callback(void * user_data, char * buf, qn_size size);
 
 #ifdef __cplusplus
 }
