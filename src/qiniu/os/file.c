@@ -14,16 +14,6 @@ typedef struct _QN_FL_INFO
     qn_fsize fsize;
 } qn_file_info;
 
-qn_fl_info_ptr qn_fl_info_create(void)
-{
-    qn_fl_info_ptr new_fi = calloc(1, sizeof(qn_file_info));
-    if (!new_fi) {
-        qn_err_set_no_enough_memory();
-        return NULL;
-    } // if
-    return new_fi;
-}
-
 void qn_fl_info_destroy(qn_fl_info_ptr fi)
 {
     if (fi) {
@@ -131,28 +121,30 @@ qn_size qn_fl_reader_callback(void * user_data, char * buf, qn_size size)
 
 // ---- Definition of file info depends on operating system ----
 
-qn_fl_info_ptr qn_fl_info_stat_raw(const char * fname)
+qn_fl_info_ptr qn_fl_info_stat(const char * fname)
 {
     struct stat st;
 
-    qn_fl_info_ptr fi = qn_fl_info_create();
-    if (!fi) return NULL;
+    qn_fl_info_ptr new_fi = calloc(1, sizeof(qn_file_info));
+    if (!new_fi) {
+        qn_err_set_no_enough_memory();
+        return NULL;
+    } // if
 
     if (stat(fname, &st) < 0) {
-        qn_fl_info_destroy(fi);
+        qn_fl_info_destroy(new_fi);
         qn_err_fl_info_set_stating_file_info_failed();
         return NULL;
     } // if
 
-    fi->fname = qn_str_duplicate(fname);
-    if (!fi->fname) {
-        qn_fl_info_destroy(fi);
+    new_fi->fname = qn_str_duplicate(fname);
+    if (!new_fi->fname) {
+        qn_fl_info_destroy(new_fi);
         return NULL;
     } // if
+    new_fi->fsize = st.st_size;
 
-    fi->fsize = st.st_size;
-
-    return fi;
+    return new_fi;
 }
 
 // ---- Definition of file section depends on operating system ----

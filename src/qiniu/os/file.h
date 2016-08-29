@@ -43,15 +43,8 @@ extern qn_size qn_fl_reader_callback(void * user_data, char * buf, qn_size size)
 struct _QN_FL_INFO;
 typedef struct _QN_FL_INFO * qn_fl_info_ptr;
 
-extern qn_fl_info_ptr qn_fl_info_create(void);
+extern qn_fl_info_ptr qn_fl_info_stat(const char * fname);
 extern void qn_fl_info_destroy(qn_fl_info_ptr fi);
-
-extern qn_fl_info_ptr qn_fl_info_stat_raw(const char * fname);
-
-static inline qn_fl_info_ptr qn_fl_info_stat(qn_string fname)
-{
-    return qn_fl_info_stat_raw(qn_str_cstr(fname));
-}
 
 extern qn_fsize qn_fl_info_fsize(qn_fl_info_ptr fi);
 extern qn_string qn_fl_info_fname(qn_fl_info_ptr fi);
