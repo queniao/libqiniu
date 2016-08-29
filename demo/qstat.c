@@ -22,7 +22,7 @@ int main(int argc, char * argv[])
     bucket = argv[3];
     key = argv[4];
 
-    stor = qn_stor_mn_create();
+    stor = qn_stor_create();
     if (!stor) {
         printf("Cannot initialize a new storage object.\n");
         return 1;
@@ -31,7 +31,7 @@ int main(int argc, char * argv[])
     memset(&ext, 0, sizeof(ext));
     ext.mac = mac;
 
-    if (!qn_stor_mn_stat(stor, bucket, key, &ext)) {
+    if (!qn_stor_stat(stor, bucket, key, &ext)) {
         printf("Cannot stat the `%s:%s` file.\n", bucket, key);
         return 2;
     } // if
@@ -50,7 +50,7 @@ int main(int argc, char * argv[])
     printf("%s\n", stat_ret);
     qn_str_destroy(stat_ret);
 
-    qn_stor_mn_destroy(stor);
+    qn_stor_destroy(stor);
     qn_mac_destroy(mac);
     return 0;
 }

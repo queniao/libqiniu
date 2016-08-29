@@ -18,7 +18,7 @@ typedef struct _QN_STORAGE
     qn_json_array_ptr arr_body;
 } qn_storage;
 
-qn_storage_ptr qn_stor_mn_create(void)
+qn_storage_ptr qn_stor_create(void)
 {
     qn_storage_ptr new_stor = NULL;
 
@@ -61,7 +61,7 @@ qn_storage_ptr qn_stor_mn_create(void)
     return new_stor;
 }
 
-void qn_stor_mn_destroy(qn_storage_ptr stor)
+void qn_stor_destroy(qn_storage_ptr stor)
 {
     if (stor) {
         if (stor->obj_body) qn_json_destroy_object(stor->obj_body);
@@ -83,7 +83,7 @@ qn_http_hdr_iterator_ptr qn_stor_resp_get_header_iterator(qn_storage_ptr stor)
     return qn_http_resp_get_header_iterator(stor->resp);
 }
 
-qn_bool qn_stor_mn_stat(qn_storage_ptr stor, const char * restrict bucket, const char * restrict key, const qn_stor_query_extra_ptr ext)
+qn_bool qn_stor_stat(qn_storage_ptr stor, const char * restrict bucket, const char * restrict key, const qn_stor_query_extra_ptr ext)
 {
     qn_bool ret = qn_false;
     qn_string url = NULL;
