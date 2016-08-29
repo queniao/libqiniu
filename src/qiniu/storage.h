@@ -68,11 +68,23 @@ typedef enum _QN_STOR_PUT_METHOD
 
 typedef struct _QN_STOR_PUT_EXTRA
 {
-    const qn_string uptoken;
     qn_stor_put_method method;
+
+    struct {
+        const char * uptoken;
+    } client_end;
+
+    struct {
+        qn_mac_ptr mac;
+        qn_json_object_ptr put_policy;
+    } server_end;
+
+    const char * key;
+    const char * crc32;
+    const char * accept_type;
 } qn_stor_put_extra, *qn_stor_put_extra_ptr;
 
-extern qn_bool qn_stor_put_file(qn_storage_ptr stor, const char * local_file, qn_stor_put_extra_ptr ext);
+extern qn_bool qn_stor_put_file(qn_storage_ptr stor, const char * fname, qn_stor_put_extra_ptr ext);
 extern qn_bool qn_stor_put_buffer(qn_storage_ptr stor, const char * buf, qn_size buf_size, qn_stor_put_extra_ptr ext);
 
 #ifdef __cplusplus

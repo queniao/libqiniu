@@ -107,6 +107,7 @@ qn_bool qn_stor_stat(qn_storage_ptr stor, const char * restrict bucket, const ch
         auth_header = qn_str_sprintf("QBox %s", ext->acctoken);
     } else if (ext->mac) {
         acctoken = qn_mac_make_acctoken(ext->mac, url, NULL, 0);
+        if (!acctoken) return qn_false;
         auth_header = qn_str_sprintf("QBox %s", acctoken);
         qn_str_destroy(acctoken);
     } // if
@@ -129,6 +130,96 @@ qn_bool qn_stor_stat(qn_storage_ptr stor, const char * restrict bucket, const ch
     qn_str_destroy(url);
     return ret;
 }
+
+// ---- Definition of upload functions
+
+static qn_bool qn_stor_put_file_in_one_piece(qn_storage_ptr stor, const char * fname, qn_stor_put_extra_ptr ext)
+{
+    qn_bool ret;
+    qn_string uptoken;
+    qn_fl_info_ptr fi;
+    qn_http_form_ptr form;
+
+    // ---- Prepare request and response
+    qn_http_req_reset(stor->req);
+    qn_http_resp_reset(stor->resp);
+
+    if (stor->obj_body) {
+        qn_json_destroy_object(stor->obj_body);
+        stor->obj_body = NULL;
+    } // if
+
+    // ----
+    form = qn_http_form_create();
+    if (!form) return qn_false;
+
+    // uptoken MUST be the first form item.
+    if (ext->client_end.uptoken) {
+        if (!qn_http_form_add_string(form, "token", ext->client_end.uptoken, strlen(ext->client_end.uptoken))) {
+            qn_http_form_destroy(form);
+            return qn_false;
+        } // if
+    } else if (ext->server_end.mac && ext->server_end.put_policy) {
+        uptoken = qn_pp_to_uptoken(ext->server_end.put_policy, ext->server_end.mac);
+        if (!qn_http_form_add_string(form, "token", qn_str_cstr(uptoken), qn_str_size(uptoken))) {
+            qn_str_destroy(uptoken);
+            qn_http_form_destroy(form);
+            return qn_false;
+        } // if
+        qn_str_destroy(uptoken);
+    } else {
+        qn_err_set_invalid_argument(); 
+        return qn_false;
+    } // if
+
+    if (ext->key && !qn_http_form_add_string(form, "key", ext->key, strlen(ext->key))) {
+        qn_http_form_destroy(form);
+        return qn_false;
+    } // if
+
+    // TODO: User defined variabales.
+
+    if (ext->crc32 && !qn_http_form_add_string(form, "crc32", ext->crc32, strlen(ext->crc32))) {
+        qn_http_form_destroy(form);
+        return qn_false;
+    } // if
+
+    if (ext->accept_type && !qn_http_form_add_string(form, "accept", ext->accept_type, strlen(ext->accept_type))) {
+        qn_http_form_destroy(form);
+        return qn_false;
+    } // if
+
+    fi = qn_fl_info_stat(fname);
+    if (!fi) {
+        qn_http_form_destroy(form);
+        return qn_false;
+    } // if
+
+    if (!qn_http_form_add_file(form, "file", qn_str_cstr(qn_fl_info_fname(fi)), NULL, qn_fl_info_fsize(fi))) {
+        qn_fl_info_destroy(fi);
+        qn_http_form_destroy(form);
+        return qn_false;
+    } // if
+    qn_fl_info_destroy(fi);
+
+    qn_http_req_set_form(stor->req, form);
+
+    // ----
+    qn_http_json_wrt_prepare_for_object(stor->resp_json_wrt, &stor->obj_body);
+    qn_http_resp_set_data_writer(stor->resp, stor->resp_json_wrt, &qn_http_json_wrt_callback);
+
+    // ----
+    ret = qn_http_conn_post(stor->conn, "http://up.qiniu.com", stor->req, stor->resp);
+    qn_http_form_destroy(form);
+    return ret;
+}
+
+qn_bool qn_stor_put_file(qn_storage_ptr stor, const char * fname, qn_stor_put_extra_ptr ext)
+{
+    return qn_stor_put_file_in_one_piece(stor, fname, ext);
+}
+
+extern qn_bool qn_stor_put_buffer(qn_storage_ptr stor, const char * buf, qn_size buf_size, qn_stor_put_extra_ptr ext);
 
 #ifdef __cplusplus
 }
