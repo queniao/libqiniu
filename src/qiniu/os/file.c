@@ -88,16 +88,12 @@ void qn_fl_close(qn_file_ptr fl)
     } // if
 }
 
-qn_bool qn_fl_read(qn_file_ptr fl, char * buf, qn_size * buf_size)
+int qn_fl_read(qn_file_ptr fl, char * buf, int buf_size)
 {
-    ssize_t ret;
-
-    ret = read(fl->fd, buf, *buf_size); 
-    if (ret < 0) {
-        qn_err_fl_set_reading_file_failed();
-        return qn_false;
-    } // if
-    return qn_true;
+    int ret;
+    ret = read(fl->fd, buf, buf_size);
+    if (ret < 0) qn_err_fl_set_reading_file_failed();
+    return ret;
 }
 
 qn_bool qn_fl_seek(qn_file_ptr fl, qn_fsize offset)
@@ -109,14 +105,20 @@ qn_bool qn_fl_seek(qn_file_ptr fl, qn_fsize offset)
     return qn_true;
 }
 
+qn_bool qn_fl_advance(qn_file_ptr fl, int delta)
+{
+    if (lseek(fl->fd, delta, SEEK_CUR) < 0) {
+        qn_err_fl_set_seeking_file_failed();
+        return qn_false;
+    } // if
+    return qn_true;
+}
+
 qn_size qn_fl_reader_callback(void * user_data, char * buf, qn_size size)
 {
     qn_size buf_size = size;
     qn_file_ptr fl = (qn_file_ptr) user_data;
-    if (!qn_fl_read(fl, buf, &buf_size)) {
-        return 0;
-    } // if
-    return buf_size;
+    return qn_fl_read(fl, buf, buf_size);
 }
 
 // ---- Definition of file info depends on operating system ----

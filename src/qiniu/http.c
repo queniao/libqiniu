@@ -142,14 +142,14 @@ qn_bool qn_http_form_add_file(qn_http_form_ptr form, const char * restrict field
 
 typedef struct _QN_HTTP_REQUEST
 {
-    qn_size body_reader_retcode;
-
     qn_http_header_ptr hdr;
     qn_http_form_ptr form;
 
-    void * body_reader;
-    qn_http_body_reader_callback body_reader_callback;
+    char * body_data;
     qn_size body_size;
+
+    void * body_rd;
+    qn_http_body_reader_callback body_rd_cb;
 } qn_http_request;
 
 qn_http_request_ptr qn_http_req_create(void)
@@ -180,8 +180,10 @@ void qn_http_req_destroy(qn_http_request_ptr req)
 
 void qn_http_req_reset(qn_http_request_ptr req)
 {
-    req->body_reader = NULL;
-    req->body_reader_callback = NULL;
+    req->body_data = NULL;
+    req->body_size = 0;
+    req->body_rd = NULL;
+    req->body_rd_cb = NULL;
     req->form = NULL;
     qn_http_hdr_reset(req->hdr);
 }
@@ -233,10 +235,16 @@ void qn_http_req_set_form(qn_http_request_ptr req, qn_http_form_ptr form)
 
 // ----
 
-void qn_http_req_set_body_reader(qn_http_request_ptr req, void * body_reader, qn_http_body_reader_callback body_reader_callback, qn_size body_size)
+void qn_http_req_set_body_data(qn_http_request_ptr req, char * body_data, qn_size body_size)
 {
-    req->body_reader = body_reader;
-    req->body_reader_callback = body_reader_callback;
+    req->body_data = body_data;
+    req->body_size = body_size;
+}
+
+void qn_http_req_set_body_reader(qn_http_request_ptr req, void * body_rd, qn_http_body_reader_callback body_rd_cb, qn_size body_size)
+{
+    req->body_rd = body_rd;
+    req->body_rd_cb = body_rd_cb;
     req->body_size = body_size;
 }
 
@@ -479,8 +487,7 @@ void qn_http_conn_destroy(qn_http_connection_ptr conn)
 static size_t qn_http_conn_body_reader(char * ptr, size_t size, size_t nmemb, void * user_data)
 {
     qn_http_request_ptr req = (qn_http_request_ptr) user_data;
-    req->body_reader_retcode = req->body_reader_callback(req->body_reader, ptr, size * nmemb);
-    return req->body_reader_retcode;
+    return req->body_rd_cb(req->body_rd, ptr, size * nmemb);
 }
 
 static qn_bool qn_http_conn_do_request(qn_http_connection_ptr conn, qn_http_request_ptr req, qn_http_response_ptr resp)
@@ -496,12 +503,6 @@ static qn_bool qn_http_conn_do_request(qn_http_connection_ptr conn, qn_http_requ
 
     curl_easy_setopt(conn->curl, CURLOPT_WRITEFUNCTION, qn_http_resp_body_wrt_callback);
     curl_easy_setopt(conn->curl, CURLOPT_WRITEDATA, resp);
-
-    headers = curl_slist_append(NULL, "Expect:");
-    if (!headers) {
-        qn_err_set_no_enough_memory();
-        return qn_false;
-    } // if
 
     if (qn_http_hdr_size(req->hdr) > 0) {
         itr = qn_http_hdr_itr_create(req->hdr);
@@ -550,11 +551,13 @@ qn_bool qn_http_conn_post(qn_http_connection_ptr conn, const qn_string url, qn_h
     curl_easy_reset(conn->curl);
 
     curl_easy_setopt(conn->curl, CURLOPT_POST, 1);
-    curl_easy_setopt(conn->curl, CURLOPT_INFILESIZE_LARGE, req->body_size);
     curl_easy_setopt(conn->curl, CURLOPT_URL, qn_str_cstr(url));
 
     if (req->form) {
         curl_easy_setopt(conn->curl, CURLOPT_HTTPPOST, req->form->first);
+    } else if (req->body_data) {
+        curl_easy_setopt(conn->curl, CURLOPT_POSTFIELDS, req->body_data);
+        curl_easy_setopt(conn->curl, CURLOPT_POSTFIELDSIZE, req->body_size);
     } else {
         curl_easy_setopt(conn->curl, CURLOPT_READFUNCTION, qn_http_conn_body_reader);
         curl_easy_setopt(conn->curl, CURLOPT_READDATA, req);

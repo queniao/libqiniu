@@ -68,6 +68,7 @@ extern void qn_http_req_set_form(qn_http_request_ptr req, qn_http_form_ptr form)
 
 // ----
 
+extern void qn_http_req_set_body_data(qn_http_request_ptr req, char * body_data, qn_size body_size);
 extern void qn_http_req_set_body_reader(qn_http_request_ptr req, void * body_reader, qn_http_body_reader_callback body_reader_callback, qn_size body_size);
 
 // ---- Declaration of HTTP response ----
