@@ -86,7 +86,7 @@ typedef struct _QN_STOR_PUT_EXTRA
 } qn_stor_put_extra, *qn_stor_put_extra_ptr;
 
 extern qn_bool qn_stor_put_file(qn_storage_ptr stor, const char * fname, qn_stor_put_extra_ptr ext);
-extern qn_bool qn_stor_put_buffer(qn_storage_ptr stor, const char * buf, qn_size buf_size, qn_stor_put_extra_ptr ext);
+extern qn_bool qn_stor_put_buffer(qn_storage_ptr stor, const char * buf, int buf_size, qn_stor_put_extra_ptr ext);
 
 // ----
 

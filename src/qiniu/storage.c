@@ -137,11 +137,9 @@ qn_bool qn_stor_stat(qn_storage_ptr stor, const char * restrict bucket, const ch
 
 // ---- Definition of upload functions
 
-static qn_bool qn_stor_put_file_in_one_piece(qn_storage_ptr stor, const char * fname, qn_stor_put_extra_ptr ext)
+static qn_bool qn_stor_prepare_for_putting_file(qn_storage_ptr stor, qn_stor_put_extra_ptr ext)
 {
-    qn_bool ret;
     qn_string uptoken;
-    qn_fl_info_ptr fi;
     qn_http_form_ptr form;
 
     // ---- Prepare request and response
@@ -196,6 +194,26 @@ static qn_bool qn_stor_put_file_in_one_piece(qn_storage_ptr stor, const char * f
         return qn_false;
     } // if
 
+    qn_http_req_set_form(stor->req, form);
+
+    // ----
+    qn_http_json_wrt_prepare_for_object(stor->resp_json_wrt, &stor->obj_body);
+    qn_http_resp_set_data_writer(stor->resp, stor->resp_json_wrt, &qn_http_json_wrt_callback);
+
+    return qn_true;
+}
+
+qn_bool qn_stor_put_file(qn_storage_ptr stor, const char * fname, qn_stor_put_extra_ptr ext)
+{
+    qn_bool ret;
+    qn_fl_info_ptr fi;
+    qn_http_form_ptr form;
+
+    ret = qn_stor_prepare_for_putting_file(stor, ext);
+    if (!ret) return qn_false;
+
+    form = qn_http_req_get_form(stor->req);
+
     fi = qn_fl_info_stat(fname);
     if (!fi) {
         qn_http_form_destroy(form);
@@ -209,24 +227,32 @@ static qn_bool qn_stor_put_file_in_one_piece(qn_storage_ptr stor, const char * f
     } // if
     qn_fl_info_destroy(fi);
 
-    qn_http_req_set_form(stor->req, form);
-
-    // ----
-    qn_http_json_wrt_prepare_for_object(stor->resp_json_wrt, &stor->obj_body);
-    qn_http_resp_set_data_writer(stor->resp, stor->resp_json_wrt, &qn_http_json_wrt_callback);
-
     // ----
     ret = qn_http_conn_post(stor->conn, "http://up.qiniu.com", stor->req, stor->resp);
     qn_http_form_destroy(form);
     return ret;
 }
 
-qn_bool qn_stor_put_file(qn_storage_ptr stor, const char * fname, qn_stor_put_extra_ptr ext)
+qn_bool qn_stor_put_buffer(qn_storage_ptr stor, const char * buf, int buf_size, qn_stor_put_extra_ptr ext)
 {
-    return qn_stor_put_file_in_one_piece(stor, fname, ext);
-}
+    qn_bool ret;
+    qn_http_form_ptr form;
 
-extern qn_bool qn_stor_put_buffer(qn_storage_ptr stor, const char * buf, qn_size buf_size, qn_stor_put_extra_ptr ext);
+    ret = qn_stor_prepare_for_putting_file(stor, ext);
+    if (!ret) return qn_false;
+
+    form = qn_http_req_get_form(stor->req);
+
+    if (!qn_http_form_add_buffer(form, "file", "<null>", buf, buf_size)) {
+        qn_http_form_destroy(form);
+        return qn_false;
+    } // if
+
+    // ----
+    ret = qn_http_conn_post(stor->conn, "http://up.qiniu.com", stor->req, stor->resp);
+    qn_http_form_destroy(form);
+    return ret;
+}
 
 // ----
 

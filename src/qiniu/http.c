@@ -145,6 +145,7 @@ qn_bool qn_http_form_add_buffer(qn_http_form_ptr form, const char * restrict fie
         qn_err_http_set_adding_buffer_field_failed();
         return qn_false;
     } // if
+    return qn_true;
 }
 
 // ---- Definition of HTTP request ----
@@ -236,6 +237,11 @@ void qn_http_req_unset_header(qn_http_request_ptr req, const qn_string hdr)
 }
 
 // ----
+
+qn_http_form_ptr qn_http_req_get_form(qn_http_request_ptr req)
+{
+    return req->form;
+}
 
 void qn_http_req_set_form(qn_http_request_ptr req, qn_http_form_ptr form)
 {
