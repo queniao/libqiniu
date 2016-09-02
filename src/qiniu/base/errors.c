@@ -1,3 +1,4 @@
+#include <stdio.h>
 #include <stdlib.h>
 
 #include "qiniu/base/errors.h"
@@ -36,11 +37,12 @@ enum
 typedef qn_uint32 qn_err_enum;
 
 static qn_err_enum qn_err_code;
+static char qn_err_msg[2048];
 
 typedef struct _QN_ERROR
 {
-    qn_uint32 code;
-    const char * message;
+    qn_err_enum code;
+    const char * msg;
 } qn_error, *qn_error_ptr;
 
 static qn_error qn_errors[] = {
@@ -76,105 +78,110 @@ static int qn_err_compare(const void * key, const void * item)
     return 0;
 }
 
+static int qn_err_format_info(qn_err_enum code, const char * fl, int ln)
+{
+    qn_error_ptr err = (qn_error_ptr) bsearch(&qn_err_code, &qn_errors, sizeof(qn_errors) / sizeof(qn_errors[0]), sizeof(qn_errors[0]), &qn_err_compare);
+    return snprintf(qn_err_msg, sizeof(qn_err_msg), "%s:%d %d:[%s]", fl, ln, err->code, err->msg);
+}
+
 const char * qn_err_get_message(void)
 {
-    qn_error_ptr error = (qn_error_ptr) bsearch(&qn_err_code, &qn_errors, sizeof(qn_errors) / sizeof(qn_errors[0]), sizeof(qn_errors[0]), &qn_err_compare);
-    return error->message;
+    return qn_err_msg;
 }
 
 void qn_err_set_succeed_imp(const char * fl, int ln)
 {
-    qn_err_code = QN_ERR_SUCCEED;
+    qn_err_format_info(qn_err_code = QN_ERR_SUCCEED, fl, ln);
 }
 
 void qn_err_set_no_enough_memory_imp(const char * fl, int ln)
 {
-    qn_err_code = QN_ERR_NO_ENOUGH_MEMORY;
+    qn_err_format_info(qn_err_code = QN_ERR_NO_ENOUGH_MEMORY, fl, ln);
 }
 
 void qn_err_set_try_again_imp(const char * fl, int ln)
 {
-    qn_err_code = QN_ERR_TRY_AGAIN;
+    qn_err_format_info(qn_err_code = QN_ERR_TRY_AGAIN, fl, ln);
 }
 
 void qn_err_set_invalid_argument_imp(const char * fl, int ln)
 {
-    qn_err_code = QN_ERR_INVALID_ARGUMENT;
+    qn_err_format_info(qn_err_code = QN_ERR_INVALID_ARGUMENT, fl, ln);
 }
 
 void qn_err_set_overflow_upper_bound_imp(const char * fl, int ln)
 {
-    qn_err_code = QN_ERR_OVERFLOW_UPPER_BOUND;
+    qn_err_format_info(qn_err_code = QN_ERR_OVERFLOW_UPPER_BOUND, fl, ln);
 }
 
 void qn_err_set_overflow_lower_bound_imp(const char * fl, int ln)
 {
-    qn_err_code = QN_ERR_OVERFLOW_LOWER_BOUND;
+    qn_err_format_info(qn_err_code = QN_ERR_OVERFLOW_LOWER_BOUND, fl, ln);
 }
 
 void qn_err_set_bad_utf8_sequence_imp(const char * fl, int ln)
 {
-    qn_err_code = QN_ERR_BAD_UTF8_SEQUENCE;
+    qn_err_format_info(qn_err_code = QN_ERR_BAD_UTF8_SEQUENCE, fl, ln);
 }
 
 void qn_err_set_no_enough_buffer_imp(const char * fl, int ln)
 {
-    qn_err_code = QN_ERR_NO_ENOUGH_BUFFER;
+    qn_err_format_info(qn_err_code = QN_ERR_NO_ENOUGH_BUFFER, fl, ln);
 }
 
 void qn_err_json_set_bad_text_input_imp(const char * fl, int ln)
 {
-    qn_err_code = QN_ERR_JSON_BAD_TEXT_INPUT;
+    qn_err_format_info(qn_err_code = QN_ERR_JSON_BAD_TEXT_INPUT, fl, ln);
 }
 
 void qn_err_json_set_too_many_parsing_levels_imp(const char * fl, int ln)
 {
-    qn_err_code = QN_ERR_JSON_TOO_MANY_PARSING_LEVELS;
+    qn_err_format_info(qn_err_code = QN_ERR_JSON_TOO_MANY_PARSING_LEVELS, fl, ln);
 }
 
 void qn_err_http_set_invalid_header_syntax_imp(const char * fl, int ln)
 {
-    qn_err_code = QN_ERR_HTTP_INVALID_HEADER_SYNTAX;
+    qn_err_format_info(qn_err_code = QN_ERR_HTTP_INVALID_HEADER_SYNTAX, fl, ln);
 }
 
 void qn_err_http_set_adding_string_field_failed_imp(const char * fl, int ln)
 {
-    qn_err_code = QN_ERR_HTTP_ADDING_STRING_FIELD_FAILED;
+    qn_err_format_info(qn_err_code = QN_ERR_HTTP_ADDING_STRING_FIELD_FAILED, fl, ln);
 }
 
 void qn_err_http_set_adding_file_field_failed_imp(const char * fl, int ln)
 {
-    qn_err_code = QN_ERR_HTTP_ADDING_FILE_FIELD_FAILED;
+    qn_err_format_info(qn_err_code = QN_ERR_HTTP_ADDING_FILE_FIELD_FAILED, fl, ln);
 }
 
 void qn_err_http_set_adding_buffer_field_failed_imp(const char * fl, int ln)
 {
-    qn_err_code = QN_ERR_HTTP_ADDING_BUFFER_FIELD_FAILED;
+    qn_err_format_info(qn_err_code = QN_ERR_HTTP_ADDING_BUFFER_FIELD_FAILED, fl, ln);
 }
 
 void qn_err_fl_set_opening_file_failed_imp(const char * fl, int ln)
 {
-    qn_err_code = QN_ERR_FL_OPENING_FILE_FAILED;
+    qn_err_format_info(qn_err_code = QN_ERR_FL_OPENING_FILE_FAILED, fl, ln);
 }
 
 void qn_err_fl_set_duplicating_file_failed_imp(const char * fl, int ln)
 {
-    qn_err_code = QN_ERR_FL_DUPLICATING_FILE_FAILED;
+    qn_err_format_info(qn_err_code = QN_ERR_FL_DUPLICATING_FILE_FAILED, fl, ln);
 }
 
 void qn_err_fl_set_reading_file_failed_imp(const char * fl, int ln)
 {
-    qn_err_code = QN_ERR_FL_READING_FILE_FAILED;
+    qn_err_format_info(qn_err_code = QN_ERR_FL_READING_FILE_FAILED, fl, ln);
 }
 
 void qn_err_fl_set_seeking_file_failed_imp(const char * fl, int ln)
 {
-    qn_err_code = QN_ERR_FL_SEEKING_FILE_FAILED;
+    qn_err_format_info(qn_err_code = QN_ERR_FL_SEEKING_FILE_FAILED, fl, ln);
 }
 
 void qn_err_fl_info_set_stating_file_info_failed_imp(const char * fl, int ln)
 {
-    qn_err_code = QN_ERR_FL_INFO_STATING_FILE_INFO_FAILED;
+    qn_err_format_info(qn_err_code = QN_ERR_FL_INFO_STATING_FILE_INFO_FAILED, fl, ln);
 }
 
 // ----
