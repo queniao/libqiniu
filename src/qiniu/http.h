@@ -38,6 +38,7 @@ extern void qn_http_form_destroy(qn_http_form_ptr form);
 
 extern qn_bool qn_http_form_add_string(qn_http_form_ptr form, const char * restrict field, const char * restrict value, qn_size size);
 extern qn_bool qn_http_form_add_file(qn_http_form_ptr form, const char * restrict field, const char * restrict fname, const char * restrict fname_utf8, qn_size fsize);
+extern qn_bool qn_http_form_add_buffer(qn_http_form_ptr form, const char * restrict field, const char * restrict fname, const char * restrict buf, int buf_size);
 
 // ---- Declaration of HTTP request ----
 

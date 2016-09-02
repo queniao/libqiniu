@@ -23,6 +23,8 @@ enum
 
     QN_ERR_HTTP_INVALID_HEADER_SYNTAX = 3001,
     QN_ERR_HTTP_ADDING_STRING_FIELD_FAILED = 3002,
+    QN_ERR_HTTP_ADDING_FILE_FIELD_FAILED = 3003,
+    QN_ERR_HTTP_ADDING_BUFFER_FIELD_FAILED = 3004,
 
     QN_ERR_FL_OPENING_FILE_FAILED = 11001,
     QN_ERR_FL_DUPLICATING_FILE_FAILED = 11002,
@@ -54,6 +56,8 @@ static qn_error qn_errors[] = {
     {QN_ERR_JSON_TOO_MANY_PARSING_LEVELS, "Parsing too many levels in a piece of JSON text"},
     {QN_ERR_HTTP_INVALID_HEADER_SYNTAX, "Invalid HTTP header syntax"},
     {QN_ERR_HTTP_ADDING_STRING_FIELD_FAILED, "Adding string field to HTTP form failed"},
+    {QN_ERR_HTTP_ADDING_FILE_FIELD_FAILED, "Adding file field to HTTP form failed"},
+    {QN_ERR_HTTP_ADDING_BUFFER_FIELD_FAILED, "Adding buffer field to HTTP form failed"},
     {QN_ERR_FL_OPENING_FILE_FAILED, "Opening file failed"},
     {QN_ERR_FL_DUPLICATING_FILE_FAILED, "Duplicating file failed"},
     {QN_ERR_FL_READING_FILE_FAILED, "Reading file failed"},
@@ -136,6 +140,16 @@ void qn_err_http_set_invalid_header_syntax(void)
 void qn_err_http_set_adding_string_field_failed(void)
 {
     qn_err_code = QN_ERR_HTTP_ADDING_STRING_FIELD_FAILED;
+}
+
+void qn_err_http_set_adding_file_field_failed(void)
+{
+    qn_err_code = QN_ERR_HTTP_ADDING_FILE_FIELD_FAILED;
+}
+
+void qn_err_http_set_adding_buffer_field_failed(void)
+{
+    qn_err_code = QN_ERR_HTTP_ADDING_BUFFER_FIELD_FAILED;
 }
 
 void qn_err_fl_set_opening_file_failed(void)
@@ -223,6 +237,16 @@ qn_bool qn_err_http_is_invalid_header_syntax(void)
 qn_bool qn_err_http_is_adding_string_field_failed(void)
 {
     return (qn_err_code == QN_ERR_HTTP_ADDING_STRING_FIELD_FAILED);
+}
+
+qn_bool qn_err_http_is_adding_file_field_failed(void)
+{
+    return (qn_err_code == QN_ERR_HTTP_ADDING_FILE_FIELD_FAILED);
+}
+
+qn_bool qn_err_http_is_adding_buffer_field_failed(void)
+{
+    return (qn_err_code == QN_ERR_HTTP_ADDING_BUFFER_FIELD_FAILED);
 }
 
 qn_bool qn_err_fl_is_opening_file_failed(void)

@@ -132,10 +132,19 @@ qn_bool qn_http_form_add_file(qn_http_form_ptr form, const char * restrict field
         ret = curl_formadd(&form->first, &form->last, CURLFORM_COPYNAME, field, CURLFORM_FILE, fname, CURLFORM_END);
     } // if
     if (ret != 0) {
-        qn_err_http_set_adding_string_field_failed();
+        qn_err_http_set_adding_file_field_failed();
         return qn_false;
     } // if
     return qn_true;
+}
+
+qn_bool qn_http_form_add_buffer(qn_http_form_ptr form, const char * restrict field, const char * restrict fname, const char * restrict buf, int buf_size)
+{
+    CURLFORMcode ret = curl_formadd(&form->first, &form->last, CURLFORM_COPYNAME, field, CURLFORM_BUFFER, fname, CURLFORM_BUFFERPTR, buf, CURLFORM_BUFFERLENGTH, buf_size, CURLFORM_END);
+    if (ret != 0) {
+        qn_err_http_set_adding_buffer_field_failed();
+        return qn_false;
+    } // if
 }
 
 // ---- Definition of HTTP request ----

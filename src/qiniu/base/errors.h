@@ -24,6 +24,8 @@ extern void qn_err_json_set_too_many_parsing_levels(void);
 
 extern void qn_err_http_set_invalid_header_syntax(void);
 extern void qn_err_http_set_adding_string_field_failed(void);
+extern void qn_err_http_set_adding_file_field_failed(void);
+extern void qn_err_http_set_adding_buffer_field_failed(void);
 
 extern void qn_err_fl_info_set_stating_file_info_failed(void);
 
@@ -31,6 +33,8 @@ extern void qn_err_fl_set_opening_file_failed(void);
 extern void qn_err_fl_set_duplicating_file_failed(void);
 extern void qn_err_fl_set_reading_file_failed(void);
 extern void qn_err_fl_set_seeking_file_failed(void);
+
+// ----
 
 extern qn_bool qn_err_is_succeed(void);
 extern qn_bool qn_err_is_no_enough_memory(void);
@@ -46,6 +50,8 @@ extern qn_bool qn_err_json_is_too_many_pasring_levels(void);
 
 extern qn_bool qn_err_http_is_invalid_header_syntax(void);
 extern qn_bool qn_err_http_is_adding_string_field_failed(void);
+extern qn_bool qn_err_http_is_adding_file_field_failed(void);
+extern qn_bool qn_err_http_is_adding_buffer_field_failed(void);
 
 extern qn_bool qn_err_fl_is_opening_file_failed(void);
 extern qn_bool qn_err_fl_is_duplicating_file_failed(void);
