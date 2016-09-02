@@ -10,31 +10,65 @@ extern "C"
 
 const char * qn_err_get_message(void);
 
-extern void qn_err_set_succeed(void);
-extern void qn_err_set_no_enough_memory(void);
-extern void qn_err_set_try_again(void);
-extern void qn_err_set_invalid_argument(void);
-extern void qn_err_set_overflow_upper_bound(void);
-extern void qn_err_set_overflow_lower_bound(void);
-extern void qn_err_set_bad_utf8_sequence(void);
-extern void qn_err_set_no_enough_buffer(void);
+// ---- Declaration of setting functions
 
-extern void qn_err_json_set_bad_text_input(void);
-extern void qn_err_json_set_too_many_parsing_levels(void);
+#define qn_err_set_succeed() qn_err_set_succeed_imp(__FILE__, __LINE__)
+#define qn_err_set_no_enough_memory() qn_err_set_no_enough_memory_imp(__FILE__, __LINE__)
+#define qn_err_set_try_again() qn_err_set_try_again_imp(__FILE__, __LINE__)
+#define qn_err_set_invalid_argument() qn_err_set_invalid_argument_imp(__FILE__, __LINE__)
+#define qn_err_set_overflow_upper_bound() qn_err_set_overflow_upper_bound_imp(__FILE__, __LINE__)
+#define qn_err_set_overflow_lower_bound() qn_err_set_overflow_lower_bound_imp(__FILE__, __LINE__)
+#define qn_err_set_bad_utf8_sequence() qn_err_set_bad_utf8_sequence_imp(__FILE__, __LINE__)
+#define qn_err_set_no_enough_buffer() qn_err_set_no_enough_buffer_imp(__FILE__, __LINE__)
 
-extern void qn_err_http_set_invalid_header_syntax(void);
-extern void qn_err_http_set_adding_string_field_failed(void);
-extern void qn_err_http_set_adding_file_field_failed(void);
-extern void qn_err_http_set_adding_buffer_field_failed(void);
-
-extern void qn_err_fl_info_set_stating_file_info_failed(void);
-
-extern void qn_err_fl_set_opening_file_failed(void);
-extern void qn_err_fl_set_duplicating_file_failed(void);
-extern void qn_err_fl_set_reading_file_failed(void);
-extern void qn_err_fl_set_seeking_file_failed(void);
+extern void qn_err_set_succeed_imp(const char * fl, int ln);
+extern void qn_err_set_no_enough_memory_imp(const char * fl, int ln);
+extern void qn_err_set_try_again_imp(const char * fl, int ln);
+extern void qn_err_set_invalid_argument_imp(const char * fl, int ln);
+extern void qn_err_set_overflow_upper_bound_imp(const char * fl, int ln);
+extern void qn_err_set_overflow_lower_bound_imp(const char * fl, int ln);
+extern void qn_err_set_bad_utf8_sequence_imp(const char * fl, int ln);
+extern void qn_err_set_no_enough_buffer_imp(const char * fl, int ln);
 
 // ----
+
+#define qn_err_json_set_bad_text_input() qn_err_json_set_bad_text_input_imp(__FILE__, __LINE__)
+#define qn_err_json_set_too_many_parsing_levels() qn_err_json_set_too_many_parsing_levels_imp(__FILE__, __LINE__)
+
+extern void qn_err_json_set_bad_text_input_imp(const char * fl, int ln);
+extern void qn_err_json_set_too_many_parsing_levels_imp(const char * fl, int ln);
+
+// ----
+
+#define qn_err_http_set_invalid_header_syntax() qn_err_http_set_invalid_header_syntax_imp(__FILE__, __LINE__)
+#define qn_err_http_set_adding_string_field_failed() qn_err_http_set_adding_string_field_failed_imp(__FILE__, __LINE__)
+#define qn_err_http_set_adding_file_field_failed() qn_err_http_set_adding_file_field_failed_imp(__FILE__, __LINE__)
+#define qn_err_http_set_adding_buffer_field_failed() qn_err_http_set_adding_buffer_field_failed_imp(__FILE__, __LINE__)
+
+extern void qn_err_http_set_invalid_header_syntax_imp(const char * fl, int ln);
+extern void qn_err_http_set_adding_string_field_failed_imp(const char * fl, int ln);
+extern void qn_err_http_set_adding_file_field_failed_imp(const char * fl, int ln);
+extern void qn_err_http_set_adding_buffer_field_failed_imp(const char * fl, int ln);
+
+// ----
+
+#define qn_err_fl_info_set_stating_file_info_failed() qn_err_fl_info_set_stating_file_info_failed_imp(__FILE__, __LINE__)
+
+extern void qn_err_fl_info_set_stating_file_info_failed_imp(const char * fl, int ln);
+
+// ----
+
+#define qn_err_fl_set_opening_file_failed() qn_err_fl_set_opening_file_failed_imp(__FILE__, __LINE__)
+#define qn_err_fl_set_duplicating_file_failed() qn_err_fl_set_duplicating_file_failed_imp(__FILE__, __LINE__)
+#define qn_err_fl_set_reading_file_failed() qn_err_fl_set_reading_file_failed_imp(__FILE__, __LINE__)
+#define qn_err_fl_set_seeking_file_failed() qn_err_fl_set_seeking_file_failed_imp(__FILE__, __LINE__)
+
+extern void qn_err_fl_set_opening_file_failed_imp(const char * fl, int ln);
+extern void qn_err_fl_set_duplicating_file_failed_imp(const char * fl, int ln);
+extern void qn_err_fl_set_reading_file_failed_imp(const char * fl, int ln);
+extern void qn_err_fl_set_seeking_file_failed_imp(const char * fl, int ln);
+
+// ---- Declaration of testing functions
 
 extern qn_bool qn_err_is_succeed(void);
 extern qn_bool qn_err_is_no_enough_memory(void);
@@ -45,20 +79,28 @@ extern qn_bool qn_err_is_overflow_lower_bound(void);
 extern qn_bool qn_err_is_bad_utf8_sequence(void);
 extern qn_bool qn_err_is_no_enough_buffer(void);
 
+// ----
+
 extern qn_bool qn_err_json_is_bad_text_input(void);
 extern qn_bool qn_err_json_is_too_many_pasring_levels(void);
+
+// ----
 
 extern qn_bool qn_err_http_is_invalid_header_syntax(void);
 extern qn_bool qn_err_http_is_adding_string_field_failed(void);
 extern qn_bool qn_err_http_is_adding_file_field_failed(void);
 extern qn_bool qn_err_http_is_adding_buffer_field_failed(void);
 
+// ----
+
+extern qn_bool qn_err_fl_info_is_stating_file_info_failed(void);
+
+// ----
+
 extern qn_bool qn_err_fl_is_opening_file_failed(void);
 extern qn_bool qn_err_fl_is_duplicating_file_failed(void);
 extern qn_bool qn_err_fl_is_reading_file_failed(void);
 extern qn_bool qn_err_fl_is_seeking_file_failed(void);
-
-extern qn_bool qn_err_fl_info_is_stating_file_info_failed(void);
 
 #ifdef __cplusplus
 }

@@ -82,97 +82,97 @@ const char * qn_err_get_message(void)
     return error->message;
 }
 
-void qn_err_set_succeed(void)
+void qn_err_set_succeed_imp(const char * fl, int ln)
 {
     qn_err_code = QN_ERR_SUCCEED;
 }
 
-void qn_err_set_no_enough_memory(void)
+void qn_err_set_no_enough_memory_imp(const char * fl, int ln)
 {
     qn_err_code = QN_ERR_NO_ENOUGH_MEMORY;
 }
 
-void qn_err_set_try_again(void)
+void qn_err_set_try_again_imp(const char * fl, int ln)
 {
     qn_err_code = QN_ERR_TRY_AGAIN;
 }
 
-void qn_err_set_invalid_argument(void)
+void qn_err_set_invalid_argument_imp(const char * fl, int ln)
 {
     qn_err_code = QN_ERR_INVALID_ARGUMENT;
 }
 
-void qn_err_set_overflow_upper_bound(void)
+void qn_err_set_overflow_upper_bound_imp(const char * fl, int ln)
 {
     qn_err_code = QN_ERR_OVERFLOW_UPPER_BOUND;
 }
 
-void qn_err_set_overflow_lower_bound(void)
+void qn_err_set_overflow_lower_bound_imp(const char * fl, int ln)
 {
     qn_err_code = QN_ERR_OVERFLOW_LOWER_BOUND;
 }
 
-void qn_err_set_bad_utf8_sequence(void)
+void qn_err_set_bad_utf8_sequence_imp(const char * fl, int ln)
 {
     qn_err_code = QN_ERR_BAD_UTF8_SEQUENCE;
 }
 
-void qn_err_set_no_enough_buffer(void)
+void qn_err_set_no_enough_buffer_imp(const char * fl, int ln)
 {
     qn_err_code = QN_ERR_NO_ENOUGH_BUFFER;
 }
 
-void qn_err_json_set_bad_text_input(void)
+void qn_err_json_set_bad_text_input_imp(const char * fl, int ln)
 {
     qn_err_code = QN_ERR_JSON_BAD_TEXT_INPUT;
 }
 
-void qn_err_json_set_too_many_parsing_levels(void)
+void qn_err_json_set_too_many_parsing_levels_imp(const char * fl, int ln)
 {
     qn_err_code = QN_ERR_JSON_TOO_MANY_PARSING_LEVELS;
 }
 
-void qn_err_http_set_invalid_header_syntax(void)
+void qn_err_http_set_invalid_header_syntax_imp(const char * fl, int ln)
 {
     qn_err_code = QN_ERR_HTTP_INVALID_HEADER_SYNTAX;
 }
 
-void qn_err_http_set_adding_string_field_failed(void)
+void qn_err_http_set_adding_string_field_failed_imp(const char * fl, int ln)
 {
     qn_err_code = QN_ERR_HTTP_ADDING_STRING_FIELD_FAILED;
 }
 
-void qn_err_http_set_adding_file_field_failed(void)
+void qn_err_http_set_adding_file_field_failed_imp(const char * fl, int ln)
 {
     qn_err_code = QN_ERR_HTTP_ADDING_FILE_FIELD_FAILED;
 }
 
-void qn_err_http_set_adding_buffer_field_failed(void)
+void qn_err_http_set_adding_buffer_field_failed_imp(const char * fl, int ln)
 {
     qn_err_code = QN_ERR_HTTP_ADDING_BUFFER_FIELD_FAILED;
 }
 
-void qn_err_fl_set_opening_file_failed(void)
+void qn_err_fl_set_opening_file_failed_imp(const char * fl, int ln)
 {
     qn_err_code = QN_ERR_FL_OPENING_FILE_FAILED;
 }
 
-void qn_err_fl_set_duplicating_file_failed(void)
+void qn_err_fl_set_duplicating_file_failed_imp(const char * fl, int ln)
 {
     qn_err_code = QN_ERR_FL_DUPLICATING_FILE_FAILED;
 }
 
-void qn_err_fl_set_reading_file_failed(void)
+void qn_err_fl_set_reading_file_failed_imp(const char * fl, int ln)
 {
     qn_err_code = QN_ERR_FL_READING_FILE_FAILED;
 }
 
-void qn_err_fl_set_seeking_file_failed(void)
+void qn_err_fl_set_seeking_file_failed_imp(const char * fl, int ln)
 {
     qn_err_code = QN_ERR_FL_SEEKING_FILE_FAILED;
 }
 
-void qn_err_fl_info_set_stating_file_info_failed(void)
+void qn_err_fl_info_set_stating_file_info_failed_imp(const char * fl, int ln)
 {
     qn_err_code = QN_ERR_FL_INFO_STATING_FILE_INFO_FAILED;
 }
