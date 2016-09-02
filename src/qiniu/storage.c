@@ -155,20 +155,16 @@ static qn_bool qn_stor_prepare_for_putting_file(qn_storage_ptr stor, qn_stor_put
     if (!qn_http_req_set_header(stor->req, "Expect", "")) return qn_false;
 
     // ----
-    form = qn_http_form_create();
+    form = qn_http_req_prepare_form(stor->req);
     if (!form) return qn_false;
 
     // uptoken MUST be the first form item.
     if (ext->client_end.uptoken) {
-        if (!qn_http_form_add_string(form, "token", ext->client_end.uptoken, strlen(ext->client_end.uptoken))) {
-            qn_http_form_destroy(form);
-            return qn_false;
-        } // if
+        if (!qn_http_form_add_string(form, "token", ext->client_end.uptoken, strlen(ext->client_end.uptoken))) return qn_false;
     } else if (ext->server_end.mac && ext->server_end.put_policy) {
         uptoken = qn_pp_to_uptoken(ext->server_end.put_policy, ext->server_end.mac);
         if (!qn_http_form_add_string(form, "token", qn_str_cstr(uptoken), qn_str_size(uptoken))) {
             qn_str_destroy(uptoken);
-            qn_http_form_destroy(form);
             return qn_false;
         } // if
         qn_str_destroy(uptoken);
@@ -177,24 +173,11 @@ static qn_bool qn_stor_prepare_for_putting_file(qn_storage_ptr stor, qn_stor_put
         return qn_false;
     } // if
 
-    if (ext->key && !qn_http_form_add_string(form, "key", ext->key, strlen(ext->key))) {
-        qn_http_form_destroy(form);
-        return qn_false;
-    } // if
+    if (ext->key && !qn_http_form_add_string(form, "key", ext->key, strlen(ext->key))) return qn_false;
+    if (ext->crc32 && !qn_http_form_add_string(form, "crc32", ext->crc32, strlen(ext->crc32))) return qn_false;
+    if (ext->accept_type && !qn_http_form_add_string(form, "accept", ext->accept_type, strlen(ext->accept_type))) return qn_false;
 
     // TODO: User defined variabales.
-
-    if (ext->crc32 && !qn_http_form_add_string(form, "crc32", ext->crc32, strlen(ext->crc32))) {
-        qn_http_form_destroy(form);
-        return qn_false;
-    } // if
-
-    if (ext->accept_type && !qn_http_form_add_string(form, "accept", ext->accept_type, strlen(ext->accept_type))) {
-        qn_http_form_destroy(form);
-        return qn_false;
-    } // if
-
-    qn_http_req_set_form(stor->req, form);
 
     // ----
     qn_http_json_wrt_prepare_for_object(stor->resp_json_wrt, &stor->obj_body);
@@ -215,43 +198,28 @@ qn_bool qn_stor_put_file(qn_storage_ptr stor, const char * fname, qn_stor_put_ex
     form = qn_http_req_get_form(stor->req);
 
     fi = qn_fl_info_stat(fname);
-    if (!fi) {
-        qn_http_form_destroy(form);
-        return qn_false;
-    } // if
+    if (!fi) return qn_false;
 
-    if (!qn_http_form_add_file(form, "file", qn_str_cstr(qn_fl_info_fname(fi)), NULL, qn_fl_info_fsize(fi))) {
-        qn_fl_info_destroy(fi);
-        qn_http_form_destroy(form);
-        return qn_false;
-    } // if
+    ret = qn_http_form_add_file(form, "file", qn_str_cstr(qn_fl_info_fname(fi)), NULL, qn_fl_info_fsize(fi));
     qn_fl_info_destroy(fi);
+    if (!ret) return qn_false;
 
     // ----
-    ret = qn_http_conn_post(stor->conn, "http://up.qiniu.com", stor->req, stor->resp);
-    qn_http_form_destroy(form);
-    return ret;
+    return qn_http_conn_post(stor->conn, "http://up.qiniu.com", stor->req, stor->resp);
 }
 
 qn_bool qn_stor_put_buffer(qn_storage_ptr stor, const char * buf, int buf_size, qn_stor_put_extra_ptr ext)
 {
-    qn_bool ret;
     qn_http_form_ptr form;
 
-    ret = qn_stor_prepare_for_putting_file(stor, ext);
-    if (!ret) return qn_false;
+    if (!qn_stor_prepare_for_putting_file(stor, ext)) return qn_false;
 
     form = qn_http_req_get_form(stor->req);
 
-    if (!qn_http_form_add_buffer(form, "file", "<null>", buf, buf_size)) {
-        qn_http_form_destroy(form);
-        return qn_false;
-    } // if
+    if (!qn_http_form_add_buffer(form, "file", "<null>", buf, buf_size)) return qn_false;
 
     // ----
-    ret = qn_http_conn_post(stor->conn, "http://up.qiniu.com", stor->req, stor->resp);
-    qn_http_form_destroy(form);
-    return ret;
+    return qn_http_conn_post(stor->conn, "http://up.qiniu.com", stor->req, stor->resp);
 }
 
 // ----

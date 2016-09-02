@@ -65,6 +65,7 @@ extern void qn_http_req_unset_header(qn_http_request_ptr req, const qn_string he
 
 // ----
 
+extern qn_http_form_ptr qn_http_req_prepare_form(qn_http_request_ptr req);
 extern qn_http_form_ptr qn_http_req_get_form(qn_http_request_ptr req);
 extern void qn_http_req_set_form(qn_http_request_ptr req, qn_http_form_ptr form);
 

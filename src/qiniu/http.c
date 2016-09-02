@@ -150,8 +150,14 @@ qn_bool qn_http_form_add_buffer(qn_http_form_ptr form, const char * restrict fie
 
 // ---- Definition of HTTP request ----
 
+enum
+{
+    QN_HTTP_REQ_USING_LOCAL_FORM = 0x1
+};
+
 typedef struct _QN_HTTP_REQUEST
 {
+    int flags;
     qn_http_header_ptr hdr;
     qn_http_form_ptr form;
 
@@ -183,6 +189,7 @@ qn_http_request_ptr qn_http_req_create(void)
 void qn_http_req_destroy(qn_http_request_ptr req)
 {
     if (req) {
+        if (req->flags & QN_HTTP_REQ_USING_LOCAL_FORM) qn_http_form_destroy(req->form);
         qn_http_hdr_destroy(req->hdr);
         free(req);
     } // if
@@ -190,6 +197,9 @@ void qn_http_req_destroy(qn_http_request_ptr req)
 
 void qn_http_req_reset(qn_http_request_ptr req)
 {
+    if (req->flags & QN_HTTP_REQ_USING_LOCAL_FORM) qn_http_form_destroy(req->form);
+
+    req->flags = 0;
     req->body_data = NULL;
     req->body_size = 0;
     req->body_rd = NULL;
@@ -238,6 +248,13 @@ void qn_http_req_unset_header(qn_http_request_ptr req, const qn_string hdr)
 
 // ----
 
+qn_http_form_ptr qn_http_req_prepare_form(qn_http_request_ptr req)
+{
+    if (req->form) qn_http_form_destroy(req->form);
+    req->flags |= QN_HTTP_REQ_USING_LOCAL_FORM;
+    return (req->form = qn_http_form_create());
+}
+
 qn_http_form_ptr qn_http_req_get_form(qn_http_request_ptr req)
 {
     return req->form;
@@ -245,6 +262,7 @@ qn_http_form_ptr qn_http_req_get_form(qn_http_request_ptr req)
 
 void qn_http_req_set_form(qn_http_request_ptr req, qn_http_form_ptr form)
 {
+    req->flags &= ~QN_HTTP_REQ_USING_LOCAL_FORM;
     req->form = form;
 }
 
