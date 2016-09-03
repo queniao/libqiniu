@@ -11,6 +11,8 @@ extern "C"
 {
 #endif
 
+// ---- Declaration of Storage ----
+
 struct _QN_STORAGE;
 typedef struct _QN_STORAGE * qn_storage_ptr;
 
@@ -20,13 +22,15 @@ extern void qn_stor_destroy(qn_storage_ptr stor);
 extern qn_json_object_ptr qn_stor_get_object_body(qn_storage_ptr stor);
 extern qn_http_hdr_iterator_ptr qn_stor_resp_get_header_iterator(qn_storage_ptr stor);
 
+// ---- Declaration of Management ----
+
 typedef struct _QN_STOR_QUERY_EXTRA
 {
     qn_mac_ptr mac;
     const qn_string acctoken;
 } qn_stor_query_extra, *qn_stor_query_extra_ptr;
 
-extern qn_bool qn_stor_stat(qn_storage_ptr stor, const char * restrict bucket, const char * restrict key, const qn_stor_query_extra_ptr ext);
+extern qn_bool qn_stor_stat(qn_storage_ptr stor, const char * restrict bucket, const char * restrict key, const qn_stor_query_extra_ptr restrict ext);
 
 extern qn_bool qn_stor_copy(qn_storage_ptr stor, const char * restrict src_bucket, const char * restrict src_key, const char * restrict dest_bucket, const char * restrict dest_key, const qn_stor_query_extra_ptr ext);
 extern qn_bool qn_stor_move(qn_storage_ptr stor, const char * restrict src_bucket, const char * restrict src_key, const char * restrict dest_bucket, const char * restrict dest_key, const qn_stor_query_extra_ptr ext);

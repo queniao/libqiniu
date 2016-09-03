@@ -85,15 +85,22 @@ qn_http_hdr_iterator_ptr qn_stor_resp_get_header_iterator(qn_storage_ptr stor)
     return qn_http_resp_get_header_iterator(stor->resp);
 }
 
-qn_bool qn_stor_stat(qn_storage_ptr stor, const char * restrict bucket, const char * restrict key, const qn_stor_query_extra_ptr ext)
+static qn_bool qn_stor_prepare_common_request_headers(qn_storage_ptr stor)
 {
-    qn_bool ret = qn_false;
-    qn_string url = NULL;
-    qn_string encoded_uri = NULL;
-    qn_string acctoken = NULL;
-    qn_string auth_header = NULL;
+    if (!qn_http_req_set_header(stor->req, "Expect", "")) return qn_false;
+    if (!qn_http_req_set_header(stor->req, "Transfer-Encoding", "")) return qn_false;
+    return qn_true;
+}
 
-    // ---- Prepare an URL
+qn_bool qn_stor_stat(qn_storage_ptr stor, const char * restrict bucket, const char * restrict key, const qn_stor_query_extra_ptr restrict ext)
+{
+    qn_bool ret;
+    qn_string encoded_uri;
+    qn_string url;
+    qn_string acctoken;
+    qn_string auth_header;
+
+    // ---- Prepare the query URL
     encoded_uri = qn_misc_encode_uri(bucket, key);
     if (!encoded_uri) return qn_false;
 
@@ -101,7 +108,7 @@ qn_bool qn_stor_stat(qn_storage_ptr stor, const char * restrict bucket, const ch
     qn_str_destroy(encoded_uri);
     if (!url) return qn_false;
 
-    // ---- Prepare request and response
+    // ---- Prepare the request and response
     qn_http_req_reset(stor->req);
     qn_http_resp_reset(stor->resp);
 
@@ -109,7 +116,11 @@ qn_bool qn_stor_stat(qn_storage_ptr stor, const char * restrict bucket, const ch
         auth_header = qn_str_sprintf("QBox %s", ext->acctoken);
     } else if (ext->mac) {
         acctoken = qn_mac_make_acctoken(ext->mac, url, NULL, 0);
-        if (!acctoken) return qn_false;
+        if (!acctoken) {
+            qn_str_destroy(url);
+            return qn_false;
+        } // if
+
         auth_header = qn_str_sprintf("QBox %s", acctoken);
         qn_str_destroy(acctoken);
     } // if
@@ -117,10 +128,16 @@ qn_bool qn_stor_stat(qn_storage_ptr stor, const char * restrict bucket, const ch
         qn_str_destroy(url);
         return qn_false;
     } // if
-    qn_http_req_set_header(stor->req, "Authorization", auth_header);
+    if (!qn_http_req_set_header(stor->req, "Authorization", auth_header)) {
+        qn_str_destroy(url);
+        return qn_false;
+    } // if
     qn_str_destroy(auth_header);
 
-    if (!qn_http_req_set_header(stor->req, "Expect", "")) return qn_false;
+    if (!qn_stor_prepare_common_request_headers(stor)) {
+        qn_str_destroy(url);
+        return qn_false;
+    } // if
 
     if (stor->obj_body) {
         qn_json_destroy_object(stor->obj_body);
