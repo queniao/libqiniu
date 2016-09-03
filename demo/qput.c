@@ -27,7 +27,7 @@ int main(int argc, char * argv[])
     fname = argv[5];
 
     memset(&ext, 0, sizeof(ext));
-    ext.key = key;
+    ext.final_key = key;
     ext.server_end.mac = mac;
     ext.server_end.put_policy = qn_json_create_object();
     if (!ext.server_end.put_policy) {

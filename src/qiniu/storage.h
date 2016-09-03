@@ -30,12 +30,12 @@ typedef struct _QN_STOR_QUERY_EXTRA
     const qn_string acctoken;
 } qn_stor_query_extra, *qn_stor_query_extra_ptr;
 
-extern qn_bool qn_stor_stat(qn_storage_ptr stor, const char * restrict bucket, const char * restrict key, const qn_stor_query_extra_ptr restrict ext);
+extern qn_bool qn_stor_stat(qn_storage_ptr stor, const char * restrict bucket, const char * restrict key, qn_stor_query_extra_ptr restrict ext);
 
-extern qn_bool qn_stor_copy(qn_storage_ptr stor, const char * restrict src_bucket, const char * restrict src_key, const char * restrict dest_bucket, const char * restrict dest_key, const qn_stor_query_extra_ptr ext);
-extern qn_bool qn_stor_move(qn_storage_ptr stor, const char * restrict src_bucket, const char * restrict src_key, const char * restrict dest_bucket, const char * restrict dest_key, const qn_stor_query_extra_ptr ext);
-extern qn_bool qn_stor_delete(qn_storage_ptr stor, const char * restrict bucket, const char * restrict key, const qn_stor_query_extra_ptr ext);
-extern qn_bool qn_stor_change_mime(qn_storage_ptr stor, const char * restrict bucket, const char * restrict key, const char * restrict mime, const qn_stor_query_extra_ptr ext);
+extern qn_bool qn_stor_copy(qn_storage_ptr stor, const char * restrict src_bucket, const char * restrict src_key, const char * restrict dest_bucket, const char * restrict dest_key, qn_stor_query_extra_ptr ext);
+extern qn_bool qn_stor_move(qn_storage_ptr stor, const char * restrict src_bucket, const char * restrict src_key, const char * restrict dest_bucket, const char * restrict dest_key, qn_stor_query_extra_ptr ext);
+extern qn_bool qn_stor_delete(qn_storage_ptr stor, const char * restrict bucket, const char * restrict key, qn_stor_query_extra_ptr ext);
+extern qn_bool qn_stor_change_mime(qn_storage_ptr stor, const char * restrict bucket, const char * restrict key, const char * restrict mime, qn_stor_query_extra_ptr ext);
 
 typedef struct _QN_STOR_FETCH_EXTRA
 {
@@ -62,7 +62,7 @@ extern void qn_stor_reset_batch(qn_stor_batch_ptr bt);
 
 extern qn_bool qn_stor_batch_operate(qn_storage_ptr stor, qn_stor_batch_ptr bt);
 
-// ---- Declaration of upload functions
+// ---- Declaration of Upload ----
 
 typedef enum _QN_STOR_PUT_METHOD
 {
@@ -84,7 +84,7 @@ typedef struct _QN_STOR_PUT_EXTRA
         qn_json_object_ptr put_policy;
     } server_end;
 
-    const char * key;
+    const char * final_key;
     const char * crc32;
     const char * accept_type;
 } qn_stor_put_extra, *qn_stor_put_extra_ptr;

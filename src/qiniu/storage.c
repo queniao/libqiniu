@@ -92,7 +92,9 @@ static qn_bool qn_stor_prepare_common_request_headers(qn_storage_ptr stor)
     return qn_true;
 }
 
-qn_bool qn_stor_stat(qn_storage_ptr stor, const char * restrict bucket, const char * restrict key, const qn_stor_query_extra_ptr restrict ext)
+// ---- Definition of Management ----
+
+qn_bool qn_stor_stat(qn_storage_ptr stor, const char * restrict bucket, const char * restrict key, qn_stor_query_extra_ptr restrict ext)
 {
     qn_bool ret;
     qn_string encoded_uri;
@@ -152,10 +154,11 @@ qn_bool qn_stor_stat(qn_storage_ptr stor, const char * restrict bucket, const ch
     return ret;
 }
 
-// ---- Definition of upload functions
+// ---- Definition of Upload ----
 
 static qn_bool qn_stor_prepare_for_putting_file(qn_storage_ptr stor, qn_stor_put_extra_ptr ext)
 {
+    qn_bool ret;
     qn_string uptoken;
     qn_http_form_ptr form;
 
@@ -169,28 +172,27 @@ static qn_bool qn_stor_prepare_for_putting_file(qn_storage_ptr stor, qn_stor_put
     } // if
 
     // ----
-    if (!qn_http_req_set_header(stor->req, "Expect", "")) return qn_false;
+    if (!qn_stor_prepare_common_request_headers(stor)) return qn_false;
 
     // ----
-    form = qn_http_req_prepare_form(stor->req);
-    if (!form) return qn_false;
+    if (! (form = qn_http_req_prepare_form(stor->req))) return qn_false;
 
     // uptoken MUST be the first form item.
     if (ext->client_end.uptoken) {
         if (!qn_http_form_add_string(form, "token", ext->client_end.uptoken, strlen(ext->client_end.uptoken))) return qn_false;
     } else if (ext->server_end.mac && ext->server_end.put_policy) {
         uptoken = qn_pp_to_uptoken(ext->server_end.put_policy, ext->server_end.mac);
-        if (!qn_http_form_add_string(form, "token", qn_str_cstr(uptoken), qn_str_size(uptoken))) {
-            qn_str_destroy(uptoken);
-            return qn_false;
-        } // if
+        if (!uptoken) return qn_false;
+
+        ret = qn_http_form_add_string(form, "token", qn_str_cstr(uptoken), qn_str_size(uptoken));
         qn_str_destroy(uptoken);
+        if (!ret) return qn_false;
     } else {
         qn_err_set_invalid_argument(); 
         return qn_false;
     } // if
 
-    if (ext->key && !qn_http_form_add_string(form, "key", ext->key, strlen(ext->key))) return qn_false;
+    if (ext->final_key && !qn_http_form_add_string(form, "key", ext->final_key, strlen(ext->final_key))) return qn_false;
     if (ext->crc32 && !qn_http_form_add_string(form, "crc32", ext->crc32, strlen(ext->crc32))) return qn_false;
     if (ext->accept_type && !qn_http_form_add_string(form, "accept", ext->accept_type, strlen(ext->accept_type))) return qn_false;
 
@@ -209,8 +211,7 @@ qn_bool qn_stor_put_file(qn_storage_ptr stor, const char * fname, qn_stor_put_ex
     qn_fl_info_ptr fi;
     qn_http_form_ptr form;
 
-    ret = qn_stor_prepare_for_putting_file(stor, ext);
-    if (!ret) return qn_false;
+    if (!qn_stor_prepare_for_putting_file(stor, ext)) return qn_false;
 
     form = qn_http_req_get_form(stor->req);
 
