@@ -130,7 +130,7 @@ static qn_bool qn_stor_prepare_managment(qn_storage_ptr stor, const qn_string re
     return qn_true;
 }
 
-qn_bool qn_stor_stat(qn_storage_ptr stor, const char * restrict bucket, const char * restrict key, qn_stor_query_extra_ptr restrict ext)
+qn_bool qn_stor_stat(qn_storage_ptr stor, const qn_stor_auth_ptr restrict auth, const char * restrict bucket, const char * restrict key, qn_stor_stat_extra_ptr restrict ext)
 {
     qn_bool ret;
     qn_string encoded_uri;
@@ -144,7 +144,7 @@ qn_bool qn_stor_stat(qn_storage_ptr stor, const char * restrict bucket, const ch
     qn_str_destroy(encoded_uri);
     if (!url) return qn_false;
 
-    if (!qn_stor_prepare_managment(stor, url, ext->client_end.acctoken, ext->server_end.mac)) {
+    if (!qn_stor_prepare_managment(stor, url, auth->client_end.acctoken, auth->server_end.mac)) {
         qn_str_destroy(url);
         return qn_false;
     } // if
@@ -154,7 +154,7 @@ qn_bool qn_stor_stat(qn_storage_ptr stor, const char * restrict bucket, const ch
     return ret;
 }
 
-qn_bool qn_stor_copy(qn_storage_ptr stor, const char * restrict src_bucket, const char * restrict src_key, const char * restrict dest_bucket, const char * restrict dest_key, qn_stor_copy_extra_ptr restrict ext)
+qn_bool qn_stor_copy(qn_storage_ptr stor, const qn_stor_auth_ptr restrict auth, const char * restrict src_bucket, const char * restrict src_key, const char * restrict dest_bucket, const char * restrict dest_key, qn_stor_copy_extra_ptr restrict ext)
 {
     qn_bool ret;
     qn_string encoded_src_uri;
@@ -186,7 +186,7 @@ qn_bool qn_stor_copy(qn_storage_ptr stor, const char * restrict src_bucket, cons
         } // if
     } // if
 
-    if (!qn_stor_prepare_managment(stor, url, ext->client_end.acctoken, ext->server_end.mac)) {
+    if (!qn_stor_prepare_managment(stor, url, auth->client_end.acctoken, auth->server_end.mac)) {
         qn_str_destroy(url);
         return qn_false;
     } // if
@@ -198,7 +198,7 @@ qn_bool qn_stor_copy(qn_storage_ptr stor, const char * restrict src_bucket, cons
     return ret;
 }
 
-qn_bool qn_stor_move(qn_storage_ptr stor, const char * restrict src_bucket, const char * restrict src_key, const char * restrict dest_bucket, const char * restrict dest_key, qn_stor_move_extra_ptr restrict ext)
+qn_bool qn_stor_move(qn_storage_ptr stor, const qn_stor_auth_ptr restrict auth, const char * restrict src_bucket, const char * restrict src_key, const char * restrict dest_bucket, const char * restrict dest_key, qn_stor_move_extra_ptr restrict ext)
 {
     qn_bool ret;
     qn_string encoded_src_uri;
@@ -220,7 +220,7 @@ qn_bool qn_stor_move(qn_storage_ptr stor, const char * restrict src_bucket, cons
     qn_str_destroy(encoded_dest_uri);
     if (!url) return qn_false;
 
-    if (!qn_stor_prepare_managment(stor, url, ext->client_end.acctoken, ext->server_end.mac)) {
+    if (!qn_stor_prepare_managment(stor, url, auth->client_end.acctoken, auth->server_end.mac)) {
         qn_str_destroy(url);
         return qn_false;
     } // if
@@ -232,7 +232,7 @@ qn_bool qn_stor_move(qn_storage_ptr stor, const char * restrict src_bucket, cons
     return ret;
 }
 
-qn_bool qn_stor_delete(qn_storage_ptr stor, const char * restrict bucket, const char * restrict key, qn_stor_delete_extra_ptr restrict ext)
+qn_bool qn_stor_delete(qn_storage_ptr stor, const qn_stor_auth_ptr restrict auth, const char * restrict bucket, const char * restrict key, qn_stor_delete_extra_ptr restrict ext)
 {
     qn_bool ret;
     qn_string encoded_uri;
@@ -246,7 +246,7 @@ qn_bool qn_stor_delete(qn_storage_ptr stor, const char * restrict bucket, const 
     qn_str_destroy(encoded_uri);
     if (!url) return qn_false;
 
-    if (!qn_stor_prepare_managment(stor, url, ext->client_end.acctoken, ext->server_end.mac)) {
+    if (!qn_stor_prepare_managment(stor, url, auth->client_end.acctoken, auth->server_end.mac)) {
         qn_str_destroy(url);
         return qn_false;
     } // if
@@ -258,7 +258,7 @@ qn_bool qn_stor_delete(qn_storage_ptr stor, const char * restrict bucket, const 
     return ret;
 }
 
-qn_bool qn_stor_change_mime(qn_storage_ptr stor, const char * restrict bucket, const char * restrict key, const char * restrict mime, qn_stor_change_mime_extra_ptr restrict ext)
+qn_bool qn_stor_change_mime(qn_storage_ptr stor, const qn_stor_auth_ptr restrict auth, const char * restrict bucket, const char * restrict key, const char * restrict mime, qn_stor_change_mime_extra_ptr restrict ext)
 {
     qn_bool ret;
     qn_string encoded_uri;
@@ -280,7 +280,7 @@ qn_bool qn_stor_change_mime(qn_storage_ptr stor, const char * restrict bucket, c
     qn_str_destroy(encoded_mime);
     if (!url) return qn_false;
 
-    if (!qn_stor_prepare_managment(stor, url, ext->client_end.acctoken, ext->server_end.mac)) {
+    if (!qn_stor_prepare_managment(stor, url, auth->client_end.acctoken, auth->server_end.mac)) {
         qn_str_destroy(url);
         return qn_false;
     } // if

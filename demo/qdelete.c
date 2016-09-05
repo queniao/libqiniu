@@ -4,9 +4,10 @@
 int main(int argc, char * argv[])
 {
     qn_mac_ptr mac;
-    qn_string bucket = NULL;
-    qn_string key = NULL;
-    qn_storage_ptr stor = NULL;
+    qn_stor_auth auth;
+    qn_string bucket;
+    qn_string key;
+    qn_storage_ptr stor;
     qn_stor_delete_extra ext;
     qn_http_hdr_iterator_ptr hdr_itr;
     qn_string hdr_ent;
@@ -26,10 +27,10 @@ int main(int argc, char * argv[])
         return 1;
     } // if
 
-    memset(&ext, 0, sizeof(ext));
-    ext.server_end.mac = mac;
+    memset(&auth, 0, sizeof(auth));
+    auth.server_end.mac = mac;
 
-    if (!qn_stor_delete(stor, bucket, key, &ext)) {
+    if (!qn_stor_delete(stor, &auth, bucket, key, &ext)) {
         printf("Cannot stat the `%s:%s` file.\n", bucket, key);
         return 2;
     } // if

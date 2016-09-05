@@ -5,6 +5,7 @@
 int main(int argc, char * argv[])
 {
     qn_mac_ptr mac;
+    qn_stor_auth auth;
     qn_string src_bucket = NULL;
     qn_string src_key = NULL;
     qn_string dest_bucket = NULL;
@@ -15,7 +16,7 @@ int main(int argc, char * argv[])
     qn_string hdr_ent;
 
     if (argc < 7) {
-        printf("Usage: qmove <ACCESS_KEY> <SECRET_KEY> <SRC_BUCKET> <SRC_KEY> <DEST_BUCKET> <DEST_BUCKET> [FORCE]\n");
+        printf("Usage: qmove <ACCESS_KEY> <SECRET_KEY> <SRC_BUCKET> <SRC_KEY> <DEST_BUCKET> <DEST_BUCKET>\n");
         return 0;
     } // if
 
@@ -31,10 +32,10 @@ int main(int argc, char * argv[])
         return 1;
     } // if
 
-    memset(&ext, 0, sizeof(ext));
-    ext.server_end.mac = mac;
+    memset(&auth, 0, sizeof(auth));
+    auth.server_end.mac = mac;
 
-    if (!qn_stor_move(stor, src_bucket, src_key, dest_bucket, dest_key, &ext)) {
+    if (!qn_stor_move(stor, &auth, src_bucket, src_key, dest_bucket, dest_key, &ext)) {
         printf("Cannot move the `%s:%s` file to `%s:%s`.\n", src_bucket, src_key, dest_bucket, dest_bucket);
         return 2;
     } // if

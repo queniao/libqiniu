@@ -5,11 +5,13 @@
 int main(int argc, char * argv[])
 {
     qn_mac_ptr mac;
-    qn_string src_bucket = NULL;
-    qn_string src_key = NULL;
-    qn_string dest_bucket = NULL;
-    qn_string dest_key = NULL;
-    qn_storage_ptr stor = NULL;
+    qn_stor_auth auth;
+    qn_string src_bucket;
+    qn_string src_key;
+    qn_string dest_bucket;
+    qn_string dest_key;
+    qn_string force = NULL;
+    qn_storage_ptr stor;
     qn_stor_copy_extra ext;
     qn_http_hdr_iterator_ptr hdr_itr;
     qn_string hdr_ent;
@@ -24,6 +26,9 @@ int main(int argc, char * argv[])
     src_key = argv[4];
     dest_bucket = argv[5];
     dest_key = argv[6];
+    if (argc == 7) {
+        force = argv[7];
+    } // if
 
     stor = qn_stor_create();
     if (!stor) {
@@ -31,10 +36,14 @@ int main(int argc, char * argv[])
         return 1;
     } // if
 
-    memset(&ext, 0, sizeof(ext));
-    ext.server_end.mac = mac;
+    memset(&auth, 0, sizeof(auth));
+    auth.server_end.mac = mac;
 
-    if (!qn_stor_copy(stor, src_bucket, src_key, dest_bucket, dest_key, &ext)) {
+    if (force) {
+        ext.force = qn_true;
+    } // if
+
+    if (!qn_stor_copy(stor, &auth, src_bucket, src_key, dest_bucket, dest_key, &ext)) {
         printf("Cannot copy the `%s:%s` file to `%s:%s`.\n", src_bucket, src_key, dest_bucket, dest_bucket);
         return 2;
     } // if
