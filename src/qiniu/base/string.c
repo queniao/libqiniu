@@ -14,6 +14,8 @@ extern "C"
 {
 #endif
 
+const qn_string qn_str_empty_string = "";
+
 qn_string qn_str_duplicate(const char * s)
 {
     return qn_str_clone(s, strlen(s));

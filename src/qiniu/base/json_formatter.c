@@ -390,6 +390,8 @@ qn_string qn_json_object_to_string(qn_json_object_ptr root)
     qn_size size = capacity;
     qn_size final_size = 0;
 
+    if (!root) return qn_str_empty_string;
+
     fmt = qn_json_fmt_create();
     if (!fmt) return NULL;
 
@@ -439,6 +441,8 @@ qn_string qn_json_array_to_string(qn_json_array_ptr root)
     qn_size new_capacity = 0;
     qn_size size = capacity;
     qn_size final_size = 0;
+
+    if (!root) return qn_str_empty_string;
 
     fmt = qn_json_fmt_create();
     if (!fmt) return NULL;

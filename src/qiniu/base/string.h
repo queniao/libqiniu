@@ -18,6 +18,8 @@ extern "C"
 
 typedef char * qn_string;
 
+extern const qn_string qn_str_empty_string;
+
 #define QN_STR_ARG_END (NULL)
 
 #define qn_str_cstr(s) (s)
@@ -58,7 +60,9 @@ extern qn_string qn_str_clone(const char * s, int sz);
 
 static inline void qn_str_destroy(const char * s)
 {
-    free((void *)s);
+    if (s != qn_str_empty_string) {
+        free((void *)s);
+    } // if
 }
 
 extern qn_string qn_str_join_list(const char * restrict delimiter, const qn_string strs[], int n);
