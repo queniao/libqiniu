@@ -260,7 +260,36 @@ qn_bool qn_stor_delete(qn_storage_ptr stor, const char * restrict bucket, const 
 
 qn_bool qn_stor_change_mime(qn_storage_ptr stor, const char * restrict bucket, const char * restrict key, const char * restrict mime, qn_stor_change_mime_extra_ptr restrict ext)
 {
-    return qn_true;
+    qn_bool ret;
+    qn_string encoded_uri;
+    qn_string encoded_mime;
+    qn_string url;
+
+    // ---- Prepare the query URL
+    encoded_uri = qn_misc_encode_uri(bucket, key);
+    if (!encoded_uri) return qn_false;
+
+    encoded_mime = qn_str_encode_base64_urlsafe(mime, strlen(mime));
+    if (!encoded_mime) {
+        qn_str_destroy(encoded_uri);
+        return qn_false;
+    } // if
+
+    url = qn_str_sprintf("%s/chgm/%s/mime/%s", "http://rs.qiniu.com", qn_str_cstr(encoded_uri), qn_str_cstr(encoded_mime));
+    qn_str_destroy(encoded_uri);
+    qn_str_destroy(encoded_mime);
+    if (!url) return qn_false;
+
+    if (!qn_stor_prepare_managment(stor, url, ext->client_end.acctoken, ext->server_end.mac)) {
+        qn_str_destroy(url);
+        return qn_false;
+    } // if
+
+    qn_http_req_set_body_data(stor->req, "", 0);
+
+    ret = qn_http_conn_post(stor->conn, url, stor->req, stor->resp);
+    qn_str_destroy(url);
+    return ret;
 }
 
 // ---- Definition of Upload ----

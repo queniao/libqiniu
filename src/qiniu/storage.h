@@ -88,6 +88,13 @@ extern qn_bool qn_stor_delete(qn_storage_ptr stor, const char * restrict bucket,
 
 typedef struct _QN_STOR_CHANGE_MIME_EXTRA
 {
+    struct {
+        qn_mac_ptr mac;
+    } server_end;
+
+    struct {
+        const qn_string acctoken;
+    } client_end;
 } qn_stor_change_mime_extra, *qn_stor_change_mime_extra_ptr;
 
 extern qn_bool qn_stor_change_mime(qn_storage_ptr stor, const char * restrict bucket, const char * restrict key, const char * restrict mime, qn_stor_change_mime_extra_ptr restrict ext);
