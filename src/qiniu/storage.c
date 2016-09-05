@@ -94,13 +94,47 @@ static qn_bool qn_stor_prepare_common_request_headers(qn_storage_ptr stor)
 
 // ---- Definition of Management ----
 
+static qn_bool qn_stor_prepare_managment(qn_storage_ptr stor, const qn_string restrict url, qn_string restrict acctoken, const qn_mac_ptr restrict mac)
+{
+    qn_string auth_header;
+
+    // ---- Prepare the request and response
+    qn_http_req_reset(stor->req);
+    qn_http_resp_reset(stor->resp);
+
+    if (acctoken) {
+        auth_header = qn_str_sprintf("QBox %s", acctoken);
+    } else if (mac) {
+        acctoken = qn_mac_make_acctoken(mac, url, NULL, 0);
+        if (!acctoken) return qn_false;
+
+        auth_header = qn_str_sprintf("QBox %s", acctoken);
+        qn_str_destroy(acctoken);
+    } else {
+        qn_err_set_invalid_argument();
+        return qn_false;
+    } // if
+    if (!auth_header) return qn_false;
+    if (!qn_http_req_set_header(stor->req, "Authorization", auth_header)) return qn_false;
+    qn_str_destroy(auth_header);
+
+    if (!qn_stor_prepare_common_request_headers(stor)) return qn_false;
+
+    if (stor->obj_body) {
+        qn_json_destroy_object(stor->obj_body);
+        stor->obj_body = NULL;
+    } // if
+
+    qn_http_json_wrt_prepare_for_object(stor->resp_json_wrt, &stor->obj_body);
+    qn_http_resp_set_data_writer(stor->resp, stor->resp_json_wrt, &qn_http_json_wrt_callback);
+    return qn_true;
+}
+
 qn_bool qn_stor_stat(qn_storage_ptr stor, const char * restrict bucket, const char * restrict key, qn_stor_query_extra_ptr restrict ext)
 {
     qn_bool ret;
     qn_string encoded_uri;
     qn_string url;
-    qn_string acctoken;
-    qn_string auth_header;
 
     // ---- Prepare the query URL
     encoded_uri = qn_misc_encode_uri(bucket, key);
@@ -110,48 +144,73 @@ qn_bool qn_stor_stat(qn_storage_ptr stor, const char * restrict bucket, const ch
     qn_str_destroy(encoded_uri);
     if (!url) return qn_false;
 
-    // ---- Prepare the request and response
-    qn_http_req_reset(stor->req);
-    qn_http_resp_reset(stor->resp);
-
-    if (ext->acctoken) {
-        auth_header = qn_str_sprintf("QBox %s", ext->acctoken);
-    } else if (ext->mac) {
-        acctoken = qn_mac_make_acctoken(ext->mac, url, NULL, 0);
-        if (!acctoken) {
-            qn_str_destroy(url);
-            return qn_false;
-        } // if
-
-        auth_header = qn_str_sprintf("QBox %s", acctoken);
-        qn_str_destroy(acctoken);
-    } // if
-    if (!auth_header) {
+    if (!qn_stor_prepare_managment(stor, url, ext->client_end.acctoken, ext->server_end.mac)) {
         qn_str_destroy(url);
         return qn_false;
     } // if
-    if (!qn_http_req_set_header(stor->req, "Authorization", auth_header)) {
-        qn_str_destroy(url);
-        return qn_false;
-    } // if
-    qn_str_destroy(auth_header);
-
-    if (!qn_stor_prepare_common_request_headers(stor)) {
-        qn_str_destroy(url);
-        return qn_false;
-    } // if
-
-    if (stor->obj_body) {
-        qn_json_destroy_object(stor->obj_body);
-        stor->obj_body = NULL;
-    } // if
-
-    qn_http_json_wrt_prepare_for_object(stor->resp_json_wrt, &stor->obj_body);
-    qn_http_resp_set_data_writer(stor->resp, stor->resp_json_wrt, &qn_http_json_wrt_callback);
 
     ret = qn_http_conn_get(stor->conn, url, stor->req, stor->resp);
     qn_str_destroy(url);
     return ret;
+}
+
+qn_bool qn_stor_copy(qn_storage_ptr stor, const char * restrict src_bucket, const char * restrict src_key, const char * restrict dest_bucket, const char * restrict dest_key, qn_stor_copy_extra_ptr restrict ext)
+{
+    qn_bool ret;
+    qn_string encoded_src_uri;
+    qn_string encoded_dest_uri;
+    qn_string url;
+    qn_string url2;
+
+    // ---- Prepare the query URL
+    encoded_src_uri = qn_misc_encode_uri(src_bucket, src_key);
+    if (!encoded_src_uri) return qn_false;
+
+    encoded_dest_uri = qn_misc_encode_uri(dest_bucket, dest_key);
+    if (!encoded_dest_uri) {
+        qn_str_destroy(encoded_src_uri);
+        return qn_false;
+    } // if
+
+    url = qn_str_sprintf("%s/copy/%s/%s", "http://rs.qiniu.com", qn_str_cstr(encoded_src_uri), qn_str_cstr(encoded_dest_uri));
+    qn_str_destroy(encoded_src_uri);
+    qn_str_destroy(encoded_dest_uri);
+    if (!url) return qn_false;
+
+    if (ext) {
+        if (ext->force) {
+            url2 = qn_str_sprintf("%s/force/true", url);
+            qn_str_destroy(url);
+            if (!url2) return qn_false;
+            url = url2;
+        } // if
+    } // if
+
+    if (!qn_stor_prepare_managment(stor, url, ext->client_end.acctoken, ext->server_end.mac)) {
+        qn_str_destroy(url);
+        return qn_false;
+    } // if
+
+    qn_http_req_set_body_data(stor->req, "", 0);
+
+    ret = qn_http_conn_post(stor->conn, url, stor->req, stor->resp);
+    qn_str_destroy(url);
+    return ret;
+}
+
+qn_bool qn_stor_move(qn_storage_ptr stor, const char * restrict src_bucket, const char * restrict src_key, const char * restrict dest_bucket, const char * restrict dest_key, qn_stor_move_extra_ptr restrict ext)
+{
+    return qn_true;
+}
+
+qn_bool qn_stor_delete(qn_storage_ptr stor, const char * restrict bucket, const char * restrict key, qn_stor_delete_extra_ptr restrict ext)
+{
+    return qn_true;
+}
+
+qn_bool qn_stor_change_mime(qn_storage_ptr stor, const char * restrict bucket, const char * restrict key, const char * restrict mime, qn_stor_change_mime_extra_ptr restrict ext)
+{
+    return qn_true;
 }
 
 // ---- Definition of Upload ----

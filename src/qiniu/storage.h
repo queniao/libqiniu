@@ -26,16 +26,60 @@ extern qn_http_hdr_iterator_ptr qn_stor_resp_get_header_iterator(qn_storage_ptr 
 
 typedef struct _QN_STOR_QUERY_EXTRA
 {
-    qn_mac_ptr mac;
-    const qn_string acctoken;
+    struct {
+        qn_mac_ptr mac;
+    } server_end;
+
+    struct {
+        const qn_string acctoken;
+    } client_end;
 } qn_stor_query_extra, *qn_stor_query_extra_ptr;
 
 extern qn_bool qn_stor_stat(qn_storage_ptr stor, const char * restrict bucket, const char * restrict key, qn_stor_query_extra_ptr restrict ext);
 
-extern qn_bool qn_stor_copy(qn_storage_ptr stor, const char * restrict src_bucket, const char * restrict src_key, const char * restrict dest_bucket, const char * restrict dest_key, qn_stor_query_extra_ptr ext);
-extern qn_bool qn_stor_move(qn_storage_ptr stor, const char * restrict src_bucket, const char * restrict src_key, const char * restrict dest_bucket, const char * restrict dest_key, qn_stor_query_extra_ptr ext);
-extern qn_bool qn_stor_delete(qn_storage_ptr stor, const char * restrict bucket, const char * restrict key, qn_stor_query_extra_ptr ext);
-extern qn_bool qn_stor_change_mime(qn_storage_ptr stor, const char * restrict bucket, const char * restrict key, const char * restrict mime, qn_stor_query_extra_ptr ext);
+// ----
+
+typedef struct _QN_STOR_COPY_EXTRA
+{
+    struct {
+        qn_mac_ptr mac;
+    } server_end;
+
+    struct {
+        const qn_string acctoken;
+    } client_end;
+
+    qn_bool force;
+} qn_stor_copy_extra, *qn_stor_copy_extra_ptr;
+
+extern qn_bool qn_stor_copy(qn_storage_ptr stor, const char * restrict src_bucket, const char * restrict src_key, const char * restrict dest_bucket, const char * restrict dest_key, qn_stor_copy_extra_ptr restrict ext);
+
+// ----
+
+typedef struct _QN_STOR_MOVE_COPY_EXTRA
+{
+    qn_bool force;
+} qn_stor_move_extra, *qn_stor_move_extra_ptr;
+
+extern qn_bool qn_stor_move(qn_storage_ptr stor, const char * restrict src_bucket, const char * restrict src_key, const char * restrict dest_bucket, const char * restrict dest_key, qn_stor_move_extra_ptr restrict ext);
+
+// ----
+
+typedef struct _QN_STOR_DELETE_EXTRA
+{
+} qn_stor_delete_extra, *qn_stor_delete_extra_ptr;
+
+extern qn_bool qn_stor_delete(qn_storage_ptr stor, const char * restrict bucket, const char * restrict key, qn_stor_delete_extra_ptr restrict ext);
+
+// ----
+
+typedef struct _QN_STOR_CHANGE_MIME_EXTRA
+{
+} qn_stor_change_mime_extra, *qn_stor_change_mime_extra_ptr;
+
+extern qn_bool qn_stor_change_mime(qn_storage_ptr stor, const char * restrict bucket, const char * restrict key, const char * restrict mime, qn_stor_change_mime_extra_ptr restrict ext);
+
+// ----
 
 typedef struct _QN_STOR_FETCH_EXTRA
 {
@@ -43,6 +87,8 @@ typedef struct _QN_STOR_FETCH_EXTRA
 
 extern qn_bool qn_stor_fetch(qn_storage_ptr stor, const char * restrict url, const char * restrict bucket, const char * restrict key, qn_stor_fetch_extra_ptr ext);
 extern qn_bool qn_stor_prefetch(qn_storage_ptr stor, const char * restrict bucket, const char * restrict key, qn_stor_fetch_extra_ptr ext);
+
+// ----
 
 typedef struct _QN_STOR_LIST_EXTRA
 {
@@ -52,6 +98,8 @@ typedef struct _QN_STOR_LIST_EXTRA
 } qn_stor_list_extra, *qn_stor_list_extra_ptr;
 
 extern qn_bool qn_stor_list(qn_storage_ptr stor, const char * restrict bucket, qn_stor_list_extra_ptr ext);
+
+// ----
 
 struct _QN_STOR_BATCH;
 typedef struct _QN_STOR_BATCH * qn_stor_batch_ptr;
