@@ -13,6 +13,9 @@ target_link_libraries (qcopy qiniu curl crypto)
 add_executable (qmove qmove.c)
 target_link_libraries (qmove qiniu curl crypto)
 
+add_executable (qdelete qdelete.c)
+target_link_libraries (qdelete qiniu curl crypto)
+
 add_executable (qput qput.c)
 target_link_libraries (qput qiniu curl crypto)
 

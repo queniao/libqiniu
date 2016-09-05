@@ -73,6 +73,13 @@ extern qn_bool qn_stor_move(qn_storage_ptr stor, const char * restrict src_bucke
 
 typedef struct _QN_STOR_DELETE_EXTRA
 {
+    struct {
+        qn_mac_ptr mac;
+    } server_end;
+
+    struct {
+        const qn_string acctoken;
+    } client_end;
 } qn_stor_delete_extra, *qn_stor_delete_extra_ptr;
 
 extern qn_bool qn_stor_delete(qn_storage_ptr stor, const char * restrict bucket, const char * restrict key, qn_stor_delete_extra_ptr restrict ext);
