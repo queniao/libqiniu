@@ -9,7 +9,6 @@ int main(int argc, char * argv[])
     qn_string src_key = NULL;
     qn_string dest_bucket = NULL;
     qn_string dest_key = NULL;
-    qn_string stat_ret = NULL;
     qn_storage_ptr stor = NULL;
     qn_stor_copy_extra ext;
     qn_http_hdr_iterator_ptr hdr_itr;
@@ -44,15 +43,6 @@ int main(int argc, char * argv[])
     while ((hdr_ent = qn_http_hdr_itr_next_entry(hdr_itr))) {
         printf("%s\n", qn_str_cstr(hdr_ent));
     } // while
-
-    stat_ret = qn_json_object_to_string(qn_stor_get_object_body(stor));
-    if (!stat_ret) {
-        printf("Cannot format the object body form /stat interface.\n");
-        return 3;
-    } // if
-
-    printf("%s\n", stat_ret);
-    qn_str_destroy(stat_ret);
 
     qn_stor_destroy(stor);
     qn_mac_destroy(mac);
