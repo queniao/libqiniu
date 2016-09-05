@@ -200,7 +200,36 @@ qn_bool qn_stor_copy(qn_storage_ptr stor, const char * restrict src_bucket, cons
 
 qn_bool qn_stor_move(qn_storage_ptr stor, const char * restrict src_bucket, const char * restrict src_key, const char * restrict dest_bucket, const char * restrict dest_key, qn_stor_move_extra_ptr restrict ext)
 {
-    return qn_true;
+    qn_bool ret;
+    qn_string encoded_src_uri;
+    qn_string encoded_dest_uri;
+    qn_string url;
+
+    // ---- Prepare the query URL
+    encoded_src_uri = qn_misc_encode_uri(src_bucket, src_key);
+    if (!encoded_src_uri) return qn_false;
+
+    encoded_dest_uri = qn_misc_encode_uri(dest_bucket, dest_key);
+    if (!encoded_dest_uri) {
+        qn_str_destroy(encoded_src_uri);
+        return qn_false;
+    } // if
+
+    url = qn_str_sprintf("%s/move/%s/%s", "http://rs.qiniu.com", qn_str_cstr(encoded_src_uri), qn_str_cstr(encoded_dest_uri));
+    qn_str_destroy(encoded_src_uri);
+    qn_str_destroy(encoded_dest_uri);
+    if (!url) return qn_false;
+
+    if (!qn_stor_prepare_managment(stor, url, ext->client_end.acctoken, ext->server_end.mac)) {
+        qn_str_destroy(url);
+        return qn_false;
+    } // if
+
+    qn_http_req_set_body_data(stor->req, "", 0);
+
+    ret = qn_http_conn_post(stor->conn, url, stor->req, stor->resp);
+    qn_str_destroy(url);
+    return ret;
 }
 
 qn_bool qn_stor_delete(qn_storage_ptr stor, const char * restrict bucket, const char * restrict key, qn_stor_delete_extra_ptr restrict ext)

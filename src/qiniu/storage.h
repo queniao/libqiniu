@@ -56,9 +56,15 @@ extern qn_bool qn_stor_copy(qn_storage_ptr stor, const char * restrict src_bucke
 
 // ----
 
-typedef struct _QN_STOR_MOVE_COPY_EXTRA
+typedef struct _QN_STOR_MOVE_EXTRA
 {
-    qn_bool force;
+    struct {
+        qn_mac_ptr mac;
+    } server_end;
+
+    struct {
+        const qn_string acctoken;
+    } client_end;
 } qn_stor_move_extra, *qn_stor_move_extra_ptr;
 
 extern qn_bool qn_stor_move(qn_storage_ptr stor, const char * restrict src_bucket, const char * restrict src_key, const char * restrict dest_bucket, const char * restrict dest_key, qn_stor_move_extra_ptr restrict ext);
