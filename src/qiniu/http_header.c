@@ -43,6 +43,7 @@ void qn_http_hdr_destroy(qn_http_header_ptr hdr)
 {
     if (hdr) {
         qn_http_hdr_reset(hdr);
+        free(hdr->entries);
         free(hdr);
     } // if
 }
@@ -130,7 +131,7 @@ qn_bool qn_http_hdr_set_raw(qn_http_header_ptr hdr, const char * key, qn_size ke
     if (!new_val) {
         qn_err_set_no_enough_memory();
         return qn_false;
-    }
+    } // if
 
     pos = qn_http_hdr_bsearch(hdr, key, key_size, &ord);
     if (pos < hdr->cnt && ord == 0) {
