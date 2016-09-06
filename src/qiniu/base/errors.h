@@ -21,6 +21,7 @@ extern void qn_err_set_no_enough_buffer(void);
 
 extern void qn_err_json_set_bad_text_input(void);
 extern void qn_err_json_set_too_many_parsing_levels(void);
+extern void qn_err_json_set_need_more_text_input(void);
 
 extern void qn_err_http_set_invalid_header_syntax(void);
 extern void qn_err_http_set_adding_string_field_failed(void);
@@ -47,6 +48,7 @@ extern qn_bool qn_err_is_no_enough_buffer(void);
 
 extern qn_bool qn_err_json_is_bad_text_input(void);
 extern qn_bool qn_err_json_is_too_many_pasring_levels(void);
+extern qn_bool qn_err_json_is_need_more_text_input(void);
 
 extern qn_bool qn_err_http_is_invalid_header_syntax(void);
 extern qn_bool qn_err_http_is_adding_string_field_failed(void);

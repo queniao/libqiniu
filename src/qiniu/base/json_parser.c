@@ -436,6 +436,7 @@ static qn_json_token qn_json_scan_null(qn_json_scanner_ptr s, char ** txt, qn_si
 
 static qn_json_token qn_json_scan(qn_json_scanner_ptr s, char ** txt, qn_size * txt_size)
 {
+    if (s->buf_pos >= s->buf_size) return QN_JSON_TKNERR_NEED_MORE_TEXT;
     if (!s->tkn_scanner) {
         while (isspace(s->buf[s->buf_pos])) {
             if (++s->buf_pos == s->buf_size) return QN_JSON_TKNERR_NEED_MORE_TEXT;
@@ -763,7 +764,11 @@ PARSING_NEXT_ELEMENT_IN_THE_OBJECT:
             } // if
 
             if (tkn != QN_JSON_TKN_STRING) {
-                qn_err_json_set_bad_text_input();
+                if (tkn == QN_JSON_TKNERR_NEED_MORE_TEXT) {
+                    qn_err_json_set_need_more_text_input();
+                } else {
+                    qn_err_json_set_bad_text_input();
+                } // if
                 return QN_JSON_PARSING_ERROR;
             } // if
 
@@ -774,7 +779,11 @@ PARSING_NEXT_ELEMENT_IN_THE_OBJECT:
             tkn = qn_json_scan(&prs->scanner, &txt, &txt_size);
 
             if (tkn != QN_JSON_TKN_COLON) {
-                qn_err_json_set_bad_text_input();
+                if (tkn == QN_JSON_TKNERR_NEED_MORE_TEXT) {
+                    qn_err_json_set_need_more_text_input();
+                } else {
+                    qn_err_json_set_bad_text_input();
+                } // if
                 return QN_JSON_PARSING_ERROR;
             } // if
 
@@ -801,7 +810,11 @@ PARSING_NEXT_ELEMENT_IN_THE_OBJECT:
                 return QN_JSON_PARSING_OK;
             } // if
             if (tkn != QN_JSON_TKN_COMMA) {
-                qn_err_json_set_bad_text_input();
+                if (tkn == QN_JSON_TKNERR_NEED_MORE_TEXT) {
+                    qn_err_json_set_need_more_text_input();
+                } else {
+                    qn_err_json_set_bad_text_input();
+                } // if
                 return QN_JSON_PARSING_ERROR;
             } // if
 
@@ -853,7 +866,11 @@ PARSING_NEXT_ELEMENT_IN_THE_ARRAY:
                 return QN_JSON_PARSING_OK;
             } // if
             if (tkn != QN_JSON_TKN_COMMA) {
-                qn_err_json_set_bad_text_input();
+                if (tkn == QN_JSON_TKNERR_NEED_MORE_TEXT) {
+                    qn_err_json_set_need_more_text_input();
+                } else {
+                    qn_err_json_set_bad_text_input();
+                } // if
                 return QN_JSON_PARSING_ERROR;
             } // if
 

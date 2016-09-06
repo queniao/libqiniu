@@ -65,12 +65,12 @@ qn_size qn_http_json_wrt_callback(void * user_data, char * buf, qn_size buf_size
     qn_http_json_writer_ptr w = (qn_http_json_writer_ptr) user_data;
     if (w->obj) {
         if (!qn_json_prs_parse_object(w->prs, buf, &size, w->obj)) {
-            if (qn_err_is_try_again()) return buf_size;
+            if (qn_err_json_is_need_more_text_input()) return buf_size;
             return 0;
         } // if
     } else {
         if (!qn_json_prs_parse_array(w->prs, buf, &size, w->arr)) {
-            if (qn_err_is_try_again()) return buf_size;
+            if (qn_err_json_is_need_more_text_input()) return buf_size;
             return 0;
         } // if
     } // if
@@ -464,7 +464,7 @@ static size_t qn_http_resp_body_wrt_callback(char * buf, size_t size, size_t nit
         case QN_HTTP_RESP_WRT_PARSING_BODY:
             resp->body_wrt_code = resp->body_wrt_cb(resp->body_wrt, buf, buf_size);
             if (resp->body_wrt_code == 0) {
-                if (qn_err_is_try_again()) return buf_size;
+                if (qn_err_json_is_need_more_text_input()) return buf_size;
                 resp->body_wrt_sts = QN_HTTP_RESP_WRT_PARSING_ERROR;
             } else if (qn_err_is_succeed()) {
                 resp->body_wrt_sts = QN_HTTP_RESP_WRT_PARSING_DONE;

@@ -1,5 +1,6 @@
 #include <CUnit/Basic.h>
 
+#include "qiniu/base/errors.h"
 #include "qiniu/base/json.h"
 #include "qiniu/base/json_parser.h"
 #include "qiniu/base/json_formatter.h"
@@ -147,7 +148,8 @@ CU_TestInfo test_normal_cases_of_json_manipulating[] = {
     {"test_manipulate_array()", test_manipulate_array},
     CU_TEST_INFO_NULL
 };
-// ---- test parser ----
+
+// ---- normal test case of parsing ----
 
 void test_parse_empty_object(void)
 {
@@ -325,6 +327,30 @@ void test_parse_object_holding_embedded_objects(void)
 
     qn_json_destroy_object(obj_root);
 }
+
+void test_parse_object_holding_utf8_string(void)
+{
+    qn_bool ret;
+    const char buf[] = {"{\"_str\":\"工人\"}"};
+    qn_size buf_len = strlen(buf);
+    qn_string str;
+    qn_json_object_ptr obj_root = NULL;
+    qn_json_parser_ptr prs = NULL;
+
+    prs = qn_json_prs_create();
+    CU_ASSERT_FATAL(prs != NULL);
+
+    ret = qn_json_prs_parse_object(prs, buf, &buf_len, &obj_root);
+    CU_ASSERT_TRUE(ret);
+
+    str = qn_json_get_string(obj_root, "_str", NULL);
+    CU_ASSERT_PTR_NOT_NULL(str);
+    CU_ASSERT_STRING_EQUAL(qn_str_cstr(str), "工人");
+
+    qn_json_destroy_object(obj_root);
+}
+
+// ----
 
 void test_parse_empty_array(void)
 {
@@ -508,12 +534,41 @@ CU_TestInfo test_normal_cases_of_json_parsing[] = {
     {"test_parse_object_holding_ordinary_elements()", test_parse_object_holding_ordinary_elements},
     {"test_parse_object_holding_empty_complex_elements()", test_parse_object_holding_empty_complex_elements},
     {"test_parse_object_holding_embedded_objects()", test_parse_object_holding_embedded_objects},
+    {"test_parse_object_holding_utf8_string()", test_parse_object_holding_utf8_string}, 
     {"test_parse_empty_array()", test_parse_empty_array},
     {"test_parse_array_holding_one_element()", test_parse_array_holding_one_element},
     {"test_parse_array_holding_two_elements()", test_parse_array_holding_two_elements},
     {"test_parse_array_holding_ordinary_elements()", test_parse_array_holding_ordinary_elements},
     {"test_parse_array_holding_empty_complex_elements()", test_parse_array_holding_empty_complex_elements},
     {"test_parse_array_holding_embedded_arrays()", test_parse_array_holding_embedded_arrays},
+    CU_TEST_INFO_NULL
+};
+
+// ---- abnormal test case of parsing ----
+
+void test_parse_object_without_enough_input_of_key(void)
+{
+    qn_bool ret;
+    const char buf[] = {"{\"_key\":123456,"};
+    qn_size buf_len = strlen(buf);
+    qn_json_object_ptr obj_root = NULL;
+    qn_json_parser_ptr prs = NULL;
+
+    prs = qn_json_prs_create();
+    CU_ASSERT_FATAL(prs != NULL);
+
+    ret = qn_json_prs_parse_object(prs, buf, &buf_len, &obj_root);
+    qn_json_prs_destroy(prs);
+    CU_ASSERT_FALSE(ret);
+
+    if (!qn_err_json_is_need_more_text_input()) {
+        CU_FAIL("The error is not `need more text input`.");
+        return;
+    } // if
+}
+
+CU_TestInfo test_abnormal_cases_of_json_parsing[] = {
+    {"test_parse_object_without_enough_input_of_key()", test_parse_object_without_enough_input_of_key},
     CU_TEST_INFO_NULL
 };
 
@@ -934,6 +989,7 @@ CU_TestInfo test_normal_cases_of_json_formatting[] = {
 CU_SuiteInfo suites[] = {
     {"test_normal_cases_of_json_manipulating", NULL, NULL, test_normal_cases_of_json_manipulating},
     {"test_normal_cases_of_json_parsing", NULL, NULL, test_normal_cases_of_json_parsing},
+    {"test_abnormal_cases_of_json_parsing", NULL, NULL, test_abnormal_cases_of_json_parsing},
     {"test_normal_cases_of_json_formatting", NULL, NULL, test_normal_cases_of_json_formatting},
     CU_SUITE_INFO_NULL
 };
