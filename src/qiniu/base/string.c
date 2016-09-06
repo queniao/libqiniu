@@ -337,13 +337,15 @@ qn_string qn_str_percent_encode(const char * restrict bin, int bin_size)
     qn_string new_str = NULL;
     int buf_size = qn_str_percent_encode_in_buffer(NULL, 0, bin, bin_size);
 
+    if (buf_size == bin_size) return qn_str_clone(bin, bin_size);
+
     new_str = malloc(buf_size + 1);
     if (!new_str) {
         qn_err_set_no_enough_memory();
         return NULL;
     }
-    new_str[buf_size + 1] = '\0';
     qn_str_percent_encode_in_buffer(new_str, buf_size, bin, bin_size);
+    new_str[buf_size] = '\0';
     return new_str;
 }
 
