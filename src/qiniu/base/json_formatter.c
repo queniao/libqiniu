@@ -19,7 +19,14 @@ typedef enum _QN_JSON_FMT_STATUS
     QN_JSON_FORMATTING_CLOSURE = 6
 } qn_json_fmt_status;
 
+enum
+{
+    QN_JSON_FMT_ESCAPE_UTF8_STRING = 0x1
+};
+
 typedef struct _QN_JSON_FORMATTER {
+    int flags;
+
     char * buf;
     qn_size buf_size;
     qn_size buf_capacity;
@@ -40,7 +47,7 @@ qn_json_formatter_ptr qn_json_fmt_create(void)
 {
     qn_json_formatter_ptr new_fmt = NULL;
 
-    new_fmt = calloc(1, sizeof(*new_fmt));
+    new_fmt = calloc(1, sizeof(qn_json_formatter));
     if (!new_fmt) {
         qn_err_set_no_enough_memory();
         return NULL;
@@ -54,6 +61,7 @@ qn_json_formatter_ptr qn_json_fmt_create(void)
         return NULL;
     } // if
 
+    new_fmt->flags = 0;
     return new_fmt;
 }
 
@@ -63,6 +71,16 @@ void qn_json_fmt_destroy(qn_json_formatter_ptr fmt)
         qn_json_itr_destroy(fmt->iterator);
         free(fmt);
     } // for
+}
+
+void qn_json_fmt_enable_escape_utf8_string(qn_json_formatter_ptr fmt)
+{
+    fmt->flags |= QN_JSON_FMT_ESCAPE_UTF8_STRING;
+}
+
+void qn_json_fmt_disable_escape_utf8_string(qn_json_formatter_ptr fmt)
+{
+    fmt->flags &= ~QN_JSON_FMT_ESCAPE_UTF8_STRING;
 }
 
 static inline qn_bool qn_json_fmt_putc(qn_json_formatter_ptr fmt, char ch)
@@ -76,8 +94,7 @@ static inline qn_bool qn_json_fmt_putc(qn_json_formatter_ptr fmt, char ch)
     return qn_true;
 }
 
-static
-qn_bool qn_json_fmt_format_string(qn_json_formatter_ptr fmt)
+static qn_bool qn_json_fmt_format_string(qn_json_formatter_ptr fmt)
 {
 #define c1 (str[pos])
 #define c2 (str[pos+1])
@@ -91,7 +108,6 @@ qn_bool qn_json_fmt_format_string(qn_json_formatter_ptr fmt)
     const char * str = qn_str_cstr(fmt->string);
     int chars = 0;
     int ret = 0;
-    int size = 0;
     qn_uint32 wch = 0;
 
     if (pos == 0 && !qn_json_fmt_putc(fmt, '"')) {
@@ -99,7 +115,7 @@ qn_bool qn_json_fmt_format_string(qn_json_formatter_ptr fmt)
         goto FORMATTING_STRING_FAILED;
     } // if
     while (pos < end) {
-        if ((c1 & 0x80) == 0) {
+        if ((c1 & 0x80) == 0 || ((fmt->flags & QN_JSON_FMT_ESCAPE_UTF8_STRING) == 0)) {
             // ASCII range: 0zzzzzzz（00-7F）
             if (c1 == '&') {
                 if ((fmt->buf_size + 6) >= fmt->buf_capacity) {
@@ -112,14 +128,13 @@ qn_bool qn_json_fmt_format_string(qn_json_formatter_ptr fmt)
                     goto FORMATTING_STRING_FAILED;
                 } // if
                 pos += 1;
-                size += ret;
+                fmt->buf_size += ret;
             } else {
                 if (!qn_json_fmt_putc(fmt, c1)) {
                     qn_err_set_try_again();
                     goto FORMATTING_STRING_FAILED;
                 } // if
                 pos += 1;
-                size += 1;
             } // if
 
             continue;
@@ -175,7 +190,7 @@ qn_bool qn_json_fmt_format_string(qn_json_formatter_ptr fmt)
             goto FORMATTING_STRING_FAILED;
         } // if
         pos += chars;
-        size += ret;
+        fmt->buf_size += ret;
     } // while
 
     if (!qn_json_fmt_putc(fmt, '"')) {
@@ -188,7 +203,6 @@ qn_bool qn_json_fmt_format_string(qn_json_formatter_ptr fmt)
 
 FORMATTING_STRING_FAILED:
     fmt->string_pos = pos;
-    fmt->buf_size += size;
     return qn_false;
 
 #undef c1
@@ -199,8 +213,7 @@ FORMATTING_STRING_FAILED:
 #undef tail_code
 }
 
-static
-qn_bool qn_json_fmt_format_ordinary(qn_json_formatter_ptr fmt)
+static qn_bool qn_json_fmt_format_ordinary(qn_json_formatter_ptr fmt)
 {
     int ret = 0;
     const char * str = NULL;
