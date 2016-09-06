@@ -736,7 +736,7 @@ static qn_bool qn_json_prs_put_in(qn_json_parser_ptr prs, qn_json_token tkn, cha
             return qn_json_push_boolean(lvl->elem.array, qn_false);
 
         case QN_JSON_TKNERR_NEED_MORE_TEXT:
-            qn_err_set_try_again();
+            qn_err_json_set_need_more_text_input();
             return qn_false;
 
         default:
