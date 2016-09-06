@@ -2,6 +2,7 @@
 #include "qiniu/base/json_parser.h"
 #include "qiniu/base/json_formatter.h"
 #include "qiniu/http.h"
+#include "qiniu/http_query.h"
 #include "qiniu/storage.h"
 #include "qiniu/misc.h"
 
@@ -289,6 +290,109 @@ qn_bool qn_stor_change_mime(qn_storage_ptr stor, const qn_stor_auth_ptr restrict
 
     ret = qn_http_conn_post(stor->conn, url, stor->req, stor->resp);
     qn_str_destroy(url);
+    return ret;
+}
+
+// ----
+
+qn_bool qn_stor_list(qn_storage_ptr stor, const qn_stor_auth_ptr restrict auth, const char * restrict bucket, qn_stor_list_extra_ptr restrict ext)
+{
+    qn_bool ret;
+    qn_string url;
+    qn_string qry_str;
+    qn_string marker;
+    qn_http_query_ptr qry;
+    qn_json_array_ptr items;
+    qn_json_object_ptr item;
+    int i;
+    int limit = 1000;
+
+    qry = qn_http_qry_create();
+    if (!qry) return qn_false;
+
+    if (!qn_http_qry_set_string(qry, "bucket", -1, bucket, strlen(bucket))) {
+        qn_http_qry_destroy(qry);
+        return qn_false;
+    } // if
+
+    if (ext) {
+        limit = (0 < ext->limit && ext->limit <= 1000) ? ext->limit : 1000;
+
+        if (ext->delimiter && !qn_http_qry_set_string(qry, "delimiter", -1, ext->delimiter, strlen(ext->delimiter))) {
+            qn_http_qry_destroy(qry);
+            return qn_false;
+        } // if
+
+        if (ext->prefix && !qn_http_qry_set_string(qry, "prefix", -1, ext->prefix, strlen(ext->prefix))) {
+            qn_http_qry_destroy(qry);
+            return qn_false;
+        } // if
+    } // if
+
+    if (!qn_http_qry_set_integer(qry, "limit", -1, limit)) {
+        qn_http_qry_destroy(qry);
+        return qn_false;
+    } // if
+
+    // ---- Prepare the query URL
+    do {
+        if (stor->obj_body) {
+            marker = qn_json_get_string(stor->obj_body, marker, qn_str_empty_string);
+            if (!qn_http_qry_set_string(qry, "marker", -1, qn_str_cstr(marker), qn_str_size(marker))) {
+                qn_http_qry_destroy(qry);
+                return qn_false;
+            } // if
+        } // if
+
+        if (! (qry_str = qn_http_qry_to_string(qry))) {
+            qn_http_qry_destroy(qry);
+            return qn_false;
+        } // if
+        if (! (url = qn_str_sprintf("%s/list?%s", "http://rsf.qbox.me", qry_str))) {
+            qn_http_qry_destroy(qry);
+            return qn_false;
+        } // if
+
+        if (!qn_stor_prepare_managment(stor, url, auth->client_end.acctoken, auth->server_end.mac)) {
+            qn_str_destroy(url);
+            qn_http_qry_destroy(qry);
+            return qn_false;
+        } // if
+
+        qn_http_req_set_body_data(stor->req, "", 0);
+
+        ret = qn_http_conn_post(stor->conn, url, stor->req, stor->resp);
+        qn_str_destroy(url);
+
+        if (!ret || !ext->item_processor_callback) break;
+        if (!stor->obj_body || qn_json_is_empty_object(stor->obj_body)) {
+            // No list result.
+            qn_http_qry_destroy(qry);
+            return qn_true;
+        } // if
+
+        items = qn_json_get_array(stor->obj_body, "items", NULL);
+        if (!items) {
+            // TODO: Set an appropriate error.
+            qn_http_qry_destroy(qry);
+            return qn_false;
+        } // if
+
+        if (qn_json_is_empty_array(items)) {
+            qn_http_qry_destroy(qry);
+            return qn_true;
+        } // if
+
+        for (i = 0; i < qn_json_size_array(items); i += 1) {
+            item = qn_json_pick_object(items, i, NULL);
+            if (!ext->item_processor_callback(ext->item_processor, item)) {
+                qn_http_qry_destroy(qry);
+                return qn_false;
+            } // if
+        } // for
+    } while (qn_json_size_array(items) == limit);
+
+    qn_http_qry_destroy(qry);
     return ret;
 }
 

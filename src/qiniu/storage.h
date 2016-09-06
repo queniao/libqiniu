@@ -88,14 +88,19 @@ extern qn_bool qn_stor_prefetch(qn_storage_ptr stor, const char * restrict bucke
 
 // ----
 
+typedef qn_bool (*qn_stor_item_processor_callback)(void * user_data, qn_json_object_ptr item);
+
 typedef struct _QN_STOR_LIST_EXTRA
 {
     const char * prefix;
     const char * delimiter;
     int limit;
+
+    void * item_processor;
+    qn_stor_item_processor_callback item_processor_callback;
 } qn_stor_list_extra, *qn_stor_list_extra_ptr;
 
-extern qn_bool qn_stor_list(qn_storage_ptr stor, const char * restrict bucket, qn_stor_list_extra_ptr ext);
+extern qn_bool qn_stor_list(qn_storage_ptr stor, const qn_stor_auth_ptr restrict auth, const char * restrict bucket, qn_stor_list_extra_ptr restrict ext);
 
 // ----
 
