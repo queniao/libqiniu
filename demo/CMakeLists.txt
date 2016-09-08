@@ -22,6 +22,9 @@ target_link_libraries (qdelete qiniu curl crypto)
 add_executable (qchgm qchgm.c)
 target_link_libraries (qchgm qiniu curl crypto)
 
+add_executable (qfetch qfetch.c)
+target_link_libraries (qfetch qiniu curl crypto)
+
 add_executable (qput qput.c)
 target_link_libraries (qput qiniu curl crypto)
 

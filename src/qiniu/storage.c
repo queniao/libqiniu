@@ -295,6 +295,68 @@ qn_bool qn_stor_change_mime(qn_storage_ptr stor, const qn_stor_auth_ptr restrict
 
 // ----
 
+qn_bool qn_stor_fetch(qn_storage_ptr stor, const qn_stor_auth_ptr restrict auth, const char * restrict src_url, const char * restrict dest_bucket, const char * restrict dest_key, qn_stor_fetch_extra_ptr ext)
+{
+    qn_bool ret;
+    qn_string encoded_src_url;
+    qn_string encoded_dest_uri;
+    qn_string url;
+
+    // ---- Prepare the query URL
+    encoded_src_url = qn_str_encode_base64_urlsafe(src_url, strlen(src_url));
+    if (!encoded_src_url) return qn_false;
+
+    encoded_dest_uri = qn_misc_encode_uri(dest_bucket, dest_key);
+    if (!encoded_dest_uri) {
+        qn_str_destroy(encoded_src_url);
+        return qn_false;
+    } // if
+
+    url = qn_str_sprintf("%s/fetch/%s/to/%s", "http://iovip.qbox.me", qn_str_cstr(encoded_src_url), qn_str_cstr(encoded_dest_uri));
+    qn_str_destroy(encoded_src_url);
+    qn_str_destroy(encoded_dest_uri);
+    if (!url) return qn_false;
+
+    if (!qn_stor_prepare_managment(stor, url, auth->client_end.acctoken, auth->server_end.mac)) {
+        qn_str_destroy(url);
+        return qn_false;
+    } // if
+
+    qn_http_req_set_body_data(stor->req, "", 0);
+
+    ret = qn_http_conn_post(stor->conn, url, stor->req, stor->resp);
+    qn_str_destroy(url);
+    return ret;
+}
+
+qn_bool qn_stor_prefetch(qn_storage_ptr stor, const qn_stor_auth_ptr restrict auth, const char * restrict dest_bucket, const char * restrict dest_key, qn_stor_fetch_extra_ptr ext)
+{
+    qn_bool ret;
+    qn_string encoded_dest_uri;
+    qn_string url;
+
+    // ---- Prepare the query URL
+    encoded_dest_uri = qn_misc_encode_uri(dest_bucket, dest_key);
+    if (!encoded_dest_uri) return qn_false;
+
+    url = qn_str_sprintf("%s/prefetch/%s", "http://iovip.qbox.me", qn_str_cstr(encoded_dest_uri));
+    qn_str_destroy(encoded_dest_uri);
+    if (!url) return qn_false;
+
+    if (!qn_stor_prepare_managment(stor, url, auth->client_end.acctoken, auth->server_end.mac)) {
+        qn_str_destroy(url);
+        return qn_false;
+    } // if
+
+    qn_http_req_set_body_data(stor->req, "", 0);
+
+    ret = qn_http_conn_post(stor->conn, url, stor->req, stor->resp);
+    qn_str_destroy(url);
+    return ret;
+}
+
+// ----
+
 qn_bool qn_stor_list(qn_storage_ptr stor, const qn_stor_auth_ptr restrict auth, const char * restrict bucket, qn_stor_list_extra_ptr restrict ext)
 {
     qn_bool ret;
