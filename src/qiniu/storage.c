@@ -201,7 +201,7 @@ QN_API qn_bool qn_stor_copy(qn_storage_ptr restrict stor, const qn_stor_auth_ptr
     qn_bool ret;
     qn_string op;
     qn_string url;
-    qn_string url2;
+    qn_string url_tmp;
 
     // ---- Prepare the query URL
     op = qn_stor_make_copy_op(src_bucket, src_key, dest_bucket, dest_key);
@@ -213,10 +213,10 @@ QN_API qn_bool qn_stor_copy(qn_storage_ptr restrict stor, const qn_stor_auth_ptr
 
     if (ext) {
         if (ext->force) {
-            url2 = qn_str_sprintf("%s/force/true", url);
+            url_tmp = qn_str_sprintf("%s/force/true", url);
             qn_str_destroy(url);
-            if (!url2) return qn_false;
-            url = url2;
+            if (!url_tmp) return qn_false;
+            url = url_tmp;
         } // if
     } // if
 
@@ -1210,7 +1210,7 @@ QN_API qn_bool qn_stor_rp_make_file(qn_storage_ptr restrict stor, qn_stor_rput_s
     qn_string encoded_key;
     qn_string host;
     qn_string url;
-    qn_string url2;
+    qn_string url_tmp;
     qn_string ctx_info;
     qn_string * ctx_list;
 
@@ -1270,11 +1270,11 @@ QN_API qn_bool qn_stor_rp_make_file(qn_storage_ptr restrict stor, qn_stor_rput_s
         encoded_key = qn_str_encode_base64_urlsafe(ext->final_key, strlen(ext->final_key));
         if (!encoded_key) return qn_false;
 
-        url2 = qn_str_sprintf("%s/key/%s", qn_str_cstr(url), qn_str_cstr(encoded_key));
+        url_tmp = qn_str_sprintf("%s/key/%s", qn_str_cstr(url), qn_str_cstr(encoded_key));
         qn_str_destroy(encoded_key);
         qn_str_destroy(url);
-        if (!url2) return qn_false;
-        url = url2;
+        if (!url_tmp) return qn_false;
+        url = url_tmp;
     } // if
 
     ret = qn_stor_rp_make_file_to_one_piece(stor, ss, url, ctx_info, ext);
