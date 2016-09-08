@@ -17,11 +17,11 @@ struct _QN_STORAGE;
 typedef struct _QN_STORAGE * qn_storage_ptr;
 
 extern qn_storage_ptr qn_stor_create(void);
-extern void qn_stor_destroy(qn_storage_ptr stor);
+extern void qn_stor_destroy(qn_storage_ptr restrict stor);
 
-extern qn_json_object_ptr qn_stor_get_object_body(qn_storage_ptr stor);
-extern qn_json_array_ptr qn_stor_get_array_body(qn_storage_ptr stor);
-extern qn_http_hdr_iterator_ptr qn_stor_resp_get_header_iterator(qn_storage_ptr stor);
+extern qn_json_object_ptr qn_stor_get_object_body(const qn_storage_ptr restrict stor);
+extern qn_json_array_ptr qn_stor_get_array_body(const qn_storage_ptr restrict stor);
+extern qn_http_hdr_iterator_ptr qn_stor_resp_get_header_iterator(const qn_storage_ptr restrict stor);
 
 // ---- Declaration of Management ----
 
@@ -43,7 +43,7 @@ typedef struct _QN_STOR_STAT_EXTRA
 {
 } qn_stor_stat_extra, *qn_stor_stat_extra_ptr;
 
-extern qn_bool qn_stor_stat(qn_storage_ptr stor, const qn_stor_auth_ptr restrict auth, const char * restrict bucket, const char * restrict key, qn_stor_stat_extra_ptr restrict ext);
+extern qn_bool qn_stor_stat(qn_storage_ptr restrict stor, const qn_stor_auth_ptr restrict auth, const char * restrict bucket, const char * restrict key, qn_stor_stat_extra_ptr restrict ext);
 
 // ----
 
@@ -52,7 +52,7 @@ typedef struct _QN_STOR_COPY_EXTRA
     qn_bool force;
 } qn_stor_copy_extra, *qn_stor_copy_extra_ptr;
 
-extern qn_bool qn_stor_copy(qn_storage_ptr stor, const qn_stor_auth_ptr restrict auth, const char * restrict src_bucket, const char * restrict src_key, const char * restrict dest_bucket, const char * restrict dest_key, qn_stor_copy_extra_ptr restrict ext);
+extern qn_bool qn_stor_copy(qn_storage_ptr restrict stor, const qn_stor_auth_ptr restrict auth, const char * restrict src_bucket, const char * restrict src_key, const char * restrict dest_bucket, const char * restrict dest_key, qn_stor_copy_extra_ptr restrict ext);
 
 // ----
 
@@ -60,7 +60,7 @@ typedef struct _QN_STOR_MOVE_EXTRA
 {
 } qn_stor_move_extra, *qn_stor_move_extra_ptr;
 
-extern qn_bool qn_stor_move(qn_storage_ptr stor, const qn_stor_auth_ptr restrict auth, const char * restrict src_bucket, const char * restrict src_key, const char * restrict dest_bucket, const char * restrict dest_key, qn_stor_move_extra_ptr restrict ext);
+extern qn_bool qn_stor_move(qn_storage_ptr restrict stor, const qn_stor_auth_ptr restrict auth, const char * restrict src_bucket, const char * restrict src_key, const char * restrict dest_bucket, const char * restrict dest_key, qn_stor_move_extra_ptr restrict ext);
 
 // ----
 
@@ -68,7 +68,7 @@ typedef struct _QN_STOR_DELETE_EXTRA
 {
 } qn_stor_delete_extra, *qn_stor_delete_extra_ptr;
 
-extern qn_bool qn_stor_delete(qn_storage_ptr stor, const qn_stor_auth_ptr restrict auth, const char * restrict bucket, const char * restrict key, qn_stor_delete_extra_ptr restrict ext);
+extern qn_bool qn_stor_delete(qn_storage_ptr restrict stor, const qn_stor_auth_ptr restrict auth, const char * restrict bucket, const char * restrict key, qn_stor_delete_extra_ptr restrict ext);
 
 // ----
 
@@ -76,7 +76,7 @@ typedef struct _QN_STOR_CHANGE_MIME_EXTRA
 {
 } qn_stor_change_mime_extra, *qn_stor_change_mime_extra_ptr;
 
-extern qn_bool qn_stor_change_mime(qn_storage_ptr stor, const qn_stor_auth_ptr restrict auth, const char * restrict bucket, const char * restrict key, const char * restrict mime, qn_stor_change_mime_extra_ptr restrict ext);
+extern qn_bool qn_stor_change_mime(qn_storage_ptr restrict stor, const qn_stor_auth_ptr restrict auth, const char * restrict bucket, const char * restrict key, const char * restrict mime, qn_stor_change_mime_extra_ptr restrict ext);
 
 // ----
 
@@ -85,8 +85,8 @@ typedef struct _QN_STOR_FETCH_EXTRA
 } qn_stor_fetch_extra, *qn_stor_fetch_extra_ptr;
 
 
-extern qn_bool qn_stor_fetch(qn_storage_ptr stor, const qn_stor_auth_ptr restrict auth, const char * restrict src_url, const char * restrict dest_bucket, const char * restrict dest_key, qn_stor_fetch_extra_ptr ext);
-extern qn_bool qn_stor_prefetch(qn_storage_ptr stor, const qn_stor_auth_ptr restrict auth, const char * restrict dest_bucket, const char * restrict dest_key, qn_stor_fetch_extra_ptr ext);
+extern qn_bool qn_stor_fetch(qn_storage_ptr restrict stor, const qn_stor_auth_ptr restrict auth, const char * restrict src_url, const char * restrict dest_bucket, const char * restrict dest_key, qn_stor_fetch_extra_ptr restrict ext);
+extern qn_bool qn_stor_prefetch(qn_storage_ptr restrict stor, const qn_stor_auth_ptr restrict auth, const char * restrict dest_bucket, const char * restrict dest_key, qn_stor_fetch_extra_ptr restrict ext);
 
 // ----
 
@@ -102,7 +102,7 @@ typedef struct _QN_STOR_LIST_EXTRA
     qn_stor_item_processor_callback item_processor_callback;
 } qn_stor_list_extra, *qn_stor_list_extra_ptr;
 
-extern qn_bool qn_stor_list(qn_storage_ptr stor, const qn_stor_auth_ptr restrict auth, const char * restrict bucket, qn_stor_list_extra_ptr restrict ext);
+extern qn_bool qn_stor_list(qn_storage_ptr restrict stor, const qn_stor_auth_ptr restrict auth, const char * restrict bucket, qn_stor_list_extra_ptr restrict ext);
 
 // ----
 
@@ -147,8 +147,8 @@ typedef struct _QN_STOR_PUT_EXTRA
     const char * accept_type;
 } qn_stor_put_extra, *qn_stor_put_extra_ptr;
 
-extern qn_bool qn_stor_put_file(qn_storage_ptr stor, const char * fname, qn_stor_put_extra_ptr ext);
-extern qn_bool qn_stor_put_buffer(qn_storage_ptr stor, const char * buf, int buf_size, qn_stor_put_extra_ptr ext);
+extern qn_bool qn_stor_put_file(qn_storage_ptr restrict stor, const char * fname, qn_stor_put_extra_ptr ext);
+extern qn_bool qn_stor_put_buffer(qn_storage_ptr restrict stor, const char * buf, int buf_size, qn_stor_put_extra_ptr ext);
 
 // ----
 
@@ -159,12 +159,12 @@ extern qn_stor_rput_session_ptr qn_stor_rs_create(qn_fsize fsize);
 extern void qn_stor_rs_destroy(qn_stor_rput_session_ptr ss);
 
 extern qn_stor_rput_session_ptr qn_stor_rs_from_string(const char * str, int str_size);
-extern qn_string qn_stor_rs_to_string(qn_stor_rput_session_ptr ss);
+extern qn_string qn_stor_rs_to_string(const qn_stor_rput_session_ptr restrict ss);
 
-extern int qn_stor_rs_block_count(qn_stor_rput_session_ptr ss);
-extern int qn_stor_rs_block_size(qn_stor_rput_session_ptr ss, int n);
-extern qn_json_object_ptr qn_stor_rs_block_put_result(qn_stor_rput_session_ptr ss, int n);
-extern qn_bool qn_stor_rs_is_putting_block_done(qn_stor_rput_session_ptr ss, int n);
+extern int qn_stor_rs_block_count(const qn_stor_rput_session_ptr restrict ss);
+extern int qn_stor_rs_block_size(const qn_stor_rput_session_ptr restrict ss, int n);
+extern qn_json_object_ptr qn_stor_rs_block_put_result(const qn_stor_rput_session_ptr restrict ss, int n);
+extern qn_bool qn_stor_rs_is_putting_block_done(const qn_stor_rput_session_ptr restrict ss, int n);
 
 typedef struct _QN_STOR_RESUMABLE_PUT_EXTRA
 {
@@ -181,11 +181,11 @@ typedef struct _QN_STOR_RESUMABLE_PUT_EXTRA
     const char * final_key;
 } qn_stor_rput_extra, *qn_stor_rput_extra_ptr;
 
-extern qn_bool qn_stor_rp_put_chunk(qn_storage_ptr stor, qn_json_object_ptr blk_info, qn_io_reader_ptr rdr, int chk_size, qn_stor_rput_extra_ptr ext);
-extern qn_bool qn_stor_rp_put_block(qn_storage_ptr stor, qn_json_object_ptr blk_info, qn_io_reader_ptr rdr, qn_stor_rput_extra_ptr ext);
-extern qn_bool qn_stor_rp_make_file(qn_storage_ptr stor, qn_stor_rput_session_ptr ss, qn_stor_rput_extra_ptr ext);
+extern qn_bool qn_stor_rp_put_chunk(qn_storage_ptr restrict stor, qn_json_object_ptr restrict blk_info, qn_io_reader_ptr restrict rdr, int chk_size, qn_stor_rput_extra_ptr restrict ext);
+extern qn_bool qn_stor_rp_put_block(qn_storage_ptr restrict stor, qn_json_object_ptr restrict blk_info, qn_io_reader_ptr restrict rdr, qn_stor_rput_extra_ptr restrict ext);
+extern qn_bool qn_stor_rp_make_file(qn_storage_ptr restrict stor, qn_stor_rput_session_ptr restrict ss, qn_stor_rput_extra_ptr restrict ext);
 
-extern qn_bool qn_stor_rp_put_file(qn_storage_ptr stor, qn_stor_rput_session_ptr * ss, const char * fname, qn_stor_rput_extra_ptr ext);
+extern qn_bool qn_stor_rp_put_file(qn_storage_ptr restrict stor, qn_stor_rput_session_ptr * restrict ss, const char * restrict fname, qn_stor_rput_extra_ptr restrict ext);
 
 #ifdef __cplusplus
 }
