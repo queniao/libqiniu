@@ -197,7 +197,12 @@ void qn_http_req_destroy(qn_http_request_ptr req)
 
 void qn_http_req_reset(qn_http_request_ptr req)
 {
-    if (req->flags & QN_HTTP_REQ_USING_LOCAL_FORM) qn_http_form_destroy(req->form);
+    if (req->flags & QN_HTTP_REQ_USING_LOCAL_FORM) {
+        qn_http_form_destroy(req->form);
+        req->form = NULL;
+    } // if
+
+    qn_http_hdr_reset(req->hdr);
 
     req->flags = 0;
     req->body_data = NULL;
@@ -205,7 +210,6 @@ void qn_http_req_reset(qn_http_request_ptr req)
     req->body_rd = NULL;
     req->body_rd_cb = NULL;
     req->form = NULL;
-    qn_http_hdr_reset(req->hdr);
 }
 
 // ----
@@ -279,6 +283,16 @@ void qn_http_req_set_body_reader(qn_http_request_ptr req, void * body_rd, qn_htt
     req->body_rd = body_rd;
     req->body_rd_cb = body_rd_cb;
     req->body_size = body_size;
+}
+
+char * qn_http_req_body_data(qn_http_request_ptr req)
+{
+    return req->body_data;
+}
+
+qn_size qn_http_req_body_size(qn_http_request_ptr req)
+{
+    return req->body_size;
 }
 
 // ---- Definition of HTTP response ----

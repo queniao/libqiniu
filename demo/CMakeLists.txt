@@ -7,6 +7,9 @@ target_link_libraries (qacctoken qiniu crypto)
 add_executable (qstat qstat.c)
 target_link_libraries (qstat qiniu curl crypto)
 
+add_executable (qstat_batch qstat_batch.c)
+target_link_libraries (qstat_batch qiniu curl crypto)
+
 add_executable (qlist qlist.c)
 target_link_libraries (qlist qiniu curl crypto)
 

@@ -20,6 +20,7 @@ extern qn_storage_ptr qn_stor_create(void);
 extern void qn_stor_destroy(qn_storage_ptr stor);
 
 extern qn_json_object_ptr qn_stor_get_object_body(qn_storage_ptr stor);
+extern qn_json_array_ptr qn_stor_get_array_body(qn_storage_ptr stor);
 extern qn_http_hdr_iterator_ptr qn_stor_resp_get_header_iterator(qn_storage_ptr stor);
 
 // ---- Declaration of Management ----
@@ -108,11 +109,16 @@ extern qn_bool qn_stor_list(qn_storage_ptr stor, const qn_stor_auth_ptr restrict
 struct _QN_STOR_BATCH;
 typedef struct _QN_STOR_BATCH * qn_stor_batch_ptr;
 
-extern qn_stor_batch_ptr qn_stor_create_batch(void);
-extern void qn_stor_destroy_batch(qn_stor_batch_ptr bt);
-extern void qn_stor_reset_batch(qn_stor_batch_ptr bt);
+extern qn_stor_batch_ptr qn_stor_bt_create(void);
+extern void qn_stor_bt_destroy(qn_stor_batch_ptr bt);
+extern void qn_stor_bt_reset(qn_stor_batch_ptr bt);
 
-extern qn_bool qn_stor_batch_operate(qn_storage_ptr stor, qn_stor_batch_ptr bt);
+extern qn_bool qn_stor_bt_add_stat_op(qn_stor_batch_ptr restrict bt, const char * restrict bucket, const char * restrict key);
+extern qn_bool qn_stor_bt_add_copy_op(qn_stor_batch_ptr restrict bt, const char * restrict src_bucket, const char * restrict src_key, const char * restrict dest_bucket, const char * restrict dest_key);
+extern qn_bool qn_stor_bt_add_move_op(qn_stor_batch_ptr restrict bt, const char * restrict src_bucket, const char * restrict src_key, const char * restrict dest_bucket, const char * restrict dest_key);
+extern qn_bool qn_stor_bt_add_delete_op(qn_stor_batch_ptr restrict bt, const char * restrict bucket, const char * restrict key);
+
+extern qn_bool qn_stor_execute_batch_opertions(qn_storage_ptr restrict stor, const qn_stor_auth_ptr restrict auth, const qn_stor_batch_ptr restrict bt);
 
 // ---- Declaration of Upload ----
 
