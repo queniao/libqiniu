@@ -52,9 +52,9 @@ extern qn_string qn_pp_to_uptoken(qn_json_object_ptr pp, qn_mac_ptr mac);
 extern qn_mac_ptr qn_mac_create(const char * access_key, const char * secret_key);
 extern void qn_mac_destroy(qn_mac_ptr mac);
 
-extern qn_string qn_mac_make_uptoken(qn_mac_ptr mac, const char * restrict pp, qn_size pp_size);
-extern qn_string qn_mac_make_acctoken(qn_mac_ptr mac, const qn_string url, const char * restrict body, qn_size body_size);
-extern qn_string qn_mac_make_dnurl(qn_mac_ptr mac, const qn_string url, qn_uint32 deadline);
+extern const qn_string qn_mac_make_uptoken(qn_mac_ptr restrict mac, const char * restrict pp, qn_size pp_size);
+extern const qn_string qn_mac_make_acctoken(qn_mac_ptr restrict mac, const qn_string restrict url, const char * restrict body, qn_size body_size);
+extern const qn_string qn_mac_make_dnurl(qn_mac_ptr restrict mac, const qn_string restrict url, qn_uint32 deadline);
 
 #ifdef __cplusplus
 }

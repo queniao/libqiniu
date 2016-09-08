@@ -21,7 +21,7 @@ typedef struct _QN_STORAGE
     qn_json_array_ptr arr_body;
 } qn_storage;
 
-qn_storage_ptr qn_stor_create(void)
+QN_API qn_storage_ptr qn_stor_create(void)
 {
     qn_storage_ptr new_stor = NULL;
 
@@ -64,11 +64,12 @@ qn_storage_ptr qn_stor_create(void)
     return new_stor;
 }
 
-void qn_stor_destroy(qn_storage_ptr restrict stor)
+QN_API void qn_stor_destroy(qn_storage_ptr restrict stor)
 {
     if (stor) {
         if (stor->obj_body) qn_json_destroy_object(stor->obj_body);
         if (stor->arr_body) qn_json_destroy_array(stor->arr_body);
+        qn_http_json_wrt_destroy(stor->resp_json_wrt);
         qn_http_conn_destroy(stor->conn);
         qn_http_resp_destroy(stor->resp);
         qn_http_req_destroy(stor->req);
@@ -76,22 +77,22 @@ void qn_stor_destroy(qn_storage_ptr restrict stor)
     } // if
 }
 
-qn_json_object_ptr qn_stor_get_object_body(const qn_storage_ptr restrict stor)
+QN_API qn_json_object_ptr qn_stor_get_object_body(const qn_storage_ptr restrict stor)
 {
     return stor->obj_body;
 }
 
-qn_json_array_ptr qn_stor_get_array_body(const qn_storage_ptr restrict stor)
+QN_API qn_json_array_ptr qn_stor_get_array_body(const qn_storage_ptr restrict stor)
 {
     return stor->arr_body;
 }
 
-qn_http_hdr_iterator_ptr qn_stor_resp_get_header_iterator(const qn_storage_ptr restrict stor)
+QN_API qn_http_hdr_iterator_ptr qn_stor_resp_get_header_iterator(const qn_storage_ptr restrict stor)
 {
     return qn_http_resp_get_header_iterator(stor->resp);
 }
 
-static qn_bool qn_stor_prepare_common_request_headers(qn_storage_ptr stor)
+static qn_bool qn_stor_prepare_common_request_headers(qn_storage_ptr restrict stor)
 {
     if (!qn_http_req_set_header(stor->req, "Expect", "")) return qn_false;
     if (!qn_http_req_set_header(stor->req, "Transfer-Encoding", "")) return qn_false;
@@ -100,18 +101,21 @@ static qn_bool qn_stor_prepare_common_request_headers(qn_storage_ptr stor)
 
 // ---- Definition of Management ----
 
-static qn_bool qn_stor_prepare_managment(qn_storage_ptr stor, const qn_string restrict url, qn_string restrict acctoken, const qn_mac_ptr restrict mac)
+static qn_bool qn_stor_prepare_managment(qn_storage_ptr restrict stor, const qn_string restrict url, const char * restrict acctoken, const qn_mac_ptr restrict mac)
 {
     qn_string auth_header;
+    qn_string new_acctoken;
+
+    if (!qn_stor_prepare_common_request_headers(stor)) return qn_false;
 
     if (acctoken) {
         auth_header = qn_str_sprintf("QBox %s", acctoken);
     } else if (mac) {
-        acctoken = qn_mac_make_acctoken(mac, url, qn_http_req_body_data(stor->req), qn_http_req_body_size(stor->req));
-        if (!acctoken) return qn_false;
+        new_acctoken = qn_mac_make_acctoken(mac, url, qn_http_req_body_data(stor->req), qn_http_req_body_size(stor->req));
+        if (!new_acctoken) return qn_false;
 
-        auth_header = qn_str_sprintf("QBox %s", acctoken);
-        qn_str_destroy(acctoken);
+        auth_header = qn_str_sprintf("QBox %s", new_acctoken);
+        qn_str_destroy(new_acctoken);
     } else {
         qn_err_set_invalid_argument();
         return qn_false;
@@ -119,12 +123,10 @@ static qn_bool qn_stor_prepare_managment(qn_storage_ptr stor, const qn_string re
     if (!auth_header) return qn_false;
     if (!qn_http_req_set_header(stor->req, "Authorization", auth_header)) return qn_false;
     qn_str_destroy(auth_header);
-
-    if (!qn_stor_prepare_common_request_headers(stor)) return qn_false;
     return qn_true;
 }
 
-static qn_string qn_stor_make_stat_op(const char * restrict bucket, const char * restrict key)
+static const qn_string qn_stor_make_stat_op(const char * restrict bucket, const char * restrict key)
 {
     qn_string op;
     qn_string encoded_uri;
@@ -137,7 +139,7 @@ static qn_string qn_stor_make_stat_op(const char * restrict bucket, const char *
     return op;
 }
 
-qn_bool qn_stor_stat(qn_storage_ptr restrict stor, const qn_stor_auth_ptr restrict auth, const char * restrict bucket, const char * restrict key, qn_stor_stat_extra_ptr restrict ext)
+QN_API qn_bool qn_stor_stat(qn_storage_ptr restrict stor, const qn_stor_auth_ptr restrict auth, const char * restrict bucket, const char * restrict key, qn_stor_stat_extra_ptr restrict ext)
 {
     qn_bool ret;
     qn_string op;
@@ -173,7 +175,7 @@ qn_bool qn_stor_stat(qn_storage_ptr restrict stor, const qn_stor_auth_ptr restri
     return ret;
 }
 
-static qn_string qn_stor_make_copy_op(const char * restrict src_bucket, const char * restrict src_key, const char * restrict dest_bucket, const char * restrict dest_key)
+static const qn_string qn_stor_make_copy_op(const char * restrict src_bucket, const char * restrict src_key, const char * restrict dest_bucket, const char * restrict dest_key)
 {
     qn_string op;
     qn_string encoded_src_uri;
@@ -194,7 +196,7 @@ static qn_string qn_stor_make_copy_op(const char * restrict src_bucket, const ch
     return op;
 }
 
-qn_bool qn_stor_copy(qn_storage_ptr restrict stor, const qn_stor_auth_ptr restrict auth, const char * restrict src_bucket, const char * restrict src_key, const char * restrict dest_bucket, const char * restrict dest_key, qn_stor_copy_extra_ptr restrict ext)
+QN_API qn_bool qn_stor_copy(qn_storage_ptr restrict stor, const qn_stor_auth_ptr restrict auth, const char * restrict src_bucket, const char * restrict src_key, const char * restrict dest_bucket, const char * restrict dest_key, qn_stor_copy_extra_ptr restrict ext)
 {
     qn_bool ret;
     qn_string op;
@@ -242,7 +244,7 @@ qn_bool qn_stor_copy(qn_storage_ptr restrict stor, const qn_stor_auth_ptr restri
     return ret;
 }
 
-static qn_string qn_stor_make_move_op(const char * restrict src_bucket, const char * restrict src_key, const char * restrict dest_bucket, const char * restrict dest_key)
+static const qn_string qn_stor_make_move_op(const char * restrict src_bucket, const char * restrict src_key, const char * restrict dest_bucket, const char * restrict dest_key)
 {
     qn_string op;
     qn_string encoded_src_uri;
@@ -263,7 +265,7 @@ static qn_string qn_stor_make_move_op(const char * restrict src_bucket, const ch
     return op;
 }
 
-qn_bool qn_stor_move(qn_storage_ptr restrict stor, const qn_stor_auth_ptr restrict auth, const char * restrict src_bucket, const char * restrict src_key, const char * restrict dest_bucket, const char * restrict dest_key, qn_stor_move_extra_ptr restrict ext)
+QN_API qn_bool qn_stor_move(qn_storage_ptr restrict stor, const qn_stor_auth_ptr restrict auth, const char * restrict src_bucket, const char * restrict src_key, const char * restrict dest_bucket, const char * restrict dest_key, qn_stor_move_extra_ptr restrict ext)
 {
     qn_bool ret;
     qn_string op;
@@ -314,7 +316,7 @@ static qn_string qn_stor_make_delete_op(const char * restrict bucket, const char
     return op;
 }
 
-qn_bool qn_stor_delete(qn_storage_ptr restrict stor, const qn_stor_auth_ptr restrict auth, const char * restrict bucket, const char * restrict key, qn_stor_delete_extra_ptr restrict ext)
+QN_API qn_bool qn_stor_delete(qn_storage_ptr restrict stor, const qn_stor_auth_ptr restrict auth, const char * restrict bucket, const char * restrict key, qn_stor_delete_extra_ptr restrict ext)
 {
     qn_bool ret;
     qn_string op;
@@ -352,7 +354,7 @@ qn_bool qn_stor_delete(qn_storage_ptr restrict stor, const qn_stor_auth_ptr rest
     return ret;
 }
 
-qn_bool qn_stor_change_mime(qn_storage_ptr restrict stor, const qn_stor_auth_ptr restrict auth, const char * restrict bucket, const char * restrict key, const char * restrict mime, qn_stor_change_mime_extra_ptr restrict ext)
+QN_API qn_bool qn_stor_change_mime(qn_storage_ptr restrict stor, const qn_stor_auth_ptr restrict auth, const char * restrict bucket, const char * restrict key, const char * restrict mime, qn_stor_change_mime_extra_ptr restrict ext)
 {
     qn_bool ret;
     qn_string encoded_uri;
@@ -400,7 +402,7 @@ qn_bool qn_stor_change_mime(qn_storage_ptr restrict stor, const qn_stor_auth_ptr
 
 // ----
 
-qn_bool qn_stor_fetch(qn_storage_ptr restrict stor, const qn_stor_auth_ptr restrict auth, const char * restrict src_url, const char * restrict dest_bucket, const char * restrict dest_key, qn_stor_fetch_extra_ptr restrict ext)
+QN_API qn_bool qn_stor_fetch(qn_storage_ptr restrict stor, const qn_stor_auth_ptr restrict auth, const char * restrict src_url, const char * restrict dest_bucket, const char * restrict dest_key, qn_stor_fetch_extra_ptr restrict ext)
 {
     qn_bool ret;
     qn_string encoded_src_url;
@@ -446,7 +448,7 @@ qn_bool qn_stor_fetch(qn_storage_ptr restrict stor, const qn_stor_auth_ptr restr
     return ret;
 }
 
-qn_bool qn_stor_prefetch(qn_storage_ptr restrict stor, const qn_stor_auth_ptr restrict auth, const char * restrict dest_bucket, const char * restrict dest_key, qn_stor_fetch_extra_ptr restrict ext)
+QN_API qn_bool qn_stor_prefetch(qn_storage_ptr restrict stor, const qn_stor_auth_ptr restrict auth, const char * restrict dest_bucket, const char * restrict dest_key, qn_stor_fetch_extra_ptr restrict ext)
 {
     qn_bool ret;
     qn_string encoded_dest_uri;
@@ -486,7 +488,7 @@ qn_bool qn_stor_prefetch(qn_storage_ptr restrict stor, const qn_stor_auth_ptr re
 
 // ----
 
-qn_bool qn_stor_list(qn_storage_ptr restrict stor, const qn_stor_auth_ptr restrict auth, const char * restrict bucket, qn_stor_list_extra_ptr restrict ext)
+QN_API qn_bool qn_stor_list(qn_storage_ptr restrict stor, const qn_stor_auth_ptr restrict auth, const char * restrict bucket, qn_stor_list_extra_ptr restrict ext)
 {
     qn_bool ret;
     qn_string url;
@@ -608,7 +610,7 @@ typedef struct _QN_STOR_BATCH
     int cap;
 } qn_stor_batch;
 
-qn_stor_batch_ptr qn_stor_bt_create(void)
+QN_API qn_stor_batch_ptr qn_stor_bt_create(void)
 {
     qn_stor_batch_ptr new_bt = calloc(1, sizeof(qn_stor_batch));
     if (!new_bt) {
@@ -626,7 +628,7 @@ qn_stor_batch_ptr qn_stor_bt_create(void)
     return new_bt;
 }
 
-void qn_stor_bt_destroy(qn_stor_batch_ptr restrict bt)
+QN_API void qn_stor_bt_destroy(qn_stor_batch_ptr restrict bt)
 {
     if (bt) {
         qn_stor_bt_reset(bt);
@@ -635,7 +637,7 @@ void qn_stor_bt_destroy(qn_stor_batch_ptr restrict bt)
     } // if
 }
 
-void qn_stor_bt_reset(qn_stor_batch_ptr restrict bt)
+QN_API void qn_stor_bt_reset(qn_stor_batch_ptr restrict bt)
 {
     while (bt->cnt > 0) qn_str_destroy(bt->ops[--bt->cnt]);
 }
@@ -674,7 +676,7 @@ static qn_bool qn_stor_bt_add_op(qn_stor_batch_ptr restrict bt, const qn_string 
     return qn_true;
 }
 
-qn_bool qn_stor_bt_add_stat_op(qn_stor_batch_ptr restrict bt, const char * restrict bucket, const char * restrict key)
+QN_API qn_bool qn_stor_bt_add_stat_op(qn_stor_batch_ptr restrict bt, const char * restrict bucket, const char * restrict key)
 {
     qn_bool ret;
     qn_string op;
@@ -687,7 +689,7 @@ qn_bool qn_stor_bt_add_stat_op(qn_stor_batch_ptr restrict bt, const char * restr
     return ret;
 }
 
-qn_bool qn_stor_bt_add_copy_op(qn_stor_batch_ptr restrict bt, const char * restrict src_bucket, const char * restrict src_key, const char * restrict dest_bucket, const char * restrict dest_key)
+QN_API qn_bool qn_stor_bt_add_copy_op(qn_stor_batch_ptr restrict bt, const char * restrict src_bucket, const char * restrict src_key, const char * restrict dest_bucket, const char * restrict dest_key)
 {
     qn_bool ret;
     qn_string op;
@@ -700,7 +702,7 @@ qn_bool qn_stor_bt_add_copy_op(qn_stor_batch_ptr restrict bt, const char * restr
     return ret;
 }
 
-qn_bool qn_stor_bt_add_move_op(qn_stor_batch_ptr restrict bt, const char * restrict src_bucket, const char * restrict src_key, const char * restrict dest_bucket, const char * restrict dest_key)
+QN_API qn_bool qn_stor_bt_add_move_op(qn_stor_batch_ptr restrict bt, const char * restrict src_bucket, const char * restrict src_key, const char * restrict dest_bucket, const char * restrict dest_key)
 {
     qn_bool ret;
     qn_string op;
@@ -713,7 +715,7 @@ qn_bool qn_stor_bt_add_move_op(qn_stor_batch_ptr restrict bt, const char * restr
     return ret;
 }
 
-qn_bool qn_stor_bt_add_delete_op(qn_stor_batch_ptr restrict bt, const char * restrict bucket, const char * restrict key)
+QN_API qn_bool qn_stor_bt_add_delete_op(qn_stor_batch_ptr restrict bt, const char * restrict bucket, const char * restrict key)
 {
     qn_bool ret;
     qn_string op;
@@ -726,7 +728,7 @@ qn_bool qn_stor_bt_add_delete_op(qn_stor_batch_ptr restrict bt, const char * res
     return ret;
 }
 
-qn_bool qn_stor_execute_batch_opertions(qn_storage_ptr restrict stor, const qn_stor_auth_ptr restrict auth, const qn_stor_batch_ptr restrict bt)
+QN_API qn_bool qn_stor_execute_batch_opertions(qn_storage_ptr restrict stor, const qn_stor_auth_ptr restrict auth, const qn_stor_batch_ptr restrict bt)
 {
     qn_bool ret;
     qn_string body;
@@ -770,7 +772,7 @@ qn_bool qn_stor_execute_batch_opertions(qn_storage_ptr restrict stor, const qn_s
 
 // ---- Definition of Upload ----
 
-static qn_bool qn_stor_prepare_for_putting_file(qn_storage_ptr stor, qn_stor_put_extra_ptr ext)
+static qn_bool qn_stor_prepare_for_putting_file(qn_storage_ptr restrict stor, qn_stor_put_extra_ptr restrict ext)
 {
     qn_bool ret;
     qn_string uptoken;
@@ -819,7 +821,7 @@ static qn_bool qn_stor_prepare_for_putting_file(qn_storage_ptr stor, qn_stor_put
     return qn_true;
 }
 
-qn_bool qn_stor_put_file(qn_storage_ptr restrict stor, const char * fname, qn_stor_put_extra_ptr ext)
+QN_API qn_bool qn_stor_put_file(qn_storage_ptr restrict stor, const char * restrict fname, qn_stor_put_extra_ptr restrict ext)
 {
     qn_bool ret;
     qn_fl_info_ptr fi;
@@ -840,7 +842,7 @@ qn_bool qn_stor_put_file(qn_storage_ptr restrict stor, const char * fname, qn_st
     return qn_http_conn_post(stor->conn, "http://up.qiniu.com", stor->req, stor->resp);
 }
 
-qn_bool qn_stor_put_buffer(qn_storage_ptr restrict stor, const char * buf, int buf_size, qn_stor_put_extra_ptr ext)
+QN_API qn_bool qn_stor_put_buffer(qn_storage_ptr restrict stor, const char * restrict buf, int buf_size, qn_stor_put_extra_ptr restrict ext)
 {
     qn_http_form_ptr form;
 
@@ -865,7 +867,7 @@ typedef struct _QN_STOR_RESUMABLE_PUT_SESSION
 #define QN_STOR_RPUT_BLOCK_MAX_SIZE (1L << 22)
 #define QN_STOR_RPUT_CHUNK_DEFAULT_SIZE (1024 * 256)
 
-qn_stor_rput_session_ptr qn_stor_rs_create(qn_fsize fsize)
+QN_API qn_stor_rput_session_ptr qn_stor_rs_create(qn_fsize fsize)
 {
     int i;
     int blk_count;
@@ -913,7 +915,7 @@ qn_stor_rput_session_ptr qn_stor_rs_create(qn_fsize fsize)
     return new_ss;
 }
 
-void qn_stor_rs_destroy(qn_stor_rput_session_ptr ss)
+QN_API void qn_stor_rs_destroy(qn_stor_rput_session_ptr restrict ss)
 {
     if (ss) {
         qn_json_destroy_array(ss->blk_info_list);
@@ -921,7 +923,7 @@ void qn_stor_rs_destroy(qn_stor_rput_session_ptr ss)
     } // if
 }
 
-qn_stor_rput_session_ptr qn_stor_rs_from_string(const char * str, int str_size)
+QN_API qn_stor_rput_session_ptr qn_stor_rs_from_string(const char * restrict str, int str_size)
 {
     qn_bool ret;
     qn_size ret_size;
@@ -951,29 +953,29 @@ qn_stor_rput_session_ptr qn_stor_rs_from_string(const char * str, int str_size)
     return new_ss;
 }
 
-qn_string qn_stor_rs_to_string(const qn_stor_rput_session_ptr restrict ss)
+QN_API qn_string qn_stor_rs_to_string(const qn_stor_rput_session_ptr restrict ss)
 {
     return qn_json_array_to_string(ss->blk_info_list);
 }
 
-int qn_stor_rs_block_count(const qn_stor_rput_session_ptr restrict ss)
+QN_API int qn_stor_rs_block_count(const qn_stor_rput_session_ptr restrict ss)
 {
     return qn_json_size_array(ss->blk_info_list);
 }
 
-int qn_stor_rs_block_size(const qn_stor_rput_session_ptr restrict ss, int n)
+QN_API int qn_stor_rs_block_size(const qn_stor_rput_session_ptr restrict ss, int n)
 {
     qn_json_object_ptr blk_info = qn_json_pick_object(ss->blk_info_list, n, NULL);
     if (!blk_info) return 0;
     return qn_json_get_integer(blk_info, "bsize", 0);
 }
 
-qn_json_object_ptr qn_stor_rs_block_info(const qn_stor_rput_session_ptr restrict ss, int n)
+QN_API qn_json_object_ptr qn_stor_rs_block_info(const qn_stor_rput_session_ptr restrict ss, int n)
 {
     return qn_json_pick_object(ss->blk_info_list, n, NULL);
 }
 
-qn_bool qn_stor_rs_is_putting_block_done(const qn_stor_rput_session_ptr restrict ss, int n)
+QN_API qn_bool qn_stor_rs_is_putting_block_done(const qn_stor_rput_session_ptr restrict ss, int n)
 {
     qn_json_object_ptr blk_info = qn_json_pick_object(ss->blk_info_list, n, NULL);
     if (!blk_info) return qn_false;
@@ -996,7 +998,7 @@ static qn_size qn_stor_rp_chunk_body_reader_callback(void * user_data, char * bu
     return ret;
 }
 
-static qn_bool qn_stor_rp_put_chunk_in_one_piece(qn_storage_ptr stor, qn_json_object_ptr blk_info, qn_io_reader_ptr rdr, int chk_size, qn_string url, qn_stor_rput_extra_ptr ext)
+static qn_bool qn_stor_rp_put_chunk_in_one_piece(qn_storage_ptr restrict stor, qn_json_object_ptr restrict blk_info, qn_io_reader_ptr restrict rdr, int chk_size, const qn_string restrict url, qn_stor_rput_extra_ptr restrict ext)
 {
     qn_bool ret;
     qn_string uptoken;
@@ -1090,7 +1092,7 @@ static qn_bool qn_stor_rp_put_chunk_in_one_piece(qn_storage_ptr stor, qn_json_ob
     return ret;
 }
 
-qn_bool qn_stor_rp_put_chunk(qn_storage_ptr restrict stor, qn_json_object_ptr restrict blk_info, qn_io_reader_ptr restrict rdr, int chk_size, qn_stor_rput_extra_ptr restrict ext)
+QN_API qn_bool qn_stor_rp_put_chunk(qn_storage_ptr restrict stor, qn_json_object_ptr restrict blk_info, qn_io_reader_ptr restrict rdr, int chk_size, qn_stor_rput_extra_ptr restrict ext)
 {
     qn_bool ret;
     qn_string host;
@@ -1116,7 +1118,7 @@ qn_bool qn_stor_rp_put_chunk(qn_storage_ptr restrict stor, qn_json_object_ptr re
     return ret;
 }
 
-qn_bool qn_stor_rp_put_block(qn_storage_ptr restrict stor, qn_json_object_ptr restrict blk_info, qn_io_reader_ptr restrict rdr, qn_stor_rput_extra_ptr restrict ext)
+QN_API qn_bool qn_stor_rp_put_block(qn_storage_ptr restrict stor, qn_json_object_ptr restrict blk_info, qn_io_reader_ptr restrict rdr, qn_stor_rput_extra_ptr restrict ext)
 {
     int chk_size;
     int chk_offset;
@@ -1138,7 +1140,7 @@ qn_bool qn_stor_rp_put_block(qn_storage_ptr restrict stor, qn_json_object_ptr re
     return qn_true;
 }
 
-static qn_bool qn_stor_rp_make_file_to_one_piece(qn_storage_ptr stor, qn_stor_rput_session_ptr ss, const qn_string url, const qn_string ctx_info, qn_stor_rput_extra_ptr ext)
+static qn_bool qn_stor_rp_make_file_to_one_piece(qn_storage_ptr restrict stor, qn_stor_rput_session_ptr restrict ss, const qn_string restrict url, const qn_string restrict ctx_info, qn_stor_rput_extra_ptr restrict ext)
 {
     qn_bool ret;
     qn_string uptoken;
@@ -1197,7 +1199,7 @@ static qn_bool qn_stor_rp_make_file_to_one_piece(qn_storage_ptr stor, qn_stor_rp
     return ret;
 }
 
-qn_bool qn_stor_rp_make_file(qn_storage_ptr restrict stor, qn_stor_rput_session_ptr restrict ss, qn_stor_rput_extra_ptr restrict ext)
+QN_API qn_bool qn_stor_rp_make_file(qn_storage_ptr restrict stor, qn_stor_rput_session_ptr restrict ss, qn_stor_rput_extra_ptr restrict ext)
 {
     qn_bool ret;
     qn_json_object_ptr blk_info;
@@ -1281,7 +1283,7 @@ qn_bool qn_stor_rp_make_file(qn_storage_ptr restrict stor, qn_stor_rput_session_
     return ret;
 }
 
-static qn_bool qn_stor_rp_put_file_in_serial_blocks(qn_storage_ptr stor, qn_stor_rput_session_ptr ss, const char * fname, qn_stor_rput_extra_ptr ext)
+static qn_bool qn_stor_rp_put_file_in_serial_blocks(qn_storage_ptr restrict stor, qn_stor_rput_session_ptr restrict ss, const char * restrict fname, qn_stor_rput_extra_ptr restrict ext)
 {
     qn_bool ret;
     qn_bool skip;
@@ -1333,7 +1335,7 @@ static qn_bool qn_stor_rp_put_file_in_serial_blocks(qn_storage_ptr stor, qn_stor
     return qn_true;
 }
 
-qn_bool qn_stor_rp_put_file(qn_storage_ptr restrict stor, qn_stor_rput_session_ptr * restrict ss, const char * restrict fname, qn_stor_rput_extra_ptr restrict ext)
+QN_API qn_bool qn_stor_rp_put_file(qn_storage_ptr restrict stor, qn_stor_rput_session_ptr * restrict ss, const char * restrict fname, qn_stor_rput_extra_ptr restrict ext)
 {
     qn_bool ret;
     qn_fl_info_ptr fi;

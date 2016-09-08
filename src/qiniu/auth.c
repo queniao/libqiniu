@@ -299,7 +299,7 @@ void qn_mac_destroy(qn_mac_ptr mac)
     } // if
 }
 
-qn_string qn_mac_make_uptoken(qn_mac_ptr mac, const char * restrict pp_str, qn_size pp_str_size)
+const qn_string qn_mac_make_uptoken(qn_mac_ptr restrict mac, const char * restrict pp, qn_size pp_size)
 {
     qn_string sign = NULL;
     qn_string encoded_pp = NULL;
@@ -308,7 +308,7 @@ qn_string qn_mac_make_uptoken(qn_mac_ptr mac, const char * restrict pp_str, qn_s
     unsigned int digest_size = sizeof(digest);
     HMAC_CTX ctx;
 
-    encoded_pp = qn_str_encode_base64_urlsafe(pp_str, pp_str_size);
+    encoded_pp = qn_str_encode_base64_urlsafe(pp, pp_size);
     if (!encoded_pp) return NULL;
 
     HMAC_CTX_init(&ctx);
@@ -324,7 +324,7 @@ qn_string qn_mac_make_uptoken(qn_mac_ptr mac, const char * restrict pp_str, qn_s
     return sign;
 }
 
-qn_string qn_mac_make_acctoken(qn_mac_ptr mac, const qn_string url, const char * restrict body, qn_size body_size)
+const qn_string qn_mac_make_acctoken(qn_mac_ptr restrict mac, const qn_string restrict url, const char * restrict body, qn_size body_size)
 {
     qn_string encoded_digest = NULL;
     qn_string acctoken = NULL;
@@ -366,7 +366,7 @@ qn_string qn_mac_make_acctoken(qn_mac_ptr mac, const qn_string url, const char *
     return acctoken;
 }
 
-qn_string qn_mac_make_dnurl(qn_mac_ptr mac, const qn_string url, qn_uint32 deadline)
+const qn_string qn_mac_make_dnurl(qn_mac_ptr restrict mac, const qn_string restrict url, qn_uint32 deadline)
 {
     qn_string url_with_deadline = NULL;
     qn_string url_with_token = NULL;
