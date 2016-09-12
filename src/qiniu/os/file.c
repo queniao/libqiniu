@@ -139,7 +139,7 @@ qn_fl_info_ptr qn_fl_info_stat(const char * fname)
         return NULL;
     } // if
 
-    new_fi->fname = qn_str_duplicate(fname);
+    new_fi->fname = qn_cs_duplicate(fname);
     if (!new_fi->fname) {
         qn_fl_info_destroy(new_fi);
         return NULL;

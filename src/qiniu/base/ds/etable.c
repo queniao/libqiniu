@@ -16,7 +16,7 @@ typedef unsigned short qn_etbl_pos;
 
 typedef struct _QN_ETABLE
 {
-    const char * deli;
+    qn_string deli;
     qn_string * entries;
     qn_etbl_pos cnt;
     qn_etbl_pos cap;
@@ -30,7 +30,7 @@ qn_etable_ptr qn_etbl_create(const char * restrict deli)
         return NULL;
     } // if
 
-    new_etbl->deli = strdup(deli);
+    new_etbl->deli = qn_cs_duplicate(deli);
     if (!new_etbl->deli) {
         free(new_etbl);
         qn_err_set_no_enough_memory();
@@ -53,8 +53,8 @@ void qn_etbl_destroy(qn_etable_ptr etbl)
 {
     if (etbl) {
         qn_etbl_reset(etbl);
+        qn_str_destroy(etbl->deli);
         free(etbl->entries);
-        free(etbl->deli);
         free(etbl);
     } // if
 }
