@@ -231,7 +231,7 @@ QN_API qn_bool qn_err_json_is_bad_text_input(void)
     return (qn_err_code == QN_ERR_JSON_BAD_TEXT_INPUT);
 }
 
-QN_API qn_bool qn_err_json_is_too_many_levels_in_parsing(void)
+QN_API qn_bool qn_err_json_is_too_many_parsing_levels(void)
 {
     return (qn_err_code == QN_ERR_JSON_TOO_MANY_PARSING_LEVELS);
 }

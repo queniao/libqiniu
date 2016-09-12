@@ -48,7 +48,7 @@ QN_API extern qn_bool qn_err_is_bad_utf8_sequence(void);
 QN_API extern qn_bool qn_err_is_no_enough_buffer(void);
 
 QN_API extern qn_bool qn_err_json_is_bad_text_input(void);
-QN_API extern qn_bool qn_err_json_is_too_many_pasring_levels(void);
+QN_API extern qn_bool qn_err_json_is_too_many_parsing_levels(void);
 QN_API extern qn_bool qn_err_json_is_need_more_text_input(void);
 
 QN_API extern qn_bool qn_err_http_is_invalid_header_syntax(void);

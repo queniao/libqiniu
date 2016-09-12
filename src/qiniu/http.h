@@ -37,6 +37,7 @@ typedef struct _QN_HTTP_FORM * qn_http_form_ptr;
 
 QN_API extern qn_http_form_ptr qn_http_form_create(void);
 QN_API extern void qn_http_form_destroy(qn_http_form_ptr restrict form);
+QN_API extern void qn_http_form_reset(qn_http_form_ptr restrict form);
 
 QN_API extern qn_bool qn_http_form_add_string(qn_http_form_ptr restrict form, const char * restrict field, const char * restrict value, qn_size size);
 QN_API extern qn_bool qn_http_form_add_file(qn_http_form_ptr restrict form, const char * restrict field, const char * restrict fname, const char * restrict fname_utf8, qn_size fsize);

@@ -88,7 +88,6 @@ typedef struct _QN_STOR_FETCH_EXTRA
 {
 } qn_stor_fetch_extra, *qn_stor_fetch_extra_ptr;
 
-
 QN_API extern qn_bool qn_stor_fetch(qn_storage_ptr restrict stor, const qn_stor_auth_ptr restrict auth, const char * restrict src_url, const char * restrict dest_bucket, const char * restrict dest_key, qn_stor_fetch_extra_ptr restrict ext);
 QN_API extern qn_bool qn_stor_prefetch(qn_storage_ptr restrict stor, const qn_stor_auth_ptr restrict auth, const char * restrict dest_bucket, const char * restrict dest_key, qn_stor_fetch_extra_ptr restrict ext);
 
@@ -167,7 +166,7 @@ QN_API extern qn_string qn_stor_rs_to_string(const qn_stor_rput_session_ptr rest
 
 QN_API extern int qn_stor_rs_block_count(const qn_stor_rput_session_ptr restrict ss);
 QN_API extern int qn_stor_rs_block_size(const qn_stor_rput_session_ptr restrict ss, int n);
-QN_API extern qn_json_object_ptr qn_stor_rs_block_put_result(const qn_stor_rput_session_ptr restrict ss, int n);
+QN_API extern qn_json_object_ptr qn_stor_rs_block_info(const qn_stor_rput_session_ptr restrict ss, int n);
 QN_API extern qn_bool qn_stor_rs_is_putting_block_done(const qn_stor_rput_session_ptr restrict ss, int n);
 
 typedef struct _QN_STOR_RESUMABLE_PUT_EXTRA
