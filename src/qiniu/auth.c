@@ -36,7 +36,7 @@ QN_API qn_bool qn_pp_set_scope(qn_json_object_ptr restrict pp, const char * rest
     qn_bool ret;
     qn_string scope;
     if (key) {
-        scope = qn_str_sprintf("%s:%s", bucket, key);
+        scope = qn_cs_sprintf("%s:%s", bucket, key);
         if (!scope) return qn_false;
         ret = qn_json_set_string(pp, "scope", qn_str_cstr(scope));
         qn_str_destroy(scope);
@@ -174,13 +174,13 @@ QN_API qn_bool qn_pp_mime_deny(qn_json_object_ptr restrict pp, const char * rest
     qn_string mime_str;
 
     if (!mime2) {
-        deny_mime_str = qn_str_sprintf("!%s", mime1); // Only one mime passed.
+        deny_mime_str = qn_cs_sprintf("!%s", mime1); // Only one mime passed.
     } else {
         va_start(ap, mime2);
         mime_str = qn_cs_join_va(";", mime1, mime2, ap);
         va_end(ap);
         if (!mime_str) return qn_false;
-        deny_mime_str = qn_str_sprintf("!%s", mime_str);
+        deny_mime_str = qn_cs_sprintf("!%s", mime_str);
         qn_str_destroy(mime_str);
         if (!deny_mime_str) return qn_false;
     } // if
@@ -197,11 +197,11 @@ QN_API qn_bool qn_pp_mime_deny_list(qn_json_object_ptr restrict pp, const char *
     qn_string mime_str;
     
     if (mime_count == 1) { 
-        deny_mime_str = qn_str_sprintf("!%s", mime_list[0]); // Only one mime passed.
+        deny_mime_str = qn_cs_sprintf("!%s", mime_list[0]); // Only one mime passed.
     } else {
         mime_str = qn_cs_join_list(";", mime_list, mime_count);
         if (!mime_str) return qn_false;
-        deny_mime_str = qn_str_sprintf("!%s", mime_str);
+        deny_mime_str = qn_cs_sprintf("!%s", mime_str);
         qn_str_destroy(mime_str);
     } // if
     if (!deny_mime_str) return qn_false;
@@ -283,7 +283,7 @@ QN_API const qn_string qn_mac_make_uptoken(qn_mac_ptr restrict mac, const char *
     unsigned int digest_size = sizeof(digest);
     HMAC_CTX ctx;
 
-    encoded_pp = qn_str_encode_base64_urlsafe(pp, pp_size);
+    encoded_pp = qn_cs_encode_base64_urlsafe(pp, pp_size);
     if (!encoded_pp) return NULL;
 
     HMAC_CTX_init(&ctx);
@@ -292,7 +292,7 @@ QN_API const qn_string qn_mac_make_uptoken(qn_mac_ptr restrict mac, const char *
     HMAC_Final(&ctx, (unsigned char *)digest, &digest_size);
     HMAC_CTX_cleanup(&ctx);
 
-    encoded_digest = qn_str_encode_base64_urlsafe(digest, digest_size);
+    encoded_digest = qn_cs_encode_base64_urlsafe(digest, digest_size);
     sign = qn_str_join_3(":", mac->access_key, encoded_digest, encoded_pp);
     qn_str_destroy(encoded_digest);
     qn_str_destroy(encoded_pp);
@@ -333,7 +333,7 @@ QN_API const qn_string qn_mac_make_acctoken(qn_mac_ptr restrict mac, const char 
     HMAC_Final(&ctx, (unsigned char *)digest, &digest_size);
     HMAC_CTX_cleanup(&ctx);
 
-    encoded_digest = qn_str_encode_base64_urlsafe(digest, digest_size);
+    encoded_digest = qn_cs_encode_base64_urlsafe(digest, digest_size);
     if (!encoded_digest) return NULL;
 
     acctoken = qn_str_join_2(":", mac->access_key, encoded_digest);
@@ -373,7 +373,7 @@ QN_API const qn_string qn_mac_make_dnurl(qn_mac_ptr restrict mac, const char * r
     url_size = strlen(url);
     if (!end) end = url + url_size;
 
-    buf_size = qn_str_percent_encode_in_buffer(NULL, 0, begin, end - begin);
+    buf_size = qn_cs_percent_encode_in_buffer(NULL, 0, begin, end - begin);
     if (buf_size > (end - begin)) {
         // Need to percent encode the path of the url.
         buf = malloc(buf_size + 1);
@@ -383,18 +383,18 @@ QN_API const qn_string qn_mac_make_dnurl(qn_mac_ptr restrict mac, const char * r
         } // if
         buf[buf_size + 1] = '\0';
 
-        qn_str_percent_encode_in_buffer(buf, buf_size, begin, end - begin);
+        qn_cs_percent_encode_in_buffer(buf, buf_size, begin, end - begin);
         if (*end == '?') {
-            url_with_deadline = qn_str_sprintf("%.*s%.*s%.*s&e=%d", begin - url, url, buf_size, buf, url_size - (end - url), end, deadline);
+            url_with_deadline = qn_cs_sprintf("%.*s%.*s%.*s&e=%d", begin - url, url, buf_size, buf, url_size - (end - url), end, deadline);
         } else {
-            url_with_deadline = qn_str_sprintf("%.*s%.*s?e=%d", begin - url, url, buf_size, buf, deadline);
+            url_with_deadline = qn_cs_sprintf("%.*s%.*s?e=%d", begin - url, url, buf_size, buf, deadline);
         } // if
         free(buf);
     } else {
         if (*end == '?') {
-            url_with_deadline = qn_str_sprintf("%.*s&e=%d", url_size, url, deadline);
+            url_with_deadline = qn_cs_sprintf("%.*s&e=%d", url_size, url, deadline);
         } else {
-            url_with_deadline = qn_str_sprintf("%.*s?e=%d", url_size, url, deadline);
+            url_with_deadline = qn_cs_sprintf("%.*s?e=%d", url_size, url, deadline);
         }
     } // if
     if (!url_with_deadline) return NULL;
@@ -405,13 +405,13 @@ QN_API const qn_string qn_mac_make_dnurl(qn_mac_ptr restrict mac, const char * r
     HMAC_Final(&ctx, (unsigned char *)digest, &digest_size);
     HMAC_CTX_cleanup(&ctx);
 
-    encoded_digest = qn_str_encode_base64_urlsafe(digest, digest_size);
+    encoded_digest = qn_cs_encode_base64_urlsafe(digest, digest_size);
     if (!encoded_digest) {
         qn_str_destroy(url_with_deadline);
         return NULL;
     } // if
 
-    url_with_token = qn_str_sprintf("%s&token=%s:%s", url_with_deadline, qn_str_cstr(mac->access_key), encoded_digest);
+    url_with_token = qn_cs_sprintf("%s&token=%s:%s", url_with_deadline, qn_str_cstr(mac->access_key), encoded_digest);
     qn_str_destroy(encoded_digest);
     qn_str_destroy(url_with_deadline);
     return url_with_token;

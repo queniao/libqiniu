@@ -53,7 +53,7 @@ int qn_http_qry_size(qn_http_query_ptr qry)
 qn_bool qn_http_qry_set_string(qn_http_query_ptr qry, const char * restrict key, int key_size, const char * restrict val, int val_size)
 {
     qn_bool ret;
-    qn_string encoded_val = qn_str_percent_encode(val, val_size);
+    qn_string encoded_val = qn_cs_percent_encode(val, val_size);
     ret = qn_etbl_set_string(qry->etbl, key, key_size, qn_str_cstr(encoded_val), qn_str_size(encoded_val));
     qn_str_destroy(encoded_val);
     return ret;

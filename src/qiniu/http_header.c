@@ -127,7 +127,7 @@ qn_bool qn_http_hdr_set_raw(qn_http_header_ptr hdr, const char * key, qn_size ke
 
     if (hdr->cnt == hdr->cap && !qn_http_hdr_augment(hdr)) return qn_false;
 
-    new_val = qn_str_sprintf("%.*s: %.*s", key_size, key, val_size, val);
+    new_val = qn_cs_sprintf("%.*s: %.*s", key_size, key, val_size, val);
     if (!new_val) {
         qn_err_set_no_enough_memory();
         return qn_false;

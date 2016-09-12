@@ -123,7 +123,7 @@ static qn_bool qn_json_fmt_format_string(qn_json_formatter_ptr fmt)
                     goto FORMATTING_STRING_FAILED;
                 } // if
 
-                ret = qn_str_snprintf(fmt->buf + fmt->buf_size, (fmt->buf_capacity - fmt->buf_size), "\\u%4X", c1);
+                ret = qn_cs_snprintf(fmt->buf + fmt->buf_size, (fmt->buf_capacity - fmt->buf_size), "\\u%4X", c1);
                 if (ret < 0) {
                     goto FORMATTING_STRING_FAILED;
                 } // if
@@ -185,7 +185,7 @@ static qn_bool qn_json_fmt_format_string(qn_json_formatter_ptr fmt)
             goto FORMATTING_STRING_FAILED;
         } // if
 
-        ret = qn_str_snprintf(fmt->buf + fmt->buf_size, (fmt->buf_capacity - fmt->buf_size), "\\u%4X\\u%4X", head_code, tail_code);
+        ret = qn_cs_snprintf(fmt->buf + fmt->buf_size, (fmt->buf_capacity - fmt->buf_size), "\\u%4X\\u%4X", head_code, tail_code);
         if (ret < 0) {
             goto FORMATTING_STRING_FAILED;
         } // if
@@ -220,24 +220,24 @@ static qn_bool qn_json_fmt_format_ordinary(qn_json_formatter_ptr fmt)
 
     switch (fmt->class) {
         case QN_JSON_INTEGER:
-            ret = qn_str_snprintf(fmt->buf + fmt->buf_size, (fmt->buf_capacity - fmt->buf_size) - 1, "%lld", fmt->val.integer);
+            ret = qn_cs_snprintf(fmt->buf + fmt->buf_size, (fmt->buf_capacity - fmt->buf_size) - 1, "%lld", fmt->val.integer);
             break;
 
         case QN_JSON_NUMBER:
 #ifndef QN_CFG_BIG_NUMBERS
-            ret = qn_str_snprintf(fmt->buf + fmt->buf_size, (fmt->buf_capacity - fmt->buf_size) - 1, "%lf", fmt->val.number);
+            ret = qn_cs_snprintf(fmt->buf + fmt->buf_size, (fmt->buf_capacity - fmt->buf_size) - 1, "%lf", fmt->val.number);
 #else
-            ret = qn_str_snprintf(fmt->buf + fmt->buf_size, (fmt->buf_capacity - fmt->buf_size) - 1, "%Lf", fmt->val.number);
+            ret = qn_cs_snprintf(fmt->buf + fmt->buf_size, (fmt->buf_capacity - fmt->buf_size) - 1, "%Lf", fmt->val.number);
 #endif
             break;
 
         case QN_JSON_BOOLEAN:
             str = (fmt->val.boolean) ? "true" : "false";
-            ret = qn_str_snprintf(fmt->buf + fmt->buf_size, (fmt->buf_capacity - fmt->buf_size) - 1, str);
+            ret = qn_cs_snprintf(fmt->buf + fmt->buf_size, (fmt->buf_capacity - fmt->buf_size) - 1, str);
             break;
 
         case QN_JSON_NULL:
-            ret = qn_str_snprintf(fmt->buf + fmt->buf_size, (fmt->buf_capacity - fmt->buf_size) - 1, "null");
+            ret = qn_cs_snprintf(fmt->buf + fmt->buf_size, (fmt->buf_capacity - fmt->buf_size) - 1, "null");
             break;
 
         default:

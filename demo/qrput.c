@@ -34,7 +34,7 @@ int main(int argc, char * argv[])
         return 1;
     } // if
 
-    scope = qn_str_sprintf("%s:%s", bucket, key);
+    scope = qn_cs_sprintf("%s:%s", bucket, key);
     if (!scope) {
         qn_json_destroy_object(ext.server_end.put_policy);
         printf("Cannot format a valid scope for inserting the file.\n");

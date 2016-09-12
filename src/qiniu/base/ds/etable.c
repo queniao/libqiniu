@@ -126,7 +126,7 @@ static qn_bool qn_etbl_set_entry(qn_etable_ptr etbl, const char * restrict key, 
     if (etbl->cnt == etbl->cap && !qn_etbl_augment(etbl)) return qn_false;
     if (key_size < 0) key_size = strlen(key);
 
-    new_entry = qn_str_sprintf("%.*s%s%.*s", key_size, key, etbl->deli, val_size, val);
+    new_entry = qn_cs_sprintf("%.*s%s%.*s", key_size, key, etbl->deli, val_size, val);
     if (!new_entry) {
         qn_err_set_no_enough_memory();
         return qn_false;
@@ -152,7 +152,7 @@ qn_bool qn_etbl_set_string(qn_etable_ptr etbl, const char * restrict key, int ke
 qn_bool qn_etbl_set_integer(qn_etable_ptr etbl, const char * restrict key, int key_size, int value)
 {
     qn_bool ret;
-    qn_string encoded_val = qn_str_sprintf("%d", value);
+    qn_string encoded_val = qn_cs_sprintf("%d", value);
     ret = qn_etbl_set_entry(etbl, key, key_size, qn_str_cstr(encoded_val), qn_str_size(encoded_val));
     qn_str_destroy(encoded_val);
     return ret;

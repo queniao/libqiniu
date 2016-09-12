@@ -34,7 +34,7 @@ qn_string qn_misc_encode_uri(const char * restrict bucket, const char * restrict
 
     buf[buf_size] = '\0';
 
-    encoded_uri = qn_str_encode_base64_urlsafe(buf, buf_size);
+    encoded_uri = qn_cs_encode_base64_urlsafe(buf, buf_size);
     free(buf);
     return encoded_uri;
 }

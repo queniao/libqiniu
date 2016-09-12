@@ -21,7 +21,7 @@ QN_API extern qn_string qn_cs_duplicate(const char * restrict s)
     return qn_cs_clone(s, strlen(s));
 }
 
-qn_string qn_cs_clone(const char * restrict s, int sz)
+QN_API qn_string qn_cs_clone(const char * restrict s, int sz)
 {
     qn_string new_str = malloc(sz + 1);
     if (!new_str) {
@@ -132,11 +132,241 @@ QN_API qn_string qn_cs_join_va(const char * restrict deli, const char * restrict
     return new_str; 
 }
 
+QN_API qn_string qn_cs_vprintf(const char * restrict format, va_list ap)
+{
+    va_list cp;
+    qn_string new_str = NULL;
+    int printed_size = 0;
+
+    va_copy(cp, ap);
+#if defined(_MSC_VER)
+    printed_size = vsnprintf(0x1, 1, format, cp);
+#else
+    printed_size = vsnprintf(NULL, 0, format, cp);
+#endif
+    va_end(cp);
+
+    if (printed_size < 0) {
+        // Keep the errno set by vsnprintf.
+        return NULL;
+    }
+    if (printed_size == 0) {
+        return "";
+    }
+
+    new_str = malloc(printed_size + 1);
+    if (!new_str) {
+        qn_err_set_no_enough_memory();
+        return NULL;
+    }
+
+    va_copy(cp, ap);
+    printed_size = vsnprintf(new_str, printed_size + 1, format, cp);
+    va_end(cp);
+
+    if (printed_size < 0) {
+        // Keep the errno set by vsnprintf.
+        qn_str_destroy(new_str);
+        return NULL;
+    }
+    return new_str;
+}
+
+QN_API qn_string qn_cs_sprintf(const char * restrict format, ...)
+{
+    va_list ap;
+    qn_string new_str;
+
+    va_start(ap, format);
+    new_str = qn_cs_vprintf(format, ap);
+    va_end(ap);
+    return new_str;
+}
+
+#if defined(_MSC_VER)
+
+#if (_MSC_VER < 1400)
+#error The version of the MSVC is lower then VC++ 2005.
+#endif
+
+QN_API int qn_cs_snprintf(char * restrict buf, int buf_size, const char * restrict format, ...)
+{
+    va_list ap;
+    int printed_size = 0;
+    char * buf = str;
+    int buf_cap = size;
+
+    if (str == NULL || size == 0) {
+        buf = 0x1;
+        buf_cap = 1;
+    } // if
+
+    va_start(ap, format);
+    printed_size = vsnprintf(buf, buf_cap, format, ap);
+    va_end(ap);
+    return printed_size;
+}
+
+#else
+
+QN_API int qn_cs_snprintf(char * restrict str, int size,  const char * restrict format, ...)
+{
+    va_list ap;
+    int printed_size = 0;
+
+    va_start(ap, format);
+    printed_size = vsnprintf(str, size, format, ap);
+    va_end(ap);
+    // TODO: Convert system errno to local errors.
+    return printed_size;
+}
+
+#endif
+
+QN_API qn_string qn_cs_encode_base64_urlsafe(const char * restrict bin, int bin_size)
+{
+    qn_string new_str = NULL;
+    int encoding_size = qn_b64_encode_urlsafe(NULL, 0, bin, bin_size, QN_B64_APPEND_PADDING);
+    
+    if (encoding_size == 0) {
+        return "";
+    }
+
+    new_str = malloc(encoding_size + 1);
+    if (!new_str) {
+        qn_err_set_no_enough_memory();
+        return NULL;
+    }
+
+    qn_b64_encode_urlsafe(new_str, encoding_size, bin, bin_size, QN_B64_APPEND_PADDING);
+    new_str[encoding_size] = '\0';
+    return new_str;
+}
+
+QN_API qn_string qn_cs_decode_base64_urlsafe(const char * restrict str, int str_size)
+{
+    qn_string new_str = NULL;
+    int decoding_size = qn_b64_decode_urlsafe(NULL, 0, str, str_size, 0);
+    
+    if (decoding_size == 0) {
+        return "";
+    }
+
+    new_str = malloc(decoding_size + 1);
+    if (!new_str) {
+        qn_err_set_no_enough_memory();
+        return NULL;
+    }
+
+    qn_b64_decode_urlsafe(new_str, decoding_size, str, str_size, 0);
+    new_str[decoding_size] = '\0';
+    return new_str;
+}
+
+static const char qn_str_hex_map[] = {'0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'A', 'B', 'C', 'D', 'E', 'F'};
+
+static inline qn_bool qn_cs_need_to_percent_encode(int c)
+{
+    if ('a' <= c) {
+        if (c <= 'z' || c == '~') {
+            return qn_false;
+        }
+        // { | } DEL or chars > 127
+        return qn_true;
+    } // if
+
+    if (c <= '9') {
+        if ('0' <= c || c == '.' || c == '-') {
+            return qn_false;
+        } // if
+        return qn_true;
+    } // if
+
+    if ('A' <= c) {
+        if (c <= 'Z' || c == '_') {
+            return qn_false;
+        }
+    } // if
+    return qn_true;
+}
+
+QN_API int qn_cs_percent_encode_in_buffer(char * restrict buf, int buf_size, const char * restrict bin, int bin_size)
+{
+    int i = 0;
+    int m = 0;
+    int ret = 0;
+
+    if (!buf || buf_size <= 0) {
+        for (i = 0; i < bin_size; i += 1) {
+            if (qn_cs_need_to_percent_encode(bin[i])) {
+                if (bin[i] == '%' && (i + 2 < bin_size) && isxdigit(bin[i+1]) && isxdigit(bin[i+2])) {
+                    ret += 1;
+                } else {
+                    ret += 3;
+                } // if
+            } else {
+                ret += 1;
+            } // if
+        } // for
+        return ret;
+    } else if (buf_size < bin_size) {
+        qn_err_set_no_enough_buffer();
+        return -1;
+    } // if
+
+    for (i = 0; i < bin_size; i += 1) {
+        if (qn_cs_need_to_percent_encode(bin[i])) {
+            if (bin[i] == '%' && (i + 2 < bin_size) && isxdigit(bin[i+1]) && isxdigit(bin[i+2])) {
+                    if (m + 1 > buf_size) {
+                        qn_err_set_no_enough_buffer();
+                        return -1;
+                    } // if
+
+                    buf[m++] = bin[i];
+            } else {
+                if (m + 3 > buf_size) {
+                    qn_err_set_no_enough_buffer();
+                    return -1;
+                } // if
+
+                buf[m++] = '%';
+                buf[m++] = qn_str_hex_map[(bin[i] >> 4) & 0xF];
+                buf[m++] = qn_str_hex_map[bin[i] & 0xF];
+            } // if
+        } else {
+            if (m + 1 > buf_size) {
+                qn_err_set_no_enough_buffer();
+                return -1;
+            } // if
+
+            buf[m++] = bin[i];
+        }
+    } // for
+    return m;
+}
+
+QN_API qn_string qn_cs_percent_encode(const char * restrict bin, int bin_size)
+{
+    qn_string new_str = NULL;
+    int buf_size = qn_cs_percent_encode_in_buffer(NULL, 0, bin, bin_size);
+
+    if (buf_size == bin_size) return qn_cs_clone(bin, bin_size);
+
+    new_str = malloc(buf_size + 1);
+    if (!new_str) {
+        qn_err_set_no_enough_memory();
+        return NULL;
+    }
+    qn_cs_percent_encode_in_buffer(new_str, buf_size, bin, bin_size);
+    new_str[buf_size] = '\0';
+    return new_str;
+}
+
 // ---- Declaration of C String ----
 
 const qn_string qn_str_empty_string = "";
 
-qn_string qn_str_join_list(const char * restrict deli, const qn_string ss[], int n)
+QN_API qn_string qn_str_join_list(const char * restrict deli, const qn_string * restrict ss, int n)
 {
     qn_string new_str = NULL;
     char * pos = NULL;
@@ -172,7 +402,7 @@ qn_string qn_str_join_list(const char * restrict deli, const qn_string ss[], int
     return new_str;
 }
 
-qn_string qn_str_join_va(const char * restrict deli, const qn_string restrict s1, const qn_string restrict s2, va_list ap)
+QN_API qn_string qn_str_join_va(const char * restrict deli, const qn_string restrict s1, const qn_string restrict s2, va_list ap)
 {
     va_list cp;
     qn_string new_str = NULL;
@@ -220,236 +450,6 @@ qn_string qn_str_join_va(const char * restrict deli, const qn_string restrict s1
 
     new_str[final_size] = '\0';
     return new_str; 
-}
-
-qn_string qn_str_vprintf(const char * restrict format, va_list ap)
-{
-    va_list cp;
-    qn_string new_str = NULL;
-    int printed_size = 0;
-
-    va_copy(cp, ap);
-#if defined(_MSC_VER)
-    printed_size = vsnprintf(0x1, 1, format, cp);
-#else
-    printed_size = vsnprintf(NULL, 0, format, cp);
-#endif
-    va_end(cp);
-
-    if (printed_size < 0) {
-        // Keep the errno set by vsnprintf.
-        return NULL;
-    }
-    if (printed_size == 0) {
-        return "";
-    }
-
-    new_str = malloc(printed_size + 1);
-    if (!new_str) {
-        qn_err_set_no_enough_memory();
-        return NULL;
-    }
-
-    va_copy(cp, ap);
-    printed_size = vsnprintf(new_str, printed_size + 1, format, cp);
-    va_end(cp);
-
-    if (printed_size < 0) {
-        // Keep the errno set by vsnprintf.
-        qn_str_destroy(new_str);
-        return NULL;
-    }
-    return new_str;
-} // qn_str_vprintf
-
-qn_string qn_str_sprintf(const char * restrict format, ...)
-{
-    va_list ap;
-    qn_string new_str = NULL;
-
-    va_start(ap, format);
-    new_str = qn_str_vprintf(format, ap);
-    va_end(ap);
-    return new_str;
-} // qn_str_printf
-
-#if defined(_MSC_VER)
-
-#if (_MSC_VER < 1400)
-#error The version of the MSVC is lower then VC++ 2005.
-#endif
-
-int qn_str_snprintf(char * restrict str, int size,  const char * restrict format, ...)
-{
-    va_list ap;
-    int printed_size = 0;
-    char * buf = str;
-    int buf_cap = size;
-
-    if (str == NULL || size == 0) {
-        buf = 0x1;
-        buf_cap = 1;
-    } // if
-
-    va_start(ap, format);
-    printed_size = vsnprintf(buf, buf_cap, format, ap);
-    va_end(ap);
-    return printed_size;
-} // qn_str_snprintf
-
-#else
-
-int qn_str_snprintf(char * restrict str, int size,  const char * restrict format, ...)
-{
-    va_list ap;
-    int printed_size = 0;
-
-    va_start(ap, format);
-    printed_size = vsnprintf(str, size, format, ap);
-    va_end(ap);
-    // TODO: Convert system errno to local errors.
-    return printed_size;
-} // qn_str_snprintf
-
-#endif
-
-qn_string qn_str_encode_base64_urlsafe(const char * restrict bin, int bin_size)
-{
-    qn_string new_str = NULL;
-    int encoding_size = qn_b64_encode_urlsafe(NULL, 0, bin, bin_size, QN_B64_APPEND_PADDING);
-    
-    if (encoding_size == 0) {
-        return "";
-    }
-
-    new_str = malloc(encoding_size + 1);
-    if (!new_str) {
-        qn_err_set_no_enough_memory();
-        return NULL;
-    }
-
-    qn_b64_encode_urlsafe(new_str, encoding_size, bin, bin_size, QN_B64_APPEND_PADDING);
-    new_str[encoding_size] = '\0';
-    return new_str;
-} // qn_str_encode_base64_urlsafe
-
-qn_string qn_str_decode_base64_urlsafe(const char * restrict str, int str_size)
-{
-    qn_string new_str = NULL;
-    int decoding_size = qn_b64_decode_urlsafe(NULL, 0, str, str_size, 0);
-    
-    if (decoding_size == 0) {
-        return "";
-    }
-
-    new_str = malloc(decoding_size + 1);
-    if (!new_str) {
-        qn_err_set_no_enough_memory();
-        return NULL;
-    }
-
-    qn_b64_decode_urlsafe(new_str, decoding_size, str, str_size, 0);
-    new_str[decoding_size] = '\0';
-    return new_str;
-} // qn_str_decode_base64_urlsafe
-
-const char qn_str_hex_map[] = {'0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'A', 'B', 'C', 'D', 'E', 'F'};
-
-static inline qn_bool qn_str_need_to_percent_encode(int c)
-{
-    if ('a' <= c) {
-        if (c <= 'z' || c == '~') {
-            return qn_false;
-        }
-        // { | } DEL or chars > 127
-        return qn_true;
-    } // if
-
-    if (c <= '9') {
-        if ('0' <= c || c == '.' || c == '-') {
-            return qn_false;
-        } // if
-        return qn_true;
-    } // if
-
-    if ('A' <= c) {
-        if (c <= 'Z' || c == '_') {
-            return qn_false;
-        }
-    } // if
-    return qn_true;
-}
-
-int qn_str_percent_encode_in_buffer(char * restrict buf, int buf_size, const char * restrict bin, int bin_size)
-{
-    int i = 0;
-    int m = 0;
-    int ret = 0;
-
-    if (!buf || buf_size <= 0) {
-        for (i = 0; i < bin_size; i += 1) {
-            if (qn_str_need_to_percent_encode(bin[i])) {
-                if (bin[i] == '%' && (i + 2 < bin_size) && isxdigit(bin[i+1]) && isxdigit(bin[i+2])) {
-                    ret += 1;
-                } else {
-                    ret += 3;
-                } // if
-            } else {
-                ret += 1;
-            } // if
-        } // for
-        return ret;
-    } else if (buf_size < bin_size) {
-        qn_err_set_no_enough_buffer();
-        return -1;
-    } // if
-
-    for (i = 0; i < bin_size; i += 1) {
-        if (qn_str_need_to_percent_encode(bin[i])) {
-            if (bin[i] == '%' && (i + 2 < bin_size) && isxdigit(bin[i+1]) && isxdigit(bin[i+2])) {
-                    if (m + 1 > buf_size) {
-                        qn_err_set_no_enough_buffer();
-                        return -1;
-                    } // if
-
-                    buf[m++] = bin[i];
-            } else {
-                if (m + 3 > buf_size) {
-                    qn_err_set_no_enough_buffer();
-                    return -1;
-                } // if
-
-                buf[m++] = '%';
-                buf[m++] = qn_str_hex_map[(bin[i] >> 4) & 0xF];
-                buf[m++] = qn_str_hex_map[bin[i] & 0xF];
-            } // if
-        } else {
-            if (m + 1 > buf_size) {
-                qn_err_set_no_enough_buffer();
-                return -1;
-            } // if
-
-            buf[m++] = bin[i];
-        }
-    } // for
-    return m;
-}
-
-qn_string qn_str_percent_encode(const char * restrict bin, int bin_size)
-{
-    qn_string new_str = NULL;
-    int buf_size = qn_str_percent_encode_in_buffer(NULL, 0, bin, bin_size);
-
-    if (buf_size == bin_size) return qn_cs_clone(bin, bin_size);
-
-    new_str = malloc(buf_size + 1);
-    if (!new_str) {
-        qn_err_set_no_enough_memory();
-        return NULL;
-    }
-    qn_str_percent_encode_in_buffer(new_str, buf_size, bin, bin_size);
-    new_str[buf_size] = '\0';
-    return new_str;
 }
 
 #ifdef __cplusplus

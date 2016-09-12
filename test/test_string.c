@@ -144,7 +144,7 @@ void test_sprintf(void)
     qn_string str = NULL;
     char ret[] = {"Testing sprintf -123 ABCD."};
     
-    str = qn_str_sprintf("Testing sprintf %d %s.", -123, "ABCD");
+    str = qn_cs_sprintf("Testing sprintf %d %s.", -123, "ABCD");
     if (!str) {
         CU_FAIL("Cannot sprintf a new string.");
         return;
@@ -163,7 +163,7 @@ void test_snprintf(void)
     char ret[] = {"Testing sprintf -123 ABCD."};
     char buf[100] = {0};
     
-    len = qn_str_snprintf(NULL, 0, "Testing sprintf %d %s.", -123, "ABCD");
+    len = qn_cs_snprintf(NULL, 0, "Testing sprintf %d %s.", -123, "ABCD");
     if (len < 0) {
         CU_FAIL("Cannot measure the length of formatting string.");
         return;
@@ -171,7 +171,7 @@ void test_snprintf(void)
 
     CU_ASSERT_EQUAL(len, strlen(ret));
 
-    str_len = qn_str_snprintf(buf, sizeof(buf), "Testing sprintf %d %s.", -123, "ABCD");
+    str_len = qn_cs_snprintf(buf, sizeof(buf), "Testing sprintf %d %s.", -123, "ABCD");
     if (str_len < 0) {
         CU_FAIL("Cannot snprintf a new string.");
         return;
