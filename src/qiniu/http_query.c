@@ -15,7 +15,7 @@ typedef struct _QN_HTTP_QUERY
     qn_etable_ptr etbl;
 } qn_http_query;
 
-qn_http_query_ptr qn_http_qry_create(void)
+QN_API qn_http_query_ptr qn_http_qry_create(void)
 {
     qn_http_query_ptr new_qry = calloc(1, sizeof(qn_http_query));
     if (!new_qry) {
@@ -32,7 +32,7 @@ qn_http_query_ptr qn_http_qry_create(void)
     return new_qry;
 }
 
-void qn_http_qry_destroy(qn_http_query_ptr qry)
+QN_API void qn_http_qry_destroy(qn_http_query_ptr restrict qry)
 {
     if (qry) {
         qn_etbl_destroy(qry->etbl);
@@ -40,7 +40,7 @@ void qn_http_qry_destroy(qn_http_query_ptr qry)
     } // if
 }
 
-void qn_http_qry_reset(qn_http_query_ptr qry)
+QN_API void qn_http_qry_reset(qn_http_query_ptr restrict qry)
 {
     qn_etbl_reset(qry->etbl); 
 }
@@ -50,7 +50,7 @@ int qn_http_qry_size(qn_http_query_ptr qry)
     return qn_etbl_size(qry->etbl);
 }
 
-qn_bool qn_http_qry_set_string(qn_http_query_ptr qry, const char * restrict key, int key_size, const char * restrict val, int val_size)
+QN_API qn_bool qn_http_qry_set_string(qn_http_query_ptr restrict qry, const char * restrict key, int key_size, const char * restrict val, int val_size)
 {
     qn_bool ret;
     qn_string encoded_val = qn_cs_percent_encode(val, val_size);
@@ -59,12 +59,12 @@ qn_bool qn_http_qry_set_string(qn_http_query_ptr qry, const char * restrict key,
     return ret;
 }
 
-qn_bool qn_http_qry_set_integer(qn_http_query_ptr qry, const char * restrict key, int key_size, int value)
+QN_API qn_bool qn_http_qry_set_integer(qn_http_query_ptr restrict qry, const char * restrict key, int key_size, int value)
 {
     return qn_etbl_set_integer(qry->etbl, key, key_size, value);
 }
 
-qn_string qn_http_qry_to_string(qn_http_query_ptr qry)
+QN_API qn_string qn_http_qry_to_string(qn_http_query_ptr restrict qry)
 {
     return qn_str_join_list("&", qn_etbl_entries(qry->etbl), qn_etbl_size(qry->etbl));
 }

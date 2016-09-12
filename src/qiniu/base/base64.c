@@ -10,32 +10,28 @@ extern "C"
 
 static const char QN_B64_PADDING_CHAR = '=';
 
-static inline
-void qn_b64_encode_3_bytes(char * map, char d1, char d2, char d3, char * dst)
+static inline void qn_b64_encode_3_bytes(char * map, char d1, char d2, char d3, char * dst)
 { 
     dst[0] = map[(d1 >> 2) & 0x3F];
     dst[1] = map[( (d1 & 0x3) << 4 ) | ( (d2 & 0xF0) >> 4 )];
     dst[2] = map[( (d2 & 0xF) << 2 ) | ( (d3 & 0xC0) >> 6 )];
     dst[3] = map[d3 & 0x3F];
-} // qn_b64_encode_3_bytes
+}
 
-static inline
-void qn_b64_encode_2_bytes(char * map, char d1, char d2, char * dst)
+static inline void qn_b64_encode_2_bytes(char * map, char d1, char d2, char * dst)
 { 
     dst[0] = map[(d1 >> 2) & 0x3F];
     dst[1] = map[( (d1 & 0x3) << 4 ) | ( (d2 & 0xF0) >> 4 )];
     dst[2] = map[( (d2 & 0xF) << 2 ) | ( (0 & 0xC0) >> 6 )];
-} // qn_b64_encode_2_bytes
+}
 
-static inline
-void qn_b64_encode_1_bytes(char * map, char d1, char * dst)
+static inline void qn_b64_encode_1_bytes(char * map, char d1, char * dst)
 { 
     dst[0] = map[(d1 >> 2) & 0x3F];
     dst[1] = map[( (d1 & 0x3) << 4 ) | ( (0 & 0xF0) >> 4 )];
-} // qn_b64_encode_1_bytes
+}
 
-static
-qn_size qn_b64_encode(char * restrict encoded_str, qn_size encoded_cap, const char * restrict bin, qn_size bin_size, int opts, char * map)
+static qn_size qn_b64_encode(char * restrict encoded_str, qn_size encoded_cap, const char * restrict bin, qn_size bin_size, int opts, char * map)
 {
     qn_size i = 0;
     qn_size m = 0;
@@ -71,10 +67,9 @@ qn_size qn_b64_encode(char * restrict encoded_str, qn_size encoded_cap, const ch
     } // if
 
     return m;
-} // qn_b64_encode
+}
 
-static inline
-int qn_b64_calc_ord(char c)
+static inline int qn_b64_calc_ord(char c)
 {
     if ('A' <= c && c <= 'Z') {
         return c - 'A';
@@ -92,31 +87,27 @@ int qn_b64_calc_ord(char c)
         return 63;
     }
     return -1;
-} // qn_b64_calc_ord
+}
 
-static inline
-void qn_b64_decode_4_chars(char c1, char c2, char c3, char c4, char * dst)
+static inline void qn_b64_decode_4_chars(char c1, char c2, char c3, char c4, char * dst)
 {
     dst[0] = ((qn_b64_calc_ord(c1) & 0x3F) << 2) | ((qn_b64_calc_ord(c2) & 0x30) >> 4);
     dst[1] = ((qn_b64_calc_ord(c2) & 0x0F) << 4) | ((qn_b64_calc_ord(c3) & 0x3C) >> 2);
     dst[2] = ((qn_b64_calc_ord(c3) & 0x03) << 6) | (qn_b64_calc_ord(c4) & 0x3F);
-} // qn_b64_decode_4_chars
+}
 
-static inline
-void qn_b64_decode_3_chars(char c1, char c2, char c3, char * dst)
+static inline void qn_b64_decode_3_chars(char c1, char c2, char c3, char * dst)
 {
     dst[0] = ((qn_b64_calc_ord(c1) & 0x3F) << 2) | ((qn_b64_calc_ord(c2) & 0x30) >> 4);
     dst[1] = ((qn_b64_calc_ord(c2) & 0x0F) << 4) | ((qn_b64_calc_ord(c3) & 0x3C) >> 2);
-} // qn_b64_decode_3_chars
+}
 
-static inline
-void qn_b64_decode_2_chars(char c1, char c2, char * dst)
+static inline void qn_b64_decode_2_chars(char c1, char c2, char * dst)
 {
     dst[0] = ((qn_b64_calc_ord(c1) & 0x3F) << 2) | ((qn_b64_calc_ord(c2) & 0x30) >> 4);
-} // qn_b64_decode_2_chars
+}
 
-static
-qn_size qn_b64_decode(char * restrict decoded_bin, qn_size decoded_cap, const char * str, qn_size str_size, int opts)
+static qn_size qn_b64_decode(char * restrict decoded_bin, qn_size decoded_cap, const char * str, qn_size str_size, int opts)
 {
     int i = 0;
     int m = 0;
@@ -148,11 +139,11 @@ qn_size qn_b64_decode(char * restrict decoded_bin, qn_size decoded_cap, const ch
     } // if
 
     return m;
-} // qn_b64_decode
+}
 
 static char qn_b64_urlsafe_map[] = {"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_"};
 
-qn_size qn_b64_encode_urlsafe(char * restrict encoded_str, qn_size encoded_cap, const char * restrict bin, qn_size bin_size, int opts)
+QN_API qn_size qn_b64_encode_urlsafe(char * restrict encoded_str, qn_size encoded_cap, const char * restrict bin, qn_size bin_size, int opts)
 {
     // Include spaces for two padding chars, but none for the NUL char.
     qn_size encoding_size = ((bin_size / 3) * 4) + ((bin_size % 3 > 0) ? 4 : 0);
@@ -163,9 +154,9 @@ qn_size qn_b64_encode_urlsafe(char * restrict encoded_str, qn_size encoded_cap, 
 
     assert(encoding_size <= encoded_cap);
     return qn_b64_encode(encoded_str, encoded_cap, bin, bin_size, opts, qn_b64_urlsafe_map);
-} // qn_b64_url_encode
+}
 
-qn_size qn_b64_decode_urlsafe(char * restrict decoded_bin, qn_size decoded_cap, const char * restrict str, qn_size str_size, int opts)
+QN_API qn_size qn_b64_decode_urlsafe(char * restrict decoded_bin, qn_size decoded_cap, const char * restrict str, qn_size str_size, int opts)
 {
     qn_size decoding_size = ((str_size / 4) * 3) + ((str_size % 4 > 0) ? 3 : 0);
 
@@ -175,7 +166,7 @@ qn_size qn_b64_decode_urlsafe(char * restrict decoded_bin, qn_size decoded_cap, 
 
     assert(decoding_size <= decoded_cap);
     return qn_b64_decode(decoded_bin, decoded_cap, str, str_size, opts);
-} // qn_b64_url_decode
+}
 
 #ifdef __cplusplus
 }

@@ -6,7 +6,7 @@ extern "C"
 {
 #endif
 
-qn_string qn_misc_encode_uri(const char * restrict bucket, const char * restrict key)
+QN_API qn_string qn_misc_encode_uri(const char * restrict bucket, const char * restrict key)
 {
     char * buf = NULL;
     int buf_size = 0;

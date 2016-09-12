@@ -526,7 +526,7 @@ typedef struct _QN_JSON_PARSER
     qn_json_prs_level init_lvl[3];
 } qn_json_parser;
 
-qn_json_parser_ptr qn_json_prs_create(void)
+QN_API qn_json_parser_ptr qn_json_prs_create(void)
 {
     qn_json_parser_ptr new_prs = calloc(1, sizeof(qn_json_parser));
     if (!new_prs) {
@@ -539,7 +539,7 @@ qn_json_parser_ptr qn_json_prs_create(void)
     return new_prs;
 }
 
-void qn_json_prs_destroy(qn_json_parser_ptr prs)
+QN_API void qn_json_prs_destroy(qn_json_parser_ptr restrict prs)
 {
     if (prs) {
         while (prs->size > 0) {
@@ -557,7 +557,7 @@ void qn_json_prs_destroy(qn_json_parser_ptr prs)
     } // if
 }
 
-void qn_json_prs_reset(qn_json_parser_ptr prs)
+QN_API void qn_json_prs_reset(qn_json_parser_ptr restrict prs)
 {
     if (prs) {
         while (prs->size > 0) {
@@ -915,7 +915,7 @@ static qn_bool qn_json_prs_parse(qn_json_parser_ptr prs)
     return qn_true;
 }
 
-qn_bool qn_json_prs_parse_object(qn_json_parser_ptr prs, const char * restrict buf, qn_size * buf_size, qn_json_object_ptr * root)
+QN_API qn_bool qn_json_prs_parse_object(qn_json_parser_ptr restrict prs, const char * restrict buf, qn_size * restrict buf_size, qn_json_object_ptr * restrict root)
 {
     qn_json_token tkn = QN_JSON_TKNERR_NEED_MORE_TEXT;
     char * txt = NULL;
@@ -947,7 +947,7 @@ qn_bool qn_json_prs_parse_object(qn_json_parser_ptr prs, const char * restrict b
     return qn_true;
 }
 
-qn_bool qn_json_prs_parse_array(qn_json_parser_ptr prs, const char * restrict buf, qn_size * buf_size, qn_json_array_ptr * root)
+QN_API qn_bool qn_json_prs_parse_array(qn_json_parser_ptr restrict prs, const char * restrict buf, qn_size * restrict buf_size, qn_json_array_ptr * restrict root)
 {
     qn_json_token tkn = QN_JSON_TKNERR_NEED_MORE_TEXT;
     char * txt = NULL;
@@ -984,7 +984,7 @@ qn_size qn_json_prs_get_max_levels(void)
     return qn_json_prs_max_levels;
 }
 
-void qn_json_prs_set_max_levels(qn_size count)
+QN_API void qn_json_prs_set_max_levels(qn_size count)
 {
     if (4 <= qn_json_prs_max_levels && qn_json_prs_max_levels < 64) {
         qn_json_prs_max_levels = count;

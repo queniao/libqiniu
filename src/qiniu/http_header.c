@@ -19,7 +19,7 @@ typedef struct _QN_HTTP_HEADER
     qn_http_hdr_pos cap;
 } qn_http_header;
 
-qn_http_header_ptr qn_http_hdr_create(void)
+QN_API qn_http_header_ptr qn_http_hdr_create(void)
 {
     qn_http_header_ptr new_hdr = calloc(1, sizeof(qn_http_header));
     if (!new_hdr) {
@@ -39,7 +39,7 @@ qn_http_header_ptr qn_http_hdr_create(void)
     return new_hdr;
 }
 
-void qn_http_hdr_destroy(qn_http_header_ptr hdr)
+QN_API void qn_http_hdr_destroy(qn_http_header_ptr restrict hdr)
 {
     if (hdr) {
         qn_http_hdr_reset(hdr);
@@ -48,12 +48,12 @@ void qn_http_hdr_destroy(qn_http_header_ptr hdr)
     } // if
 }
 
-void qn_http_hdr_reset(qn_http_header_ptr hdr)
+QN_API void qn_http_hdr_reset(qn_http_header_ptr restrict hdr)
 {
     while (hdr->cnt > 0) qn_str_destroy(hdr->entries[--hdr->cnt]);
 }
 
-qn_size qn_http_hdr_size(qn_http_header_ptr hdr)
+QN_API qn_size qn_http_hdr_size(qn_http_header_ptr restrict hdr)
 {
     return hdr->cnt;
 }
@@ -85,7 +85,7 @@ static qn_http_hdr_pos qn_http_hdr_bsearch(qn_http_header_ptr hdr, const char * 
     return begin;
 }
 
-qn_string qn_http_hdr_get_entry_raw(qn_http_header_ptr hdr, const char * key, qn_size key_size)
+QN_API qn_string qn_http_hdr_get_entry_raw(qn_http_header_ptr restrict hdr, const char * restrict key, qn_size key_size)
 {
     int ord;
     qn_http_hdr_pos pos = qn_http_hdr_bsearch(hdr, key, key_size, &ord);
@@ -93,7 +93,7 @@ qn_string qn_http_hdr_get_entry_raw(qn_http_header_ptr hdr, const char * key, qn
     return hdr->entries[pos];
 }
 
-qn_bool qn_http_hdr_get_raw(qn_http_header_ptr hdr, const char * key, qn_size key_size, const char ** val, qn_size * val_size)
+QN_API qn_bool qn_http_hdr_get_raw(qn_http_header_ptr restrict hdr, const char * key, qn_size key_size, const char ** restrict val, qn_size * restrict val_size)
 {
     int ord;
     qn_http_hdr_pos pos = qn_http_hdr_bsearch(hdr, key, key_size, &ord);
@@ -119,7 +119,7 @@ static qn_bool qn_http_hdr_augment(qn_http_header_ptr hdr)
     return qn_true;
 }
 
-qn_bool qn_http_hdr_set_raw(qn_http_header_ptr hdr, const char * key, qn_size key_size, const char * val, qn_size val_size)
+QN_API qn_bool qn_http_hdr_set_raw(qn_http_header_ptr restrict hdr, const char * restrict key, qn_size key_size, const char * restrict val, qn_size val_size)
 {
     int ord;
     qn_string new_val = NULL;
@@ -145,7 +145,7 @@ qn_bool qn_http_hdr_set_raw(qn_http_header_ptr hdr, const char * key, qn_size ke
     return qn_true;
 }
 
-void qn_http_hdr_unset_raw(qn_http_header_ptr hdr, const char * key, qn_size key_size)
+QN_API void qn_http_hdr_unset_raw(qn_http_header_ptr restrict hdr, const char * restrict key, qn_size key_size)
 {
     int ord;
     qn_http_hdr_pos pos = qn_http_hdr_bsearch(hdr, key, key_size, &ord);
@@ -163,7 +163,7 @@ typedef struct _QN_HTTP_HDR_ITERATOR
     qn_http_hdr_pos pos;
 } qn_http_hdr_iterator;
 
-qn_http_hdr_iterator_ptr qn_http_hdr_itr_create(qn_http_header_ptr hdr)
+QN_API qn_http_hdr_iterator_ptr qn_http_hdr_itr_create(qn_http_header_ptr restrict hdr)
 {
     qn_http_hdr_iterator_ptr new_itr = calloc(1, sizeof(qn_http_hdr_iterator));
     if (!new_itr) {
@@ -175,19 +175,19 @@ qn_http_hdr_iterator_ptr qn_http_hdr_itr_create(qn_http_header_ptr hdr)
     return new_itr;
 }
 
-void qn_http_hdr_itr_destroy(qn_http_hdr_iterator_ptr itr)
+QN_API void qn_http_hdr_itr_destroy(qn_http_hdr_iterator_ptr restrict itr)
 {
     if (itr) {
         free(itr);
     }
 }
 
-void qn_http_hdr_itr_rewind(qn_http_hdr_iterator_ptr itr)
+QN_API void qn_http_hdr_itr_rewind(qn_http_hdr_iterator_ptr restrict itr)
 {
     itr->pos = 0;
 }
 
-qn_bool qn_http_hdr_itr_next_pair_raw(qn_http_hdr_iterator_ptr itr, const char ** key, qn_size * key_size, const char ** val, qn_size * val_size)
+QN_API qn_bool qn_http_hdr_itr_next_pair_raw(qn_http_hdr_iterator_ptr restrict itr, const char ** restrict key, qn_size * restrict key_size, const char ** restrict val, qn_size * restrict val_size)
 {
     qn_string entry;
 
@@ -202,7 +202,7 @@ qn_bool qn_http_hdr_itr_next_pair_raw(qn_http_hdr_iterator_ptr itr, const char *
     return qn_true;
 }
 
-const qn_string qn_http_hdr_itr_next_entry(qn_http_hdr_iterator_ptr itr)
+QN_API const qn_string qn_http_hdr_itr_next_entry(qn_http_hdr_iterator_ptr restrict itr)
 {
     return (itr->pos == itr->hdr->cnt) ? NULL : itr->hdr->entries[itr->pos++];
 }

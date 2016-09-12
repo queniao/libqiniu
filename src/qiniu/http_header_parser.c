@@ -56,7 +56,7 @@ struct _QN_HTTP_HEADER_PARSER
     qn_http_hdr_scanner s;
 } qn_http_hdr_parser;
 
-qn_http_hdr_parser_ptr qn_http_hdr_prs_create(void)
+QN_API qn_http_hdr_parser_ptr qn_http_hdr_prs_create(void)
 {
     qn_http_hdr_parser_ptr new_prs = calloc(1, sizeof(qn_http_hdr_parser));
     if (!new_prs) {
@@ -66,7 +66,7 @@ qn_http_hdr_parser_ptr qn_http_hdr_prs_create(void)
     return new_prs;
 }
 
-void qn_http_hdr_prs_destroy(qn_http_hdr_parser_ptr prs)
+QN_API void qn_http_hdr_prs_destroy(qn_http_hdr_parser_ptr restrict prs)
 {
     if (prs) {
         qn_http_hdr_prs_reset(prs);
@@ -74,7 +74,7 @@ void qn_http_hdr_prs_destroy(qn_http_hdr_parser_ptr prs)
     } // if
 }
 
-void qn_http_hdr_prs_reset(qn_http_hdr_parser_ptr prs)
+QN_API void qn_http_hdr_prs_reset(qn_http_hdr_parser_ptr restrict prs)
 {
     if (prs->flags & QN_HTTP_HDR_SETTING_LOCAL_HEADER) qn_http_hdr_destroy(prs->hdr);
     qn_str_destroy(prs->key);
@@ -188,7 +188,7 @@ static qn_http_hdr_token qn_http_hdr_prs_scan_value(qn_http_hdr_scanner_ptr s, c
     return QN_HTTP_HDR_TKNERR_NEED_MORE_TEXT;
 }
 
-qn_bool qn_http_hdr_prs_parse(qn_http_hdr_parser_ptr prs, const char * buf, int * buf_size, qn_http_header_ptr * hdr)
+QN_API qn_bool qn_http_hdr_prs_parse(qn_http_hdr_parser_ptr restrict prs, const char * restrict buf, int * restrict buf_size, qn_http_header_ptr * restrict hdr)
 {
     const char * txt;
     int txt_size;
