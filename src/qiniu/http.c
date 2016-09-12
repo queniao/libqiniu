@@ -199,7 +199,6 @@ QN_API void qn_http_req_reset(qn_http_request_ptr restrict req)
 {
     if (req->flags & QN_HTTP_REQ_USING_LOCAL_FORM) {
         qn_http_form_destroy(req->form);
-        req->form = NULL;
     } // if
 
     qn_http_hdr_reset(req->hdr);
