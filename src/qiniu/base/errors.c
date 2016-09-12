@@ -67,7 +67,7 @@ static qn_error qn_errors[] = {
     {QN_ERR_FL_INFO_STATING_FILE_INFO_FAILED, "Stating file infomation failed"}
 };
 
-static int qn_err_compare(const void * key, const void * item)
+static int qn_err_compare(const void * restrict key, const void * restrict item)
 {
     if (*((qn_err_enum *)key) < ((qn_error_ptr)item)->code) {
         return -1;
@@ -78,210 +78,210 @@ static int qn_err_compare(const void * key, const void * item)
     return 0;
 }
 
-const char * qn_err_get_message(void)
+QN_API const char * qn_err_get_message(void)
 {
     qn_error_ptr error = (qn_error_ptr) bsearch(&qn_err_code, &qn_errors, sizeof(qn_errors) / sizeof(qn_errors[0]), sizeof(qn_errors[0]), &qn_err_compare);
     return error->message;
 }
 
-void qn_err_set_succeed(void)
+QN_API void qn_err_set_succeed(void)
 {
     qn_err_code = QN_ERR_SUCCEED;
 }
 
-void qn_err_set_no_enough_memory(void)
+QN_API void qn_err_set_no_enough_memory(void)
 {
     qn_err_code = QN_ERR_NO_ENOUGH_MEMORY;
 }
 
-void qn_err_set_try_again(void)
+QN_API void qn_err_set_try_again(void)
 {
     qn_err_code = QN_ERR_TRY_AGAIN;
 }
 
-void qn_err_set_invalid_argument(void)
+QN_API void qn_err_set_invalid_argument(void)
 {
     qn_err_code = QN_ERR_INVALID_ARGUMENT;
 }
 
-void qn_err_set_overflow_upper_bound(void)
+QN_API void qn_err_set_overflow_upper_bound(void)
 {
     qn_err_code = QN_ERR_OVERFLOW_UPPER_BOUND;
 }
 
-void qn_err_set_overflow_lower_bound(void)
+QN_API void qn_err_set_overflow_lower_bound(void)
 {
     qn_err_code = QN_ERR_OVERFLOW_LOWER_BOUND;
 }
 
-void qn_err_set_bad_utf8_sequence(void)
+QN_API void qn_err_set_bad_utf8_sequence(void)
 {
     qn_err_code = QN_ERR_BAD_UTF8_SEQUENCE;
 }
 
-void qn_err_set_no_enough_buffer(void)
+QN_API void qn_err_set_no_enough_buffer(void)
 {
     qn_err_code = QN_ERR_NO_ENOUGH_BUFFER;
 }
 
-void qn_err_json_set_bad_text_input(void)
+QN_API void qn_err_json_set_bad_text_input(void)
 {
     qn_err_code = QN_ERR_JSON_BAD_TEXT_INPUT;
 }
 
-void qn_err_json_set_too_many_parsing_levels(void)
+QN_API void qn_err_json_set_too_many_parsing_levels(void)
 {
     qn_err_code = QN_ERR_JSON_TOO_MANY_PARSING_LEVELS;
 }
 
-void qn_err_json_set_need_more_text_input(void)
+QN_API void qn_err_json_set_need_more_text_input(void)
 {
     qn_err_code = QN_ERR_JSON_NEED_MORE_TEXT_INPUT;
 }
 
-void qn_err_http_set_invalid_header_syntax(void)
+QN_API void qn_err_http_set_invalid_header_syntax(void)
 {
     qn_err_code = QN_ERR_HTTP_INVALID_HEADER_SYNTAX;
 }
 
-void qn_err_http_set_adding_string_field_failed(void)
+QN_API void qn_err_http_set_adding_string_field_failed(void)
 {
     qn_err_code = QN_ERR_HTTP_ADDING_STRING_FIELD_FAILED;
 }
 
-void qn_err_http_set_adding_file_field_failed(void)
+QN_API void qn_err_http_set_adding_file_field_failed(void)
 {
     qn_err_code = QN_ERR_HTTP_ADDING_FILE_FIELD_FAILED;
 }
 
-void qn_err_http_set_adding_buffer_field_failed(void)
+QN_API void qn_err_http_set_adding_buffer_field_failed(void)
 {
     qn_err_code = QN_ERR_HTTP_ADDING_BUFFER_FIELD_FAILED;
 }
 
-void qn_err_fl_set_opening_file_failed(void)
+QN_API void qn_err_fl_set_opening_file_failed(void)
 {
     qn_err_code = QN_ERR_FL_OPENING_FILE_FAILED;
 }
 
-void qn_err_fl_set_duplicating_file_failed(void)
+QN_API void qn_err_fl_set_duplicating_file_failed(void)
 {
     qn_err_code = QN_ERR_FL_DUPLICATING_FILE_FAILED;
 }
 
-void qn_err_fl_set_reading_file_failed(void)
+QN_API void qn_err_fl_set_reading_file_failed(void)
 {
     qn_err_code = QN_ERR_FL_READING_FILE_FAILED;
 }
 
-void qn_err_fl_set_seeking_file_failed(void)
+QN_API void qn_err_fl_set_seeking_file_failed(void)
 {
     qn_err_code = QN_ERR_FL_SEEKING_FILE_FAILED;
 }
 
-void qn_err_fl_info_set_stating_file_info_failed(void)
+QN_API void qn_err_fl_info_set_stating_file_info_failed(void)
 {
     qn_err_code = QN_ERR_FL_INFO_STATING_FILE_INFO_FAILED;
 }
 
 // ----
 
-qn_bool qn_err_is_succeed(void)
+QN_API qn_bool qn_err_is_succeed(void)
 {
     return (qn_err_code == QN_ERR_SUCCEED);
 }
 
-qn_bool qn_err_is_no_enough_memory(void)
+QN_API qn_bool qn_err_is_no_enough_memory(void)
 {
     return (qn_err_code == QN_ERR_NO_ENOUGH_MEMORY);
 }
 
-qn_bool qn_err_is_try_again(void)
+QN_API qn_bool qn_err_is_try_again(void)
 {
     return (qn_err_code == QN_ERR_TRY_AGAIN);
 }
 
-qn_bool qn_err_is_invalid_argument(void)
+QN_API qn_bool qn_err_is_invalid_argument(void)
 {
     return (qn_err_code == QN_ERR_TRY_AGAIN);
 }
 
-qn_bool qn_err_is_overflow_upper_bound(void)
+QN_API qn_bool qn_err_is_overflow_upper_bound(void)
 {
     return (qn_err_code == QN_ERR_OVERFLOW_UPPER_BOUND);
 }
 
-qn_bool qn_err_is_overflow_lower_bound(void)
+QN_API qn_bool qn_err_is_overflow_lower_bound(void)
 {
     return (qn_err_code == QN_ERR_OVERFLOW_LOWER_BOUND);
 }
 
-qn_bool qn_err_is_bad_utf8_sequence(void)
+QN_API qn_bool qn_err_is_bad_utf8_sequence(void)
 {
     return (qn_err_code == QN_ERR_BAD_UTF8_SEQUENCE);
 }
 
-qn_bool qn_err_is_no_enough_buffer(void)
+QN_API qn_bool qn_err_is_no_enough_buffer(void)
 {
     return (qn_err_code == QN_ERR_NO_ENOUGH_BUFFER);
 }
 
-qn_bool qn_err_json_is_bad_text_input(void)
+QN_API qn_bool qn_err_json_is_bad_text_input(void)
 {
     return (qn_err_code == QN_ERR_JSON_BAD_TEXT_INPUT);
 }
 
-qn_bool qn_err_json_is_too_many_levels_in_parsing(void)
+QN_API qn_bool qn_err_json_is_too_many_levels_in_parsing(void)
 {
     return (qn_err_code == QN_ERR_JSON_TOO_MANY_PARSING_LEVELS);
 }
 
-qn_bool qn_err_json_is_need_more_text_input(void)
+QN_API qn_bool qn_err_json_is_need_more_text_input(void)
 {
     return (qn_err_code == QN_ERR_JSON_NEED_MORE_TEXT_INPUT);
 }
 
-qn_bool qn_err_http_is_invalid_header_syntax(void)
+QN_API qn_bool qn_err_http_is_invalid_header_syntax(void)
 {
     return (qn_err_code == QN_ERR_HTTP_INVALID_HEADER_SYNTAX);
 }
 
-qn_bool qn_err_http_is_adding_string_field_failed(void)
+QN_API qn_bool qn_err_http_is_adding_string_field_failed(void)
 {
     return (qn_err_code == QN_ERR_HTTP_ADDING_STRING_FIELD_FAILED);
 }
 
-qn_bool qn_err_http_is_adding_file_field_failed(void)
+QN_API qn_bool qn_err_http_is_adding_file_field_failed(void)
 {
     return (qn_err_code == QN_ERR_HTTP_ADDING_FILE_FIELD_FAILED);
 }
 
-qn_bool qn_err_http_is_adding_buffer_field_failed(void)
+QN_API qn_bool qn_err_http_is_adding_buffer_field_failed(void)
 {
     return (qn_err_code == QN_ERR_HTTP_ADDING_BUFFER_FIELD_FAILED);
 }
 
-qn_bool qn_err_fl_is_opening_file_failed(void)
+QN_API qn_bool qn_err_fl_is_opening_file_failed(void)
 {
     return (qn_err_code == QN_ERR_FL_OPENING_FILE_FAILED);
 }
 
-qn_bool qn_err_fl_is_duplicating_file_failed(void)
+QN_API qn_bool qn_err_fl_is_duplicating_file_failed(void)
 {
     return (qn_err_code == QN_ERR_FL_DUPLICATING_FILE_FAILED);
 }
 
-qn_bool qn_err_fl_is_reading_file_failed(void)
+QN_API qn_bool qn_err_fl_is_reading_file_failed(void)
 {
     return (qn_err_code == QN_ERR_FL_READING_FILE_FAILED);
 }
 
-qn_bool qn_err_fl_is_seeking_file_failed(void)
+QN_API qn_bool qn_err_fl_is_seeking_file_failed(void)
 {
     return (qn_err_code == QN_ERR_FL_SEEKING_FILE_FAILED);
 }
 
-qn_bool qn_err_fl_info_is_stating_file_info_failed(void)
+QN_API qn_bool qn_err_fl_info_is_stating_file_info_failed(void)
 {
     return (qn_err_code == QN_ERR_FL_INFO_STATING_FILE_INFO_FAILED);
 }
