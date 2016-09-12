@@ -14,24 +14,127 @@ extern "C"
 {
 #endif
 
-const qn_string qn_str_empty_string = "";
+// ---- Declaration of C String ----
 
-qn_string qn_str_duplicate(const char * s)
+QN_API extern qn_string qn_cs_duplicate(const char * restrict s)
 {
-    return qn_str_clone(s, strlen(s));
+    return qn_cs_clone(s, strlen(s));
 }
 
-qn_string qn_str_clone(const char * s, int sz)
+qn_string qn_cs_clone(const char * restrict s, int sz)
 {
     qn_string new_str = malloc(sz + 1);
-    if (new_str) {
-        memcpy(new_str, s, sz);
-        new_str[sz] = '\0';
-    } else {
+    if (!new_str) {
         qn_err_set_no_enough_memory();
-    }
+        return NULL;
+    } // if
+
+    memcpy(new_str, s, sz);
+    new_str[sz] = '\0';
     return new_str;
 }
+
+QN_API qn_string qn_cs_join_list(const char * restrict deli, const char ** restrict ss, int n)
+{
+    qn_string new_str;
+    char * pos;
+    int final_size;
+    int deli_size;
+    int str_size;
+    int i;
+
+    if (n == 1) return qn_cs_duplicate(ss[0]);
+
+    deli_size = strlen(deli);
+
+    final_size = 0;
+    for (i = 0; i < n; i += 1) final_size += strlen(ss[i]);
+    final_size += deli_size * (n - 1);
+
+    pos = new_str = malloc(final_size + 1);
+    if (!new_str) {
+        qn_err_set_no_enough_memory();
+        return NULL;
+    } // if
+
+    str_size = strlen(ss[0]);
+    memcpy(pos, ss[0], str_size);
+    pos += str_size;
+
+    for (i = 1; i < n; i += 1) {
+        memcpy(pos, deli, deli_size);
+        pos += deli_size;
+
+        str_size = strlen(ss[i]);
+        memcpy(pos, ss[i], str_size);
+        pos += str_size;
+    } // for
+
+    new_str[final_size] = '\0';
+    return new_str;
+}
+
+QN_API qn_string qn_cs_join_va(const char * restrict deli, const char * restrict s1, const char * restrict s2, va_list ap)
+{
+    va_list cp;
+    qn_string new_str;
+    qn_string str;
+    int final_size;
+    int str_size;
+    int deli_size = strlen(deli);
+    int n;
+    char * pos;
+
+    if (!s1) return NULL;
+    if (!s2) return qn_cs_duplicate(s1);
+
+    final_size = strlen(s1) + deli_size + strlen(s2);
+
+    n = 0;
+    va_copy(cp, ap);
+    while ((str = va_arg(cp, qn_string))) {
+        final_size += deli_size + strlen(str);
+        n += 1;
+    } // while
+    va_end(cp);
+
+    pos = new_str = malloc(final_size + 1);
+    if (!new_str) {
+        qn_err_set_no_enough_memory();
+        return NULL;
+    } // if
+
+    str_size = strlen(s1);
+    memcpy(pos, s1, str_size);
+    pos += str_size;
+
+    memcpy(pos, deli, deli_size);
+    pos += deli_size;
+
+    str_size = strlen(s2);
+    memcpy(pos, s2, str_size);
+    pos += str_size;
+
+    if (n > 0) {
+        va_copy(cp, ap);
+        while ((str = va_arg(cp, qn_string))) {
+            memcpy(pos, deli, deli_size);
+            pos += deli_size;
+
+            str_size = strlen(str);
+            memcpy(pos, str, str_size);
+            pos += str_size;
+        } // while
+        va_end(cp);
+    } // if
+
+    new_str[final_size] = '\0';
+    return new_str; 
+}
+
+// ---- Declaration of C String ----
+
+const qn_string qn_str_empty_string = "";
 
 qn_string qn_str_join_list(const char * restrict deli, const qn_string ss[], int n)
 {
@@ -337,7 +440,7 @@ qn_string qn_str_percent_encode(const char * restrict bin, int bin_size)
     qn_string new_str = NULL;
     int buf_size = qn_str_percent_encode_in_buffer(NULL, 0, bin, bin_size);
 
-    if (buf_size == bin_size) return qn_str_clone(bin, bin_size);
+    if (buf_size == bin_size) return qn_cs_clone(bin, bin_size);
 
     new_str = malloc(buf_size + 1);
     if (!new_str) {

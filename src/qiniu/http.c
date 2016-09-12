@@ -422,7 +422,7 @@ static size_t qn_http_resp_hdr_wrt_callback(char * buf, size_t size, size_t nite
         end = strchr(begin, ' ');
         if (!end) return 0;
 
-        resp->http_ver = qn_str_clone(begin, end - begin);
+        resp->http_ver = qn_cs_clone(begin, end - begin);
         if (!resp->http_ver) return 0;
 
         // ---- http code
@@ -441,7 +441,7 @@ static size_t qn_http_resp_hdr_wrt_callback(char * buf, size_t size, size_t nite
         if (end[-1] != '\n') return 0;
         end -= (end[-2] == '\r') ? 2 : 1;
 
-        resp->http_msg = qn_str_clone(begin, end - begin);
+        resp->http_msg = qn_cs_clone(begin, end - begin);
         if (!resp->http_msg) return 0;
     } else {
         // Parse response headers.

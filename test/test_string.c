@@ -9,7 +9,7 @@ void test_duplicate(void)
     const char buf[] = {"This is a test line for create a new string by cloning raw string."};
     qn_string str = NULL;
 
-    str = qn_str_duplicate(buf);
+    str = qn_cs_duplicate(buf);
     if (!str) {
         CU_FAIL("Cannot clone the a new string from raw string.");
         return;
@@ -32,19 +32,19 @@ void test_join_list(void)
     qn_string str2 = NULL;
     qn_string str3 = NULL;
     
-    srcs[0] = qn_str_duplicate(buf1);
+    srcs[0] = qn_cs_duplicate(buf1);
     if (!srcs[0]) {
         CU_FAIL("Cannot clone a raw string to source input #1.");
         return;
     } // if
     
-    srcs[1] = qn_str_duplicate(buf2);
+    srcs[1] = qn_cs_duplicate(buf2);
     if (!srcs[1]) {
         CU_FAIL("Cannot clone a raw string to source input #2.");
         return;
     } // if
     
-    srcs[2] = qn_str_duplicate(buf3);
+    srcs[2] = qn_cs_duplicate(buf3);
     if (!srcs[2]) {
         CU_FAIL("Cannot clone a raw string to source input #3.");
         return;

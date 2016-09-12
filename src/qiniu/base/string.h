@@ -4,7 +4,9 @@
 #include <stdarg.h>
 #include <stdlib.h>
 #include <string.h>
+
 #include "qiniu/base/basic_types.h"
+#include "qiniu/macros.h"
 
 #define posix_strlen strlen
 #define posix_strcmp strcmp
@@ -17,6 +19,16 @@ extern "C"
 #endif
 
 typedef char * qn_string;
+
+// ---- Declaration of C String ----
+
+QN_API extern qn_string qn_cs_duplicate(const char * restrict s);
+QN_API extern qn_string qn_cs_clone(const char * restrict s, int sz);
+
+QN_API extern qn_string qn_cs_join_list(const char * restrict delimiter, const char ** restrict ss, int n);
+QN_API extern qn_string qn_cs_join_va(const char * restrict delimiter, const char * restrict s1, const char * restrict s2, va_list ap);
+
+// ---- Declaration of String ----
 
 extern const qn_string qn_str_empty_string;
 
@@ -55,8 +67,10 @@ static inline int qn_str_compare_raw(const qn_string restrict s1, const char * r
     return posix_strcmp(s1, s2);
 }
 
-extern qn_string qn_str_duplicate(const char * s);
-extern qn_string qn_str_clone(const char * s, int sz);
+static inline qn_string qn_str_duplicate(const qn_string restrict s)
+{
+    return qn_cs_clone(qn_str_cstr(s), qn_str_size(s));
+}
 
 static inline void qn_str_destroy(const char * s)
 {

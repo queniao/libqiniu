@@ -661,12 +661,12 @@ static qn_bool qn_json_prs_put_in(qn_json_parser_ptr prs, qn_json_token tkn, cha
 
         case QN_JSON_TKN_STRING:
             if (lvl->class == QN_JSON_OBJECT) {
-                if (!qn_json_set_string_raw(lvl->elem.object, lvl->key, txt, txt_size)) return qn_false;
+                if (!qn_json_set_text(lvl->elem.object, lvl->key, txt, txt_size)) return qn_false;
                 qn_str_destroy(lvl->key);
                 lvl->key = NULL;
                 return qn_true;
             }
-            return qn_json_push_string_raw(lvl->elem.array, txt, txt_size);
+            return qn_json_push_text(lvl->elem.array, txt, txt_size);
 
         case QN_JSON_TKN_INTEGER:
             integer = strtoll(txt, &end_txt, 10);
@@ -772,7 +772,7 @@ PARSING_NEXT_ELEMENT_IN_THE_OBJECT:
                 return QN_JSON_PARSING_ERROR;
             } // if
 
-            lvl->key = qn_str_clone(txt, txt_size);
+            lvl->key = qn_cs_clone(txt, txt_size);
             lvl->status = QN_JSON_PARSING_COLON;
 
         case QN_JSON_PARSING_COLON:

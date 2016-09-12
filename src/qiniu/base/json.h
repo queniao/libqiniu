@@ -6,6 +6,8 @@
 #include "qiniu/base/basic_types.h"
 #include "qiniu/base/string.h"
 
+#include "qiniu/macros.h"
+
 #ifdef __cplusplus
 extern "C"
 {
@@ -45,98 +47,98 @@ typedef union _QN_JSON_VARIANT
     qn_json_boolean boolean;
 } qn_json_variant, *qn_json_variant_ptr;
 
-extern qn_json_object_ptr qn_json_create_object(void);
-extern qn_json_array_ptr qn_json_create_array(void);
+QN_API extern qn_json_object_ptr qn_json_create_object(void);
+QN_API extern qn_json_array_ptr qn_json_create_array(void);
 
-extern qn_json_object_ptr qn_json_create_and_set_object(qn_json_object_ptr obj, const char * key);
-extern qn_json_array_ptr qn_json_create_and_set_array(qn_json_object_ptr obj, const char * key);
+QN_API extern qn_json_object_ptr qn_json_create_and_set_object(qn_json_object_ptr restrict obj, const char * restrict key);
+QN_API extern qn_json_array_ptr qn_json_create_and_set_array(qn_json_object_ptr restrict obj, const char * restrict key);
 
-extern qn_json_object_ptr qn_json_create_and_push_object(qn_json_array_ptr arr);
-extern qn_json_array_ptr qn_json_create_and_push_array(qn_json_array_ptr arr);
-extern qn_json_object_ptr qn_json_create_and_unshift_object(qn_json_array_ptr arr);
-extern qn_json_array_ptr qn_json_create_and_unshift_array(qn_json_array_ptr arr);
+QN_API extern qn_json_object_ptr qn_json_create_and_push_object(qn_json_array_ptr restrict arr);
+QN_API extern qn_json_array_ptr qn_json_create_and_push_array(qn_json_array_ptr restrict arr);
+QN_API extern qn_json_object_ptr qn_json_create_and_unshift_object(qn_json_array_ptr restrict arr);
+QN_API extern qn_json_array_ptr qn_json_create_and_unshift_array(qn_json_array_ptr restrict arr);
 
-extern void qn_json_destroy_object(qn_json_object_ptr obj);
-extern void qn_json_destroy_array(qn_json_array_ptr arr);
+QN_API extern void qn_json_destroy_object(qn_json_object_ptr restrict obj);
+QN_API extern void qn_json_destroy_array(qn_json_array_ptr restrict arr);
 
-extern qn_size qn_json_size_object(qn_json_object_ptr obj);
-extern qn_size qn_json_size_array(qn_json_array_ptr arr);
+QN_API extern qn_size qn_json_size_object(qn_json_object_ptr restrict obj);
+QN_API extern qn_size qn_json_size_array(qn_json_array_ptr restrict arr);
 
-static inline qn_bool qn_json_is_empty_object(qn_json_object_ptr obj)
+static inline qn_bool qn_json_is_empty_object(qn_json_object_ptr restrict obj)
 {
     return qn_json_size_object(obj) == 0;
 }
 
-static inline qn_bool qn_json_is_empty_array(qn_json_array_ptr obj)
+static inline qn_bool qn_json_is_empty_array(qn_json_array_ptr restrict obj)
 {
     return qn_json_size_array(obj) == 0;
 }
 
-extern qn_json_object_ptr qn_json_get_object(qn_json_object_ptr obj, const char * key, qn_json_object_ptr default_val);
-extern qn_json_array_ptr qn_json_get_array(qn_json_object_ptr obj, const char * key, qn_json_array_ptr default_val);
-extern qn_string qn_json_get_string(qn_json_object_ptr obj, const char * key, qn_string default_val);
-extern qn_integer qn_json_get_integer(qn_json_object_ptr obj, const char * key, qn_integer default_val);
-extern qn_number qn_json_get_number(qn_json_object_ptr obj, const char * key, qn_number default_val);
-extern qn_bool qn_json_get_boolean(qn_json_object_ptr obj, const char * key, qn_bool default_val);
+QN_API extern qn_json_object_ptr qn_json_get_object(qn_json_object_ptr restrict obj, const char * restrict key, qn_json_object_ptr restrict default_val);
+QN_API extern qn_json_array_ptr qn_json_get_array(qn_json_object_ptr restrict obj, const char * restrict key, qn_json_array_ptr restrict default_val);
+QN_API extern qn_string qn_json_get_string(qn_json_object_ptr restrict obj, const char * restrict key, qn_string restrict default_val);
+QN_API extern qn_integer qn_json_get_integer(qn_json_object_ptr restrict obj, const char * restrict key, qn_integer default_val);
+QN_API extern qn_number qn_json_get_number(qn_json_object_ptr restrict obj, const char * restrict key, qn_number default_val);
+QN_API extern qn_bool qn_json_get_boolean(qn_json_object_ptr restrict obj, const char * restrict key, qn_bool default_val);
 
-extern qn_json_object_ptr qn_json_pick_object(qn_json_array_ptr arr, int n, qn_json_object_ptr default_val);
-extern qn_json_array_ptr qn_json_pick_array(qn_json_array_ptr arr, int n, qn_json_array_ptr default_val);
-extern qn_string qn_json_pick_string(qn_json_array_ptr arr, int n, qn_string default_val);
-extern qn_integer qn_json_pick_integer(qn_json_array_ptr arr, int n, qn_integer default_val);
-extern qn_number qn_json_pick_number(qn_json_array_ptr arr, int n, qn_number default_val);
-extern qn_bool qn_json_pick_boolean(qn_json_array_ptr arr, int n, qn_bool default_val);
+QN_API extern qn_json_object_ptr qn_json_pick_object(qn_json_array_ptr restrict arr, int n, qn_json_object_ptr restrict default_val);
+QN_API extern qn_json_array_ptr qn_json_pick_array(qn_json_array_ptr restrict arr, int n, qn_json_array_ptr restrict default_val);
+QN_API extern qn_string qn_json_pick_string(qn_json_array_ptr restrict arr, int n, qn_string restrict default_val);
+QN_API extern qn_integer qn_json_pick_integer(qn_json_array_ptr restrict arr, int n, qn_integer default_val);
+QN_API extern qn_number qn_json_pick_number(qn_json_array_ptr restrict arr, int n, qn_number default_val);
+QN_API extern qn_bool qn_json_pick_boolean(qn_json_array_ptr restrict arr, int n, qn_bool default_val);
 
-extern qn_bool qn_json_set_string(qn_json_object_ptr obj, const char * key, qn_string val);
-extern qn_bool qn_json_set_string_raw(qn_json_object_ptr obj, const char * key, const char * val, int size);
-extern qn_bool qn_json_set_integer(qn_json_object_ptr obj, const char * key, qn_integer val);
-extern qn_bool qn_json_set_number(qn_json_object_ptr obj, const char * key, qn_number val);
-extern qn_bool qn_json_set_boolean(qn_json_object_ptr obj, const char * key, qn_bool val);
-extern qn_bool qn_json_set_null(qn_json_object_ptr obj, const char * key);
-extern void qn_json_unset(qn_json_object_ptr obj, const char * key);
+QN_API extern qn_bool qn_json_set_string(qn_json_object_ptr restrict obj, const char * restrict key, const char * restrict val);
+QN_API extern qn_bool qn_json_set_text(qn_json_object_ptr restrict obj, const char * restrict key, const char * restrict val, int size);
+QN_API extern qn_bool qn_json_set_integer(qn_json_object_ptr restrict obj, const char * restrict key, qn_integer val);
+QN_API extern qn_bool qn_json_set_number(qn_json_object_ptr restrict obj, const char * restrict key, qn_number val);
+QN_API extern qn_bool qn_json_set_boolean(qn_json_object_ptr restrict obj, const char * restrict key, qn_bool val);
+QN_API extern qn_bool qn_json_set_null(qn_json_object_ptr restrict obj, const char * restrict key);
+QN_API extern void qn_json_unset(qn_json_object_ptr restrict obj, const char * restrict key);
 
-extern qn_bool qn_json_push_string(qn_json_array_ptr arr, qn_string val);
-extern qn_bool qn_json_push_string_raw(qn_json_array_ptr arr, const char * val, int size);
-extern qn_bool qn_json_push_integer(qn_json_array_ptr arr, qn_integer val);
-extern qn_bool qn_json_push_number(qn_json_array_ptr arr, qn_number val);
-extern qn_bool qn_json_push_boolean(qn_json_array_ptr arr, qn_bool val);
-extern qn_bool qn_json_push_null(qn_json_array_ptr arr);
-extern void qn_json_pop(qn_json_array_ptr arr);
+QN_API extern qn_bool qn_json_push_string(qn_json_array_ptr restrict arr, const char * restrict val);
+QN_API extern qn_bool qn_json_push_text(qn_json_array_ptr restrict arr, const char * restrict val, int size);
+QN_API extern qn_bool qn_json_push_integer(qn_json_array_ptr restrict arr, qn_integer val);
+QN_API extern qn_bool qn_json_push_number(qn_json_array_ptr restrict arr, qn_number val);
+QN_API extern qn_bool qn_json_push_boolean(qn_json_array_ptr restrict arr, qn_bool val);
+QN_API extern qn_bool qn_json_push_null(qn_json_array_ptr restrict arr);
+QN_API extern void qn_json_pop(qn_json_array_ptr restrict arr);
 
-extern qn_bool qn_json_unshift_string(qn_json_array_ptr arr, qn_string val);
-extern qn_bool qn_json_unshift_string_raw(qn_json_array_ptr arr, const char * val, int size);
-extern qn_bool qn_json_unshift_integer(qn_json_array_ptr arr, qn_integer val);
-extern qn_bool qn_json_unshift_number(qn_json_array_ptr arr, qn_number val);
-extern qn_bool qn_json_unshift_boolean(qn_json_array_ptr arr, qn_bool val);
-extern qn_bool qn_json_unshift_null(qn_json_array_ptr arr);
-extern void qn_json_shift(qn_json_array_ptr arr);
+QN_API extern qn_bool qn_json_unshift_string(qn_json_array_ptr restrict arr, const char * restrict val);
+QN_API extern qn_bool qn_json_unshift_text(qn_json_array_ptr restrict arr, const char * restrict val, int size);
+QN_API extern qn_bool qn_json_unshift_integer(qn_json_array_ptr restrict arr, qn_integer val);
+QN_API extern qn_bool qn_json_unshift_number(qn_json_array_ptr restrict arr, qn_number val);
+QN_API extern qn_bool qn_json_unshift_boolean(qn_json_array_ptr restrict arr, qn_bool val);
+QN_API extern qn_bool qn_json_unshift_null(qn_json_array_ptr restrict arr);
+QN_API extern void qn_json_shift(qn_json_array_ptr restrict arr);
 
 // ---- Definition of iterator of JSON ----
 
 struct _QN_JSON_ITERATOR;
 typedef struct _QN_JSON_ITERATOR * qn_json_iterator_ptr;
 
-extern qn_json_iterator_ptr qn_json_itr_create(void);
-extern void qn_json_itr_destroy(qn_json_iterator_ptr itr);
-extern void qn_json_itr_reset(qn_json_iterator_ptr itr);
-extern void qn_json_itr_rewind(qn_json_iterator_ptr itr);
+QN_API extern qn_json_iterator_ptr qn_json_itr_create(void);
+QN_API extern void qn_json_itr_destroy(qn_json_iterator_ptr restrict itr);
+QN_API extern void qn_json_itr_reset(qn_json_iterator_ptr restrict itr);
+QN_API extern void qn_json_itr_rewind(qn_json_iterator_ptr restrict itr);
 
-extern qn_bool qn_json_itr_is_empty(qn_json_iterator_ptr itr);
-extern int qn_json_itr_steps(qn_json_iterator_ptr itr);
-extern qn_string qn_json_itr_get_key(qn_json_iterator_ptr itr);
-extern void qn_json_itr_set_status(qn_json_iterator_ptr itr, qn_uint32 sts);
-extern qn_uint32 qn_json_itr_get_status(qn_json_iterator_ptr itr);
+QN_API extern qn_bool qn_json_itr_is_empty(qn_json_iterator_ptr restrict itr);
+QN_API extern int qn_json_itr_steps(qn_json_iterator_ptr restrict itr);
+QN_API extern qn_string qn_json_itr_get_key(qn_json_iterator_ptr restrict itr);
+QN_API extern void qn_json_itr_set_status(qn_json_iterator_ptr restrict itr, qn_uint32 sts);
+QN_API extern qn_uint32 qn_json_itr_get_status(qn_json_iterator_ptr restrict itr);
 
-extern qn_bool qn_json_itr_push_object(qn_json_iterator_ptr itr, qn_json_object_ptr obj);
-extern qn_bool qn_json_itr_push_array(qn_json_iterator_ptr itr, qn_json_array_ptr arr);
-extern void qn_json_itr_pop(qn_json_iterator_ptr itr);
-extern qn_json_object_ptr qn_json_itr_top_object(qn_json_iterator_ptr itr);
-extern qn_json_array_ptr qn_json_itr_top_array(qn_json_iterator_ptr itr);
+QN_API extern qn_bool qn_json_itr_push_object(qn_json_iterator_ptr restrict itr, qn_json_object_ptr obj);
+QN_API extern qn_bool qn_json_itr_push_array(qn_json_iterator_ptr restrict itr, qn_json_array_ptr arr);
+QN_API extern void qn_json_itr_pop(qn_json_iterator_ptr restrict itr);
+QN_API extern qn_json_object_ptr qn_json_itr_top_object(qn_json_iterator_ptr restrict itr);
+QN_API extern qn_json_array_ptr qn_json_itr_top_array(qn_json_iterator_ptr restrict itr);
 
 #define QN_JSON_ITR_OK (0)
 #define QN_JSON_ITR_NO_MORE (-1)
 
-typedef int (*qn_json_itr_callback)(void * data, qn_json_class cls, qn_json_variant_ptr val);
-extern int qn_json_itr_advance(qn_json_iterator_ptr itr, void * data, qn_json_itr_callback cb);
+typedef int (*qn_json_itr_callback)(void * data, qn_json_class cls, qn_json_variant_ptr restrict val);
+QN_API extern int qn_json_itr_advance(qn_json_iterator_ptr restrict itr, void * data, qn_json_itr_callback cb);
 
 #ifdef __cplusplus
 }

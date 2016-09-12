@@ -229,7 +229,7 @@ qn_bool qn_http_hdr_prs_parse(qn_http_hdr_parser_ptr prs, const char * buf, int 
                     qn_err_http_set_invalid_header_syntax();
                     return qn_false;
                 } // if
-                prs->key = qn_str_clone(txt, txt_size);
+                prs->key = qn_cs_clone(txt, txt_size);
                 if (!prs->key) return qn_false;
                 prs->sts = QN_HTTP_HDR_PARSING_COLON;
 

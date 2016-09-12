@@ -42,7 +42,7 @@ int main(int argc, char * argv[])
         return 1;
     } // if
 
-    if (!qn_json_set_string(ext.server_end.put_policy, "scope", scope)) {
+    if (!qn_json_set_string(ext.server_end.put_policy, "scope", qn_str_cstr(scope))) {
         qn_str_destroy(scope);
         qn_json_destroy_object(ext.server_end.put_policy);
         printf("Cannot set the scope field.\n");

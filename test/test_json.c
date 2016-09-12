@@ -22,7 +22,7 @@ void test_manipulate_object(void)
     CU_ASSERT_FATAL(obj_root != NULL);
 
     // set a string element
-    ret = qn_json_set_string_raw(obj_root, "_str", buf, buf_len);
+    ret = qn_json_set_text(obj_root, "_str", buf, buf_len);
     CU_ASSERT_TRUE(ret);
     CU_ASSERT_EQUAL(qn_json_size_object(obj_root), 1);
 
@@ -90,7 +90,7 @@ void test_manipulate_array(void)
     CU_ASSERT_FATAL(arr_root != NULL);
 
     // unshift a string element
-    ret = qn_json_unshift_string_raw(arr_root, buf, buf_len);
+    ret = qn_json_unshift_text(arr_root, buf, buf_len);
     CU_ASSERT_TRUE(ret);
     CU_ASSERT_EQUAL(qn_json_size_array(arr_root), 1);
 
