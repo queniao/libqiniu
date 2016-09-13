@@ -15,8 +15,8 @@ extern "C"
 
 // ---- Declaration of body reader and writer
 
-typedef qn_size (*qn_http_body_reader_callback)(void * restrict reader, char * restrict buf, qn_size size);
-typedef qn_size (*qn_http_data_writer_callback)(void * restrict writer, char * restrict buf, qn_size size);
+typedef size_t (*qn_http_body_reader_callback)(void * restrict reader, char * restrict buf, size_t size);
+typedef size_t (*qn_http_data_writer_callback)(void * restrict writer, char * restrict buf, size_t size);
 
 // ----
 
@@ -28,7 +28,7 @@ QN_API extern void qn_http_json_wrt_destroy(qn_http_json_writer_ptr restrict wri
 
 QN_API extern void qn_http_json_wrt_prepare_for_object(qn_http_json_writer_ptr restrict writer, qn_json_object_ptr * restrict obj);
 QN_API extern void qn_http_json_wrt_prepare_for_array(qn_http_json_writer_ptr restrict writer, qn_json_array_ptr * restrict arr);
-QN_API extern qn_size qn_http_json_wrt_callback(void * restrict writer, char * restrict buf, qn_size buf_size);
+QN_API extern size_t qn_http_json_wrt_callback(void * restrict writer, char * restrict buf, size_t buf_size);
 
 // ---- Declaration of HTTP form
 
@@ -39,8 +39,8 @@ QN_API extern qn_http_form_ptr qn_http_form_create(void);
 QN_API extern void qn_http_form_destroy(qn_http_form_ptr restrict form);
 QN_API extern void qn_http_form_reset(qn_http_form_ptr restrict form);
 
-QN_API extern qn_bool qn_http_form_add_string(qn_http_form_ptr restrict form, const char * restrict field, const char * restrict value, qn_size size);
-QN_API extern qn_bool qn_http_form_add_file(qn_http_form_ptr restrict form, const char * restrict field, const char * restrict fname, const char * restrict fname_utf8, qn_size fsize);
+QN_API extern qn_bool qn_http_form_add_string(qn_http_form_ptr restrict form, const char * restrict field, const char * restrict value, size_t size);
+QN_API extern qn_bool qn_http_form_add_file(qn_http_form_ptr restrict form, const char * restrict field, const char * restrict fname, const char * restrict fname_utf8, size_t fsize);
 QN_API extern qn_bool qn_http_form_add_buffer(qn_http_form_ptr restrict form, const char * restrict field, const char * restrict fname, const char * restrict buf, int buf_size);
 
 // ---- Declaration of HTTP request ----
@@ -54,9 +54,9 @@ QN_API extern void qn_http_req_reset(qn_http_request_ptr restrict req);
 
 // ----
 
-QN_API extern qn_bool qn_http_req_get_header_raw(qn_http_request_ptr restrict req, const char * restrict hdr, qn_size hdr_size, const char ** restrict val, qn_size * restrict val_size);
+QN_API extern qn_bool qn_http_req_get_header_raw(qn_http_request_ptr restrict req, const char * restrict hdr, size_t hdr_size, const char ** restrict val, size_t * restrict val_size);
 
-static inline qn_bool qn_http_req_get_header(qn_http_request_ptr restrict req, const qn_string restrict hdr, const char ** restrict val, qn_size * restrict val_size)
+static inline qn_bool qn_http_req_get_header(qn_http_request_ptr restrict req, const qn_string restrict hdr, const char ** restrict val, size_t * restrict val_size)
 {
     return qn_http_req_get_header_raw(req, qn_str_cstr(hdr), qn_str_size(hdr), val, val_size);
 }
@@ -74,10 +74,10 @@ QN_API extern void qn_http_req_set_form(qn_http_request_ptr restrict req, qn_htt
 
 // ----
 
-QN_API extern void qn_http_req_set_body_data(qn_http_request_ptr restrict req, char * restrict body_data, qn_size body_size);
-QN_API extern void qn_http_req_set_body_reader(qn_http_request_ptr restrict req, void * restrict body_reader, qn_http_body_reader_callback body_reader_callback, qn_size body_size);
+QN_API extern void qn_http_req_set_body_data(qn_http_request_ptr restrict req, char * restrict body_data, size_t body_size);
+QN_API extern void qn_http_req_set_body_reader(qn_http_request_ptr restrict req, void * restrict body_reader, qn_http_body_reader_callback body_reader_callback, size_t body_size);
 QN_API extern char * qn_http_req_body_data(qn_http_request_ptr restrict req);
-QN_API extern qn_size qn_http_req_body_size(qn_http_request_ptr restrict req);
+QN_API extern size_t qn_http_req_body_size(qn_http_request_ptr restrict req);
 
 // ---- Declaration of HTTP response ----
 
@@ -96,9 +96,9 @@ QN_API extern int qn_http_resp_get_writer_retcode(qn_http_response_ptr restrict 
 // ----
 
 QN_API extern qn_http_hdr_iterator_ptr qn_http_resp_get_header_iterator(qn_http_response_ptr restrict resp);
-QN_API extern qn_bool qn_http_resp_get_header_raw(qn_http_response_ptr restrict resp, const char * restrict hdr, qn_size hdr_size, const char ** restrict val, qn_size * restrict val_size);
+QN_API extern qn_bool qn_http_resp_get_header_raw(qn_http_response_ptr restrict resp, const char * restrict hdr, size_t hdr_size, const char ** restrict val, size_t * restrict val_size);
 
-static inline qn_bool qn_http_resp_get_header(qn_http_response_ptr restrict resp, const qn_string restrict hdr, const char ** restrict val, qn_size * restrict val_size)
+static inline qn_bool qn_http_resp_get_header(qn_http_response_ptr restrict resp, const qn_string restrict hdr, const char ** restrict val, size_t * restrict val_size)
 {
     return qn_http_resp_get_header_raw(resp, qn_str_cstr(hdr), qn_str_size(hdr), val, val_size);
 }
