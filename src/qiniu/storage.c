@@ -503,7 +503,7 @@ QN_API qn_bool qn_stor_list(qn_storage_ptr restrict stor, const qn_stor_auth_ptr
     qry = qn_http_qry_create();
     if (!qry) return qn_false;
 
-    if (!qn_http_qry_set_string(qry, "bucket", -1, bucket, strlen(bucket))) {
+    if (!qn_http_qry_set_string(qry, "bucket", bucket)) {
         qn_http_qry_destroy(qry);
         return qn_false;
     } // if
@@ -511,18 +511,18 @@ QN_API qn_bool qn_stor_list(qn_storage_ptr restrict stor, const qn_stor_auth_ptr
     if (ext) {
         limit = (0 < ext->limit && ext->limit <= 1000) ? ext->limit : 1000;
 
-        if (ext->delimiter && !qn_http_qry_set_string(qry, "delimiter", -1, ext->delimiter, strlen(ext->delimiter))) {
+        if (ext->delimiter && !qn_http_qry_set_string(qry, "delimiter", ext->delimiter)) {
             qn_http_qry_destroy(qry);
             return qn_false;
         } // if
 
-        if (ext->prefix && !qn_http_qry_set_string(qry, "prefix", -1, ext->prefix, strlen(ext->prefix))) {
+        if (ext->prefix && !qn_http_qry_set_string(qry, "prefix", ext->prefix)) {
             qn_http_qry_destroy(qry);
             return qn_false;
         } // if
     } // if
 
-    if (!qn_http_qry_set_integer(qry, "limit", -1, limit)) {
+    if (!qn_http_qry_set_integer(qry, "limit", limit)) {
         qn_http_qry_destroy(qry);
         return qn_false;
     } // if
@@ -531,7 +531,7 @@ QN_API qn_bool qn_stor_list(qn_storage_ptr restrict stor, const qn_stor_auth_ptr
     do {
         if (stor->obj_body) {
             marker = qn_json_get_string(stor->obj_body, marker, qn_str_empty_string);
-            if (!qn_http_qry_set_string(qry, "marker", -1, qn_str_cstr(marker), qn_str_size(marker))) {
+            if (!qn_http_qry_set_string(qry, "marker", qn_str_cstr(marker))) {
                 qn_http_qry_destroy(qry);
                 return qn_false;
             } // if

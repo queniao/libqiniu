@@ -50,18 +50,18 @@ int qn_http_qry_size(qn_http_query_ptr qry)
     return qn_etbl_size(qry->etbl);
 }
 
-QN_API qn_bool qn_http_qry_set_string(qn_http_query_ptr restrict qry, const char * restrict key, int key_size, const char * restrict val, int val_size)
+QN_API qn_bool qn_http_qry_set_text(qn_http_query_ptr restrict qry, const char * restrict key, const char * restrict val, size_t val_size)
 {
     qn_bool ret;
     qn_string encoded_val = qn_cs_percent_encode(val, val_size);
-    ret = qn_etbl_set_string(qry->etbl, key, key_size, qn_str_cstr(encoded_val), qn_str_size(encoded_val));
+    ret = qn_etbl_set_text(qry->etbl, key, qn_str_cstr(encoded_val), qn_str_size(encoded_val));
     qn_str_destroy(encoded_val);
     return ret;
 }
 
-QN_API qn_bool qn_http_qry_set_integer(qn_http_query_ptr restrict qry, const char * restrict key, int key_size, int value)
+QN_API qn_bool qn_http_qry_set_integer(qn_http_query_ptr restrict qry, const char * restrict key, int value)
 {
-    return qn_etbl_set_integer(qry->etbl, key, key_size, value);
+    return qn_etbl_set_integer(qry->etbl, key, value);
 }
 
 QN_API qn_string qn_http_qry_to_string(qn_http_query_ptr restrict qry)
