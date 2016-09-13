@@ -11,17 +11,17 @@ extern "C"
 
 typedef struct _QN_JSON_DQUEUE
 {
-    qn_size capacity;
-    qn_size begin;
-    qn_size end;
+    int capacity;
+    int begin;
+    int end;
     qn_dqueue_element_ptr * elements;
     qn_dqueue_element_ptr elements_data[4];
 } qn_dqueue;
 
 static qn_bool qn_dqueue_augment_head(qn_dqueue_ptr queue)
 {
-    qn_size delta = 0;
-    qn_size new_capacity = queue->capacity * ((queue->capacity < 16) ? 2 : 1.5);
+    int delta = 0;
+    int new_capacity = queue->capacity * ((queue->capacity < 16) ? 2 : 1.5);
     qn_dqueue_element_ptr * new_data = NULL;
 
     new_data = calloc(1, sizeof(queue->elements[0]) * new_capacity);
@@ -45,7 +45,7 @@ static qn_bool qn_dqueue_augment_head(qn_dqueue_ptr queue)
 
 static qn_bool qn_dqueue_augment_tail(qn_dqueue_ptr queue)
 {
-    qn_size new_capacity = queue->capacity * ((queue->capacity < 16) ? 2 : 1.5);
+    int new_capacity = queue->capacity * ((queue->capacity < 16) ? 2 : 1.5);
     qn_dqueue_element_ptr * new_data = NULL;
 
     new_data = calloc(1, sizeof(queue->elements[0]) * new_capacity);
@@ -64,7 +64,7 @@ static qn_bool qn_dqueue_augment_tail(qn_dqueue_ptr queue)
     return qn_true;
 }
 
-QN_API qn_dqueue_ptr qn_dqueue_create(qn_size init_capacity)
+QN_API qn_dqueue_ptr qn_dqueue_create(int init_capacity)
 {
     qn_dqueue_ptr new_queue = NULL;
 
@@ -153,7 +153,7 @@ QN_API qn_dqueue_element_ptr qn_dqueue_shift(qn_dqueue_ptr restrict queue)
     return queue->elements[queue->begin++];
 }
 
-QN_API qn_dqueue_element_ptr qn_dqueue_get(qn_dqueue_ptr restrict queue, qn_size n)
+QN_API qn_dqueue_element_ptr qn_dqueue_get(qn_dqueue_ptr restrict queue, int n)
 {
     if (n > qn_dqueue_size(queue)) {
         return NULL;
@@ -169,12 +169,12 @@ QN_API qn_dqueue_element_ptr qn_dqueue_last(qn_dqueue_ptr restrict queue)
     return queue->elements[queue->end - 1];
 }
 
-QN_API void qn_dqueue_replace(qn_dqueue_ptr restrict queue, qn_size n, qn_dqueue_element_ptr restrict element)
+QN_API void qn_dqueue_replace(qn_dqueue_ptr restrict queue, int n, qn_dqueue_element_ptr restrict element)
 {
     queue->elements[queue->begin + n] = element;
 }
 
-QN_API void qn_dqueue_remove(qn_dqueue_ptr restrict queue, qn_size n)
+QN_API void qn_dqueue_remove(qn_dqueue_ptr restrict queue, int n)
 {
     if (n == 0) {
         qn_dqueue_shift(queue);
@@ -189,7 +189,7 @@ QN_API void qn_dqueue_remove(qn_dqueue_ptr restrict queue, qn_size n)
     queue->end -= 1;
 }
 
-QN_API qn_size qn_dqueue_size(qn_dqueue_ptr restrict queue)
+QN_API int qn_dqueue_size(qn_dqueue_ptr restrict queue)
 {
     return (queue->end - queue->begin);
 }
