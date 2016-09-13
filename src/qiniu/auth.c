@@ -274,7 +274,24 @@ QN_API void qn_mac_destroy(qn_mac_ptr restrict mac)
     } // if
 }
 
-QN_API const qn_string qn_mac_make_uptoken(qn_mac_ptr restrict mac, const char * restrict pp, qn_size pp_size)
+static int qn_mac_hmac_update(HMAC_CTX * restrict ctx, const unsigned char * restrict data, size_t data_size)
+{
+#define QN_MAC_HMAC_MAX_WRITING_BYTES ( ((~((int)0)) << 1) >> 1 )
+    int writing_bytes;
+    size_t rem_size = data_size;
+    const unsigned char * pos = data;
+
+    while (rem_size > 0) {
+        writing_bytes = (rem_size > QN_MAC_HMAC_MAX_WRITING_BYTES) ? (QN_MAC_HMAC_MAX_WRITING_BYTES) : (rem_size & QN_MAC_HMAC_MAX_WRITING_BYTES);
+        HMAC_Update(ctx, (const unsigned char *)pos, writing_bytes);
+        pos += writing_bytes;
+        rem_size -= writing_bytes;
+    } // while
+    return 0;
+#undef QN_MAC_HMAC_MAX_WRITING_BYTES
+}
+
+QN_API const qn_string qn_mac_make_uptoken(qn_mac_ptr restrict mac, const char * restrict pp, size_t pp_size)
 {
     qn_string sign;
     qn_string encoded_pp;
@@ -288,7 +305,7 @@ QN_API const qn_string qn_mac_make_uptoken(qn_mac_ptr restrict mac, const char *
 
     HMAC_CTX_init(&ctx);
     HMAC_Init_ex(&ctx, qn_str_cstr(mac->secret_key), qn_str_size(mac->secret_key), EVP_sha1(), NULL);
-    HMAC_Update(&ctx, (const unsigned char *)qn_str_cstr(encoded_pp), qn_str_size(encoded_pp));
+    qn_mac_hmac_update(&ctx, (const unsigned char *)qn_str_cstr(encoded_pp), qn_str_size(encoded_pp));
     HMAC_Final(&ctx, (unsigned char *)digest, &digest_size);
     HMAC_CTX_cleanup(&ctx);
 
@@ -299,7 +316,7 @@ QN_API const qn_string qn_mac_make_uptoken(qn_mac_ptr restrict mac, const char *
     return sign;
 }
 
-QN_API const qn_string qn_mac_make_acctoken(qn_mac_ptr restrict mac, const char * restrict url, const char * restrict body, qn_size body_size)
+QN_API const qn_string qn_mac_make_acctoken(qn_mac_ptr restrict mac, const char * restrict url, const char * restrict body, size_t body_size)
 {
     qn_string encoded_digest;
     qn_string acctoken;
@@ -323,12 +340,10 @@ QN_API const qn_string qn_mac_make_acctoken(qn_mac_ptr restrict mac, const char 
 
     HMAC_CTX_init(&ctx);
     HMAC_Init_ex(&ctx, qn_str_cstr(mac->secret_key), qn_str_size(mac->secret_key), EVP_sha1(), NULL);
-    HMAC_Update(&ctx, (const unsigned char *)begin, strlen(url) - (begin - url));
+    qn_mac_hmac_update(&ctx, (const unsigned char *)begin, strlen(url) - (begin - url));
     HMAC_Update(&ctx, (const unsigned char *)"\n", 1);
 
-    if (body && body_size > 0) {
-        HMAC_Update(&ctx, (const unsigned char *)body, body_size);
-    } // if
+    if (body && body_size > 0) qn_mac_hmac_update(&ctx, (const unsigned char *)body, body_size);
 
     HMAC_Final(&ctx, (unsigned char *)digest, &digest_size);
     HMAC_CTX_cleanup(&ctx);
@@ -401,7 +416,7 @@ QN_API const qn_string qn_mac_make_dnurl(qn_mac_ptr restrict mac, const char * r
 
     HMAC_CTX_init(&ctx);
     HMAC_Init_ex(&ctx, qn_str_cstr(mac->secret_key), qn_str_size(mac->secret_key), EVP_sha1(), NULL);
-    HMAC_Update(&ctx, (const unsigned char *)qn_str_cstr(url_with_deadline), qn_str_size(url_with_deadline));
+    qn_mac_hmac_update(&ctx, (const unsigned char *)qn_str_cstr(url_with_deadline), qn_str_size(url_with_deadline));
     HMAC_Final(&ctx, (unsigned char *)digest, &digest_size);
     HMAC_CTX_cleanup(&ctx);
 

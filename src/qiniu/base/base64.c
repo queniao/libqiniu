@@ -31,11 +31,11 @@ static inline void qn_b64_encode_1_bytes(char * map, char d1, char * dst)
     dst[1] = map[( (d1 & 0x3) << 4 ) | ( (0 & 0xF0) >> 4 )];
 }
 
-static int qn_b64_encode(char * restrict encoded_str, int encoded_cap, const char * restrict bin, int bin_size, int opts, char * map)
+static size_t qn_b64_encode(char * restrict encoded_str, size_t encoded_cap, const char * restrict bin, size_t bin_size, qn_uint32 opts, char * map)
 {
-    int i = 0;
-    int m = 0;
-    int rem = bin_size;
+    size_t i = 0;
+    size_t m = 0;
+    size_t rem = bin_size;
 
     while (rem >= 3) {
         qn_b64_encode_3_bytes(map, bin[i], bin[i+1], bin[i+2], &encoded_str[m]);
@@ -107,11 +107,11 @@ static inline void qn_b64_decode_2_chars(char c1, char c2, char * dst)
     dst[0] = ((qn_b64_calc_ord(c1) & 0x3F) << 2) | ((qn_b64_calc_ord(c2) & 0x30) >> 4);
 }
 
-static int qn_b64_decode(char * restrict decoded_bin, int decoded_cap, const char * str, int str_size, int opts)
+static size_t qn_b64_decode(char * restrict decoded_bin, size_t decoded_cap, const char * str, size_t str_size, qn_uint32 opts)
 {
-    int i = 0;
-    int m = 0;
-    int rem = str_size;
+    size_t i = 0;
+    size_t m = 0;
+    size_t rem = str_size;
 
     if (str[rem] == QN_B64_PADDING_CHAR) {
         if (str[--rem] == QN_B64_PADDING_CHAR) {
@@ -143,10 +143,10 @@ static int qn_b64_decode(char * restrict decoded_bin, int decoded_cap, const cha
 
 static char qn_b64_urlsafe_map[] = {"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_"};
 
-QN_API int qn_b64_encode_urlsafe(char * restrict encoded_str, int encoded_cap, const char * restrict bin, int bin_size, int opts)
+QN_API size_t qn_b64_encode_urlsafe(char * restrict encoded_str, size_t encoded_cap, const char * restrict bin, size_t bin_size, qn_uint32 opts)
 {
     // Include spaces for two padding chars, but none for the NUL char.
-    int encoding_size = ((bin_size / 3) * 4) + ((bin_size % 3 > 0) ? 4 : 0);
+    size_t encoding_size = ((bin_size / 3) * 4) + ((bin_size % 3 > 0) ? 4 : 0);
 
     if (encoded_str == NULL || encoded_cap == 0) {
         return encoding_size;
@@ -156,9 +156,9 @@ QN_API int qn_b64_encode_urlsafe(char * restrict encoded_str, int encoded_cap, c
     return qn_b64_encode(encoded_str, encoded_cap, bin, bin_size, opts, qn_b64_urlsafe_map);
 }
 
-QN_API int qn_b64_decode_urlsafe(char * restrict decoded_bin, int decoded_cap, const char * restrict str, int str_size, int opts)
+QN_API size_t qn_b64_decode_urlsafe(char * restrict decoded_bin, size_t decoded_cap, const char * restrict str, size_t str_size, qn_uint32 opts)
 {
-    int decoding_size = ((str_size / 4) * 3) + ((str_size % 4 > 0) ? 3 : 0);
+    size_t decoding_size = ((str_size / 4) * 3) + ((str_size % 4 > 0) ? 3 : 0);
 
     if (decoded_bin == NULL || decoded_cap == 0) {
         return decoding_size;

@@ -23,20 +23,20 @@ typedef char * qn_string;
 // ---- Declaration of C String ----
 
 QN_API extern qn_string qn_cs_duplicate(const char * restrict s);
-QN_API extern qn_string qn_cs_clone(const char * restrict s, int sz);
+QN_API extern qn_string qn_cs_clone(const char * restrict s, size_t sz);
 
 QN_API extern qn_string qn_cs_join_list(const char * restrict delimiter, const char ** restrict ss, int n);
 QN_API extern qn_string qn_cs_join_va(const char * restrict delimiter, const char * restrict s1, const char * restrict s2, va_list ap);
 
 QN_API extern qn_string qn_cs_vprintf(const char * restrict format, va_list ap);
 QN_API extern qn_string qn_cs_sprintf(const char * restrict format, ...);
-QN_API extern int qn_cs_snprintf(char * restrict buf, int buf_size, const char * restrict format, ...);
+QN_API extern int qn_cs_snprintf(char * restrict buf, size_t buf_size, const char * restrict format, ...);
 
-QN_API extern qn_string qn_cs_encode_base64_urlsafe(const char * restrict bin, int bin_size);
-QN_API extern qn_string qn_cs_decode_base64_urlsafe(const char * restrict str, int str_size);
+QN_API extern qn_string qn_cs_encode_base64_urlsafe(const char * restrict bin, size_t bin_size);
+QN_API extern qn_string qn_cs_decode_base64_urlsafe(const char * restrict str, size_t str_size);
 
-QN_API extern int qn_cs_percent_encode_in_buffer(char * restrict buf, int buf_size, const char * restrict bin, int bin_size);
-QN_API extern qn_string qn_cs_percent_encode(const char * restrict bin, int bin_size);
+QN_API extern size_t qn_cs_percent_encode_in_buffer(char * restrict buf, size_t buf_size, const char * restrict bin, size_t bin_size);
+QN_API extern qn_string qn_cs_percent_encode(const char * restrict bin, size_t bin_size);
 
 // ---- Declaration of String ----
 
@@ -46,7 +46,7 @@ QN_API extern const qn_string qn_str_empty_string;
 
 #define qn_str_cstr(s) (s)
 
-static inline int qn_str_size(const qn_string restrict s)
+static inline size_t qn_str_size(const qn_string restrict s)
 {
     return posix_strlen(s);
 }

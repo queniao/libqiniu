@@ -8,11 +8,11 @@ extern "C"
 
 QN_API qn_string qn_misc_encode_uri(const char * restrict bucket, const char * restrict key)
 {
-    char * buf = NULL;
-    int buf_size = 0;
-    int bkt_size = 0;
-    int key_size = 0;
-    qn_string encoded_uri = NULL;
+    char * buf;
+    size_t buf_size;
+    size_t bkt_size;
+    size_t key_size;
+    qn_string encoded_uri;
 
     buf_size = bkt_size = strlen(bucket);
     if (key) {

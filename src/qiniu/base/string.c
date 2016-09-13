@@ -21,7 +21,7 @@ QN_API extern qn_string qn_cs_duplicate(const char * restrict s)
     return qn_cs_clone(s, strlen(s));
 }
 
-QN_API qn_string qn_cs_clone(const char * restrict s, int sz)
+QN_API qn_string qn_cs_clone(const char * restrict s, size_t sz)
 {
     qn_string new_str = malloc(sz + 1);
     if (!new_str) {
@@ -189,14 +189,14 @@ QN_API qn_string qn_cs_sprintf(const char * restrict format, ...)
 #error The version of the MSVC is lower then VC++ 2005.
 #endif
 
-QN_API int qn_cs_snprintf(char * restrict buf, int buf_size, const char * restrict format, ...)
+QN_API int qn_cs_snprintf(char * restrict buf, size_t buf_size, const char * restrict format, ...)
 {
     va_list ap;
-    int printed_size = 0;
+    int printed_size;
     char * buf = str;
-    int buf_cap = size;
+    int buf_cap = buf_size;
 
-    if (str == NULL || size == 0) {
+    if (str == NULL || buf_size == 0) {
         buf = 0x1;
         buf_cap = 1;
     } // if
@@ -209,10 +209,10 @@ QN_API int qn_cs_snprintf(char * restrict buf, int buf_size, const char * restri
 
 #else
 
-QN_API int qn_cs_snprintf(char * restrict str, int size,  const char * restrict format, ...)
+QN_API int qn_cs_snprintf(char * restrict str, size_t size,  const char * restrict format, ...)
 {
     va_list ap;
-    int printed_size = 0;
+    int printed_size;
 
     va_start(ap, format);
     printed_size = vsnprintf(str, size, format, ap);
@@ -223,10 +223,10 @@ QN_API int qn_cs_snprintf(char * restrict str, int size,  const char * restrict 
 
 #endif
 
-QN_API qn_string qn_cs_encode_base64_urlsafe(const char * restrict bin, int bin_size)
+QN_API qn_string qn_cs_encode_base64_urlsafe(const char * restrict bin, size_t bin_size)
 {
     qn_string new_str = NULL;
-    int encoding_size = qn_b64_encode_urlsafe(NULL, 0, bin, bin_size, QN_B64_APPEND_PADDING);
+    size_t encoding_size = qn_b64_encode_urlsafe(NULL, 0, bin, bin_size, QN_B64_APPEND_PADDING);
     
     if (encoding_size == 0) {
         return "";
@@ -243,10 +243,10 @@ QN_API qn_string qn_cs_encode_base64_urlsafe(const char * restrict bin, int bin_
     return new_str;
 }
 
-QN_API qn_string qn_cs_decode_base64_urlsafe(const char * restrict str, int str_size)
+QN_API qn_string qn_cs_decode_base64_urlsafe(const char * restrict str, size_t str_size)
 {
     qn_string new_str = NULL;
-    int decoding_size = qn_b64_decode_urlsafe(NULL, 0, str, str_size, 0);
+    size_t decoding_size = qn_b64_decode_urlsafe(NULL, 0, str, str_size, 0);
     
     if (decoding_size == 0) {
         return "";
@@ -290,7 +290,7 @@ static inline qn_bool qn_cs_need_to_percent_encode(int c)
     return qn_true;
 }
 
-QN_API int qn_cs_percent_encode_in_buffer(char * restrict buf, int buf_size, const char * restrict bin, int bin_size)
+QN_API size_t qn_cs_percent_encode_in_buffer(char * restrict buf, size_t buf_size, const char * restrict bin, size_t bin_size)
 {
     int i = 0;
     int m = 0;
@@ -345,10 +345,10 @@ QN_API int qn_cs_percent_encode_in_buffer(char * restrict buf, int buf_size, con
     return m;
 }
 
-QN_API qn_string qn_cs_percent_encode(const char * restrict bin, int bin_size)
+QN_API qn_string qn_cs_percent_encode(const char * restrict bin, size_t bin_size)
 {
     qn_string new_str = NULL;
-    int buf_size = qn_cs_percent_encode_in_buffer(NULL, 0, bin, bin_size);
+    size_t buf_size = qn_cs_percent_encode_in_buffer(NULL, 0, bin, bin_size);
 
     if (buf_size == bin_size) return qn_cs_clone(bin, bin_size);
 
