@@ -114,9 +114,9 @@ QN_API qn_bool qn_fl_advance(qn_file_ptr restrict fl, int delta)
     return qn_true;
 }
 
-QN_API qn_size qn_fl_reader_callback(void * restrict user_data, char * restrict buf, qn_size size)
+QN_API size_t qn_fl_reader_callback(void * restrict user_data, char * restrict buf, size_t size)
 {
-    qn_size buf_size = size;
+    size_t buf_size = size;
     qn_file_ptr fl = (qn_file_ptr) user_data;
     return qn_fl_read(fl, buf, buf_size);
 }
@@ -208,7 +208,7 @@ QN_API qn_bool qn_fl_sec_reset(qn_fl_section_ptr restrict fs, qn_fsize offset, q
     return qn_true;
 }
 
-QN_API qn_bool qn_fl_sec_read(qn_fl_section_ptr restrict fs, char * restrict buf, qn_size * restrict buf_size)
+QN_API qn_bool qn_fl_sec_read(qn_fl_section_ptr restrict fs, char * restrict buf, size_t * restrict buf_size)
 {
     ssize_t ret;
     size_t read_size;
@@ -235,9 +235,9 @@ QN_API qn_bool qn_fl_sec_read(qn_fl_section_ptr restrict fs, char * restrict buf
     return qn_true;
 }
 
-QN_API qn_size qn_fl_sec_reader_callback(void * restrict user_data, char * restrict buf, qn_size size)
+QN_API size_t qn_fl_sec_reader_callback(void * restrict user_data, char * restrict buf, size_t size)
 {
-    qn_size buf_size = size;
+    size_t buf_size = size;
     qn_fl_section_ptr fs = (qn_fl_section_ptr) user_data;
     if (!qn_fl_sec_read(fs, buf, &buf_size)) {
         return 0;
