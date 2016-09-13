@@ -13,8 +13,8 @@ enum {
     QN_B64_APPEND_PADDING = 1
 };
 
-QN_API extern qn_size qn_b64_encode_urlsafe(char * restrict encoded_str, qn_size encoded_size, const char * restrict bin, size_t bin_size, int opts);
-QN_API extern qn_size qn_b64_decode_urlsafe(char * restrict decoded_bin, qn_size decoded_size, const char * restrict str, size_t str_size, int opts);
+QN_API extern int qn_b64_encode_urlsafe(char * restrict encoded_str, int encoded_cap, const char * restrict bin, int bin_size, int opts);
+QN_API extern int qn_b64_decode_urlsafe(char * restrict decoded_bin, int decoded_cap, const char * restrict str, int str_size, int opts);
 
 #ifdef __cplusplus
 }
