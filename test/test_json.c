@@ -16,7 +16,7 @@ void test_manipulate_object(void)
     qn_json_object_ptr obj_root = NULL;
     qn_string str = NULL;
     char buf[] = {"A line for creating string element."};
-    qn_size buf_len = strlen(buf);
+    size_t buf_len = strlen(buf);
 
     obj_root = qn_json_create_object();
     CU_ASSERT_FATAL(obj_root != NULL);
@@ -84,7 +84,7 @@ void test_manipulate_array(void)
     qn_json_array_ptr arr_root = NULL;
     qn_string str = NULL;
     char buf[] = {"A line for creating string element."};
-    qn_size buf_len = strlen(buf);
+    size_t buf_len = strlen(buf);
 
     arr_root = qn_json_create_array();
     CU_ASSERT_FATAL(arr_root != NULL);
@@ -155,7 +155,7 @@ void test_parse_empty_object(void)
 {
     qn_bool ret;
     const char buf[] = {"{}"};
-    qn_size buf_len = strlen(buf);
+    size_t buf_len = strlen(buf);
     qn_json_object_ptr obj_root = NULL;
     qn_json_parser_ptr prs = NULL;
 
@@ -178,7 +178,7 @@ void test_parse_object_holding_one_element(void)
 {
     qn_bool ret;
     const char buf[] = {"{\"trivial\":\"This is a trivial element.\"}"};
-    qn_size buf_len = strlen(buf);
+    size_t buf_len = strlen(buf);
     qn_json_object_ptr obj_root = NULL;
     qn_string str = NULL;
     qn_json_parser_ptr prs = NULL;
@@ -206,7 +206,7 @@ void test_parse_object_holding_two_elements(void)
 {
     qn_bool ret;
     const char buf[] = {"{\"trivial\":\"This is a trivial element.\",\"int\":-123}"};
-    qn_size buf_len = strlen(buf);
+    size_t buf_len = strlen(buf);
     qn_json_object_ptr obj_root = NULL;
     qn_json_parser_ptr prs = NULL;
 
@@ -231,7 +231,7 @@ void test_parse_object_holding_ordinary_elements(void)
 {
     qn_bool ret;
     const char buf[] = {"{\"_num\":+123.456,\"_true\":true,\"_false\":false,\"_null\":null}"};
-    qn_size buf_len = strlen(buf);
+    size_t buf_len = strlen(buf);
     qn_json_object_ptr obj_root = NULL;
     qn_json_parser_ptr prs = NULL;
 
@@ -258,7 +258,7 @@ void test_parse_object_holding_empty_complex_elements(void)
 {
     qn_bool ret;
     const char buf[] = {"{\"_arr\":[],\"_obj\":{}}"};
-    qn_size buf_len = strlen(buf);
+    size_t buf_len = strlen(buf);
     qn_json_object_ptr obj_root = NULL;
     qn_json_array_ptr arr_elem = NULL;
     qn_json_object_ptr obj_elem = NULL;
@@ -293,7 +293,7 @@ void test_parse_object_holding_embedded_objects(void)
 {
     qn_bool ret;
     const char buf[] = {"{\"_obj\":{\"_num\":+123.456,\"_true\":true,\"_false\":false,\"_null\":null},\"_obj2\":{}}"};
-    qn_size buf_len = strlen(buf);
+    size_t buf_len = strlen(buf);
     qn_json_object_ptr obj_root = NULL;
     qn_json_object_ptr obj_elem = NULL;
     qn_json_parser_ptr prs = NULL;
@@ -332,7 +332,7 @@ void test_parse_object_holding_utf8_string(void)
 {
     qn_bool ret;
     const char buf[] = {"{\"_str\":\"工人\"}"};
-    qn_size buf_len = strlen(buf);
+    size_t buf_len = strlen(buf);
     qn_string str;
     qn_json_object_ptr obj_root = NULL;
     qn_json_parser_ptr prs = NULL;
@@ -356,7 +356,7 @@ void test_parse_empty_array(void)
 {
     qn_bool ret;
     const char buf[] = {"[]"};
-    qn_size buf_len = strlen(buf);
+    size_t buf_len = strlen(buf);
     qn_json_array_ptr arr_root = NULL;
     qn_json_parser_ptr prs = NULL;
 
@@ -379,7 +379,7 @@ void test_parse_array_holding_one_element(void)
 {
     qn_bool ret;
     const char buf[] = {"[\"This is a trivial element.\"]"};
-    qn_size buf_len = strlen(buf);
+    size_t buf_len = strlen(buf);
     qn_json_array_ptr arr_root = NULL;
     qn_string str = NULL;
     qn_json_parser_ptr prs = NULL;
@@ -407,7 +407,7 @@ void test_parse_array_holding_two_elements(void)
 {
     qn_bool ret;
     const char buf[] = {"[\"This is a trivial element.\",-123]"};
-    qn_size buf_len = strlen(buf);
+    size_t buf_len = strlen(buf);
     qn_json_array_ptr arr_root = NULL;
     qn_json_parser_ptr prs = NULL;
 
@@ -431,7 +431,7 @@ void test_parse_array_holding_ordinary_elements(void)
 {
     qn_bool ret;
     const char buf[] = {"[+123.456,true,false,null]"};
-    qn_size buf_len = strlen(buf);
+    size_t buf_len = strlen(buf);
     qn_json_array_ptr arr_root = NULL;
     qn_json_parser_ptr prs = NULL;
 
@@ -458,7 +458,7 @@ void test_parse_array_holding_empty_complex_elements(void)
 {
     qn_bool ret;
     const char buf[] = {"[{},[]]"};
-    qn_size buf_len = strlen(buf);
+    size_t buf_len = strlen(buf);
     qn_json_array_ptr arr_root = NULL;
     qn_json_object_ptr obj_elem = NULL;
     qn_json_array_ptr arr_elem = NULL;
@@ -493,7 +493,7 @@ void test_parse_array_holding_embedded_arrays(void)
 {
     qn_bool ret;
     const char buf[] = {"[[+123.456,true,false,null],[]]"};
-    qn_size buf_len = strlen(buf);
+    size_t buf_len = strlen(buf);
     qn_json_array_ptr arr_root = NULL;
     qn_json_array_ptr arr_elem = NULL;
     qn_json_parser_ptr prs = NULL;
@@ -550,7 +550,7 @@ void test_parse_object_without_enough_input_of_key(void)
 {
     qn_bool ret;
     const char buf[] = {"{\"_key\":123456,"};
-    qn_size buf_len = strlen(buf);
+    size_t buf_len = strlen(buf);
     qn_json_object_ptr obj_root = NULL;
     qn_json_parser_ptr prs = NULL;
 
@@ -580,7 +580,7 @@ void test_format_empty_object(void)
     qn_json_object_ptr obj_root = NULL;
     qn_json_formatter_ptr fmt = NULL;
     char buf[128];
-    qn_size buf_size = sizeof(buf);
+    size_t buf_size = sizeof(buf);
 
     fmt = qn_json_fmt_create();
     CU_ASSERT_FATAL(fmt != NULL);
@@ -603,7 +603,7 @@ void test_format_object_holding_string_element(void)
     qn_json_object_ptr obj_root = NULL;
     qn_json_formatter_ptr fmt = NULL;
     char buf[128];
-    qn_size buf_size = sizeof(buf);
+    size_t buf_size = sizeof(buf);
 
     fmt = qn_json_fmt_create();
     CU_ASSERT_FATAL(fmt != NULL);
@@ -629,7 +629,7 @@ void test_format_object_holding_integer_element(void)
     qn_json_object_ptr obj_root = NULL;
     qn_json_formatter_ptr fmt = NULL;
     char buf[128];
-    qn_size buf_size = sizeof(buf);
+    size_t buf_size = sizeof(buf);
 
     fmt = qn_json_fmt_create();
     CU_ASSERT_FATAL(fmt != NULL);
@@ -658,7 +658,7 @@ void test_format_object_holding_number_element(void)
     qn_json_object_ptr obj_root = NULL;
     qn_json_formatter_ptr fmt = NULL;
     char buf[128];
-    qn_size buf_size = sizeof(buf);
+    size_t buf_size = sizeof(buf);
 
     fmt = qn_json_fmt_create();
     CU_ASSERT_FATAL(fmt != NULL);
@@ -687,7 +687,7 @@ void test_format_object_holding_boolean_element(void)
     qn_json_object_ptr obj_root = NULL;
     qn_json_formatter_ptr fmt = NULL;
     char buf[128];
-    qn_size buf_size = sizeof(buf);
+    size_t buf_size = sizeof(buf);
 
     fmt = qn_json_fmt_create();
     CU_ASSERT_FATAL(fmt != NULL);
@@ -716,7 +716,7 @@ void test_format_object_holding_null_element(void)
     qn_json_object_ptr obj_root = NULL;
     qn_json_formatter_ptr fmt = NULL;
     char buf[128];
-    qn_size buf_size = sizeof(buf);
+    size_t buf_size = sizeof(buf);
 
     fmt = qn_json_fmt_create();
     CU_ASSERT_FATAL(fmt != NULL);
@@ -742,7 +742,7 @@ void test_format_empty_array(void)
     qn_json_array_ptr arr_root = NULL;
     qn_json_formatter_ptr fmt = NULL;
     char buf[128];
-    qn_size buf_size = sizeof(buf);
+    size_t buf_size = sizeof(buf);
 
     fmt = qn_json_fmt_create();
     CU_ASSERT_FATAL(fmt != NULL);
@@ -765,7 +765,7 @@ void test_format_array_holding_string_element(void)
     qn_json_array_ptr arr_root = NULL;
     qn_json_formatter_ptr fmt = NULL;
     char buf[128];
-    qn_size buf_size = sizeof(buf);
+    size_t buf_size = sizeof(buf);
 
     fmt = qn_json_fmt_create();
     CU_ASSERT_FATAL(fmt != NULL);
@@ -791,7 +791,7 @@ void test_format_array_holding_integer_element(void)
     qn_json_array_ptr arr_root = NULL;
     qn_json_formatter_ptr fmt = NULL;
     char buf[128];
-    qn_size buf_size = sizeof(buf);
+    size_t buf_size = sizeof(buf);
 
     fmt = qn_json_fmt_create();
     CU_ASSERT_FATAL(fmt != NULL);
@@ -820,7 +820,7 @@ void test_format_array_holding_number_element(void)
     qn_json_array_ptr arr_root = NULL;
     qn_json_formatter_ptr fmt = NULL;
     char buf[128];
-    qn_size buf_size = sizeof(buf);
+    size_t buf_size = sizeof(buf);
 
     fmt = qn_json_fmt_create();
     CU_ASSERT_FATAL(fmt != NULL);
@@ -849,7 +849,7 @@ void test_format_array_holding_boolean_element(void)
     qn_json_array_ptr arr_root = NULL;
     qn_json_formatter_ptr fmt = NULL;
     char buf[128];
-    qn_size buf_size = sizeof(buf);
+    size_t buf_size = sizeof(buf);
 
     fmt = qn_json_fmt_create();
     CU_ASSERT_FATAL(fmt != NULL);
@@ -878,7 +878,7 @@ void test_format_array_holding_null_element(void)
     qn_json_array_ptr arr_root = NULL;
     qn_json_formatter_ptr fmt = NULL;
     char buf[128];
-    qn_size buf_size = sizeof(buf);
+    size_t buf_size = sizeof(buf);
 
     fmt = qn_json_fmt_create();
     CU_ASSERT_FATAL(fmt != NULL);
@@ -906,7 +906,7 @@ void test_format_object_holding_complex_element(void)
     qn_json_object_ptr obj_elem = NULL;
     qn_json_formatter_ptr fmt = NULL;
     char buf[128];
-    qn_size buf_size = sizeof(buf);
+    size_t buf_size = sizeof(buf);
 
     fmt = qn_json_fmt_create();
     CU_ASSERT_FATAL(fmt != NULL);
@@ -940,7 +940,7 @@ void test_format_array_holding_complex_element(void)
     qn_json_array_ptr arr_elem = NULL;
     qn_json_formatter_ptr fmt = NULL;
     char buf[128];
-    qn_size buf_size = sizeof(buf);
+    size_t buf_size = sizeof(buf);
 
     fmt = qn_json_fmt_create();
     CU_ASSERT_FATAL(fmt != NULL);

@@ -9,7 +9,7 @@ void test_manipulating_headers(void)
     qn_http_header_ptr hdr = NULL;
     const char * key = NULL;
     const char * val = NULL;
-    qn_size val_size = 0;
+    size_t val_size = 0;
     qn_string entry = NULL;
 
     hdr = qn_http_hdr_create();
@@ -44,7 +44,7 @@ void test_parsing_single_entry_with_single_value(void)
     qn_string entry = NULL;
     const char * key = NULL;
     const char * val = NULL;
-    qn_size val_size = 0;
+    size_t val_size = 0;
     qn_http_hdr_parser_ptr prs = NULL;
     qn_http_header_ptr hdr = NULL;
 
@@ -81,7 +81,7 @@ void test_parsing_single_entry_with_multi_value(void)
     qn_string entry = NULL;
     const char * key = NULL;
     const char * val = NULL;
-    qn_size val_size = 0;
+    size_t val_size = 0;
     qn_http_hdr_parser_ptr prs = NULL;
     qn_http_header_ptr hdr = NULL;
 
@@ -118,7 +118,7 @@ void test_parsing_single_entry_with_leading_and_tailing_spaces(void)
     qn_string entry = NULL;
     const char * key = NULL;
     const char * val = NULL;
-    qn_size val_size = 0;
+    size_t val_size = 0;
     qn_http_hdr_parser_ptr prs = NULL;
     qn_http_header_ptr hdr = NULL;
 
@@ -155,7 +155,7 @@ void test_parsing_multi_entries_with_single_value(void)
     qn_string entry = NULL;
     const char * key = NULL;
     const char * val = NULL;
-    qn_size val_size = 0;
+    size_t val_size = 0;
     qn_http_hdr_parser_ptr prs = NULL;
     qn_http_header_ptr hdr = NULL;
 
