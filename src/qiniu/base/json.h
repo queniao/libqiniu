@@ -61,8 +61,8 @@ QN_API extern qn_json_array_ptr qn_json_create_and_unshift_array(qn_json_array_p
 QN_API extern void qn_json_destroy_object(qn_json_object_ptr restrict obj);
 QN_API extern void qn_json_destroy_array(qn_json_array_ptr restrict arr);
 
-QN_API extern qn_size qn_json_size_object(qn_json_object_ptr restrict obj);
-QN_API extern qn_size qn_json_size_array(qn_json_array_ptr restrict arr);
+QN_API extern int qn_json_size_object(qn_json_object_ptr restrict obj);
+QN_API extern int qn_json_size_array(qn_json_array_ptr restrict arr);
 
 static inline qn_bool qn_json_is_empty_object(qn_json_object_ptr restrict obj)
 {

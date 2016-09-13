@@ -56,7 +56,7 @@ QN_API qn_json_object_ptr qn_json_create_object(void)
 
 QN_API void qn_json_destroy_object(qn_json_object_ptr restrict obj)
 {
-    qn_json_pos i = 0;
+    qn_json_pos i;
 
     for (i = 0; i < obj->cnt; i += 1) {
         switch (obj->itm[i].class) {
@@ -91,12 +91,8 @@ static qn_json_pos qn_json_obj_bsearch(qn_json_obj_item * restrict itm, qn_json_
 
 static qn_json_pos qn_json_obj_find(qn_json_object_ptr restrict obj, qn_json_hash hash, const char * restrict key, int * restrict existent)
 {
-    qn_json_pos i = 0;
-
-    i = qn_json_obj_bsearch(obj->itm, obj->cnt, hash);
-    while (i < obj->cnt && obj->itm[i].hash == hash && (*existent = qn_str_compare_raw(obj->itm[i].key, key)) != 0) {
-        i += 1;
-    } // while
+    qn_json_pos i = qn_json_obj_bsearch(obj->itm, obj->cnt, hash);
+    while (i < obj->cnt && obj->itm[i].hash == hash && (*existent = qn_str_compare_raw(obj->itm[i].key, key)) != 0) i += 1;
     return i;
 }
 
@@ -119,8 +115,8 @@ static qn_bool qn_json_obj_augment(qn_json_object_ptr restrict obj)
 
 static qn_bool qn_json_obj_set(qn_json_object_ptr restrict obj, const char * restrict key, qn_json_class cls, qn_json_variant new_elem)
 {
-    qn_json_hash hash = 0;
-    qn_size pos = 0;
+    qn_json_hash hash;
+    qn_json_pos pos;
     int existent = -2;
 
     hash = qn_json_obj_calculate_hash(key);
@@ -186,7 +182,7 @@ QN_API qn_json_array_ptr qn_json_create_array(void)
 
 QN_API void qn_json_destroy_array(qn_json_array_ptr restrict arr)
 {
-    qn_json_pos i = 0;
+    qn_json_pos i;
 
     for (i = arr->begin; i < arr->end; i += 1) {
         switch (arr->itm[i].class) {
@@ -324,12 +320,12 @@ QN_API qn_json_array_ptr qn_json_create_and_unshift_array(qn_json_array_ptr rest
     return new_elem.array;
 }
 
-QN_API qn_size qn_json_size_object(qn_json_object_ptr restrict obj)
+QN_API int qn_json_size_object(qn_json_object_ptr restrict obj)
 {
     return obj->cnt;
 }
 
-QN_API qn_size qn_json_size_array(qn_json_array_ptr restrict arr)
+QN_API int qn_json_size_array(qn_json_array_ptr restrict arr)
 {
     return arr->cnt;
 }
@@ -462,7 +458,7 @@ QN_API qn_bool qn_json_set_null(qn_json_object_ptr restrict obj, const char * re
 
 QN_API void qn_json_unset(qn_json_object_ptr restrict obj, const char * restrict key)
 {
-    qn_json_pos pos = 0;
+    qn_json_pos pos;
     int existent = -2;
 
     if (obj->cnt == 0) return;
@@ -743,7 +739,7 @@ QN_API int qn_json_itr_advance(qn_json_iterator_ptr restrict itr, void * data, q
 {
     qn_json_class class;
     qn_json_variant elem;
-    qn_json_itr_level_ptr lvl = NULL;
+    qn_json_itr_level_ptr lvl;
 
     if (itr->size <= 0) return QN_JSON_ITR_NO_MORE;
 
