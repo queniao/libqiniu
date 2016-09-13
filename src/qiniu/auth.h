@@ -1,7 +1,7 @@
 #ifndef __QN_AUTH_H__
 #define __QN_AUTH_H__
 
-#include "qiniu/base/basic_types.h"
+#include "qiniu/os/types.h"
 #include "qiniu/base/string.h"
 #include "qiniu/base/json.h"
 

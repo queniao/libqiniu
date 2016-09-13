@@ -88,10 +88,9 @@ QN_API void qn_fl_close(qn_file_ptr restrict fl)
     } // if
 }
 
-QN_API int qn_fl_read(qn_file_ptr restrict fl, char * restrict buf, int buf_size)
+QN_API ssize_t qn_fl_read(qn_file_ptr restrict fl, char * restrict buf, size_t buf_size)
 {
-    int ret;
-    ret = read(fl->fd, buf, buf_size);
+    ssize_t ret = read(fl->fd, buf, buf_size);
     if (ret < 0) qn_err_fl_set_reading_file_failed();
     return ret;
 }

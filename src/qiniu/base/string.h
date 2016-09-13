@@ -5,7 +5,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "qiniu/base/basic_types.h"
+#include "qiniu/os/types.h"
 #include "qiniu/macros.h"
 
 #define posix_strlen strlen

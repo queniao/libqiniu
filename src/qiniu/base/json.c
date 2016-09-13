@@ -415,7 +415,7 @@ QN_API qn_bool qn_json_set_string(qn_json_object_ptr restrict obj, const char * 
     return (!elem.string) ? qn_false : qn_json_obj_set(obj, key, QN_JSON_STRING, elem);
 }
 
-QN_API qn_bool qn_json_set_text(qn_json_object_ptr restrict obj, const char * restrict key, const char * restrict val, int size)
+QN_API qn_bool qn_json_set_text(qn_json_object_ptr restrict obj, const char * restrict key, const char * restrict val, size_t size)
 {
     qn_json_variant elem;
     if (size < 0) {
@@ -484,7 +484,7 @@ QN_API qn_bool qn_json_push_string(qn_json_array_ptr restrict arr, const char * 
     return (!elem.string) ? qn_false : qn_json_arr_push(arr, QN_JSON_STRING, elem);
 }
 
-QN_API qn_bool qn_json_push_text(qn_json_array_ptr restrict arr, const char * restrict val, int size)
+QN_API qn_bool qn_json_push_text(qn_json_array_ptr restrict arr, const char * restrict val, size_t size)
 {
     qn_json_variant elem;
     if (size < 0) {
@@ -545,7 +545,7 @@ QN_API qn_bool qn_json_unshift_string(qn_json_array_ptr restrict arr, const char
     return (!elem.string) ? qn_false : qn_json_arr_unshift(arr, QN_JSON_STRING, elem);
 }
 
-QN_API qn_bool qn_json_unshift_text(qn_json_array_ptr restrict arr, const char * restrict val, int size)
+QN_API qn_bool qn_json_unshift_text(qn_json_array_ptr restrict arr, const char * restrict val, size_t size)
 {
     qn_json_variant elem;
     if (size < 0) {
@@ -611,7 +611,7 @@ typedef struct _QN_JSON_ITR_LEVEL
 
 typedef struct _QN_JSON_ITERATOR
 {
-    int size;
+    int cnt;
     int cap;
     qn_json_itr_level * lvl;
     qn_json_itr_level init_lvl[3];
@@ -642,31 +642,31 @@ QN_API void qn_json_itr_destroy(qn_json_iterator_ptr restrict itr)
 
 QN_API void qn_json_itr_reset(qn_json_iterator_ptr restrict itr)
 {
-    itr->size = 0;
+    itr->cnt = 0;
 }
 
 QN_API void qn_json_itr_rewind(qn_json_iterator_ptr restrict itr)
 {
-    if (itr->size <= 0) return;
-    itr->lvl[itr->size - 1].pos = 0;
+    if (itr->cnt <= 0) return;
+    itr->lvl[itr->cnt - 1].pos = 0;
 }
 
 QN_API qn_bool qn_json_itr_is_empty(qn_json_iterator_ptr restrict itr)
 {
-    return itr->size == 0;
+    return itr->cnt == 0;
 }
 
 QN_API int qn_json_itr_steps(qn_json_iterator_ptr restrict itr)
 {
-    return (itr->size <= 0) ? 0 : itr->lvl[itr->size - 1].pos;
+    return (itr->cnt <= 0) ? 0 : itr->lvl[itr->cnt - 1].pos;
 }
 
 QN_API qn_string qn_json_itr_get_key(qn_json_iterator_ptr restrict itr)
 {
     qn_json_itr_level_ptr lvl = NULL;
 
-    if (itr->size == 0) return NULL;
-    lvl = &itr->lvl[itr->size - 1];
+    if (itr->cnt == 0) return NULL;
+    lvl = &itr->lvl[itr->cnt - 1];
 
     if (lvl->class != QN_JSON_OBJECT) return NULL;
     return lvl->parent.object->itm[lvl->pos - 1].key;
@@ -674,12 +674,12 @@ QN_API qn_string qn_json_itr_get_key(qn_json_iterator_ptr restrict itr)
 
 QN_API void qn_json_itr_set_status(qn_json_iterator_ptr restrict itr, qn_uint32 sts)
 {
-    if (itr->size) itr->lvl[itr->size - 1].status = sts;
+    if (itr->cnt) itr->lvl[itr->cnt - 1].status = sts;
 }
 
 QN_API qn_uint32 qn_json_itr_get_status(qn_json_iterator_ptr restrict itr)
 {
-    return (itr->size == 0) ? 0 : itr->lvl[itr->size - 1].status;
+    return (itr->cnt == 0) ? 0 : itr->lvl[itr->cnt - 1].status;
 }
 
 static qn_bool qn_json_itr_augment_levels(qn_json_iterator_ptr restrict itr)
@@ -691,7 +691,7 @@ static qn_bool qn_json_itr_augment_levels(qn_json_iterator_ptr restrict itr)
         return qn_false;
     }  // if
 
-    memcpy(new_lvl, itr->lvl, sizeof(qn_json_itr_level) * itr->size);
+    memcpy(new_lvl, itr->lvl, sizeof(qn_json_itr_level) * itr->cnt);
     if (itr->lvl != &itr->init_lvl[0]) free(itr->lvl);
     itr->lvl = new_lvl;
     itr->cap = new_capacity;
@@ -700,39 +700,39 @@ static qn_bool qn_json_itr_augment_levels(qn_json_iterator_ptr restrict itr)
 
 QN_API qn_bool qn_json_itr_push_object(qn_json_iterator_ptr restrict itr, qn_json_object_ptr obj)
 {
-    if ((itr->size + 1) > itr->cap && !qn_json_itr_augment_levels(itr)) return qn_false;
+    if ((itr->cnt + 1) > itr->cap && !qn_json_itr_augment_levels(itr)) return qn_false;
 
-    itr->lvl[itr->size].class = QN_JSON_OBJECT;
-    itr->lvl[itr->size].parent.object = obj;
-    itr->size += 1;
+    itr->lvl[itr->cnt].class = QN_JSON_OBJECT;
+    itr->lvl[itr->cnt].parent.object = obj;
+    itr->cnt += 1;
     qn_json_itr_rewind(itr);
     return qn_true;
 }
 
 QN_API qn_bool qn_json_itr_push_array(qn_json_iterator_ptr restrict itr, qn_json_array_ptr arr)
 {
-    if ((itr->size + 1) > itr->cap && !qn_json_itr_augment_levels(itr)) return qn_false;
+    if ((itr->cnt + 1) > itr->cap && !qn_json_itr_augment_levels(itr)) return qn_false;
 
-    itr->lvl[itr->size].class = QN_JSON_ARRAY;
-    itr->lvl[itr->size].parent.array = arr;
-    itr->size += 1;
+    itr->lvl[itr->cnt].class = QN_JSON_ARRAY;
+    itr->lvl[itr->cnt].parent.array = arr;
+    itr->cnt += 1;
     qn_json_itr_rewind(itr);
     return qn_true;
 }
 
 QN_API void qn_json_itr_pop(qn_json_iterator_ptr restrict itr)
 {
-    if (itr->size > 0) itr->size -= 1;
+    if (itr->cnt > 0) itr->cnt -= 1;
 }
 
 QN_API qn_json_object_ptr qn_json_itr_top_object(qn_json_iterator_ptr restrict itr)
 {
-    return (itr->size <= 0 || itr->lvl[itr->size - 1].class != QN_JSON_OBJECT) ? NULL : itr->lvl[itr->size - 1].parent.object;
+    return (itr->cnt <= 0 || itr->lvl[itr->cnt - 1].class != QN_JSON_OBJECT) ? NULL : itr->lvl[itr->cnt - 1].parent.object;
 }
 
 QN_API qn_json_array_ptr qn_json_itr_top_array(qn_json_iterator_ptr restrict itr)
 {
-    return (itr->size <= 0 || itr->lvl[itr->size - 1].class != QN_JSON_ARRAY) ? NULL : itr->lvl[itr->size - 1].parent.array;
+    return (itr->cnt <= 0 || itr->lvl[itr->cnt - 1].class != QN_JSON_ARRAY) ? NULL : itr->lvl[itr->cnt - 1].parent.array;
 }
 
 QN_API int qn_json_itr_advance(qn_json_iterator_ptr restrict itr, void * data, qn_json_itr_callback cb)
@@ -741,9 +741,9 @@ QN_API int qn_json_itr_advance(qn_json_iterator_ptr restrict itr, void * data, q
     qn_json_variant elem;
     qn_json_itr_level_ptr lvl;
 
-    if (itr->size <= 0) return QN_JSON_ITR_NO_MORE;
+    if (itr->cnt <= 0) return QN_JSON_ITR_NO_MORE;
 
-    lvl = &itr->lvl[itr->size - 1];
+    lvl = &itr->lvl[itr->cnt - 1];
     if (lvl->class == QN_JSON_OBJECT) {
         if (lvl->pos < lvl->parent.object->cnt) {
             class = lvl->parent.object->itm[lvl->pos].class;

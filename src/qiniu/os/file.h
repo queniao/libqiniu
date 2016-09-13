@@ -9,18 +9,6 @@ extern "C"
 {
 #endif
 
-// ---- Declaration of file info ----
-
-#if defined(_MSC_VER)
-
-#else
-
-#include <sys/types.h>
-
-typedef off_t qn_fsize;
-
-#endif
-
 // ---- Declaration of file
 
 struct _QN_FILE;
@@ -34,13 +22,13 @@ QN_API extern qn_file_ptr qn_fl_open(const char * restrict fname, qn_fl_open_ext
 QN_API extern qn_file_ptr qn_fl_duplicate(qn_file_ptr restrict fl);
 QN_API extern void qn_fl_close(qn_file_ptr restrict fl);
 
-QN_API extern int qn_fl_read(qn_file_ptr restrict fl, char * restrict buf, int buf_size);
+QN_API extern ssize_t qn_fl_read(qn_file_ptr restrict fl, char * restrict buf, size_t buf_size);
 QN_API extern qn_bool qn_fl_seek(qn_file_ptr restrict fl, qn_fsize offset);
 QN_API extern qn_bool qn_fl_advance(qn_file_ptr restrict fl, int delta);
 
 QN_API extern size_t qn_fl_reader_callback(void * restrict user_data, char * restrict buf, size_t size);
 
-// ----
+// ---- Declaration of file info ----
 
 struct _QN_FL_INFO;
 typedef struct _QN_FL_INFO * qn_fl_info_ptr;
@@ -51,7 +39,7 @@ QN_API extern void qn_fl_info_destroy(qn_fl_info_ptr restrict fi);
 QN_API extern qn_fsize qn_fl_info_fsize(qn_fl_info_ptr restrict fi);
 QN_API extern qn_string qn_fl_info_fname(qn_fl_info_ptr restrict fi);
 
-// ----
+// ---- Declaration of file section ----
 
 struct _QN_FL_SECTION;
 typedef struct _QN_FL_SECTION * qn_fl_section_ptr;

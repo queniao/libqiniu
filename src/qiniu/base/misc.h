@@ -1,7 +1,7 @@
 #ifndef __QN_MISC_H__
 #define __QN_MISC_H__
 
-#include "qiniu/base/basic_types.h"
+#include "qiniu/os/types.h"
 #include "qiniu/macros.h"
 
 #ifdef __cplusplus

@@ -1,9 +1,19 @@
-#ifndef __QN_BASIC_TYPES_H__
-#define __QN_BASIC_TYPES_H__
+#ifndef __QN_OS_TYPES_H__
+#define __QN_OS_TYPES_H__
 
 #include <stddef.h>
 #include <stdint.h>
 #include <stdbool.h>
+
+#if defined(_MSC_VER)
+
+#else
+
+#include <sys/types.h>
+
+typedef off_t qn_fsize;
+
+#endif
 
 typedef uint32_t qn_uint32;
 typedef uint64_t qn_uint64;
@@ -26,5 +36,5 @@ typedef long double qn_number;
 
 #endif
 
-#endif // __QN_BASIC_TYPES_H__
+#endif // __QN_OS_TYPES_H__
 

@@ -38,9 +38,9 @@ QN_API qn_string qn_cs_join_list(const char * restrict deli, const char ** restr
 {
     qn_string new_str;
     char * pos;
-    int final_size;
-    int deli_size;
-    int str_size;
+    size_t final_size;
+    size_t deli_size;
+    size_t str_size;
     int i;
 
     if (n == 1) return qn_cs_duplicate(ss[0]);
@@ -79,9 +79,9 @@ QN_API qn_string qn_cs_join_va(const char * restrict deli, const char * restrict
     va_list cp;
     qn_string new_str;
     qn_string str;
-    int final_size;
-    int str_size;
-    int deli_size = strlen(deli);
+    size_t final_size;
+    size_t str_size;
+    size_t deli_size = strlen(deli);
     int n;
     char * pos;
 
@@ -194,7 +194,7 @@ QN_API int qn_cs_snprintf(char * restrict buf, size_t buf_size, const char * res
     va_list ap;
     int printed_size;
     char * buf = str;
-    int buf_cap = buf_size;
+    size_t buf_cap = buf_size;
 
     if (str == NULL || buf_size == 0) {
         buf = 0x1;
@@ -370,8 +370,8 @@ QN_API qn_string qn_str_join_list(const char * restrict deli, const qn_string * 
 {
     qn_string new_str = NULL;
     char * pos = NULL;
-    int final_size = 0;
-    int deli_size = 0L;
+    size_t final_size = 0;
+    size_t deli_size = 0L;
     int i = 0;
 
     if (n == 1) return qn_str_duplicate(ss[0]);
@@ -407,8 +407,8 @@ QN_API qn_string qn_str_join_va(const char * restrict deli, const qn_string rest
     va_list cp;
     qn_string new_str = NULL;
     qn_string str = NULL;
-    int final_size = 0;
-    int deli_size = strlen(deli);
+    size_t final_size = 0;
+    size_t deli_size = strlen(deli);
     int n = 0;
     char * pos = NULL;
 

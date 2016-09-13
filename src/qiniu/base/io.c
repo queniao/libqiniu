@@ -5,10 +5,10 @@ extern "C"
 {
 #endif
 
-QN_API int qn_io_srd_read(void * restrict user_data, char * restrict buf, int buf_size)
+QN_API ssize_t qn_io_srd_read(void * restrict user_data, char * restrict buf, size_t buf_size)
 {
     qn_io_section_reader_ptr srdr = (qn_io_section_reader_ptr) user_data;
-    int reading_bytes;
+    size_t reading_bytes;
     int ret;
 
     reading_bytes = srdr->size - srdr->pos;
@@ -21,7 +21,7 @@ QN_API int qn_io_srd_read(void * restrict user_data, char * restrict buf, int bu
     return ret;
 }
 
-QN_API void qn_io_srd_init(qn_io_section_reader_ptr restrict srdr, qn_io_reader_ptr restrict rdr, int size)
+QN_API void qn_io_srd_init(qn_io_section_reader_ptr restrict srdr, qn_io_reader_ptr restrict rdr, size_t size)
 {
     srdr->rdr = rdr;
     srdr->size = size;

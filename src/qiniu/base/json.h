@@ -3,7 +3,7 @@
 
 #include <string.h>
 
-#include "qiniu/base/basic_types.h"
+#include "qiniu/os/types.h"
 #include "qiniu/base/string.h"
 
 #include "qiniu/macros.h"
@@ -89,7 +89,7 @@ QN_API extern qn_number qn_json_pick_number(qn_json_array_ptr restrict arr, int 
 QN_API extern qn_bool qn_json_pick_boolean(qn_json_array_ptr restrict arr, int n, qn_bool default_val);
 
 QN_API extern qn_bool qn_json_set_string(qn_json_object_ptr restrict obj, const char * restrict key, const char * restrict val);
-QN_API extern qn_bool qn_json_set_text(qn_json_object_ptr restrict obj, const char * restrict key, const char * restrict val, int size);
+QN_API extern qn_bool qn_json_set_text(qn_json_object_ptr restrict obj, const char * restrict key, const char * restrict val, size_t size);
 QN_API extern qn_bool qn_json_set_integer(qn_json_object_ptr restrict obj, const char * restrict key, qn_integer val);
 QN_API extern qn_bool qn_json_set_number(qn_json_object_ptr restrict obj, const char * restrict key, qn_number val);
 QN_API extern qn_bool qn_json_set_boolean(qn_json_object_ptr restrict obj, const char * restrict key, qn_bool val);
@@ -97,7 +97,7 @@ QN_API extern qn_bool qn_json_set_null(qn_json_object_ptr restrict obj, const ch
 QN_API extern void qn_json_unset(qn_json_object_ptr restrict obj, const char * restrict key);
 
 QN_API extern qn_bool qn_json_push_string(qn_json_array_ptr restrict arr, const char * restrict val);
-QN_API extern qn_bool qn_json_push_text(qn_json_array_ptr restrict arr, const char * restrict val, int size);
+QN_API extern qn_bool qn_json_push_text(qn_json_array_ptr restrict arr, const char * restrict val, size_t size);
 QN_API extern qn_bool qn_json_push_integer(qn_json_array_ptr restrict arr, qn_integer val);
 QN_API extern qn_bool qn_json_push_number(qn_json_array_ptr restrict arr, qn_number val);
 QN_API extern qn_bool qn_json_push_boolean(qn_json_array_ptr restrict arr, qn_bool val);
@@ -105,7 +105,7 @@ QN_API extern qn_bool qn_json_push_null(qn_json_array_ptr restrict arr);
 QN_API extern void qn_json_pop(qn_json_array_ptr restrict arr);
 
 QN_API extern qn_bool qn_json_unshift_string(qn_json_array_ptr restrict arr, const char * restrict val);
-QN_API extern qn_bool qn_json_unshift_text(qn_json_array_ptr restrict arr, const char * restrict val, int size);
+QN_API extern qn_bool qn_json_unshift_text(qn_json_array_ptr restrict arr, const char * restrict val, size_t size);
 QN_API extern qn_bool qn_json_unshift_integer(qn_json_array_ptr restrict arr, qn_integer val);
 QN_API extern qn_bool qn_json_unshift_number(qn_json_array_ptr restrict arr, qn_number val);
 QN_API extern qn_bool qn_json_unshift_boolean(qn_json_array_ptr restrict arr, qn_bool val);
