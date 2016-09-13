@@ -53,12 +53,12 @@ QN_API void qn_http_hdr_reset(qn_http_header_ptr restrict hdr)
     while (hdr->cnt > 0) qn_str_destroy(hdr->entries[--hdr->cnt]);
 }
 
-QN_API qn_size qn_http_hdr_size(qn_http_header_ptr restrict hdr)
+QN_API int qn_http_hdr_size(qn_http_header_ptr restrict hdr)
 {
     return hdr->cnt;
 }
 
-static qn_http_hdr_pos qn_http_hdr_bsearch(qn_http_header_ptr hdr, const char * key, qn_size key_size, int * ord)
+static qn_http_hdr_pos qn_http_hdr_bsearch(qn_http_header_ptr hdr, const char * key, size_t key_size, int * ord)
 {
     qn_http_hdr_pos mid_key_size;
     qn_http_hdr_pos begin = 0;
@@ -85,7 +85,7 @@ static qn_http_hdr_pos qn_http_hdr_bsearch(qn_http_header_ptr hdr, const char * 
     return begin;
 }
 
-QN_API qn_string qn_http_hdr_get_entry_raw(qn_http_header_ptr restrict hdr, const char * restrict key, qn_size key_size)
+QN_API qn_string qn_http_hdr_get_entry_raw(qn_http_header_ptr restrict hdr, const char * restrict key, size_t key_size)
 {
     int ord;
     qn_http_hdr_pos pos = qn_http_hdr_bsearch(hdr, key, key_size, &ord);
@@ -93,7 +93,7 @@ QN_API qn_string qn_http_hdr_get_entry_raw(qn_http_header_ptr restrict hdr, cons
     return hdr->entries[pos];
 }
 
-QN_API qn_bool qn_http_hdr_get_raw(qn_http_header_ptr restrict hdr, const char * key, qn_size key_size, const char ** restrict val, qn_size * restrict val_size)
+QN_API qn_bool qn_http_hdr_get_raw(qn_http_header_ptr restrict hdr, const char * key, size_t key_size, const char ** restrict val, size_t * restrict val_size)
 {
     int ord;
     qn_http_hdr_pos pos = qn_http_hdr_bsearch(hdr, key, key_size, &ord);
@@ -119,7 +119,7 @@ static qn_bool qn_http_hdr_augment(qn_http_header_ptr hdr)
     return qn_true;
 }
 
-QN_API qn_bool qn_http_hdr_set_raw(qn_http_header_ptr restrict hdr, const char * restrict key, qn_size key_size, const char * restrict val, qn_size val_size)
+QN_API qn_bool qn_http_hdr_set_raw(qn_http_header_ptr restrict hdr, const char * restrict key, size_t key_size, const char * restrict val, size_t val_size)
 {
     int ord;
     qn_string new_val = NULL;
@@ -145,7 +145,7 @@ QN_API qn_bool qn_http_hdr_set_raw(qn_http_header_ptr restrict hdr, const char *
     return qn_true;
 }
 
-QN_API void qn_http_hdr_unset_raw(qn_http_header_ptr restrict hdr, const char * restrict key, qn_size key_size)
+QN_API void qn_http_hdr_unset_raw(qn_http_header_ptr restrict hdr, const char * restrict key, size_t key_size)
 {
     int ord;
     qn_http_hdr_pos pos = qn_http_hdr_bsearch(hdr, key, key_size, &ord);
@@ -187,7 +187,7 @@ QN_API void qn_http_hdr_itr_rewind(qn_http_hdr_iterator_ptr restrict itr)
     itr->pos = 0;
 }
 
-QN_API qn_bool qn_http_hdr_itr_next_pair_raw(qn_http_hdr_iterator_ptr restrict itr, const char ** restrict key, qn_size * restrict key_size, const char ** restrict val, qn_size * restrict val_size)
+QN_API qn_bool qn_http_hdr_itr_next_pair_raw(qn_http_hdr_iterator_ptr restrict itr, const char ** restrict key, size_t * restrict key_size, const char ** restrict val, size_t * restrict val_size)
 {
     qn_string entry;
 
