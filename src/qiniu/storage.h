@@ -161,7 +161,7 @@ typedef struct _QN_STOR_RESUMABLE_PUT_SESSION * qn_stor_rput_session_ptr;
 QN_API extern qn_stor_rput_session_ptr qn_stor_rs_create(qn_fsize fsize);
 QN_API extern void qn_stor_rs_destroy(qn_stor_rput_session_ptr restrict ss);
 
-QN_API extern qn_stor_rput_session_ptr qn_stor_rs_from_string(const char * restrict str, int str_size);
+QN_API extern qn_stor_rput_session_ptr qn_stor_rs_from_string(const char * restrict str, size_t str_size);
 QN_API extern qn_string qn_stor_rs_to_string(const qn_stor_rput_session_ptr restrict ss);
 
 QN_API extern int qn_stor_rs_block_count(const qn_stor_rput_session_ptr restrict ss);

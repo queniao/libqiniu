@@ -923,10 +923,10 @@ QN_API void qn_stor_rs_destroy(qn_stor_rput_session_ptr restrict ss)
     } // if
 }
 
-QN_API qn_stor_rput_session_ptr qn_stor_rs_from_string(const char * restrict str, int str_size)
+QN_API qn_stor_rput_session_ptr qn_stor_rs_from_string(const char * restrict str, size_t str_size)
 {
     qn_bool ret;
-    qn_size ret_size;
+    size_t ret_size;
     qn_json_parser_ptr prs;
     qn_stor_rput_session_ptr new_ss = calloc(1, sizeof(qn_stor_rput_session));
 
@@ -990,9 +990,9 @@ typedef struct _QN_STOR_RESUMABLE_PUT_READER
     qn_stor_rput_extra_ptr ext;
 } qn_stor_rput_reader, *qn_stor_rput_reader_ptr;
 
-static qn_size qn_stor_rp_chunk_body_reader_callback(void * user_data, char * buf, qn_size size)
+static size_t qn_stor_rp_chunk_body_reader_callback(void * user_data, char * buf, size_t size)
 {
-    qn_size ret;
+    size_t ret;
     qn_stor_rput_reader_ptr chk_rdr = (qn_stor_rput_reader_ptr) user_data;
     ret = chk_rdr->rdr->read(chk_rdr->rdr->user_data, buf, size);
     return ret;
