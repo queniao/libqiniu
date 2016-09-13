@@ -213,9 +213,9 @@ QN_API void qn_http_req_reset(qn_http_request_ptr restrict req)
 
 // ----
 
-QN_API qn_bool qn_http_req_get_header_raw(qn_http_request_ptr restrict req, const char * restrict hdr, size_t hdr_size, const char ** restrict val, size_t * restrict val_size)
+QN_API const char * qn_http_req_get_header(qn_http_request_ptr restrict req, const char * restrict hdr)
 {
-    return qn_http_hdr_get_raw(req->hdr, hdr, hdr_size, val, val_size);
+    return qn_http_hdr_get(req->hdr, hdr);
 }
 
 QN_API qn_bool qn_http_req_set_header_with_values(qn_http_request_ptr restrict req, const qn_string restrict hdr, const qn_string restrict val1, const qn_string restrict val2, ...)
@@ -229,19 +229,14 @@ QN_API qn_bool qn_http_req_set_header_with_values(qn_http_request_ptr restrict r
     va_end(ap);
     if (!new_val) return qn_false;
 
-    ret = qn_http_hdr_set(req->hdr, hdr, new_val);
+    ret = qn_http_hdr_set_string(req->hdr, hdr, new_val);
     qn_str_destroy(new_val);
     return ret;
 }
 
 QN_API qn_bool qn_http_req_set_header(qn_http_request_ptr restrict req, const qn_string restrict hdr, const qn_string restrict val)
 {
-    return qn_http_hdr_set_raw(req->hdr, qn_str_cstr(hdr), qn_str_size(hdr), qn_str_cstr(val), qn_str_size(val));
-}
-
-QN_API qn_bool qn_http_req_set_header_raw(qn_http_request_ptr restrict req, const char * restrict hdr, int hdr_size, const char * restrict val, int val_size)
-{
-    return qn_http_hdr_set_raw(req->hdr, hdr, hdr_size, val, val_size);
+    return qn_http_hdr_set_text(req->hdr, qn_str_cstr(hdr), qn_str_cstr(val), qn_str_size(val));
 }
 
 QN_API void qn_http_req_unset_header(qn_http_request_ptr restrict req, const qn_string restrict hdr)
@@ -376,19 +371,14 @@ QN_API qn_http_hdr_iterator_ptr qn_http_resp_get_header_iterator(qn_http_respons
     return qn_http_hdr_itr_create(resp->hdr);
 }
 
-QN_API qn_bool qn_http_resp_get_header_raw(qn_http_response_ptr restrict resp, const char * restrict hdr, size_t hdr_size, const char ** restrict val, size_t * restrict val_size)
+QN_API const char * qn_http_resp_get_header(qn_http_response_ptr restrict resp, const char * restrict hdr)
 {
-    return qn_http_hdr_get_raw(resp->hdr, hdr, hdr_size, val, val_size);
+    return qn_http_hdr_get(resp->hdr, hdr);
 }
 
-QN_API qn_bool qn_http_resp_set_header(qn_http_response_ptr restrict resp, const qn_string restrict hdr, const qn_string restrict val)
+QN_API qn_bool qn_http_resp_set_header(qn_http_response_ptr restrict resp, const char * restrict hdr, const char * restrict val, int val_size)
 {
-    return qn_http_hdr_set_raw(resp->hdr, qn_str_cstr(hdr), qn_str_size(hdr), qn_str_cstr(val), qn_str_size(val));
-}
-
-QN_API qn_bool qn_http_resp_set_header_raw(qn_http_response_ptr restrict resp, const char * restrict hdr, int hdr_size, const char * restrict val, int val_size)
-{
-    return qn_http_hdr_set_raw(resp->hdr, hdr, hdr_size, val, val_size);
+    return qn_http_hdr_set_text(resp->hdr, hdr, val, val_size);
 }
 
 QN_API void qn_http_resp_unset_header(qn_http_response_ptr restrict resp, const qn_string restrict hdr)

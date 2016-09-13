@@ -253,7 +253,7 @@ QN_API qn_bool qn_http_hdr_prs_parse(qn_http_hdr_parser_ptr restrict prs, const 
                     qn_err_http_set_invalid_header_syntax();
                     return qn_false;
                 } // if
-                if (!qn_http_hdr_set_raw(prs->hdr, qn_str_cstr(prs->key), qn_str_size(prs->key), txt, txt_size)) {
+                if (!qn_http_hdr_set_text(prs->hdr, qn_str_cstr(prs->key), txt, txt_size)) {
                     qn_str_destroy(prs->key);
                     prs->key = NULL;
                     return qn_false;

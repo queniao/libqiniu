@@ -54,16 +54,10 @@ QN_API extern void qn_http_req_reset(qn_http_request_ptr restrict req);
 
 // ----
 
-QN_API extern qn_bool qn_http_req_get_header_raw(qn_http_request_ptr restrict req, const char * restrict hdr, size_t hdr_size, const char ** restrict val, size_t * restrict val_size);
-
-static inline qn_bool qn_http_req_get_header(qn_http_request_ptr restrict req, const qn_string restrict hdr, const char ** restrict val, size_t * restrict val_size)
-{
-    return qn_http_req_get_header_raw(req, qn_str_cstr(hdr), qn_str_size(hdr), val, val_size);
-}
+QN_API extern const char * qn_http_req_get_header(qn_http_request_ptr restrict req, const char * restrict hdr);
 
 QN_API extern qn_bool qn_http_req_set_header_with_values(qn_http_request_ptr restrict req, const qn_string restrict header, const qn_string restrict val1, const qn_string val2, ...);
 QN_API extern qn_bool qn_http_req_set_header(qn_http_request_ptr restrict req, const qn_string restrict header, const qn_string restrict value);
-QN_API extern qn_bool qn_http_req_set_header_raw(qn_http_request_ptr restrict req, const char * restrict hdr, int hdr_size, const char * restrict val, int val_size);
 QN_API extern void qn_http_req_unset_header(qn_http_request_ptr restrict req, const qn_string restrict header);
 
 // ----
@@ -96,15 +90,9 @@ QN_API extern int qn_http_resp_get_writer_retcode(qn_http_response_ptr restrict 
 // ----
 
 QN_API extern qn_http_hdr_iterator_ptr qn_http_resp_get_header_iterator(qn_http_response_ptr restrict resp);
-QN_API extern qn_bool qn_http_resp_get_header_raw(qn_http_response_ptr restrict resp, const char * restrict hdr, size_t hdr_size, const char ** restrict val, size_t * restrict val_size);
+QN_API extern const char * qn_http_resp_get_header(qn_http_response_ptr restrict resp, const char * restrict hdr);
 
-static inline qn_bool qn_http_resp_get_header(qn_http_response_ptr restrict resp, const qn_string restrict hdr, const char ** restrict val, size_t * restrict val_size)
-{
-    return qn_http_resp_get_header_raw(resp, qn_str_cstr(hdr), qn_str_size(hdr), val, val_size);
-}
-
-QN_API extern qn_bool qn_http_resp_set_header(qn_http_response_ptr restrict resp, const qn_string restrict header, const qn_string restrict value);
-QN_API extern qn_bool qn_http_resp_set_header_raw(qn_http_response_ptr restrict resp, const char * restrict hdr, int hdr_size, const char * restrict val, int val_size);
+QN_API extern qn_bool qn_http_resp_set_header(qn_http_response_ptr restrict resp, const char * restrict hdr, const char * restrict val, int val_size);
 QN_API extern void qn_http_resp_unset_header(qn_http_response_ptr restrict resp, const qn_string restrict header);
 
 // ----
