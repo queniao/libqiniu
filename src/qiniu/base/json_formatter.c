@@ -28,13 +28,13 @@ typedef struct _QN_JSON_FORMATTER {
     int flags;
 
     char * buf;
-    qn_size buf_size;
-    qn_size buf_capacity;
-    qn_size buf_pages;
-    qn_size buf_page_size;
+    size_t buf_size;
+    size_t buf_capacity;
+    size_t buf_pages;
+    size_t buf_page_size;
 
     qn_string string;
-    qn_size string_pos;
+    size_t string_pos;
     qn_json_class class;
     qn_json_variant val;
 
@@ -103,8 +103,8 @@ static qn_bool qn_json_fmt_format_string(qn_json_formatter_ptr fmt)
 #define head_code (0xD800 + (((wch - 0x10000) & 0xFFC00) >> 10))
 #define tail_code (0xDC00 + ((wch - 0x10000) & 0x003FF))
 
-    qn_size pos = fmt->string_pos;
-    qn_size end = qn_str_size(fmt->string);
+    size_t pos = fmt->string_pos;
+    size_t end = qn_str_size(fmt->string);
     const char * str = qn_str_cstr(fmt->string);
     int chars = 0;
     int ret = 0;
@@ -264,7 +264,7 @@ static int qn_json_fmt_callback(void * data, qn_json_class cls, qn_json_variant_
     return QN_JSON_ITR_OK;
 }
 
-static qn_bool qn_json_fmt_format(qn_json_formatter_ptr fmt, char * restrict buf, qn_size * restrict buf_size)
+static qn_bool qn_json_fmt_format(qn_json_formatter_ptr fmt, char * restrict buf, size_t * restrict buf_size)
 {
     qn_json_object_ptr obj = NULL;
     qn_json_array_ptr arr = NULL;
@@ -353,7 +353,7 @@ static qn_bool qn_json_fmt_format(qn_json_formatter_ptr fmt, char * restrict buf
     return qn_true;
 }
 
-QN_API qn_bool qn_json_fmt_format_object(qn_json_formatter_ptr restrict fmt, qn_json_object_ptr restrict root, char * restrict buf, qn_size * restrict buf_size)
+QN_API qn_bool qn_json_fmt_format_object(qn_json_formatter_ptr restrict fmt, qn_json_object_ptr restrict root, char * restrict buf, size_t * restrict buf_size)
 {
     qn_bool ret = qn_false;
 
@@ -373,7 +373,7 @@ QN_API qn_bool qn_json_fmt_format_object(qn_json_formatter_ptr restrict fmt, qn_
     return ret;
 }
 
-QN_API qn_bool qn_json_fmt_format_array(qn_json_formatter_ptr restrict fmt, qn_json_array_ptr restrict root, char * restrict buf, qn_size * restrict buf_size)
+QN_API qn_bool qn_json_fmt_format_array(qn_json_formatter_ptr restrict fmt, qn_json_array_ptr restrict root, char * restrict buf, size_t * restrict buf_size)
 {
     qn_bool ret = qn_false;
 
@@ -398,10 +398,10 @@ QN_API qn_string qn_json_object_to_string(qn_json_object_ptr restrict root)
     qn_json_formatter_ptr fmt = NULL;
     char * buf = NULL;
     char * new_buf = NULL;
-    qn_size capacity = 4096;
-    qn_size new_capacity = 0;
-    qn_size size = capacity;
-    qn_size final_size = 0;
+    size_t capacity = 4096;
+    size_t new_capacity = 0;
+    size_t size = capacity;
+    size_t final_size = 0;
 
     if (!root) return qn_str_empty_string;
 
@@ -450,10 +450,10 @@ QN_API qn_string qn_json_array_to_string(qn_json_array_ptr restrict root)
     qn_json_formatter_ptr fmt = NULL;
     char * buf = NULL;
     char * new_buf = NULL;
-    qn_size capacity = 4096;
-    qn_size new_capacity = 0;
-    qn_size size = capacity;
-    qn_size final_size = 0;
+    size_t capacity = 4096;
+    size_t new_capacity = 0;
+    size_t size = capacity;
+    size_t final_size = 0;
 
     if (!root) return qn_str_empty_string;
 
