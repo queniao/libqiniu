@@ -27,7 +27,7 @@ void test_manipulating_headers(void)
     CU_ASSERT_NOT_EQUAL(qn_str_cstr(entry), NULL);
     CU_ASSERT_STRING_EQUAL(qn_str_cstr(entry), "Content-Type: test/json");
 
-    val = qn_http_hdr_get(hdr, key);
+    val = qn_http_hdr_get_value(hdr, key);
     CU_ASSERT_PTR_NOT_NULL(val);
     CU_ASSERT_EQUAL(strlen(val), 9);
     CU_ASSERT_STRING_EQUAL(val, "test/json");
@@ -63,7 +63,7 @@ void test_parsing_single_entry_with_single_value(void)
     CU_ASSERT_NOT_EQUAL(qn_str_cstr(entry), NULL);
     CU_ASSERT_STRING_EQUAL(qn_str_cstr(entry), "Content-Length: 386");
 
-    val = qn_http_hdr_get(hdr, key);
+    val = qn_http_hdr_get_value(hdr, key);
     CU_ASSERT_PTR_NOT_NULL(val);
     CU_ASSERT_EQUAL(strlen(val), 3);
     CU_ASSERT_STRING_EQUAL(val, "386");
@@ -99,7 +99,7 @@ void test_parsing_single_entry_with_multi_value(void)
     CU_ASSERT_NOT_EQUAL(qn_str_cstr(entry), NULL);
     CU_ASSERT_STRING_EQUAL(qn_str_cstr(entry), "Accept: text/plain; application/json");
 
-    val = qn_http_hdr_get(hdr, key);
+    val = qn_http_hdr_get_value(hdr, key);
     CU_ASSERT_PTR_NOT_NULL(val);
     CU_ASSERT_EQUAL(strlen(val), 28);
     CU_ASSERT_STRING_EQUAL(val, "text/plain; application/json");
@@ -135,7 +135,7 @@ void test_parsing_single_entry_with_leading_and_tailing_spaces(void)
     CU_ASSERT_NOT_EQUAL(qn_str_cstr(entry), NULL);
     CU_ASSERT_STRING_EQUAL(qn_str_cstr(entry), "Content-Length: 1024");
 
-    val = qn_http_hdr_get(hdr, key);
+    val = qn_http_hdr_get_value(hdr, key);
     CU_ASSERT_PTR_NOT_NULL(val);
     CU_ASSERT_EQUAL(strlen(val), 4);
     CU_ASSERT_STRING_EQUAL(val, "1024");
@@ -171,7 +171,7 @@ void test_parsing_multi_entries_with_single_value(void)
     CU_ASSERT_NOT_EQUAL(qn_str_cstr(entry), NULL);
     CU_ASSERT_STRING_EQUAL(qn_str_cstr(entry), "Content-Length: 747");
 
-    val = qn_http_hdr_get(hdr, key);
+    val = qn_http_hdr_get_value(hdr, key);
     CU_ASSERT_PTR_NOT_NULL(val);
     CU_ASSERT_EQUAL(strlen(val), 3);
     CU_ASSERT_STRING_EQUAL(val, "747");
@@ -181,7 +181,7 @@ void test_parsing_multi_entries_with_single_value(void)
     CU_ASSERT_NOT_EQUAL(qn_str_cstr(entry), NULL);
     CU_ASSERT_STRING_EQUAL(qn_str_cstr(entry), "Age: 1");
 
-    val = qn_http_hdr_get(hdr, key);
+    val = qn_http_hdr_get_value(hdr, key);
     CU_ASSERT_PTR_NOT_NULL(val);
     CU_ASSERT_EQUAL(strlen(val), 1);
     CU_ASSERT_STRING_EQUAL(val, "1");
@@ -191,7 +191,7 @@ void test_parsing_multi_entries_with_single_value(void)
     CU_ASSERT_NOT_EQUAL(qn_str_cstr(entry), NULL);
     CU_ASSERT_STRING_EQUAL(qn_str_cstr(entry), "A: 123");
 
-    val = qn_http_hdr_get(hdr, key);
+    val = qn_http_hdr_get_value(hdr, key);
     CU_ASSERT_PTR_NOT_NULL(val);
     CU_ASSERT_EQUAL(strlen(val), 3);
     CU_ASSERT_STRING_EQUAL(val, "123");
@@ -201,7 +201,7 @@ void test_parsing_multi_entries_with_single_value(void)
     CU_ASSERT_NOT_EQUAL(qn_str_cstr(entry), NULL);
     CU_ASSERT_STRING_EQUAL(qn_str_cstr(entry), "A11: zz");
 
-    val = qn_http_hdr_get(hdr, key);
+    val = qn_http_hdr_get_value(hdr, key);
     CU_ASSERT_PTR_NOT_NULL(val);
     CU_ASSERT_EQUAL(strlen(val), 2);
     CU_ASSERT_STRING_EQUAL(val, "zz");

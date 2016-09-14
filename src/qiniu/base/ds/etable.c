@@ -10,7 +10,7 @@ extern "C"
 {
 #endif
 
-// ---- Definition of entry table ----
+// ---- Definition of Entry Table ----
 
 typedef unsigned short qn_etbl_pos;
 
@@ -49,7 +49,7 @@ QN_API qn_etable_ptr qn_etbl_create(const char * restrict deli)
     return new_etbl;
 }
 
-QN_API void qn_etbl_destroy(qn_etable_ptr etbl)
+QN_API void qn_etbl_destroy(qn_etable_ptr restrict etbl)
 {
     if (etbl) {
         qn_etbl_reset(etbl);
@@ -59,22 +59,22 @@ QN_API void qn_etbl_destroy(qn_etable_ptr etbl)
     } // if
 }
 
-QN_API void qn_etbl_reset(qn_etable_ptr etbl)
+QN_API void qn_etbl_reset(qn_etable_ptr restrict etbl)
 {
     while (etbl->cnt > 0) qn_str_destroy(etbl->entries[--etbl->cnt]);
 }
 
-QN_API const qn_string * qn_etbl_entries(qn_etable_ptr etbl)
+QN_API const qn_string * qn_etbl_entries(qn_etable_ptr restrict etbl)
 {
     return etbl->entries;
 }
 
-QN_API int qn_etbl_size(qn_etable_ptr etbl)
+QN_API int qn_etbl_size(qn_etable_ptr restrict etbl)
 {
     return etbl->cnt;
 }
 
-static qn_etbl_pos qn_etbl_bsearch(qn_etable_ptr etbl, const char * key, size_t key_size, int * ord)
+static qn_etbl_pos qn_etbl_bsearch(qn_etable_ptr restrict etbl, const char * key, size_t key_size, int * ord)
 {
     size_t mid_key_size;
     qn_etbl_pos begin = 0;
@@ -101,7 +101,7 @@ static qn_etbl_pos qn_etbl_bsearch(qn_etable_ptr etbl, const char * key, size_t 
     return begin;
 }
 
-static qn_bool qn_etbl_augment(qn_etable_ptr etbl)
+static qn_bool qn_etbl_augment(qn_etable_ptr restrict etbl)
 {
     qn_etbl_pos new_cap = etbl->cap + (etbl->cap >> 1); // 1.5 times
     qn_string * new_entries = calloc(new_cap, sizeof(qn_string));
@@ -117,7 +117,21 @@ static qn_bool qn_etbl_augment(qn_etable_ptr etbl)
     return qn_true;
 }
 
-static qn_bool qn_etbl_set_entry(qn_etable_ptr etbl, const char * restrict key, size_t key_size, const char * restrict val, size_t val_size)
+QN_API qn_string qn_etbl_get_entry(qn_etable_ptr restrict etbl, const char * restrict key)
+{
+    int ord;
+    qn_etbl_pos pos = qn_etbl_bsearch(etbl, key, strlen(key), &ord);
+    return (pos == etbl->cnt) ? NULL : etbl->entries[pos];
+}
+
+QN_API const char * qn_etbl_get_value(qn_etable_ptr restrict etbl, const char * restrict key)
+{
+    int ord;
+    qn_etbl_pos pos = qn_etbl_bsearch(etbl, key, strlen(key), &ord);
+    return (pos == etbl->cnt) ? NULL : (strstr(etbl->entries[pos], etbl->deli) + qn_str_size(etbl->deli));
+}
+
+static qn_bool qn_etbl_set_entry(qn_etable_ptr restrict etbl, const char * restrict key, size_t key_size, const char * restrict val, size_t val_size)
 {
     int ord;
     qn_string new_entry;
@@ -143,18 +157,83 @@ static qn_bool qn_etbl_set_entry(qn_etable_ptr etbl, const char * restrict key, 
     return qn_true;
 }
 
-QN_API qn_bool qn_etbl_set_raw(qn_etable_ptr etbl, const char * restrict key, size_t key_size, const char * restrict val, size_t val_size)
+QN_API qn_bool qn_etbl_set_raw(qn_etable_ptr restrict etbl, const char * restrict key, size_t key_size, const char * restrict val, size_t val_size)
 {
     return qn_etbl_set_entry(etbl, key, key_size, val, val_size);
 }
 
-QN_API qn_bool qn_etbl_set_integer(qn_etable_ptr etbl, const char * restrict key, int value)
+QN_API qn_bool qn_etbl_set_integer(qn_etable_ptr restrict etbl, const char * restrict key, int value)
 {
     qn_bool ret;
     qn_string encoded_val = qn_cs_sprintf("%d", value);
     ret = qn_etbl_set_entry(etbl, key, strlen(key), qn_str_cstr(encoded_val), qn_str_size(encoded_val));
     qn_str_destroy(encoded_val);
     return ret;
+}
+
+QN_API void qn_etbl_unset(qn_etable_ptr restrict etbl, const char * restrict key)
+{
+    int ord;
+    qn_etbl_pos pos = qn_etbl_bsearch(etbl, key, strlen(key), &ord);
+
+    if (pos == etbl->cnt) return;
+
+    qn_str_destroy(etbl->entries[pos]);
+    if (pos < etbl->cnt - 1) memmove(etbl->entries + pos, etbl->entries + pos + 1, sizeof(qn_string) * (etbl->cnt - pos - 1));
+    etbl->cnt -= 1;
+}
+
+// ---- Definition of Entry Table Iterator ----
+
+typedef struct _QN_ETABLE_ITERATOR
+{
+    qn_etable_ptr etbl;
+    int pos;
+} qn_etbl_iterator;
+
+QN_API qn_etbl_iterator_ptr qn_etbl_itr_create(qn_etable_ptr restrict etbl)
+{
+    qn_etbl_iterator_ptr new_itr = calloc(1, sizeof(qn_etbl_iterator));
+    if (!new_itr) {
+        qn_err_set_no_enough_memory();
+        return NULL;
+    } // if
+
+    new_itr->etbl = etbl;
+    new_itr->pos = 0;
+    return new_itr;
+}
+
+QN_API void qn_etbl_itr_destroy(qn_etbl_iterator_ptr restrict itr)
+{
+    if (itr) {
+        free(itr);
+    } // if
+}
+
+QN_API void qn_etbl_itr_rewind(qn_etbl_iterator_ptr restrict itr)
+{
+    itr->pos = 0;
+}
+
+QN_API qn_string qn_etbl_itr_next_entry(qn_etbl_iterator_ptr restrict itr)
+{
+    if (itr->pos == itr->etbl->cnt) return NULL;
+    return itr->etbl->entries[itr->pos++];
+}
+
+QN_API qn_bool qn_etbl_itr_next_pair_raw(qn_etbl_iterator_ptr restrict itr, const char ** restrict key, size_t * restrict key_size, const char ** restrict val, size_t * restrict val_size)
+{
+    qn_string ent;
+
+    if (itr->pos == itr->etbl->cnt) return qn_false;
+    ent = itr->etbl->entries[itr->pos++];
+
+    *key = ent;
+    *key_size = strstr(ent, itr->etbl->deli) - ent;
+    *val = *key + *key_size + qn_str_size(itr->etbl->deli);
+    *val_size = (ent + qn_str_size(ent)) - *val;
+    return qn_true;
 }
 
 #ifdef __cplusplus

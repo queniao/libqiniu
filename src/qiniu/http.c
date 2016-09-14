@@ -215,7 +215,7 @@ QN_API void qn_http_req_reset(qn_http_request_ptr restrict req)
 
 QN_API const char * qn_http_req_get_header(qn_http_request_ptr restrict req, const char * restrict hdr)
 {
-    return qn_http_hdr_get(req->hdr, hdr);
+    return qn_http_hdr_get_value(req->hdr, hdr);
 }
 
 QN_API qn_bool qn_http_req_set_header_with_values(qn_http_request_ptr restrict req, const qn_string restrict hdr, const qn_string restrict val1, const qn_string restrict val2, ...)
@@ -373,7 +373,7 @@ QN_API qn_http_hdr_iterator_ptr qn_http_resp_get_header_iterator(qn_http_respons
 
 QN_API const char * qn_http_resp_get_header(qn_http_response_ptr restrict resp, const char * restrict hdr)
 {
-    return qn_http_hdr_get(resp->hdr, hdr);
+    return qn_http_hdr_get_value(resp->hdr, hdr);
 }
 
 QN_API qn_bool qn_http_resp_set_header(qn_http_response_ptr restrict resp, const char * restrict hdr, const char * restrict val, int val_size)
