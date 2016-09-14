@@ -540,7 +540,7 @@ static qn_bool qn_http_conn_do_request(qn_http_connection_ptr restrict conn, qn_
     curl_easy_setopt(conn->curl, CURLOPT_WRITEFUNCTION, qn_http_resp_body_wrt_callback);
     curl_easy_setopt(conn->curl, CURLOPT_WRITEDATA, resp);
 
-    if (qn_http_hdr_size(req->hdr) > 0) {
+    if (qn_http_hdr_count(req->hdr) > 0) {
         itr = qn_http_hdr_itr_create(req->hdr);
         if (!itr) {
             curl_slist_free_all(headers);

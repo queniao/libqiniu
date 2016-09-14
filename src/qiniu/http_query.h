@@ -19,6 +19,8 @@ QN_API extern qn_http_query_ptr qn_http_qry_create(void);
 QN_API extern void qn_http_qry_destroy(qn_http_query_ptr restrict qry);
 QN_API extern void qn_http_qry_reset(qn_http_query_ptr restrict qry);
 
+QN_API extern int qn_http_qry_count(qn_http_query_ptr qry);
+
 QN_API extern qn_bool qn_http_qry_set_raw(qn_http_query_ptr restrict qry, const char * restrict key, size_t key_size, const char * restrict val, size_t val_size);
 
 static inline qn_bool qn_http_qry_set_text(qn_http_query_ptr restrict qry, const char * restrict key, const char * restrict val, size_t val_size)

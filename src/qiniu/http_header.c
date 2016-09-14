@@ -46,9 +46,9 @@ QN_API void qn_http_hdr_reset(qn_http_header_ptr restrict hdr)
     qn_etbl_reset(hdr->etbl);
 }
 
-QN_API int qn_http_hdr_size(qn_http_header_ptr restrict hdr)
+QN_API int qn_http_hdr_count(qn_http_header_ptr restrict hdr)
 {
-    return qn_etbl_size(hdr->etbl);
+    return qn_etbl_count(hdr->etbl);
 }
 
 QN_API qn_string qn_http_hdr_get_entry(qn_http_header_ptr restrict hdr, const char * restrict key)

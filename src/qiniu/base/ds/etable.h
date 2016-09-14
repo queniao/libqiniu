@@ -19,7 +19,7 @@ QN_API extern void qn_etbl_destroy(qn_etable_ptr restrict etbl);
 QN_API extern void qn_etbl_reset(qn_etable_ptr restrict etbl);
 
 QN_API extern const qn_string * qn_etbl_entries(qn_etable_ptr restrict etbl);
-QN_API extern int qn_etbl_size(qn_etable_ptr restrict etbl);
+QN_API extern int qn_etbl_count(qn_etable_ptr restrict etbl);
 
 QN_API extern qn_string qn_etbl_get_entry(qn_etable_ptr restrict etbl, const char * restrict key);
 QN_API extern const char * qn_etbl_get_value(qn_etable_ptr restrict etbl, const char * restrict key);

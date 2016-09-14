@@ -45,9 +45,9 @@ QN_API void qn_http_qry_reset(qn_http_query_ptr restrict qry)
     qn_etbl_reset(qry->etbl); 
 }
 
-int qn_http_qry_size(qn_http_query_ptr qry)
+QN_API int qn_http_qry_count(qn_http_query_ptr qry)
 {
-    return qn_etbl_size(qry->etbl);
+    return qn_etbl_count(qry->etbl);
 }
 
 QN_API qn_bool qn_http_qry_set_raw(qn_http_query_ptr restrict qry, const char * restrict key, size_t key_size, const char * restrict val, size_t val_size)
@@ -66,7 +66,7 @@ QN_API qn_bool qn_http_qry_set_integer(qn_http_query_ptr restrict qry, const cha
 
 QN_API qn_string qn_http_qry_to_string(qn_http_query_ptr restrict qry)
 {
-    return qn_str_join_list("&", qn_etbl_entries(qry->etbl), qn_etbl_size(qry->etbl));
+    return qn_str_join_list("&", qn_etbl_entries(qry->etbl), qn_etbl_count(qry->etbl));
 }
 
 #ifdef __cplusplus

@@ -12,7 +12,7 @@ extern "C"
 
 // ---- Definition of Entry Table ----
 
-typedef unsigned short qn_etbl_pos;
+typedef int qn_etbl_pos;
 
 typedef struct _QN_ETABLE
 {
@@ -69,7 +69,7 @@ QN_API const qn_string * qn_etbl_entries(qn_etable_ptr restrict etbl)
     return etbl->entries;
 }
 
-QN_API int qn_etbl_size(qn_etable_ptr restrict etbl)
+QN_API int qn_etbl_count(qn_etable_ptr restrict etbl)
 {
     return etbl->cnt;
 }
@@ -188,7 +188,7 @@ QN_API void qn_etbl_unset(qn_etable_ptr restrict etbl, const char * restrict key
 typedef struct _QN_ETABLE_ITERATOR
 {
     qn_etable_ptr etbl;
-    int pos;
+    qn_etbl_pos pos;
 } qn_etbl_iterator;
 
 QN_API qn_etbl_iterator_ptr qn_etbl_itr_create(qn_etable_ptr restrict etbl)

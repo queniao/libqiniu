@@ -18,7 +18,7 @@ QN_API extern qn_http_header_ptr qn_http_hdr_create(void);
 QN_API extern void qn_http_hdr_destroy(qn_http_header_ptr restrict hdr);
 QN_API extern void qn_http_hdr_reset(qn_http_header_ptr restrict hdr);
 
-QN_API extern int qn_http_hdr_size(qn_http_header_ptr restrict hdr);
+QN_API extern int qn_http_hdr_count(qn_http_header_ptr restrict hdr);
 
 QN_API extern qn_string qn_http_hdr_get_entry(qn_http_header_ptr restrict hdr, const char * restrict key);
 QN_API extern const char * qn_http_hdr_get_value(qn_http_header_ptr restrict hdr, const char * restrict key);

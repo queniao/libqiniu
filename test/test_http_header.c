@@ -21,7 +21,7 @@ void test_manipulating_headers(void)
     val = "test/json";
     ret = qn_http_hdr_set_text(hdr, key, val, strlen(val));
     CU_ASSERT_TRUE(ret);
-    CU_ASSERT_EQUAL(qn_http_hdr_size(hdr), 1);
+    CU_ASSERT_EQUAL(qn_http_hdr_count(hdr), 1);
 
     entry = qn_http_hdr_get_entry(hdr, key);
     CU_ASSERT_NOT_EQUAL(qn_str_cstr(entry), NULL);
@@ -56,7 +56,7 @@ void test_parsing_single_entry_with_single_value(void)
     qn_http_hdr_prs_destroy(prs);
 
     CU_ASSERT_TRUE(ret);
-    CU_ASSERT_EQUAL(qn_http_hdr_size(hdr), 1);
+    CU_ASSERT_EQUAL(qn_http_hdr_count(hdr), 1);
 
     key = "Content-Length";
     entry = qn_http_hdr_get_entry(hdr, key);
@@ -92,7 +92,7 @@ void test_parsing_single_entry_with_multi_value(void)
     qn_http_hdr_prs_destroy(prs);
 
     CU_ASSERT_TRUE(ret);
-    CU_ASSERT_EQUAL(qn_http_hdr_size(hdr), 1);
+    CU_ASSERT_EQUAL(qn_http_hdr_count(hdr), 1);
 
     key = "Accept";
     entry = qn_http_hdr_get_entry(hdr, key);
@@ -128,7 +128,7 @@ void test_parsing_single_entry_with_leading_and_tailing_spaces(void)
     qn_http_hdr_prs_destroy(prs);
 
     CU_ASSERT_TRUE(ret);
-    CU_ASSERT_EQUAL(qn_http_hdr_size(hdr), 1);
+    CU_ASSERT_EQUAL(qn_http_hdr_count(hdr), 1);
 
     key = "Content-Length";
     entry = qn_http_hdr_get_entry(hdr, key);
@@ -164,7 +164,7 @@ void test_parsing_multi_entries_with_single_value(void)
     qn_http_hdr_prs_destroy(prs);
 
     CU_ASSERT_TRUE(ret);
-    CU_ASSERT_EQUAL(qn_http_hdr_size(hdr), 4);
+    CU_ASSERT_EQUAL(qn_http_hdr_count(hdr), 4);
 
     key = "Content-Length";
     entry = qn_http_hdr_get_entry(hdr, key);
