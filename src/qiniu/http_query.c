@@ -45,7 +45,7 @@ QN_API void qn_http_qry_reset(qn_http_query_ptr restrict qry)
     qn_etbl_reset(qry->etbl); 
 }
 
-QN_API int qn_http_qry_count(qn_http_query_ptr qry)
+QN_API int qn_http_qry_count(qn_http_query_ptr restrict qry)
 {
     return qn_etbl_count(qry->etbl);
 }

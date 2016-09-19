@@ -698,7 +698,7 @@ static qn_bool qn_json_itr_augment_levels(qn_json_iterator_ptr restrict itr)
     return qn_true;
 }
 
-QN_API qn_bool qn_json_itr_push_object(qn_json_iterator_ptr restrict itr, qn_json_object_ptr obj)
+QN_API qn_bool qn_json_itr_push_object(qn_json_iterator_ptr restrict itr, qn_json_object_ptr restrict obj)
 {
     if ((itr->cnt + 1) > itr->cap && !qn_json_itr_augment_levels(itr)) return qn_false;
 
@@ -709,7 +709,7 @@ QN_API qn_bool qn_json_itr_push_object(qn_json_iterator_ptr restrict itr, qn_jso
     return qn_true;
 }
 
-QN_API qn_bool qn_json_itr_push_array(qn_json_iterator_ptr restrict itr, qn_json_array_ptr arr)
+QN_API qn_bool qn_json_itr_push_array(qn_json_iterator_ptr restrict itr, qn_json_array_ptr restrict arr)
 {
     if ((itr->cnt + 1) > itr->cap && !qn_json_itr_augment_levels(itr)) return qn_false;
 

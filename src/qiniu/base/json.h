@@ -128,8 +128,8 @@ QN_API extern qn_string qn_json_itr_get_key(qn_json_iterator_ptr restrict itr);
 QN_API extern void qn_json_itr_set_status(qn_json_iterator_ptr restrict itr, qn_uint32 sts);
 QN_API extern qn_uint32 qn_json_itr_get_status(qn_json_iterator_ptr restrict itr);
 
-QN_API extern qn_bool qn_json_itr_push_object(qn_json_iterator_ptr restrict itr, qn_json_object_ptr obj);
-QN_API extern qn_bool qn_json_itr_push_array(qn_json_iterator_ptr restrict itr, qn_json_array_ptr arr);
+QN_API extern qn_bool qn_json_itr_push_object(qn_json_iterator_ptr restrict itr, qn_json_object_ptr restrict obj);
+QN_API extern qn_bool qn_json_itr_push_array(qn_json_iterator_ptr restrict itr, qn_json_array_ptr restrict arr);
 QN_API extern void qn_json_itr_pop(qn_json_iterator_ptr restrict itr);
 QN_API extern qn_json_object_ptr qn_json_itr_top_object(qn_json_iterator_ptr restrict itr);
 QN_API extern qn_json_array_ptr qn_json_itr_top_array(qn_json_iterator_ptr restrict itr);
