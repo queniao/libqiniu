@@ -48,6 +48,7 @@ QN_API extern const qn_string qn_str_empty_string;
 
 static inline size_t qn_str_size(const qn_string restrict s)
 {
+    if (!s) return 0;
     return posix_strlen(s);
 }
 
