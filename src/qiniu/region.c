@@ -1,3 +1,5 @@
+#include <ctype.h>
+
 #include "qiniu/base/errors.h"
 #include "qiniu/http.h"
 #include "qiniu/region.h"
@@ -56,28 +58,6 @@ QN_API void qn_rgn_host_reset(qn_rgn_host_ptr restrict host)
     } // while
 }
 
-static qn_rgn_host_ptr qn_rgn_host_duplicate(qn_rgn_host_ptr restrict host)
-{
-    qn_rgn_pos i;
-    qn_rgn_entry_ptr ent;
-    qn_rgn_host_ptr new_host = qn_rgn_host_create();
-    if (!new_host) return NULL;
-
-    for (i = 0; i < host->cnt; i += 1) {
-        ent = qn_rgn_host_get_entry(host, i);
-        if (! qn_rgn_host_add_entry(new_host, qn_str_cstr(ent->base_url), qn_str_cstr(ent->hostname))) {
-            qn_rgn_host_destroy(new_host);
-            return NULL;
-        } // if
-    } // for
-    return new_host;
-}
-
-QN_API int qn_rgn_host_entry_count(qn_rgn_host_ptr restrict host)
-{
-    return host->cnt;
-}
-
 static qn_bool qn_rgn_host_augment(qn_rgn_host_ptr restrict host)
 {
     qn_rgn_pos new_cap = host->cap + (host->cap >> 1); // 1.5 times.
@@ -94,23 +74,56 @@ static qn_bool qn_rgn_host_augment(qn_rgn_host_ptr restrict host)
     return qn_true;
 }
 
-QN_API qn_bool qn_rgn_host_add_entry(qn_rgn_host_ptr restrict host, const char * restrict base_url, const char * restrict hostname)
+static qn_bool qn_rgn_host_add_entry_raw(qn_rgn_host_ptr restrict host, const char * restrict base_url, size_t base_url_size, const char * restrict hostname, size_t hostname_size)
 {
     qn_rgn_entry_ptr new_ent;
+
+    if (!base_url || base_url_size == 0) return qn_false;
+
     if ((host->cnt == host->cap) && !qn_rgn_host_augment(host)) return qn_false;
 
     new_ent = &host->entries[host->cnt];
-    new_ent->base_url = qn_cs_duplicate(base_url);
+    new_ent->base_url = qn_cs_clone(base_url, base_url_size);
     if (!new_ent->base_url) return NULL;
 
-    new_ent->hostname = qn_cs_duplicate(hostname);
-    if (!new_ent->hostname) {
-        qn_str_destroy(new_ent->base_url);
-        return NULL;
+    if (hostname && hostname_size > 0) {
+        new_ent->hostname = qn_cs_clone(hostname, hostname_size);
+        if (!new_ent->hostname) {
+            qn_str_destroy(new_ent->base_url);
+            return NULL;
+        } // if
     } // if
 
     host->cnt += 1;
     return qn_true;
+}
+
+
+static qn_rgn_host_ptr qn_rgn_host_duplicate(qn_rgn_host_ptr restrict host)
+{
+    qn_rgn_pos i;
+    qn_rgn_entry_ptr ent;
+    qn_rgn_host_ptr new_host = qn_rgn_host_create();
+    if (!new_host) return NULL;
+
+    for (i = 0; i < host->cnt; i += 1) {
+        ent = qn_rgn_host_get_entry(host, i);
+        if (! qn_rgn_host_add_entry_raw(new_host, qn_str_cstr(ent->base_url), qn_str_size(ent->base_url), qn_str_cstr(ent->hostname), qn_str_size(ent->hostname))) {
+            qn_rgn_host_destroy(new_host);
+            return NULL;
+        } // if
+    } // for
+    return new_host;
+}
+
+QN_API int qn_rgn_host_entry_count(qn_rgn_host_ptr restrict host)
+{
+    return host->cnt;
+}
+
+QN_API qn_bool qn_rgn_host_add_entry(qn_rgn_host_ptr restrict host, const char * restrict base_url, const char * restrict hostname)
+{
+    return qn_rgn_host_add_entry_raw(host, base_url, strlen(base_url), hostname, strlen(hostname));
 }
 
 QN_API qn_rgn_entry_ptr qn_rgn_host_get_entry(qn_rgn_host_ptr restrict host, int n)
@@ -122,6 +135,7 @@ QN_API qn_rgn_entry_ptr qn_rgn_host_get_entry(qn_rgn_host_ptr restrict host, int
 
 typedef struct _QN_REGION
 {
+    int time_to_live;
     qn_string name;
     qn_rgn_host_ptr up;
     qn_rgn_host_ptr io;
@@ -137,6 +151,8 @@ QN_API qn_region_ptr qn_rgn_create(const char * restrict name)
         qn_err_set_no_enough_memory();
         return NULL;
     } // if
+
+    new_rgn->time_to_live = 86400;
 
     if (! (new_rgn->up = qn_rgn_host_create())) goto QN_RGN_CREATE_CLEAN_FOR_UP;
     if (! (new_rgn->io = qn_rgn_host_create())) goto QN_RGN_CREATE_CLEAN_FOR_IO;
@@ -366,6 +382,7 @@ static qn_rgn_entry qn_rgn_default_api_entry = { "http://api.qiniu.com", NULL };
 static qn_rgn_host qn_rgn_default_api_host = { &qn_rgn_default_api_entry, 1, 1 };
 
 static qn_region qn_rgn_default_region = {
+    -1,
     "default",
     &qn_rgn_default_up_host,
     &qn_rgn_default_io_host,
@@ -384,7 +401,6 @@ QN_API qn_bool qn_rgn_tbl_set_default_region(qn_rgn_table_ptr restrict rtbl, con
 {
     return qn_rgn_tbl_set_region(rtbl, "default", rgn);
 }
-
 
 // ---- Definition of Region Interator ----
 
@@ -434,6 +450,7 @@ typedef struct _QN_RGN_SERVICE
     qn_http_connection_ptr conn;
     qn_http_request_ptr req;
     qn_http_response_ptr resp;
+    qn_http_json_writer_ptr resp_json_wrt;
 } qn_rgn_service;
 
 QN_API qn_rgn_service_ptr qn_rgn_svc_create(void)
@@ -464,12 +481,23 @@ QN_API qn_rgn_service_ptr qn_rgn_svc_create(void)
         free(new_svc);
         return NULL;
     } // if
+
+    new_svc->resp_json_wrt = qn_http_json_wrt_create();
+    if (!new_svc->resp_json_wrt) {
+        qn_http_conn_destroy(new_svc->conn);
+        qn_http_req_destroy(new_svc->req);
+        qn_http_conn_destroy(new_svc->conn);
+        free(new_svc);
+        return NULL;
+    } // if
     return new_svc;
 }
 
 QN_API void qn_rgn_svc_destroy(qn_rgn_service_ptr restrict svc)
 {
     if (svc) {
+        qn_http_json_wrt_destroy(svc->resp_json_wrt);
+        qn_http_conn_destroy(svc->conn);
         qn_http_resp_destroy(svc->resp);
         qn_http_req_destroy(svc->req);
         qn_http_conn_destroy(svc->conn);
@@ -477,11 +505,138 @@ QN_API void qn_rgn_svc_destroy(qn_rgn_service_ptr restrict svc)
     } // if
 }
 
-QN_API qn_bool qn_rgn_svc_grab_conf(qn_rgn_service_ptr restrict svc, qn_rgn_table_ptr restrict rtbl)
+static qn_bool qn_rgn_svc_parse_and_add_entry(qn_string txt, qn_rgn_host_ptr host)
 {
+    const char * end;
+    const char * base_url = NULL;
+    size_t base_url_size = 0;
+    const char * hostname = NULL;
+    size_t hostname_size = 0;
+
+    if (! (hostname = strstr(qn_str_cstr(txt), "-H"))) {
+        hostname += 2;
+        while (isspace(*hostname)) hostname += 1;
+        end = strchr(hostname, ' ');
+        hostname_size = end - hostname;
+
+        base_url = strstr(end, "http");
+        base_url_size = qn_str_cstr(txt) + qn_str_size(txt) - hostname;
+    } else {
+        base_url = qn_str_cstr(txt);
+        while (isspace(*base_url)) base_url++;
+
+        end = qn_str_cstr(txt) + qn_str_size(txt);
+        while (isspace(end[-1])) end -= 1;
+
+        base_url_size = end - base_url;
+    } // if
+
+    return qn_rgn_host_add_entry_raw(host, base_url, base_url_size, hostname, hostname_size);
+}
+
+static qn_bool qn_rgn_svc_extract_and_add_entries(qn_json_object_ptr root, qn_region_ptr rgn)
+{
+    qn_bool ret;
+    qn_rgn_host_ptr up;
+    qn_rgn_host_ptr io;
+    qn_json_object_ptr scheme_table;
+    qn_json_array_ptr entry_list;
+    int i;
+
+    rgn->time_to_live = qn_json_get_integer(root, "ttl", 86400);
+
+    up = qn_rgn_get_up_host(rgn);
+    io = qn_rgn_get_io_host(rgn);
+
+    scheme_table = qn_json_get_object(root, "http", NULL);
+    if (scheme_table) {
+        entry_list = qn_json_get_array(scheme_table, "io", NULL);
+        for (i = 0; entry_list && i < qn_json_size_array(entry_list); i += 1) {
+            ret = qn_rgn_svc_parse_and_add_entry(qn_json_pick_string(entry_list, i, NULL), io);
+            if (!ret) return qn_false;
+        } // for
+
+        entry_list = qn_json_get_array(scheme_table, "up", NULL);
+        for (i = 0; entry_list && i < qn_json_size_array(entry_list); i += 1) {
+            ret = qn_rgn_svc_parse_and_add_entry(qn_json_pick_string(entry_list, i, NULL), up);
+            if (!ret) return qn_false;
+        } // for
+    } // if
+
+    scheme_table = qn_json_get_object(root, "https", NULL);
+    if (scheme_table) {
+        entry_list = qn_json_get_array(scheme_table, "io", NULL);
+        for (i = 0; entry_list && i < qn_json_size_array(entry_list); i += 1) {
+            ret = qn_rgn_svc_parse_and_add_entry(qn_json_pick_string(entry_list, i, NULL), io);
+            if (!ret) return qn_false;
+        } // for
+
+        entry_list = qn_json_get_array(scheme_table, "up", NULL);
+        for (i = 0; entry_list && i < qn_json_size_array(entry_list); i += 1) {
+            ret = qn_rgn_svc_parse_and_add_entry(qn_json_pick_string(entry_list, i, NULL), up);
+            if (!ret) return qn_false;
+        } // for
+    } // if
     return qn_true;
 }
 
+QN_API qn_bool qn_rgn_svc_grab_bucket_region(qn_rgn_service_ptr restrict svc, qn_rgn_auth_ptr restrict auth, const char * restrict bucket, qn_rgn_table_ptr restrict rtbl)
+{
+    qn_bool ret;
+    qn_string url;
+    qn_string encoded_bucket;
+    qn_json_object_ptr root;
+    qn_region_ptr new_rgn;
+
+    // ---- Prepare the query URL
+    encoded_bucket = qn_cs_percent_encode(bucket, strlen(bucket));
+    if (!encoded_bucket) return qn_false;
+
+    url = qn_cs_sprintf("%s/v1/query?ak=%s&bucket=%s", "http://uc.qbox.me", auth->server_end.access_key, qn_str_cstr(encoded_bucket));
+    qn_str_destroy(encoded_bucket);
+    if (!url) return qn_false;
+
+    // ---- Prepare the request and response object
+    qn_http_req_reset(svc->req);
+    qn_http_resp_reset(svc->resp);
+
+    if (!qn_http_req_set_header(svc->req, "Expect", "")) {
+        qn_str_destroy(url);
+        return qn_false;
+    } // if
+    if (!qn_http_req_set_header(svc->req, "Transfer-Encoding", "")) {
+        qn_str_destroy(url);
+        return qn_false;
+    } // if
+
+    qn_http_req_set_body_data(svc->req, "", 0);
+
+    qn_http_json_wrt_prepare_for_object(svc->resp_json_wrt, &root);
+    qn_http_resp_set_data_writer(svc->resp, svc->resp_json_wrt, &qn_http_json_wrt_callback);
+
+    ret = qn_http_conn_get(svc->conn, url, svc->req, svc->resp);
+    qn_str_destroy(url);
+
+    // ---- Grab the region info of the givan bucket
+
+    if (ret) {
+        if (! (new_rgn = qn_rgn_create(bucket))) {
+            qn_json_destroy_object(root);
+            return qn_false;
+        } // if
+
+        if (!qn_rgn_svc_extract_and_add_entries(root, new_rgn)) {
+            qn_rgn_destroy(new_rgn);
+            qn_json_destroy_object(root);
+            return qn_false;
+        } // if
+
+        ret = qn_rgn_tbl_set_region(rtbl, bucket, new_rgn);
+        qn_rgn_destroy(new_rgn);
+    } // if
+    qn_json_destroy_object(root);
+    return ret;
+}
 
 #ifdef __cplusplus
 }

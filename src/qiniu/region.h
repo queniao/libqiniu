@@ -76,13 +76,20 @@ QN_API extern qn_bool qn_rgn_itr_next_pair(qn_rgn_iterator_ptr restrict itr, con
 
 // ---- Declaration of Region Service ----
 
+typedef struct _QN_RGN_AUTH
+{
+    struct {
+        const char * access_key;
+    } server_end;
+} qn_rgn_auth, *qn_rgn_auth_ptr;
+
 struct _QN_RGN_SERVICE;
 typedef struct _QN_RGN_SERVICE * qn_rgn_service_ptr;
 
 QN_API extern qn_rgn_service_ptr qn_rgn_svc_create(void);
 QN_API extern void qn_rgn_svc_destroy(qn_rgn_service_ptr restrict svc);
 
-QN_API extern qn_bool qn_rgn_svc_grab_conf(qn_rgn_service_ptr restrict svc, qn_rgn_table_ptr restrict rtbl);
+QN_API extern qn_bool qn_rgn_svc_grab_bucket_region(qn_rgn_service_ptr restrict svc, qn_rgn_auth_ptr restrict auth, const char * restrict bucket, qn_rgn_table_ptr restrict rtbl);
 
 #ifdef __cplusplus
 }
