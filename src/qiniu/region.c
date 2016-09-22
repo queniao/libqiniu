@@ -440,6 +440,7 @@ QN_API qn_bool qn_rgn_itr_next_pair(qn_rgn_iterator_ptr restrict itr, const char
     if (itr->pos == itr->rtbl->cnt) return qn_false;
     *name = qn_str_cstr(itr->rtbl->regions[itr->pos]->name);
     *rgn = itr->rtbl->regions[itr->pos];
+    itr->pos += 1;
     return qn_true;
 }
 
@@ -484,7 +485,7 @@ QN_API qn_rgn_service_ptr qn_rgn_svc_create(void)
 
     new_svc->resp_json_wrt = qn_http_json_wrt_create();
     if (!new_svc->resp_json_wrt) {
-        qn_http_conn_destroy(new_svc->conn);
+        qn_http_resp_destroy(new_svc->resp);
         qn_http_req_destroy(new_svc->req);
         qn_http_conn_destroy(new_svc->conn);
         free(new_svc);
@@ -497,7 +498,6 @@ QN_API void qn_rgn_svc_destroy(qn_rgn_service_ptr restrict svc)
 {
     if (svc) {
         qn_http_json_wrt_destroy(svc->resp_json_wrt);
-        qn_http_conn_destroy(svc->conn);
         qn_http_resp_destroy(svc->resp);
         qn_http_req_destroy(svc->req);
         qn_http_conn_destroy(svc->conn);
@@ -513,7 +513,7 @@ static qn_bool qn_rgn_svc_parse_and_add_entry(qn_string txt, qn_rgn_host_ptr hos
     const char * hostname = NULL;
     size_t hostname_size = 0;
 
-    if (! (hostname = strstr(qn_str_cstr(txt), "-H"))) {
+    if ((hostname = strstr(qn_str_cstr(txt), "-H"))) {
         hostname += 2;
         while (isspace(*hostname)) hostname += 1;
         end = strchr(hostname, ' ');

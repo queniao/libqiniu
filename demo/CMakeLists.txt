@@ -33,3 +33,6 @@ target_link_libraries (qput qiniu curl crypto)
 
 add_executable (qrput qrput.c)
 target_link_libraries (qrput qiniu curl crypto)
+
+add_executable (qregion qregion.c)
+target_link_libraries (qregion qiniu curl crypto)
