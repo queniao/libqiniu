@@ -1008,7 +1008,7 @@ static size_t qn_stor_rp_chunk_body_reader_callback(void * user_data, char * buf
     return ret;
 }
 
-static qn_bool qn_stor_rp_put_chunk_in_one_piece(qn_storage_ptr restrict stor, qn_json_object_ptr restrict blk_info, qn_io_reader_ptr restrict rdr, int chk_size, const qn_string restrict url, qn_stor_rput_extra_ptr restrict ext)
+static qn_bool qn_stor_rp_put_chunk_in_one_piece(qn_storage_ptr restrict stor, qn_stor_auth_ptr restrict auth, qn_json_object_ptr restrict blk_info, qn_io_reader_ptr restrict rdr, int chk_size, const qn_string restrict url, qn_stor_rput_extra_ptr restrict ext)
 {
     qn_bool ret;
     qn_string uptoken;
@@ -1033,10 +1033,10 @@ static qn_bool qn_stor_rp_put_chunk_in_one_piece(qn_storage_ptr restrict stor, q
     } // if
 
     // ----
-    if (ext->client_end.uptoken) {
-        auth_header = qn_cs_sprintf("UpToken %s", ext->client_end.uptoken);
-    } else if (ext->server_end.mac && ext->server_end.put_policy) {
-        uptoken = qn_pp_to_uptoken(ext->server_end.put_policy, ext->server_end.mac);
+    if (auth->client_end.uptoken) {
+        auth_header = qn_cs_sprintf("UpToken %s", auth->client_end.uptoken);
+    } else if (auth->server_end.mac && auth->server_end.put_policy) {
+        uptoken = qn_pp_to_uptoken(auth->server_end.put_policy, auth->server_end.mac);
         if (!uptoken) return qn_false;
 
         auth_header = qn_cs_sprintf("UpToken %s", uptoken);
@@ -1103,7 +1103,7 @@ static qn_bool qn_stor_rp_put_chunk_in_one_piece(qn_storage_ptr restrict stor, q
     return ret;
 }
 
-QN_API qn_bool qn_stor_rp_put_chunk(qn_storage_ptr restrict stor, qn_json_object_ptr restrict blk_info, qn_io_reader_ptr restrict rdr, int chk_size, qn_stor_rput_extra_ptr restrict ext)
+QN_API qn_bool qn_stor_rp_put_chunk(qn_storage_ptr restrict stor, qn_stor_auth_ptr restrict auth, qn_json_object_ptr restrict blk_info, qn_io_reader_ptr restrict rdr, int chk_size, qn_stor_rput_extra_ptr restrict ext)
 {
     qn_bool ret;
     qn_string host;
@@ -1128,14 +1128,14 @@ QN_API qn_bool qn_stor_rp_put_chunk(qn_storage_ptr restrict stor, qn_json_object
         url = qn_cs_sprintf("%s/bput/%s/%d", host, qn_str_cstr(ctx), chk_offset);
     } // if
 
-    ret = qn_stor_rp_put_chunk_in_one_piece(stor, blk_info, rdr, chk_size, url, ext);
+    ret = qn_stor_rp_put_chunk_in_one_piece(stor, auth, blk_info, rdr, chk_size, url, ext);
     qn_str_destroy(url);
 
     ext->rgn_entry = rgn_entry;
     return ret;
 }
 
-QN_API qn_bool qn_stor_rp_put_block(qn_storage_ptr restrict stor, qn_json_object_ptr restrict blk_info, qn_io_reader_ptr restrict rdr, qn_stor_rput_extra_ptr restrict ext)
+QN_API qn_bool qn_stor_rp_put_block(qn_storage_ptr restrict stor, qn_stor_auth_ptr restrict auth, qn_json_object_ptr restrict blk_info, qn_io_reader_ptr restrict rdr, qn_stor_rput_extra_ptr restrict ext)
 {
     qn_rgn_entry_ptr rgn_entry = ext->rgn_entry;
     int chk_size;
@@ -1154,7 +1154,7 @@ QN_API qn_bool qn_stor_rp_put_block(qn_storage_ptr restrict stor, qn_json_object
     while (chk_offset < blk_size) {
         sending_bytes = blk_size - chk_offset;
         if (sending_bytes > chk_size) sending_bytes = chk_size;
-        if (!qn_stor_rp_put_chunk(stor, blk_info, rdr, sending_bytes, ext)) {
+        if (!qn_stor_rp_put_chunk(stor, auth, blk_info, rdr, sending_bytes, ext)) {
             ext->rgn_entry = rgn_entry;
             return qn_false;
         } // if
@@ -1165,7 +1165,7 @@ QN_API qn_bool qn_stor_rp_put_block(qn_storage_ptr restrict stor, qn_json_object
     return qn_true;
 }
 
-static qn_bool qn_stor_rp_make_file_to_one_piece(qn_storage_ptr restrict stor, qn_stor_rput_session_ptr restrict ss, const qn_string restrict url, const qn_string restrict ctx_info, qn_stor_rput_extra_ptr restrict ext)
+static qn_bool qn_stor_rp_make_file_to_one_piece(qn_storage_ptr restrict stor, qn_stor_auth_ptr restrict auth, qn_stor_rput_session_ptr restrict ss, const qn_string restrict url, const qn_string restrict ctx_info, qn_stor_rput_extra_ptr restrict ext)
 {
     qn_bool ret;
     qn_string uptoken;
@@ -1182,10 +1182,10 @@ static qn_bool qn_stor_rp_make_file_to_one_piece(qn_storage_ptr restrict stor, q
     } // if
 
     // ----
-    if (ext->client_end.uptoken) {
-        auth_header = qn_cs_sprintf("UpToken %s", ext->client_end.uptoken);
-    } else if (ext->server_end.mac && ext->server_end.put_policy) {
-        uptoken = qn_pp_to_uptoken(ext->server_end.put_policy, ext->server_end.mac);
+    if (auth->client_end.uptoken) {
+        auth_header = qn_cs_sprintf("UpToken %s", auth->client_end.uptoken);
+    } else if (auth->server_end.mac && auth->server_end.put_policy) {
+        uptoken = qn_pp_to_uptoken(auth->server_end.put_policy, auth->server_end.mac);
         if (!uptoken) return qn_false;
 
         auth_header = qn_cs_sprintf("UpToken %s", uptoken);
@@ -1224,7 +1224,7 @@ static qn_bool qn_stor_rp_make_file_to_one_piece(qn_storage_ptr restrict stor, q
     return ret;
 }
 
-QN_API qn_bool qn_stor_rp_make_file(qn_storage_ptr restrict stor, qn_stor_rput_session_ptr restrict ss, qn_stor_rput_extra_ptr restrict ext)
+QN_API qn_bool qn_stor_rp_make_file(qn_storage_ptr restrict stor, qn_stor_auth_ptr restrict auth, qn_stor_rput_session_ptr restrict ss, qn_stor_rput_extra_ptr restrict ext)
 {
     qn_bool ret;
     qn_json_object_ptr blk_info;
@@ -1302,13 +1302,13 @@ QN_API qn_bool qn_stor_rp_make_file(qn_storage_ptr restrict stor, qn_stor_rput_s
         url = url_tmp;
     } // if
 
-    ret = qn_stor_rp_make_file_to_one_piece(stor, ss, url, ctx_info, ext);
+    ret = qn_stor_rp_make_file_to_one_piece(stor, auth, ss, url, ctx_info, ext);
     qn_str_destroy(url);
     qn_str_destroy(ctx_info);
     return ret;
 }
 
-static qn_bool qn_stor_rp_put_file_in_serial_blocks(qn_storage_ptr restrict stor, qn_stor_rput_session_ptr restrict ss, const char * restrict fname, qn_stor_rput_extra_ptr restrict ext)
+static qn_bool qn_stor_rp_put_file_in_serial_blocks(qn_storage_ptr restrict stor, qn_stor_auth_ptr restrict auth, qn_stor_rput_session_ptr restrict ss, const char * restrict fname, qn_stor_rput_extra_ptr restrict ext)
 {
     qn_bool ret;
     qn_bool skip;
@@ -1357,7 +1357,9 @@ static qn_bool qn_stor_rp_put_file_in_serial_blocks(qn_storage_ptr restrict stor
             skip = qn_false;
         } // if
 
-        ret = qn_stor_rp_put_block(stor, blk_info, &rdr, ext);
+        // TODO: Refresh the uptoken for every block, in the case that the deadline may expires between puts.
+
+        ret = qn_stor_rp_put_block(stor, auth, blk_info, &rdr, ext);
         if (!ret) {
             qn_fl_close(fl);
             ext->rgn_entry = rgn_entry;
@@ -1370,7 +1372,7 @@ static qn_bool qn_stor_rp_put_file_in_serial_blocks(qn_storage_ptr restrict stor
     return qn_true;
 }
 
-QN_API qn_bool qn_stor_rp_put_file(qn_storage_ptr restrict stor, qn_stor_rput_session_ptr * restrict ss, const char * restrict fname, qn_stor_rput_extra_ptr restrict ext)
+QN_API qn_bool qn_stor_rp_put_file(qn_storage_ptr restrict stor, qn_stor_auth_ptr restrict auth, qn_stor_rput_session_ptr * restrict ss, const char * restrict fname, qn_stor_rput_extra_ptr restrict ext)
 {
     qn_bool ret;
     qn_fl_info_ptr fi;
@@ -1385,9 +1387,9 @@ QN_API qn_bool qn_stor_rp_put_file(qn_storage_ptr restrict stor, qn_stor_rput_se
         if (!*ss) return qn_false;
     } // if
 
-    if (!qn_stor_rp_put_file_in_serial_blocks(stor, *ss, fname, ext)) return qn_false;
+    if (!qn_stor_rp_put_file_in_serial_blocks(stor, auth, *ss, fname, ext)) return qn_false;
 
-    ret = qn_stor_rp_make_file(stor, *ss, ext);
+    ret = qn_stor_rp_make_file(stor, auth, *ss, ext);
     if (ret) {
         qn_stor_rs_destroy(*ss);
         *ss = NULL;

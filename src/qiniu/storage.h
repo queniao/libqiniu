@@ -167,15 +167,6 @@ QN_API extern qn_bool qn_stor_rs_is_putting_block_done(const qn_stor_rput_sessio
 
 typedef struct _QN_STOR_RESUMABLE_PUT_EXTRA
 {
-    struct {
-        const char * uptoken;
-    } client_end;
-
-    struct {
-        qn_mac_ptr mac;
-        qn_json_object_ptr put_policy;
-    } server_end;
-
     int chk_size;
     const char * final_key;
 
@@ -183,11 +174,11 @@ typedef struct _QN_STOR_RESUMABLE_PUT_EXTRA
     qn_rgn_entry_ptr rgn_entry;
 } qn_stor_rput_extra, *qn_stor_rput_extra_ptr;
 
-QN_API extern qn_bool qn_stor_rp_put_chunk(qn_storage_ptr restrict stor, qn_json_object_ptr restrict blk_info, qn_io_reader_ptr restrict rdr, int chk_size, qn_stor_rput_extra_ptr restrict ext);
-QN_API extern qn_bool qn_stor_rp_put_block(qn_storage_ptr restrict stor, qn_json_object_ptr restrict blk_info, qn_io_reader_ptr restrict rdr, qn_stor_rput_extra_ptr restrict ext);
-QN_API extern qn_bool qn_stor_rp_make_file(qn_storage_ptr restrict stor, qn_stor_rput_session_ptr restrict ss, qn_stor_rput_extra_ptr restrict ext);
+QN_API extern qn_bool qn_stor_rp_put_chunk(qn_storage_ptr restrict stor, qn_stor_auth_ptr restrict auth, qn_json_object_ptr restrict blk_info, qn_io_reader_ptr restrict rdr, int chk_size, qn_stor_rput_extra_ptr restrict ext);
+QN_API extern qn_bool qn_stor_rp_put_block(qn_storage_ptr restrict stor, qn_stor_auth_ptr restrict auth, qn_json_object_ptr restrict blk_info, qn_io_reader_ptr restrict rdr, qn_stor_rput_extra_ptr restrict ext);
+QN_API extern qn_bool qn_stor_rp_make_file(qn_storage_ptr restrict stor, qn_stor_auth_ptr restrict auth, qn_stor_rput_session_ptr restrict ss, qn_stor_rput_extra_ptr restrict ext);
 
-QN_API extern qn_bool qn_stor_rp_put_file(qn_storage_ptr restrict stor, qn_stor_rput_session_ptr * restrict ss, const char * restrict fname, qn_stor_rput_extra_ptr restrict ext);
+QN_API extern qn_bool qn_stor_rp_put_file(qn_storage_ptr restrict stor, qn_stor_auth_ptr restrict auth, qn_stor_rput_session_ptr * restrict ss, const char * restrict fname, qn_stor_rput_extra_ptr restrict ext);
 
 #ifdef __cplusplus
 }
