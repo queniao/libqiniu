@@ -776,7 +776,7 @@ QN_API qn_bool qn_stor_execute_batch_opertions(qn_storage_ptr restrict stor, con
 
 // ---- Definition of Upload ----
 
-static qn_bool qn_stor_prepare_for_putting_file(qn_storage_ptr restrict stor, qn_stor_put_extra_ptr restrict ext)
+static qn_bool qn_stor_prepare_for_putting_file(qn_storage_ptr restrict stor, const qn_stor_auth_ptr restrict auth, qn_stor_put_extra_ptr restrict ext)
 {
     qn_bool ret;
     qn_string uptoken;
@@ -798,10 +798,10 @@ static qn_bool qn_stor_prepare_for_putting_file(qn_storage_ptr restrict stor, qn
     if (! (form = qn_http_req_prepare_form(stor->req))) return qn_false;
 
     // uptoken MUST be the first form item.
-    if (ext->client_end.uptoken) {
-        if (!qn_http_form_add_string(form, "token", ext->client_end.uptoken, strlen(ext->client_end.uptoken))) return qn_false;
-    } else if (ext->server_end.mac && ext->server_end.put_policy) {
-        uptoken = qn_pp_to_uptoken(ext->server_end.put_policy, ext->server_end.mac);
+    if (auth->client_end.uptoken) {
+        if (!qn_http_form_add_string(form, "token", auth->client_end.uptoken, strlen(auth->client_end.uptoken))) return qn_false;
+    } else if (auth->server_end.mac && auth->server_end.put_policy) {
+        uptoken = qn_pp_to_uptoken(auth->server_end.put_policy, auth->server_end.mac);
         if (!uptoken) return qn_false;
 
         ret = qn_http_form_add_string(form, "token", qn_str_cstr(uptoken), qn_str_size(uptoken));
@@ -825,14 +825,14 @@ static qn_bool qn_stor_prepare_for_putting_file(qn_storage_ptr restrict stor, qn
     return qn_true;
 }
 
-QN_API qn_bool qn_stor_put_file(qn_storage_ptr restrict stor, const char * restrict fname, qn_stor_put_extra_ptr restrict ext)
+QN_API qn_bool qn_stor_put_file(qn_storage_ptr restrict stor, const qn_stor_auth_ptr restrict auth, const char * restrict fname, qn_stor_put_extra_ptr restrict ext)
 {
     qn_bool ret;
     qn_fl_info_ptr fi;
     qn_http_form_ptr form;
     qn_rgn_entry_ptr rgn_entry = ext->rgn_entry;
 
-    if (!qn_stor_prepare_for_putting_file(stor, ext)) return qn_false;
+    if (!qn_stor_prepare_for_putting_file(stor, auth, ext)) return qn_false;
 
     form = qn_http_req_get_form(stor->req);
 
@@ -849,12 +849,12 @@ QN_API qn_bool qn_stor_put_file(qn_storage_ptr restrict stor, const char * restr
     return qn_http_conn_post(stor->conn, qn_str_cstr(rgn_entry->base_url), stor->req, stor->resp);
 }
 
-QN_API qn_bool qn_stor_put_buffer(qn_storage_ptr restrict stor, const char * restrict buf, int buf_size, qn_stor_put_extra_ptr restrict ext)
+QN_API qn_bool qn_stor_put_buffer(qn_storage_ptr restrict stor, const qn_stor_auth_ptr restrict auth, const char * restrict buf, int buf_size, qn_stor_put_extra_ptr restrict ext)
 {
     qn_http_form_ptr form;
     qn_rgn_entry_ptr rgn_entry = ext->rgn_entry;
 
-    if (!qn_stor_prepare_for_putting_file(stor, ext)) return qn_false;
+    if (!qn_stor_prepare_for_putting_file(stor, auth, ext)) return qn_false;
 
     form = qn_http_req_get_form(stor->req);
 

@@ -32,6 +32,7 @@ typedef struct _QN_STOR_AUTH
 {
     struct {
         qn_mac_ptr mac;
+        qn_json_object_ptr put_policy;
     } server_end;
 
     struct {
@@ -137,15 +138,6 @@ typedef struct _QN_STOR_PUT_EXTRA
 {
     qn_stor_put_method method;
 
-    struct {
-        const char * uptoken;
-    } client_end;
-
-    struct {
-        qn_mac_ptr mac;
-        qn_json_object_ptr put_policy;
-    } server_end;
-
     const char * final_key;
     const char * crc32;
     const char * accept_type;
@@ -154,8 +146,8 @@ typedef struct _QN_STOR_PUT_EXTRA
     qn_rgn_entry_ptr rgn_entry;
 } qn_stor_put_extra, *qn_stor_put_extra_ptr;
 
-QN_API extern qn_bool qn_stor_put_file(qn_storage_ptr restrict stor, const char * restrict fname, qn_stor_put_extra_ptr restrict ext);
-QN_API extern qn_bool qn_stor_put_buffer(qn_storage_ptr restrict stor, const char * restrict buf, int buf_size, qn_stor_put_extra_ptr restrict ext);
+QN_API extern qn_bool qn_stor_put_file(qn_storage_ptr restrict stor, const qn_stor_auth_ptr restrict auth, const char * restrict fname, qn_stor_put_extra_ptr restrict ext);
+QN_API extern qn_bool qn_stor_put_buffer(qn_storage_ptr restrict stor, const qn_stor_auth_ptr restrict auth, const char * restrict buf, int buf_size, qn_stor_put_extra_ptr restrict ext);
 
 // ----
 

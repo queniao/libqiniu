@@ -12,6 +12,7 @@ int main(int argc, char * argv[])
     const char * key = NULL;
     const char * fname = NULL;
     qn_storage_ptr stor = NULL;
+    qn_stor_auth auth;
     qn_stor_put_extra ext;
     qn_http_hdr_iterator_ptr hdr_itr;
     qn_string hdr_ent;
@@ -28,45 +29,47 @@ int main(int argc, char * argv[])
 
     memset(&ext, 0, sizeof(ext));
     ext.final_key = key;
-    ext.server_end.mac = mac;
-    ext.server_end.put_policy = qn_json_create_object();
-    if (!ext.server_end.put_policy) {
+
+    memset(&auth, 0, sizeof(auth));
+    auth.server_end.mac = mac;
+    auth.server_end.put_policy = qn_json_create_object();
+    if (!auth.server_end.put_policy) {
         printf("Cannot create a put policy.\n");
         return 1;
     } // if
 
     scope = qn_cs_sprintf("%s:%s", bucket, key);
     if (!scope) {
-        qn_json_destroy_object(ext.server_end.put_policy);
+        qn_json_destroy_object(auth.server_end.put_policy);
         printf("Cannot format a valid scope for inserting the file.\n");
         return 1;
     } // if
 
-    if (!qn_json_set_string(ext.server_end.put_policy, "scope", qn_str_cstr(scope))) {
+    if (!qn_json_set_string(auth.server_end.put_policy, "scope", qn_str_cstr(scope))) {
         qn_str_destroy(scope);
-        qn_json_destroy_object(ext.server_end.put_policy);
+        qn_json_destroy_object(auth.server_end.put_policy);
         printf("Cannot set the scope field.\n");
         return 1;
     } // if
     qn_str_destroy(scope);
 
-    if (!qn_json_set_integer(ext.server_end.put_policy, "deadline", time(NULL) + 3600)) {
+    if (!qn_json_set_integer(auth.server_end.put_policy, "deadline", time(NULL) + 3600)) {
         qn_str_destroy(scope);
-        qn_json_destroy_object(ext.server_end.put_policy);
+        qn_json_destroy_object(auth.server_end.put_policy);
         printf("Cannot set the deadline field.\n");
         return 1;
     } // if
 
     stor = qn_stor_create();
     if (!stor) {
-        qn_json_destroy_object(ext.server_end.put_policy);
+        qn_json_destroy_object(auth.server_end.put_policy);
         printf("Cannot initialize a new storage object.\n");
         return 1;
     } // if
 
-    if (!qn_stor_put_file(stor, fname, &ext)) {
+    if (!qn_stor_put_file(stor, &auth, fname, &ext)) {
         qn_stor_destroy(stor);
-        qn_json_destroy_object(ext.server_end.put_policy);
+        qn_json_destroy_object(auth.server_end.put_policy);
         printf("Cannot put the file `%s` to `%s:%s`.\n", fname, bucket, key);
         return 2;
     } // if
@@ -79,7 +82,7 @@ int main(int argc, char * argv[])
     put_ret = qn_json_object_to_string(qn_stor_get_object_body(stor));
     if (!put_ret) {
         qn_stor_destroy(stor);
-        qn_json_destroy_object(ext.server_end.put_policy);
+        qn_json_destroy_object(auth.server_end.put_policy);
         printf("Cannot format the object body from upload interface.\n");
         return 3;
     } // if
@@ -88,7 +91,7 @@ int main(int argc, char * argv[])
     qn_str_destroy(put_ret);
 
     qn_stor_destroy(stor);
-    qn_json_destroy_object(ext.server_end.put_policy);
+    qn_json_destroy_object(auth.server_end.put_policy);
     qn_mac_destroy(mac);
     return 0;
 }
