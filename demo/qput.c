@@ -8,9 +8,9 @@ int main(int argc, char * argv[])
     qn_mac_ptr mac;
     qn_string scope = NULL;
     qn_string put_ret = NULL;
-    qn_string bucket = NULL;
-    qn_string key = NULL;
-    qn_string fname = NULL;
+    const char * bucket = NULL;
+    const char * key = NULL;
+    const char * fname = NULL;
     qn_storage_ptr stor = NULL;
     qn_stor_put_extra ext;
     qn_http_hdr_iterator_ptr hdr_itr;

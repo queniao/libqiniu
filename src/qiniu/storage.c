@@ -11,6 +11,10 @@ extern "C"
 {
 #endif
 
+// ---- Definition of Helper Functions ----
+
+// ---- Definition of Storage ----
+
 typedef struct _QN_STORAGE
 {
     qn_http_request_ptr req;
@@ -826,6 +830,7 @@ QN_API qn_bool qn_stor_put_file(qn_storage_ptr restrict stor, const char * restr
     qn_bool ret;
     qn_fl_info_ptr fi;
     qn_http_form_ptr form;
+    qn_rgn_entry_ptr rgn_entry = ext->rgn_entry;
 
     if (!qn_stor_prepare_for_putting_file(stor, ext)) return qn_false;
 
@@ -839,12 +844,15 @@ QN_API qn_bool qn_stor_put_file(qn_storage_ptr restrict stor, const char * restr
     if (!ret) return qn_false;
 
     // ----
-    return qn_http_conn_post(stor->conn, "http://up.qiniu.com", stor->req, stor->resp);
+    qn_rgn_tbl_choose_first_entry(ext->rgn_tbl, QN_RGN_SVC_UP, NULL, &rgn_entry);
+    if (rgn_entry->hostname && !qn_http_req_set_header(stor->req, "Host", qn_str_cstr(rgn_entry->hostname))) return qn_false;
+    return qn_http_conn_post(stor->conn, qn_str_cstr(rgn_entry->base_url), stor->req, stor->resp);
 }
 
 QN_API qn_bool qn_stor_put_buffer(qn_storage_ptr restrict stor, const char * restrict buf, int buf_size, qn_stor_put_extra_ptr restrict ext)
 {
     qn_http_form_ptr form;
+    qn_rgn_entry_ptr rgn_entry = ext->rgn_entry;
 
     if (!qn_stor_prepare_for_putting_file(stor, ext)) return qn_false;
 
@@ -853,7 +861,9 @@ QN_API qn_bool qn_stor_put_buffer(qn_storage_ptr restrict stor, const char * res
     if (!qn_http_form_add_buffer(form, "file", "<null>", buf, buf_size)) return qn_false;
 
     // ----
-    return qn_http_conn_post(stor->conn, "http://up.qiniu.com", stor->req, stor->resp);
+    qn_rgn_tbl_choose_first_entry(ext->rgn_tbl, QN_RGN_SVC_UP, NULL, &rgn_entry);
+    if (rgn_entry->hostname && !qn_http_req_set_header(stor->req, "Host", qn_str_cstr(rgn_entry->hostname))) return qn_false;
+    return qn_http_conn_post(stor->conn, qn_str_cstr(rgn_entry->base_url), stor->req, stor->resp);
 }
 
 // ----
@@ -1046,6 +1056,7 @@ static qn_bool qn_stor_rp_put_chunk_in_one_piece(qn_storage_ptr restrict stor, q
     if (!qn_http_req_set_header(stor->req, "Expect", "")) return qn_false;
     if (!qn_http_req_set_header(stor->req, "Transfer-Encoding", "")) return qn_false;
     if (!qn_http_req_set_header(stor->req, "Content-Type", "application/octet-stream")) return qn_false;
+    if (ext->rgn_entry->hostname && !qn_http_req_set_header(stor->req, "Host", qn_str_cstr(ext->rgn_entry->hostname))) return qn_false;
 
     content_length = qn_cs_sprintf("%d", chk_size);
     if (!content_length) return qn_false;
@@ -1098,8 +1109,11 @@ QN_API qn_bool qn_stor_rp_put_chunk(qn_storage_ptr restrict stor, qn_json_object
     qn_string host;
     qn_string ctx;
     qn_string url;
+    qn_rgn_entry_ptr rgn_entry = ext->rgn_entry;
     int chk_offset;
     int blk_size;
+
+    if (!ext->rgn_entry) qn_rgn_tbl_choose_first_entry(ext->rgn_tbl, QN_RGN_SVC_UP, NULL, &ext->rgn_entry);
     
     chk_offset = qn_json_get_integer(blk_info, "offset", 0);
     blk_size = qn_json_get_integer(blk_info, "bsize", 0);
@@ -1107,23 +1121,29 @@ QN_API qn_bool qn_stor_rp_put_chunk(qn_storage_ptr restrict stor, qn_json_object
     if (chk_offset == blk_size) return qn_true;
 
     if (chk_offset == 0) {
-        url = qn_cs_sprintf("http://up.qiniu.com/mkblk/%d", blk_size);
+        url = qn_cs_sprintf("%s/mkblk/%d", qn_str_cstr(rgn_entry->base_url), blk_size);
     } else {
         host = qn_json_get_string(blk_info, "host", "");
         ctx = qn_json_get_string(blk_info, "ctx", "");
         url = qn_cs_sprintf("%s/bput/%s/%d", host, qn_str_cstr(ctx), chk_offset);
     } // if
+
     ret = qn_stor_rp_put_chunk_in_one_piece(stor, blk_info, rdr, chk_size, url, ext);
     qn_str_destroy(url);
+
+    ext->rgn_entry = rgn_entry;
     return ret;
 }
 
 QN_API qn_bool qn_stor_rp_put_block(qn_storage_ptr restrict stor, qn_json_object_ptr restrict blk_info, qn_io_reader_ptr restrict rdr, qn_stor_rput_extra_ptr restrict ext)
 {
+    qn_rgn_entry_ptr rgn_entry = ext->rgn_entry;
     int chk_size;
     int chk_offset;
     int blk_size;
     int sending_bytes;
+
+    if (!ext->rgn_entry) qn_rgn_tbl_choose_first_entry(ext->rgn_tbl, QN_RGN_SVC_UP, NULL, &ext->rgn_entry);
 
     chk_size = ext->chk_size;
     if (chk_size <= 0) chk_size = QN_STOR_RPUT_CHUNK_DEFAULT_SIZE;
@@ -1134,9 +1154,14 @@ QN_API qn_bool qn_stor_rp_put_block(qn_storage_ptr restrict stor, qn_json_object
     while (chk_offset < blk_size) {
         sending_bytes = blk_size - chk_offset;
         if (sending_bytes > chk_size) sending_bytes = chk_size;
-        if (!qn_stor_rp_put_chunk(stor, blk_info, rdr, sending_bytes, ext)) return qn_false;
+        if (!qn_stor_rp_put_chunk(stor, blk_info, rdr, sending_bytes, ext)) {
+            ext->rgn_entry = rgn_entry;
+            return qn_false;
+        } // if
         chk_offset += sending_bytes;
     } // while
+
+    ext->rgn_entry = rgn_entry;
     return qn_true;
 }
 
@@ -1203,8 +1228,6 @@ QN_API qn_bool qn_stor_rp_make_file(qn_storage_ptr restrict stor, qn_stor_rput_s
 {
     qn_bool ret;
     qn_json_object_ptr blk_info;
-    int blk_count;
-    int i;
     qn_integer chk_offset;
     qn_integer blk_size;
     qn_string encoded_key;
@@ -1213,6 +1236,8 @@ QN_API qn_bool qn_stor_rp_make_file(qn_storage_ptr restrict stor, qn_stor_rput_s
     qn_string url_tmp;
     qn_string ctx_info;
     qn_string * ctx_list;
+    int blk_count;
+    int i;
 
     blk_count = qn_stor_rs_block_count(ss);
     ctx_list = calloc(blk_count, sizeof(qn_string));
@@ -1292,12 +1317,18 @@ static qn_bool qn_stor_rp_put_file_in_serial_blocks(qn_storage_ptr restrict stor
     qn_integer blk_count;
     qn_integer blk_size;
     qn_integer chk_offset;
-    int i;
     qn_fsize blk_offset;
     qn_io_reader rdr;
+    qn_rgn_entry_ptr rgn_entry = ext->rgn_entry;
+    int i;
+
+    if (!ext->rgn_entry) qn_rgn_tbl_choose_first_entry(ext->rgn_tbl, QN_RGN_SVC_UP, NULL, &ext->rgn_entry);
 
     fl = qn_fl_open(fname, NULL);
-    if (!fl) return qn_false;
+    if (!fl) {
+        ext->rgn_entry = rgn_entry;
+        return qn_false;
+    } // if
 
     memset(&rdr, 0, sizeof(qn_io_reader));
     rdr.user_data = fl;
@@ -1320,6 +1351,7 @@ static qn_bool qn_stor_rp_put_file_in_serial_blocks(qn_storage_ptr restrict stor
         if (skip) {
             if (!qn_fl_seek(fl, blk_offset)) {
                 qn_fl_close(fl);
+                ext->rgn_entry = rgn_entry;
                 return qn_false;
             } // if
             skip = qn_false;
@@ -1328,10 +1360,13 @@ static qn_bool qn_stor_rp_put_file_in_serial_blocks(qn_storage_ptr restrict stor
         ret = qn_stor_rp_put_block(stor, blk_info, &rdr, ext);
         if (!ret) {
             qn_fl_close(fl);
+            ext->rgn_entry = rgn_entry;
             return qn_false;
         } // if
         blk_offset += blk_size;
     } // for
+
+    ext->rgn_entry = rgn_entry;
     return qn_true;
 }
 

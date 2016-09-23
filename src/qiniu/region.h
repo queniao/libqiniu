@@ -63,6 +63,19 @@ QN_API extern qn_bool qn_rgn_tbl_set_region(qn_rgn_table_ptr restrict rtbl, cons
 QN_API extern const qn_region_ptr qn_rgn_tbl_get_default_region(qn_rgn_table_ptr restrict rtbl);
 QN_API extern qn_bool qn_rgn_tbl_set_default_region(qn_rgn_table_ptr restrict rtbl, const qn_region_ptr restrict region);
 
+// ----
+
+enum
+{
+    QN_RGN_SVC_UP = 0,
+    QN_RGN_SVC_IO,
+    QN_RGN_SVC_RS,
+    QN_RGN_SVC_RSF,
+    QN_RGN_SVC_API
+};
+
+QN_API extern void qn_rgn_tbl_choose_first_entry(qn_rgn_table_ptr restrict rtbl, int svc, const char * restrict name, qn_rgn_entry_ptr * restrict entry);
+
 // ---- Declaration of Region Interator ----
 
 struct _QN_RGN_ITERATOR;

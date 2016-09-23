@@ -393,13 +393,51 @@ static qn_region qn_rgn_default_region = {
 
 QN_API const qn_region_ptr qn_rgn_tbl_get_default_region(qn_rgn_table_ptr restrict rtbl)
 {
-    qn_region_ptr rgn = qn_rgn_tbl_get_region(rtbl, "default");
+    qn_region_ptr rgn;
+
+    if (!rtbl) return &qn_rgn_default_region;
+    
+    rgn= qn_rgn_tbl_get_region(rtbl, "default");
     return (rgn) ? rgn : &qn_rgn_default_region;
 }
 
 QN_API qn_bool qn_rgn_tbl_set_default_region(qn_rgn_table_ptr restrict rtbl, const qn_region_ptr restrict rgn)
 {
     return qn_rgn_tbl_set_region(rtbl, "default", rgn);
+}
+
+QN_API void qn_rgn_tbl_choose_first_entry(qn_rgn_table_ptr restrict rtbl, int svc, const char * restrict name, qn_rgn_entry_ptr * restrict entry)
+{
+    qn_region_ptr rgn;
+    qn_rgn_host_ptr host;
+
+    if (!*entry && name) {
+        rgn = qn_rgn_tbl_get_region(rtbl, name);
+        if (rgn) {
+            switch (svc) {
+                case QN_RGN_SVC_UP: host = qn_rgn_get_up_host(rgn); break;
+                case QN_RGN_SVC_IO: host = qn_rgn_get_io_host(rgn); break;
+                case QN_RGN_SVC_RS: host = qn_rgn_get_rs_host(rgn); break;
+                case QN_RGN_SVC_RSF: host = qn_rgn_get_rsf_host(rgn); break;
+                case QN_RGN_SVC_API: host = qn_rgn_get_api_host(rgn); break;
+            } // switch
+
+            if (host) *entry = qn_rgn_host_get_entry(host, 0);
+        } // if
+    } // if
+
+    if (!*entry) {
+        rgn = qn_rgn_tbl_get_default_region(rtbl);
+        switch (svc) {
+            case QN_RGN_SVC_UP: host = qn_rgn_get_up_host(rgn); break;
+            case QN_RGN_SVC_IO: host = qn_rgn_get_io_host(rgn); break;
+            case QN_RGN_SVC_RS: host = qn_rgn_get_rs_host(rgn); break;
+            case QN_RGN_SVC_RSF: host = qn_rgn_get_rsf_host(rgn); break;
+            case QN_RGN_SVC_API: host = qn_rgn_get_api_host(rgn); break;
+        } // switch
+
+        *entry = qn_rgn_host_get_entry(host, 0);
+    } // if
 }
 
 // ---- Definition of Region Interator ----

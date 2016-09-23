@@ -5,6 +5,7 @@
 #include "qiniu/base/json.h"
 #include "qiniu/auth.h"
 #include "qiniu/http.h"
+#include "qiniu/region.h"
 
 #include "qiniu/macros.h"
 
@@ -148,6 +149,9 @@ typedef struct _QN_STOR_PUT_EXTRA
     const char * final_key;
     const char * crc32;
     const char * accept_type;
+
+    qn_rgn_table_ptr rgn_tbl;
+    qn_rgn_entry_ptr rgn_entry;
 } qn_stor_put_extra, *qn_stor_put_extra_ptr;
 
 QN_API extern qn_bool qn_stor_put_file(qn_storage_ptr restrict stor, const char * restrict fname, qn_stor_put_extra_ptr restrict ext);
@@ -182,6 +186,9 @@ typedef struct _QN_STOR_RESUMABLE_PUT_EXTRA
 
     int chk_size;
     const char * final_key;
+
+    qn_rgn_table_ptr rgn_tbl;
+    qn_rgn_entry_ptr rgn_entry;
 } qn_stor_rput_extra, *qn_stor_rput_extra_ptr;
 
 QN_API extern qn_bool qn_stor_rp_put_chunk(qn_storage_ptr restrict stor, qn_json_object_ptr restrict blk_info, qn_io_reader_ptr restrict rdr, int chk_size, qn_stor_rput_extra_ptr restrict ext);
