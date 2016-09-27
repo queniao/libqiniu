@@ -49,7 +49,7 @@ int main(int argc, char * argv[])
         } // if
     } // if
 
-    if (!qn_stor_execute_batch_opertions(stor, &auth, bt)) {
+    if (!qn_stor_execute_batch_opertions(stor, &auth, bt, NULL)) {
         printf("Cannot stat the `%s:%s` file.\n", bucket, key);
         return 2;
     } // if

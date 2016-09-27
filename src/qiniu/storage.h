@@ -47,6 +47,8 @@ typedef struct _QN_STOR_AUTH
 
 typedef struct _QN_STOR_STAT_EXTRA
 {
+    qn_rgn_table_ptr rgn_tbl;
+    qn_rgn_entry_ptr rgn_entry;
 } qn_stor_stat_extra, *qn_stor_stat_extra_ptr;
 
 QN_API extern qn_bool qn_stor_stat(qn_storage_ptr restrict stor, const qn_stor_auth_ptr restrict auth, const char * restrict bucket, const char * restrict key, qn_stor_stat_extra_ptr restrict ext);
@@ -56,6 +58,9 @@ QN_API extern qn_bool qn_stor_stat(qn_storage_ptr restrict stor, const qn_stor_a
 typedef struct _QN_STOR_COPY_EXTRA
 {
     qn_bool force;
+
+    qn_rgn_table_ptr rgn_tbl;
+    qn_rgn_entry_ptr rgn_entry;
 } qn_stor_copy_extra, *qn_stor_copy_extra_ptr;
 
 QN_API extern qn_bool qn_stor_copy(qn_storage_ptr restrict stor, const qn_stor_auth_ptr restrict auth, const char * restrict src_bucket, const char * restrict src_key, const char * restrict dest_bucket, const char * restrict dest_key, qn_stor_copy_extra_ptr restrict ext);
@@ -64,6 +69,8 @@ QN_API extern qn_bool qn_stor_copy(qn_storage_ptr restrict stor, const qn_stor_a
 
 typedef struct _QN_STOR_MOVE_EXTRA
 {
+    qn_rgn_table_ptr rgn_tbl;
+    qn_rgn_entry_ptr rgn_entry;
 } qn_stor_move_extra, *qn_stor_move_extra_ptr;
 
 QN_API extern qn_bool qn_stor_move(qn_storage_ptr restrict stor, const qn_stor_auth_ptr restrict auth, const char * restrict src_bucket, const char * restrict src_key, const char * restrict dest_bucket, const char * restrict dest_key, qn_stor_move_extra_ptr restrict ext);
@@ -72,6 +79,8 @@ QN_API extern qn_bool qn_stor_move(qn_storage_ptr restrict stor, const qn_stor_a
 
 typedef struct _QN_STOR_DELETE_EXTRA
 {
+    qn_rgn_table_ptr rgn_tbl;
+    qn_rgn_entry_ptr rgn_entry;
 } qn_stor_delete_extra, *qn_stor_delete_extra_ptr;
 
 QN_API extern qn_bool qn_stor_delete(qn_storage_ptr restrict stor, const qn_stor_auth_ptr restrict auth, const char * restrict bucket, const char * restrict key, qn_stor_delete_extra_ptr restrict ext);
@@ -80,6 +89,8 @@ QN_API extern qn_bool qn_stor_delete(qn_storage_ptr restrict stor, const qn_stor
 
 typedef struct _QN_STOR_CHANGE_MIME_EXTRA
 {
+    qn_rgn_table_ptr rgn_tbl;
+    qn_rgn_entry_ptr rgn_entry;
 } qn_stor_change_mime_extra, *qn_stor_change_mime_extra_ptr;
 
 QN_API extern qn_bool qn_stor_change_mime(qn_storage_ptr restrict stor, const qn_stor_auth_ptr restrict auth, const char * restrict bucket, const char * restrict key, const char * restrict mime, qn_stor_change_mime_extra_ptr restrict ext);
@@ -88,6 +99,8 @@ QN_API extern qn_bool qn_stor_change_mime(qn_storage_ptr restrict stor, const qn
 
 typedef struct _QN_STOR_FETCH_EXTRA
 {
+    qn_rgn_table_ptr rgn_tbl;
+    qn_rgn_entry_ptr rgn_entry;
 } qn_stor_fetch_extra, *qn_stor_fetch_extra_ptr;
 
 QN_API extern qn_bool qn_stor_fetch(qn_storage_ptr restrict stor, const qn_stor_auth_ptr restrict auth, const char * restrict src_url, const char * restrict dest_bucket, const char * restrict dest_key, qn_stor_fetch_extra_ptr restrict ext);
@@ -105,6 +118,9 @@ typedef struct _QN_STOR_LIST_EXTRA
 
     void * item_processor;
     qn_stor_item_processor_callback item_processor_callback;
+
+    qn_rgn_table_ptr rgn_tbl;
+    qn_rgn_entry_ptr rgn_entry;
 } qn_stor_list_extra, *qn_stor_list_extra_ptr;
 
 QN_API extern qn_bool qn_stor_list(qn_storage_ptr restrict stor, const qn_stor_auth_ptr restrict auth, const char * restrict bucket, qn_stor_list_extra_ptr restrict ext);
@@ -113,6 +129,12 @@ QN_API extern qn_bool qn_stor_list(qn_storage_ptr restrict stor, const qn_stor_a
 
 struct _QN_STOR_BATCH;
 typedef struct _QN_STOR_BATCH * qn_stor_batch_ptr;
+
+typedef struct _QN_STOR_BATCH_EXTRA
+{
+    qn_rgn_table_ptr rgn_tbl;
+    qn_rgn_entry_ptr rgn_entry;
+} qn_stor_batch_extra, *qn_stor_batch_extra_ptr;
 
 QN_API extern qn_stor_batch_ptr qn_stor_bt_create(void);
 QN_API extern void qn_stor_bt_destroy(qn_stor_batch_ptr restrict bt);
@@ -123,7 +145,7 @@ QN_API extern qn_bool qn_stor_bt_add_copy_op(qn_stor_batch_ptr restrict bt, cons
 QN_API extern qn_bool qn_stor_bt_add_move_op(qn_stor_batch_ptr restrict bt, const char * restrict src_bucket, const char * restrict src_key, const char * restrict dest_bucket, const char * restrict dest_key);
 QN_API extern qn_bool qn_stor_bt_add_delete_op(qn_stor_batch_ptr restrict bt, const char * restrict bucket, const char * restrict key);
 
-QN_API extern qn_bool qn_stor_execute_batch_opertions(qn_storage_ptr restrict stor, const qn_stor_auth_ptr restrict auth, const qn_stor_batch_ptr restrict bt);
+QN_API extern qn_bool qn_stor_execute_batch_opertions(qn_storage_ptr restrict stor, const qn_stor_auth_ptr restrict auth, const qn_stor_batch_ptr restrict bt, qn_stor_batch_extra_ptr restrict ext);
 
 // ---- Declaration of Upload ----
 

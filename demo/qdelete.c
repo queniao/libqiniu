@@ -27,6 +27,8 @@ int main(int argc, char * argv[])
         return 1;
     } // if
 
+    memset(&ext, 0, sizeof(ext));
+
     memset(&auth, 0, sizeof(auth));
     auth.server_end.mac = mac;
 

@@ -105,12 +105,14 @@ static qn_bool qn_stor_prepare_common_request_headers(qn_storage_ptr restrict st
 
 // ---- Definition of Management ----
 
-static qn_bool qn_stor_prepare_managment(qn_storage_ptr restrict stor, const qn_string restrict url, const char * restrict acctoken, const qn_mac_ptr restrict mac)
+static qn_bool qn_stor_prepare_managment(qn_storage_ptr restrict stor, const qn_string restrict url, const qn_string restrict hostname, const char * restrict acctoken, const qn_mac_ptr restrict mac)
 {
     qn_string auth_header;
     qn_string new_acctoken;
 
     if (!qn_stor_prepare_common_request_headers(stor)) return qn_false;
+
+    if (hostname && !qn_http_req_set_header(stor->req, "Host", qn_str_cstr(hostname))) return qn_false;
 
     if (acctoken) {
         auth_header = qn_cs_sprintf("QBox %s", acctoken);
@@ -148,12 +150,21 @@ QN_API qn_bool qn_stor_stat(qn_storage_ptr restrict stor, const qn_stor_auth_ptr
     qn_bool ret;
     qn_string op;
     qn_string url;
+    qn_rgn_entry_ptr rgn_entry;
+    
+    if (ext) {
+        rgn_entry = ext->rgn_entry;
+        qn_rgn_tbl_choose_first_entry(ext->rgn_tbl, QN_RGN_SVC_RS, NULL, &rgn_entry);
+    } else {
+        rgn_entry = NULL;
+        qn_rgn_tbl_choose_first_entry(NULL, QN_RGN_SVC_RS, NULL, &rgn_entry);
+    } // if
 
     // ---- Prepare the query URL
     op = qn_stor_make_stat_op(bucket, key);
     if (!op) return qn_false;
 
-    url = qn_cs_sprintf("%s/%.*s", "http://rs.qiniu.com", qn_str_size(op), qn_str_cstr(op));
+    url = qn_cs_sprintf("%.*s/%.*s", qn_str_size(rgn_entry->base_url), qn_str_cstr(rgn_entry->base_url), qn_str_size(op), qn_str_cstr(op));
     qn_str_destroy(op);
     if (!url) return qn_false;
 
@@ -161,7 +172,7 @@ QN_API qn_bool qn_stor_stat(qn_storage_ptr restrict stor, const qn_stor_auth_ptr
     qn_http_req_reset(stor->req);
     qn_http_resp_reset(stor->resp);
 
-    if (!qn_stor_prepare_managment(stor, url, auth->client_end.acctoken, auth->server_end.mac)) {
+    if (!qn_stor_prepare_managment(stor, url, rgn_entry->hostname, auth->client_end.acctoken, auth->server_end.mac)) {
         qn_str_destroy(url);
         return qn_false;
     } // if
@@ -206,12 +217,21 @@ QN_API qn_bool qn_stor_copy(qn_storage_ptr restrict stor, const qn_stor_auth_ptr
     qn_string op;
     qn_string url;
     qn_string url_tmp;
+    qn_rgn_entry_ptr rgn_entry;
+    
+    if (ext) {
+        rgn_entry = ext->rgn_entry;
+        qn_rgn_tbl_choose_first_entry(ext->rgn_tbl, QN_RGN_SVC_RS, NULL, &rgn_entry);
+    } else {
+        rgn_entry = NULL;
+        qn_rgn_tbl_choose_first_entry(NULL, QN_RGN_SVC_RS, NULL, &rgn_entry);
+    } // if
 
     // ---- Prepare the query URL
     op = qn_stor_make_copy_op(src_bucket, src_key, dest_bucket, dest_key);
     if (!op) return qn_false;
 
-    url = qn_cs_sprintf("%s/%.*s", "http://rs.qiniu.com", qn_str_size(op), qn_str_cstr(op));
+    url = qn_cs_sprintf("%.*s/%.*s", qn_str_size(rgn_entry->base_url), qn_str_cstr(rgn_entry->base_url), qn_str_size(op), qn_str_cstr(op));
     qn_str_destroy(op);
     if (!url) return qn_false;
 
@@ -230,7 +250,7 @@ QN_API qn_bool qn_stor_copy(qn_storage_ptr restrict stor, const qn_stor_auth_ptr
 
     qn_http_req_set_body_data(stor->req, "", 0);
 
-    if (!qn_stor_prepare_managment(stor, url, auth->client_end.acctoken, auth->server_end.mac)) {
+    if (!qn_stor_prepare_managment(stor, url, rgn_entry->hostname, auth->client_end.acctoken, auth->server_end.mac)) {
         qn_str_destroy(url);
         return qn_false;
     } // if
@@ -274,12 +294,21 @@ QN_API qn_bool qn_stor_move(qn_storage_ptr restrict stor, const qn_stor_auth_ptr
     qn_bool ret;
     qn_string op;
     qn_string url;
+    qn_rgn_entry_ptr rgn_entry;
+    
+    if (ext) {
+        rgn_entry = ext->rgn_entry;
+        qn_rgn_tbl_choose_first_entry(ext->rgn_tbl, QN_RGN_SVC_RS, NULL, &rgn_entry);
+    } else {
+        rgn_entry = NULL;
+        qn_rgn_tbl_choose_first_entry(NULL, QN_RGN_SVC_RS, NULL, &rgn_entry);
+    } // if
 
     // ---- Prepare the query URL
     op = qn_stor_make_move_op(src_bucket, src_key, dest_bucket, dest_key);
     if (!op) return qn_false;
 
-    url = qn_cs_sprintf("%s/%.*s", "http://rs.qiniu.com", qn_str_size(op), qn_str_cstr(op));
+    url = qn_cs_sprintf("%.*s/%.*s", qn_str_size(rgn_entry->base_url), qn_str_cstr(rgn_entry->base_url), qn_str_size(op), qn_str_cstr(op));
     qn_str_destroy(op);
     if (!url) return qn_false;
 
@@ -289,7 +318,7 @@ QN_API qn_bool qn_stor_move(qn_storage_ptr restrict stor, const qn_stor_auth_ptr
 
     qn_http_req_set_body_data(stor->req, "", 0);
 
-    if (!qn_stor_prepare_managment(stor, url, auth->client_end.acctoken, auth->server_end.mac)) {
+    if (!qn_stor_prepare_managment(stor, url, rgn_entry->hostname, auth->client_end.acctoken, auth->server_end.mac)) {
         qn_str_destroy(url);
         return qn_false;
     } // if
@@ -325,12 +354,21 @@ QN_API qn_bool qn_stor_delete(qn_storage_ptr restrict stor, const qn_stor_auth_p
     qn_bool ret;
     qn_string op;
     qn_string url;
+    qn_rgn_entry_ptr rgn_entry;
+    
+    if (ext) {
+        rgn_entry = ext->rgn_entry;
+        qn_rgn_tbl_choose_first_entry(ext->rgn_tbl, QN_RGN_SVC_RS, NULL, &rgn_entry);
+    } else {
+        rgn_entry = NULL;
+        qn_rgn_tbl_choose_first_entry(NULL, QN_RGN_SVC_RS, NULL, &rgn_entry);
+    } // if
 
     // ---- Prepare the query URL
     op = qn_stor_make_delete_op(bucket, key);
     if (!op) return qn_false;
 
-    url = qn_cs_sprintf("%s/%.*s", "http://rs.qiniu.com", qn_str_size(op), qn_str_cstr(op));
+    url = qn_cs_sprintf("%.*s/%.*s", qn_str_size(rgn_entry->base_url), qn_str_cstr(rgn_entry->base_url), qn_str_size(op), qn_str_cstr(op));
     qn_str_destroy(op);
     if (!url) return qn_false;
 
@@ -340,7 +378,7 @@ QN_API qn_bool qn_stor_delete(qn_storage_ptr restrict stor, const qn_stor_auth_p
 
     qn_http_req_set_body_data(stor->req, "", 0);
 
-    if (!qn_stor_prepare_managment(stor, url, auth->client_end.acctoken, auth->server_end.mac)) {
+    if (!qn_stor_prepare_managment(stor, url, rgn_entry->hostname, auth->client_end.acctoken, auth->server_end.mac)) {
         qn_str_destroy(url);
         return qn_false;
     } // if
@@ -364,6 +402,15 @@ QN_API qn_bool qn_stor_change_mime(qn_storage_ptr restrict stor, const qn_stor_a
     qn_string encoded_uri;
     qn_string encoded_mime;
     qn_string url;
+    qn_rgn_entry_ptr rgn_entry;
+    
+    if (ext) {
+        rgn_entry = ext->rgn_entry;
+        qn_rgn_tbl_choose_first_entry(ext->rgn_tbl, QN_RGN_SVC_RS, NULL, &rgn_entry);
+    } else {
+        rgn_entry = NULL;
+        qn_rgn_tbl_choose_first_entry(NULL, QN_RGN_SVC_RS, NULL, &rgn_entry);
+    } // if
 
     // ---- Prepare the query URL
     encoded_uri = qn_misc_encode_uri(bucket, key);
@@ -375,7 +422,7 @@ QN_API qn_bool qn_stor_change_mime(qn_storage_ptr restrict stor, const qn_stor_a
         return qn_false;
     } // if
 
-    url = qn_cs_sprintf("%s/chgm/%s/mime/%s", "http://rs.qiniu.com", qn_str_cstr(encoded_uri), qn_str_cstr(encoded_mime));
+    url = qn_cs_sprintf("%.*s/chgm/%.*s/mime/%.*s", qn_str_size(rgn_entry->base_url), qn_str_cstr(rgn_entry->base_url), qn_str_size(encoded_uri), qn_str_cstr(encoded_uri), qn_str_size(encoded_mime), qn_str_cstr(encoded_mime));
     qn_str_destroy(encoded_uri);
     qn_str_destroy(encoded_mime);
     if (!url) return qn_false;
@@ -386,7 +433,7 @@ QN_API qn_bool qn_stor_change_mime(qn_storage_ptr restrict stor, const qn_stor_a
 
     qn_http_req_set_body_data(stor->req, "", 0);
 
-    if (!qn_stor_prepare_managment(stor, url, auth->client_end.acctoken, auth->server_end.mac)) {
+    if (!qn_stor_prepare_managment(stor, url, rgn_entry->hostname, auth->client_end.acctoken, auth->server_end.mac)) {
         qn_str_destroy(url);
         return qn_false;
     } // if
@@ -412,6 +459,15 @@ QN_API qn_bool qn_stor_fetch(qn_storage_ptr restrict stor, const qn_stor_auth_pt
     qn_string encoded_src_url;
     qn_string encoded_dest_uri;
     qn_string url;
+    qn_rgn_entry_ptr rgn_entry;
+    
+    if (ext) {
+        rgn_entry = ext->rgn_entry;
+        qn_rgn_tbl_choose_first_entry(ext->rgn_tbl, QN_RGN_SVC_IO, NULL, &rgn_entry);
+    } else {
+        rgn_entry = NULL;
+        qn_rgn_tbl_choose_first_entry(NULL, QN_RGN_SVC_IO, NULL, &rgn_entry);
+    } // if
 
     // ---- Prepare the query URL
     encoded_src_url = qn_cs_encode_base64_urlsafe(src_url, strlen(src_url));
@@ -423,7 +479,7 @@ QN_API qn_bool qn_stor_fetch(qn_storage_ptr restrict stor, const qn_stor_auth_pt
         return qn_false;
     } // if
 
-    url = qn_cs_sprintf("%s/fetch/%s/to/%s", "http://iovip.qbox.me", qn_str_cstr(encoded_src_url), qn_str_cstr(encoded_dest_uri));
+    url = qn_cs_sprintf("%.*s/fetch/%.*s/to/%.*s", qn_str_size(rgn_entry->base_url), qn_str_cstr(rgn_entry->base_url), qn_str_size(encoded_src_url), qn_str_cstr(encoded_src_url), qn_str_size(encoded_dest_uri), qn_str_cstr(encoded_dest_uri));
     qn_str_destroy(encoded_src_url);
     qn_str_destroy(encoded_dest_uri);
     if (!url) return qn_false;
@@ -434,7 +490,7 @@ QN_API qn_bool qn_stor_fetch(qn_storage_ptr restrict stor, const qn_stor_auth_pt
 
     qn_http_req_set_body_data(stor->req, "", 0);
 
-    if (!qn_stor_prepare_managment(stor, url, auth->client_end.acctoken, auth->server_end.mac)) {
+    if (!qn_stor_prepare_managment(stor, url, rgn_entry->hostname, auth->client_end.acctoken, auth->server_end.mac)) {
         qn_str_destroy(url);
         return qn_false;
     } // if
@@ -457,12 +513,21 @@ QN_API qn_bool qn_stor_prefetch(qn_storage_ptr restrict stor, const qn_stor_auth
     qn_bool ret;
     qn_string encoded_dest_uri;
     qn_string url;
+    qn_rgn_entry_ptr rgn_entry;
+    
+    if (ext) {
+        rgn_entry = ext->rgn_entry;
+        qn_rgn_tbl_choose_first_entry(ext->rgn_tbl, QN_RGN_SVC_IO, NULL, &rgn_entry);
+    } else {
+        rgn_entry = NULL;
+        qn_rgn_tbl_choose_first_entry(NULL, QN_RGN_SVC_IO, NULL, &rgn_entry);
+    } // if
 
     // ---- Prepare the query URL
     encoded_dest_uri = qn_misc_encode_uri(dest_bucket, dest_key);
     if (!encoded_dest_uri) return qn_false;
 
-    url = qn_cs_sprintf("%s/prefetch/%s", "http://iovip.qbox.me", qn_str_cstr(encoded_dest_uri));
+    url = qn_cs_sprintf("%.s/prefetch/%.s", qn_str_size(rgn_entry->base_url), qn_str_cstr(rgn_entry->base_url), qn_str_size(encoded_dest_uri), qn_str_cstr(encoded_dest_uri));
     qn_str_destroy(encoded_dest_uri);
     if (!url) return qn_false;
 
@@ -472,7 +537,7 @@ QN_API qn_bool qn_stor_prefetch(qn_storage_ptr restrict stor, const qn_stor_auth
 
     qn_http_req_set_body_data(stor->req, "", 0);
 
-    if (!qn_stor_prepare_managment(stor, url, auth->client_end.acctoken, auth->server_end.mac)) {
+    if (!qn_stor_prepare_managment(stor, url, rgn_entry->hostname, auth->client_end.acctoken, auth->server_end.mac)) {
         qn_str_destroy(url);
         return qn_false;
     } // if
@@ -501,8 +566,17 @@ QN_API qn_bool qn_stor_list(qn_storage_ptr restrict stor, const qn_stor_auth_ptr
     qn_http_query_ptr qry;
     qn_json_array_ptr items;
     qn_json_object_ptr item;
+    qn_rgn_entry_ptr rgn_entry;
     int i;
     int limit = 1000;
+    
+    if (ext) {
+        rgn_entry = ext->rgn_entry;
+        qn_rgn_tbl_choose_first_entry(ext->rgn_tbl, QN_RGN_SVC_RSF, NULL, &rgn_entry);
+    } else {
+        rgn_entry = NULL;
+        qn_rgn_tbl_choose_first_entry(NULL, QN_RGN_SVC_RSF, NULL, &rgn_entry);
+    } // if
 
     qry = qn_http_qry_create();
     if (!qry) return qn_false;
@@ -545,10 +619,11 @@ QN_API qn_bool qn_stor_list(qn_storage_ptr restrict stor, const qn_stor_auth_ptr
             qn_http_qry_destroy(qry);
             return qn_false;
         } // if
-        if (! (url = qn_cs_sprintf("%s/list?%s", "http://rsf.qbox.me", qry_str))) {
+        if (! (url = qn_cs_sprintf("%.*s/list?%.*s", qn_str_size(rgn_entry->base_url), qn_str_cstr(rgn_entry->base_url), qn_str_size(qry_str), qn_str_cstr(qry_str)))) {
             qn_http_qry_destroy(qry);
             return qn_false;
         } // if
+        qn_str_destroy(qry_str);
 
         // ---- Prepare the request and response
         qn_http_req_reset(stor->req);
@@ -556,7 +631,7 @@ QN_API qn_bool qn_stor_list(qn_storage_ptr restrict stor, const qn_stor_auth_ptr
 
         qn_http_req_set_body_data(stor->req, "", 0);
 
-        if (!qn_stor_prepare_managment(stor, url, auth->client_end.acctoken, auth->server_end.mac)) {
+        if (!qn_stor_prepare_managment(stor, url, rgn_entry->hostname, auth->client_end.acctoken, auth->server_end.mac)) {
             qn_str_destroy(url);
             qn_http_qry_destroy(qry);
             return qn_false;
@@ -732,17 +807,26 @@ QN_API qn_bool qn_stor_bt_add_delete_op(qn_stor_batch_ptr restrict bt, const cha
     return ret;
 }
 
-QN_API qn_bool qn_stor_execute_batch_opertions(qn_storage_ptr restrict stor, const qn_stor_auth_ptr restrict auth, const qn_stor_batch_ptr restrict bt)
+QN_API qn_bool qn_stor_execute_batch_opertions(qn_storage_ptr restrict stor, const qn_stor_auth_ptr restrict auth, const qn_stor_batch_ptr restrict bt, qn_stor_batch_extra_ptr restrict ext)
 {
     qn_bool ret;
     qn_string body;
     qn_string url;
+    qn_rgn_entry_ptr rgn_entry;
+    
+    if (ext) {
+        rgn_entry = ext->rgn_entry;
+        qn_rgn_tbl_choose_first_entry(ext->rgn_tbl, QN_RGN_SVC_RS, NULL, &rgn_entry);
+    } else {
+        rgn_entry = NULL;
+        qn_rgn_tbl_choose_first_entry(NULL, QN_RGN_SVC_RS, NULL, &rgn_entry);
+    } // if
 
     // ---- Prepare the query URL
     body = qn_str_join_list("&", bt->ops, bt->cnt);
     if (!body) return qn_false;
 
-    url = qn_cs_sprintf("%s/batch", "http://rs.qiniu.com");
+    url = qn_cs_sprintf("%.*s/batch", qn_str_size(rgn_entry->base_url), qn_str_cstr(rgn_entry->base_url));
     if (!url) {
         qn_str_destroy(body);
         return qn_false;
@@ -754,7 +838,7 @@ QN_API qn_bool qn_stor_execute_batch_opertions(qn_storage_ptr restrict stor, con
 
     qn_http_req_set_body_data(stor->req, qn_str_cstr(body), qn_str_size(body));
 
-    if (!qn_stor_prepare_managment(stor, url, auth->client_end.acctoken, auth->server_end.mac)) {
+    if (!qn_stor_prepare_managment(stor, url, rgn_entry->hostname, auth->client_end.acctoken, auth->server_end.mac)) {
         qn_str_destroy(url);
         qn_str_destroy(body);
         return qn_false;
