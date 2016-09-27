@@ -155,8 +155,7 @@ QN_API qn_bool qn_stor_stat(qn_storage_ptr restrict stor, const qn_stor_auth_ptr
     qn_rgn_entry_ptr rgn_entry;
     
     if (ext) {
-        rgn_entry = ext->rgn.entry;
-        qn_rgn_tbl_choose_first_entry(ext->rgn.rtbl, QN_RGN_SVC_RS, NULL, &rgn_entry);
+        if (! (rgn_entry = ext->rgn.entry)) qn_rgn_tbl_choose_first_entry(ext->rgn.rtbl, QN_RGN_SVC_RS, NULL, &rgn_entry);
     } else {
         rgn_entry = NULL;
         qn_rgn_tbl_choose_first_entry(NULL, QN_RGN_SVC_RS, NULL, &rgn_entry);
@@ -222,8 +221,7 @@ QN_API qn_bool qn_stor_copy(qn_storage_ptr restrict stor, const qn_stor_auth_ptr
     qn_rgn_entry_ptr rgn_entry;
     
     if (ext) {
-        rgn_entry = ext->rgn.entry;
-        qn_rgn_tbl_choose_first_entry(ext->rgn.rtbl, QN_RGN_SVC_RS, NULL, &rgn_entry);
+        if (! (rgn_entry = ext->rgn.entry)) qn_rgn_tbl_choose_first_entry(ext->rgn.rtbl, QN_RGN_SVC_RS, NULL, &rgn_entry);
     } else {
         rgn_entry = NULL;
         qn_rgn_tbl_choose_first_entry(NULL, QN_RGN_SVC_RS, NULL, &rgn_entry);
@@ -299,8 +297,7 @@ QN_API qn_bool qn_stor_move(qn_storage_ptr restrict stor, const qn_stor_auth_ptr
     qn_rgn_entry_ptr rgn_entry;
     
     if (ext) {
-        rgn_entry = ext->rgn.entry;
-        qn_rgn_tbl_choose_first_entry(ext->rgn.rtbl, QN_RGN_SVC_RS, NULL, &rgn_entry);
+        if (! (rgn_entry = ext->rgn.entry)) qn_rgn_tbl_choose_first_entry(ext->rgn.rtbl, QN_RGN_SVC_RS, NULL, &rgn_entry);
     } else {
         rgn_entry = NULL;
         qn_rgn_tbl_choose_first_entry(NULL, QN_RGN_SVC_RS, NULL, &rgn_entry);
@@ -359,8 +356,7 @@ QN_API qn_bool qn_stor_delete(qn_storage_ptr restrict stor, const qn_stor_auth_p
     qn_rgn_entry_ptr rgn_entry;
     
     if (ext) {
-        rgn_entry = ext->rgn.entry;
-        qn_rgn_tbl_choose_first_entry(ext->rgn.rtbl, QN_RGN_SVC_RS, NULL, &rgn_entry);
+        if (! (rgn_entry = ext->rgn.entry)) qn_rgn_tbl_choose_first_entry(ext->rgn.rtbl, QN_RGN_SVC_RS, NULL, &rgn_entry);
     } else {
         rgn_entry = NULL;
         qn_rgn_tbl_choose_first_entry(NULL, QN_RGN_SVC_RS, NULL, &rgn_entry);
@@ -407,8 +403,7 @@ QN_API qn_bool qn_stor_change_mime(qn_storage_ptr restrict stor, const qn_stor_a
     qn_rgn_entry_ptr rgn_entry;
     
     if (ext) {
-        rgn_entry = ext->rgn.entry;
-        qn_rgn_tbl_choose_first_entry(ext->rgn.rtbl, QN_RGN_SVC_RS, NULL, &rgn_entry);
+        if (! (rgn_entry = ext->rgn.entry)) qn_rgn_tbl_choose_first_entry(ext->rgn.rtbl, QN_RGN_SVC_RS, NULL, &rgn_entry);
     } else {
         rgn_entry = NULL;
         qn_rgn_tbl_choose_first_entry(NULL, QN_RGN_SVC_RS, NULL, &rgn_entry);
@@ -464,8 +459,7 @@ QN_API qn_bool qn_stor_fetch(qn_storage_ptr restrict stor, const qn_stor_auth_pt
     qn_rgn_entry_ptr rgn_entry;
     
     if (ext) {
-        rgn_entry = ext->rgn.entry;
-        qn_rgn_tbl_choose_first_entry(ext->rgn.rtbl, QN_RGN_SVC_IO, NULL, &rgn_entry);
+        if (! (rgn_entry = ext->rgn.entry)) qn_rgn_tbl_choose_first_entry(ext->rgn.rtbl, QN_RGN_SVC_IO, NULL, &rgn_entry);
     } else {
         rgn_entry = NULL;
         qn_rgn_tbl_choose_first_entry(NULL, QN_RGN_SVC_IO, NULL, &rgn_entry);
@@ -518,8 +512,7 @@ QN_API qn_bool qn_stor_prefetch(qn_storage_ptr restrict stor, const qn_stor_auth
     qn_rgn_entry_ptr rgn_entry;
     
     if (ext) {
-        rgn_entry = ext->rgn.entry;
-        qn_rgn_tbl_choose_first_entry(ext->rgn.rtbl, QN_RGN_SVC_IO, NULL, &rgn_entry);
+        if (! (rgn_entry = ext->rgn.entry)) qn_rgn_tbl_choose_first_entry(ext->rgn.rtbl, QN_RGN_SVC_IO, NULL, &rgn_entry);
     } else {
         rgn_entry = NULL;
         qn_rgn_tbl_choose_first_entry(NULL, QN_RGN_SVC_IO, NULL, &rgn_entry);
@@ -573,8 +566,7 @@ QN_API qn_bool qn_stor_list(qn_storage_ptr restrict stor, const qn_stor_auth_ptr
     int limit = 1000;
     
     if (ext) {
-        rgn_entry = ext->rgn.entry;
-        qn_rgn_tbl_choose_first_entry(ext->rgn.rtbl, QN_RGN_SVC_RSF, NULL, &rgn_entry);
+        if (! (rgn_entry = ext->rgn.entry)) qn_rgn_tbl_choose_first_entry(ext->rgn.rtbl, QN_RGN_SVC_RSF, NULL, &rgn_entry);
     } else {
         rgn_entry = NULL;
         qn_rgn_tbl_choose_first_entry(NULL, QN_RGN_SVC_RSF, NULL, &rgn_entry);
@@ -817,8 +809,7 @@ QN_API qn_bool qn_stor_execute_batch_opertions(qn_storage_ptr restrict stor, con
     qn_rgn_entry_ptr rgn_entry;
     
     if (ext) {
-        rgn_entry = ext->rgn.entry;
-        qn_rgn_tbl_choose_first_entry(ext->rgn.rtbl, QN_RGN_SVC_RS, NULL, &rgn_entry);
+        if (! (rgn_entry = ext->rgn.entry)) qn_rgn_tbl_choose_first_entry(ext->rgn.rtbl, QN_RGN_SVC_RS, NULL, &rgn_entry);
     } else {
         rgn_entry = NULL;
         qn_rgn_tbl_choose_first_entry(NULL, QN_RGN_SVC_RS, NULL, &rgn_entry);
