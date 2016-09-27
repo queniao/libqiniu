@@ -107,6 +107,7 @@ static qn_bool qn_stor_prepare_common_request_headers(qn_storage_ptr restrict st
 
 static qn_bool qn_stor_prepare_managment(qn_storage_ptr restrict stor, const qn_string restrict url, const qn_string restrict hostname, const char * restrict acctoken, const qn_mac_ptr restrict mac)
 {
+    qn_bool ret;
     qn_string auth_header;
     qn_string new_acctoken;
 
@@ -127,9 +128,10 @@ static qn_bool qn_stor_prepare_managment(qn_storage_ptr restrict stor, const qn_
         return qn_false;
     } // if
     if (!auth_header) return qn_false;
-    if (!qn_http_req_set_header(stor->req, "Authorization", auth_header)) return qn_false;
+
+    ret = qn_http_req_set_header(stor->req, "Authorization", auth_header);
     qn_str_destroy(auth_header);
-    return qn_true;
+    return ret;
 }
 
 static const qn_string qn_stor_make_stat_op(const char * restrict bucket, const char * restrict key)
