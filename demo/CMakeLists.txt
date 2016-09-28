@@ -31,6 +31,9 @@ target_link_libraries (qfetch qiniu curl crypto)
 add_executable (qput qput.c)
 target_link_libraries (qput qiniu curl crypto)
 
+add_executable (qputa qputa.c)
+target_link_libraries (qputa qiniu curl crypto)
+
 add_executable (qrput qrput.c)
 target_link_libraries (qrput qiniu curl crypto)
 

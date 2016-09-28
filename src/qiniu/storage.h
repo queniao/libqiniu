@@ -22,6 +22,22 @@ typedef struct _QN_STOR_RGN
     qn_rgn_entry_ptr entry;
 } qn_stor_rgn, *qn_stor_rgn_ptr;
 
+enum
+{
+    QN_STOR_PUTTING_OK = 0,
+    QN_STOR_PUTTING_ABORT
+};
+
+typedef int (*qn_stor_data_checker_pre_callback)(void * data_checker, char * restrict buf, size_t * buf_size);
+typedef int (*qn_stor_data_checker_post_callback)(void * data_checker, char * restrict buf, size_t buf_size);
+
+typedef struct _QN_STOR_PUT_CTRL
+{
+    void * data_checker;
+    qn_stor_data_checker_pre_callback data_checker_pre_callback;
+    qn_stor_data_checker_post_callback data_checker_post_callback;
+} qn_stor_put_ctrl, *qn_stor_put_ctrl_ptr;
+
 // ---- Declaration of Storage ----
 
 struct _QN_STORAGE;
@@ -172,6 +188,8 @@ typedef enum _QN_STOR_PUT_METHOD
     QN_STOR_PUT_CHUNKED = 0x4
 } qn_stor_put_method;
 
+// ----
+
 typedef struct _QN_STOR_PUT_EXTRA
 {
     qn_stor_put_method method;
@@ -183,6 +201,9 @@ typedef struct _QN_STOR_PUT_EXTRA
     // ---- Extensions ----
     // Multi-Region : Pass the host entry information of a storage region.
     qn_stor_rgn rgn;
+
+    // Put-Control : Control the progress of putting a file.
+    qn_stor_put_ctrl put_ctrl;
 } qn_stor_put_extra, *qn_stor_put_extra_ptr;
 
 QN_API extern qn_bool qn_stor_put_file(qn_storage_ptr restrict stor, const qn_stor_auth_ptr restrict auth, const char * restrict fname, qn_stor_put_extra_ptr restrict ext);

@@ -138,6 +138,22 @@ QN_API qn_bool qn_http_form_add_file(qn_http_form_ptr restrict form, const char 
     return qn_true;
 }
 
+QN_API qn_bool qn_http_form_add_file_reader(qn_http_form_ptr restrict form, const char * restrict field, const char * restrict fname, const char * restrict fname_utf8, size_t fsize, void * restrict rdr)
+{
+    CURLFORMcode ret;
+
+    if (fname_utf8) {
+        ret = curl_formadd(&form->first, &form->last, CURLFORM_COPYNAME, field, CURLFORM_STREAM, rdr, CURLFORM_CONTENTSLENGTH, (long)fsize, CURLFORM_FILENAME, fname_utf8, CURLFORM_END);
+    } else {
+        ret = curl_formadd(&form->first, &form->last, CURLFORM_COPYNAME, field, CURLFORM_STREAM, rdr, CURLFORM_CONTENTSLENGTH, (long)fsize, CURLFORM_END);
+    } // if
+    if (ret != 0) {
+        qn_err_http_set_adding_file_field_failed();
+        return qn_false;
+    } // if
+    return qn_true;
+}
+
 QN_API qn_bool qn_http_form_add_buffer(qn_http_form_ptr restrict form, const char * restrict field, const char * restrict fname, const char * restrict buf, int buf_size)
 {
     CURLFORMcode ret = curl_formadd(&form->first, &form->last, CURLFORM_COPYNAME, field, CURLFORM_BUFFER, fname, CURLFORM_BUFFERPTR, buf, CURLFORM_BUFFERLENGTH, buf_size, CURLFORM_END);
@@ -591,6 +607,8 @@ QN_API qn_bool qn_http_conn_post(qn_http_connection_ptr restrict conn, const qn_
 
     if (req->form) {
         curl_easy_setopt(conn->curl, CURLOPT_HTTPPOST, req->form->first);
+        
+        if (req->body_rd && req->body_rd_cb) curl_easy_setopt(conn->curl, CURLOPT_READFUNCTION, qn_http_conn_body_reader);
     } else if (req->body_data) {
         curl_easy_setopt(conn->curl, CURLOPT_POSTFIELDS, req->body_data);
         curl_easy_setopt(conn->curl, CURLOPT_POSTFIELDSIZE, req->body_size);
