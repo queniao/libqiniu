@@ -875,7 +875,7 @@ static size_t qn_stor_put_body_reader_callback(void * user_data, char * buf, siz
         if (put_ctrl->data_checker_pre_callback) {
             code = put_ctrl->data_checker_pre_callback(put_ctrl->data_checker, buf, &real_size);
             if (code == QN_STOR_PUTTING_ABORT) {
-                // TODO: Set an appropriate error.
+                qn_err_stor_set_putting_aborted_by_data_checker_pre_callback();
                 return CURL_READFUNC_ABORT;
             } // if
         } // if
@@ -887,7 +887,7 @@ static size_t qn_stor_put_body_reader_callback(void * user_data, char * buf, siz
         if (put_ctrl->data_checker_post_callback) {
             code = put_ctrl->data_checker_post_callback(put_ctrl->data_checker, buf, ret);
             if (code == QN_STOR_PUTTING_ABORT) {
-                // TODO: Set an appropriate error.
+                qn_err_stor_set_putting_aborted_by_data_checker_post_callback();
                 return CURL_READFUNC_ABORT;
             } // if
         } // if

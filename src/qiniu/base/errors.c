@@ -31,7 +31,10 @@ enum
     QN_ERR_FL_DUPLICATING_FILE_FAILED = 11002,
     QN_ERR_FL_READING_FILE_FAILED = 11003,
     QN_ERR_FL_SEEKING_FILE_FAILED = 11004,
-    QN_ERR_FL_INFO_STATING_FILE_INFO_FAILED = 11101
+    QN_ERR_FL_INFO_STATING_FILE_INFO_FAILED = 11101,
+
+    QN_ERR_STOR_PUTTING_ABORTED_BY_DATA_CHECKER_PRE_CALLBACK = 21001,
+    QN_ERR_STOR_PUTTING_ABORTED_BY_DATA_CHECKER_POST_CALLBACK = 21002
 };
 
 typedef qn_uint32 qn_err_enum;
@@ -53,18 +56,24 @@ static qn_error qn_errors[] = {
     {QN_ERR_OVERFLOW_LOWER_BOUND, "Integer value is overflow the lower bound"},
     {QN_ERR_BAD_UTF8_SEQUENCE, "The string contains a bad UTF-8 sequence"},
     {QN_ERR_NO_ENOUGH_BUFFER, "No enough buffer"},
+
     {QN_ERR_JSON_BAD_TEXT_INPUT, "Bad text input of a JSON string is read"},
     {QN_ERR_JSON_TOO_MANY_PARSING_LEVELS, "Parsing too many levels in a piece of JSON text"},
     {QN_ERR_JSON_NEED_MORE_TEXT_INPUT, "Need more text input to parse a JSON object or array"},
+
     {QN_ERR_HTTP_INVALID_HEADER_SYNTAX, "Invalid HTTP header syntax"},
     {QN_ERR_HTTP_ADDING_STRING_FIELD_FAILED, "Adding string field to HTTP form failed"},
     {QN_ERR_HTTP_ADDING_FILE_FIELD_FAILED, "Adding file field to HTTP form failed"},
     {QN_ERR_HTTP_ADDING_BUFFER_FIELD_FAILED, "Adding buffer field to HTTP form failed"},
+
     {QN_ERR_FL_OPENING_FILE_FAILED, "Opening file failed"},
     {QN_ERR_FL_DUPLICATING_FILE_FAILED, "Duplicating file failed"},
     {QN_ERR_FL_READING_FILE_FAILED, "Reading file failed"},
     {QN_ERR_FL_SEEKING_FILE_FAILED, "Seeking file failed"},
-    {QN_ERR_FL_INFO_STATING_FILE_INFO_FAILED, "Stating file infomation failed"}
+    {QN_ERR_FL_INFO_STATING_FILE_INFO_FAILED, "Stating file infomation failed"},
+
+    {QN_ERR_STOR_PUTTING_ABORTED_BY_DATA_CHECKER_PRE_CALLBACK, "Putting file is aborted by data checker PRE callback"},
+    {QN_ERR_STOR_PUTTING_ABORTED_BY_DATA_CHECKER_POST_CALLBACK, "Putting file is aborted by data checker POST callback"}
 };
 
 static int qn_err_compare(const void * restrict key, const void * restrict item)
@@ -184,6 +193,16 @@ QN_API void qn_err_fl_info_set_stating_file_info_failed(void)
     qn_err_code = QN_ERR_FL_INFO_STATING_FILE_INFO_FAILED;
 }
 
+QN_API void qn_err_stor_set_putting_aborted_by_data_checker_pre_callback(void)
+{
+    qn_err_code = QN_ERR_STOR_PUTTING_ABORTED_BY_DATA_CHECKER_PRE_CALLBACK;
+}
+
+QN_API void qn_err_stor_set_putting_aborted_by_data_checker_post_callback(void)
+{
+    qn_err_code = QN_ERR_STOR_PUTTING_ABORTED_BY_DATA_CHECKER_POST_CALLBACK;
+}
+
 // ----
 
 QN_API qn_bool qn_err_is_succeed(void)
@@ -284,6 +303,16 @@ QN_API qn_bool qn_err_fl_is_seeking_file_failed(void)
 QN_API qn_bool qn_err_fl_info_is_stating_file_info_failed(void)
 {
     return (qn_err_code == QN_ERR_FL_INFO_STATING_FILE_INFO_FAILED);
+}
+
+QN_API qn_bool qn_err_stor_is_putting_aborted_by_data_checker_pre_callback(void)
+{
+    return (qn_err_code == QN_ERR_STOR_PUTTING_ABORTED_BY_DATA_CHECKER_PRE_CALLBACK);
+}
+
+QN_API qn_bool qn_err_stor_is_putting_aborted_by_data_checker_post_callback(void)
+{
+    return (qn_err_code == QN_ERR_STOR_PUTTING_ABORTED_BY_DATA_CHECKER_POST_CALLBACK);
 }
 
 #ifdef __cplusplus

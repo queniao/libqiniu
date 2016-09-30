@@ -29,12 +29,15 @@ QN_API extern void qn_err_http_set_adding_string_field_failed(void);
 QN_API extern void qn_err_http_set_adding_file_field_failed(void);
 QN_API extern void qn_err_http_set_adding_buffer_field_failed(void);
 
-QN_API extern void qn_err_fl_info_set_stating_file_info_failed(void);
-
 QN_API extern void qn_err_fl_set_opening_file_failed(void);
 QN_API extern void qn_err_fl_set_duplicating_file_failed(void);
 QN_API extern void qn_err_fl_set_reading_file_failed(void);
 QN_API extern void qn_err_fl_set_seeking_file_failed(void);
+
+QN_API extern void qn_err_fl_info_set_stating_file_info_failed(void);
+
+QN_API extern void qn_err_stor_set_putting_aborted_by_data_checker_pre_callback(void);
+QN_API extern void qn_err_stor_set_putting_aborted_by_data_checker_post_callback(void);
 
 // ----
 
@@ -62,6 +65,9 @@ QN_API extern qn_bool qn_err_fl_is_reading_file_failed(void);
 QN_API extern qn_bool qn_err_fl_is_seeking_file_failed(void);
 
 QN_API extern qn_bool qn_err_fl_info_is_stating_file_info_failed(void);
+
+QN_API extern qn_bool qn_err_stor_is_putting_aborted_by_data_checker_pre_callback(void);
+QN_API extern qn_bool qn_err_stor_is_putting_aborted_by_data_checker_post_callback(void);
 
 #ifdef __cplusplus
 }
