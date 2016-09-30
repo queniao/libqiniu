@@ -654,7 +654,7 @@ QN_API qn_bool qn_stor_list(qn_storage_ptr restrict stor, const qn_stor_auth_ptr
 
         items = qn_json_get_array(stor->obj_body, "items", NULL);
         if (!items) {
-            // TODO: Set an appropriate error.
+            qn_err_stor_set_invalid_list_result();
             qn_http_qry_destroy(qry);
             return qn_false;
         } // if
@@ -1206,8 +1206,7 @@ static qn_bool qn_stor_rp_put_chunk_in_one_piece(qn_storage_ptr restrict stor, q
         auth_header = qn_cs_sprintf("UpToken %s", uptoken);
         qn_str_destroy(uptoken);
     } else {
-        // TODO: Set an appropriate error.
-        qn_err_set_invalid_argument(); 
+        qn_err_stor_set_lack_of_authorization_information();
         return qn_false;
     } // if
     if (!auth_header) return qn_false;
@@ -1253,7 +1252,7 @@ static qn_bool qn_stor_rp_put_chunk_in_one_piece(qn_storage_ptr restrict stor, q
         offset = qn_json_get_integer(stor->obj_body, "offset", -1);
 
         if (!ctx || !checksum || !host || crc32 < 0 || offset < 0) {
-            // TODO: Set an appropriate error.
+            qn_err_stor_set_invalid_chunk_put_result();
             return qn_false;
         } // if
 
@@ -1368,8 +1367,7 @@ static qn_bool qn_stor_rp_make_file_to_one_piece(qn_storage_ptr restrict stor, q
         auth_header = qn_cs_sprintf("UpToken %s", uptoken);
         qn_str_destroy(uptoken);
     } else {
-        // TODO: Set an appropriate error;
-        qn_err_set_invalid_argument(); 
+        qn_err_stor_set_lack_of_authorization_information();
         return qn_false;
     } // if
     if (!auth_header) return qn_false;
@@ -1426,7 +1424,7 @@ QN_API qn_bool qn_stor_rp_make_file(qn_storage_ptr restrict stor, qn_stor_auth_p
     for (i = 0; i < blk_count; i += 1) {
         blk_info = qn_stor_rs_block_info(ss, i);
         if (!blk_info) {
-            // TODO: Set an apprepriate error.
+            qn_err_stor_set_invalid_resumable_session_information();
             free(ctx_list);
             return qn_false;
         } // if
@@ -1437,12 +1435,12 @@ QN_API qn_bool qn_stor_rp_make_file(qn_storage_ptr restrict stor, qn_stor_auth_p
         if (chk_offset > 0 && blk_size > 0 && chk_offset == blk_size) {
             ctx_list[i] = qn_json_get_string(blk_info, "ctx", NULL);
             if (!ctx_list[i]) {
-                // TODO: Set an apprepriate error.
+                qn_err_stor_set_invalid_resumable_session_information();
                 free(ctx_list);
                 return qn_false;
             } // if
         } else {
-            // TODO: Set an apprepriate error.
+            qn_err_stor_set_invalid_resumable_session_information();
             free(ctx_list);
             return qn_false;
         } // if
@@ -1458,15 +1456,12 @@ QN_API qn_bool qn_stor_rp_make_file(qn_storage_ptr restrict stor, qn_stor_auth_p
     // Here the blk_info variable is pointing to the last block.
     host = qn_json_get_string(blk_info, "host", NULL);
     if (!host) {
-        // TODO: Set an apprepriate error.
+        qn_err_stor_set_invalid_resumable_session_information();
         return qn_false;
     } // if
 
     url = qn_cs_sprintf("%s/mkfile/%ld", qn_str_cstr(host), ss->fsize); // TODO: Use correct directive for large numbers.
-    if (!url) {
-        // TODO: Set an apprepriate error.
-        return qn_false;
-    } // if
+    if (!url) return qn_false;
 
     if (ext->final_key) {
         encoded_key = qn_cs_encode_base64_urlsafe(ext->final_key, strlen(ext->final_key));

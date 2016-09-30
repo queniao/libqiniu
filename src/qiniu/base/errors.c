@@ -33,8 +33,12 @@ enum
     QN_ERR_FL_SEEKING_FILE_FAILED = 11004,
     QN_ERR_FL_INFO_STATING_FILE_INFO_FAILED = 11101,
 
-    QN_ERR_STOR_PUTTING_ABORTED_BY_DATA_CHECKER_PRE_CALLBACK = 21001,
-    QN_ERR_STOR_PUTTING_ABORTED_BY_DATA_CHECKER_POST_CALLBACK = 21002
+    QN_ERR_STOR_LACK_OF_AUTHORIZATION_INFORMATION = 21001,
+    QN_ERR_STOR_INVALID_RESUMABLE_SESSION_INFORMATION = 21002,
+    QN_ERR_STOR_INVALID_LIST_RESULT = 21003,
+    QN_ERR_STOR_PUTTING_ABORTED_BY_DATA_CHECKER_PRE_CALLBACK = 21004,
+    QN_ERR_STOR_PUTTING_ABORTED_BY_DATA_CHECKER_POST_CALLBACK = 21005,
+    QN_ERR_STOR_INVALID_CHUNK_PUT_RESULT = 21006
 };
 
 typedef qn_uint32 qn_err_enum;
@@ -72,8 +76,12 @@ static qn_error qn_errors[] = {
     {QN_ERR_FL_SEEKING_FILE_FAILED, "Seeking file failed"},
     {QN_ERR_FL_INFO_STATING_FILE_INFO_FAILED, "Stating file infomation failed"},
 
+    {QN_ERR_STOR_LACK_OF_AUTHORIZATION_INFORMATION, "Lack of auhorization information like token or put policy"},
+    {QN_ERR_STOR_INVALID_RESUMABLE_SESSION_INFORMATION, "Invalid resumable session information"},
+    {QN_ERR_STOR_INVALID_LIST_RESULT, "Invalid list result"},
     {QN_ERR_STOR_PUTTING_ABORTED_BY_DATA_CHECKER_PRE_CALLBACK, "Putting file is aborted by data checker PRE callback"},
-    {QN_ERR_STOR_PUTTING_ABORTED_BY_DATA_CHECKER_POST_CALLBACK, "Putting file is aborted by data checker POST callback"}
+    {QN_ERR_STOR_PUTTING_ABORTED_BY_DATA_CHECKER_POST_CALLBACK, "Putting file is aborted by data checker POST callback"},
+    {QN_ERR_STOR_INVALID_CHUNK_PUT_RESULT, "Invalid chunk put result"}
 };
 
 static int qn_err_compare(const void * restrict key, const void * restrict item)
@@ -193,6 +201,21 @@ QN_API void qn_err_fl_info_set_stating_file_info_failed(void)
     qn_err_code = QN_ERR_FL_INFO_STATING_FILE_INFO_FAILED;
 }
 
+QN_API void qn_err_stor_set_lack_of_authorization_information(void)
+{
+    qn_err_code = QN_ERR_STOR_LACK_OF_AUTHORIZATION_INFORMATION;
+}
+
+QN_API void qn_err_stor_set_invalid_resumable_session_information(void)
+{
+    qn_err_code = QN_ERR_STOR_INVALID_RESUMABLE_SESSION_INFORMATION;
+}
+
+QN_API void qn_err_stor_set_invalid_list_result(void)
+{
+    qn_err_code = QN_ERR_STOR_INVALID_LIST_RESULT;
+}
+
 QN_API void qn_err_stor_set_putting_aborted_by_data_checker_pre_callback(void)
 {
     qn_err_code = QN_ERR_STOR_PUTTING_ABORTED_BY_DATA_CHECKER_PRE_CALLBACK;
@@ -201,6 +224,11 @@ QN_API void qn_err_stor_set_putting_aborted_by_data_checker_pre_callback(void)
 QN_API void qn_err_stor_set_putting_aborted_by_data_checker_post_callback(void)
 {
     qn_err_code = QN_ERR_STOR_PUTTING_ABORTED_BY_DATA_CHECKER_POST_CALLBACK;
+}
+
+QN_API void qn_err_stor_set_invalid_chunk_put_result(void)
+{
+    qn_err_code = QN_ERR_STOR_INVALID_CHUNK_PUT_RESULT;
 }
 
 // ----
@@ -305,6 +333,21 @@ QN_API qn_bool qn_err_fl_info_is_stating_file_info_failed(void)
     return (qn_err_code == QN_ERR_FL_INFO_STATING_FILE_INFO_FAILED);
 }
 
+QN_API qn_bool qn_err_stor_is_lack_of_authorization_information(void)
+{
+    return (qn_err_code == QN_ERR_STOR_LACK_OF_AUTHORIZATION_INFORMATION);
+}
+
+QN_API qn_bool qn_err_stor_is_invalid_resumable_session_information(void)
+{
+    return (qn_err_code == QN_ERR_STOR_INVALID_RESUMABLE_SESSION_INFORMATION);
+}
+
+QN_API qn_bool qn_err_stor_is_invalid_list_result(void)
+{
+    return (qn_err_code == QN_ERR_STOR_INVALID_LIST_RESULT);
+}
+
 QN_API qn_bool qn_err_stor_is_putting_aborted_by_data_checker_pre_callback(void)
 {
     return (qn_err_code == QN_ERR_STOR_PUTTING_ABORTED_BY_DATA_CHECKER_PRE_CALLBACK);
@@ -313,6 +356,11 @@ QN_API qn_bool qn_err_stor_is_putting_aborted_by_data_checker_pre_callback(void)
 QN_API qn_bool qn_err_stor_is_putting_aborted_by_data_checker_post_callback(void)
 {
     return (qn_err_code == QN_ERR_STOR_PUTTING_ABORTED_BY_DATA_CHECKER_POST_CALLBACK);
+}
+
+QN_API qn_bool qn_err_stor_is_invalid_chunk_put_result(void)
+{
+    return (qn_err_code == QN_ERR_STOR_INVALID_CHUNK_PUT_RESULT);
 }
 
 #ifdef __cplusplus
