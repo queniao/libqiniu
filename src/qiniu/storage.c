@@ -127,7 +127,7 @@ static qn_bool qn_stor_prepare_managment(qn_storage_ptr restrict stor, const qn_
         auth_header = qn_cs_sprintf("QBox %s", new_acctoken);
         qn_str_destroy(new_acctoken);
     } else {
-        qn_err_set_invalid_argument();
+        qn_err_stor_set_lack_of_authorization_information();
         return qn_false;
     } // if
     if (!auth_header) return qn_false;
@@ -928,7 +928,7 @@ static qn_bool qn_stor_prepare_for_putting_file(qn_storage_ptr restrict stor, co
         qn_str_destroy(uptoken);
         if (!ret) return qn_false;
     } else {
-        qn_err_set_invalid_argument(); 
+        qn_err_stor_set_lack_of_authorization_information();
         return qn_false;
     } // if
 
