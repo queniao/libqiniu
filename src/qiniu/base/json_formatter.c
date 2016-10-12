@@ -86,7 +86,7 @@ QN_API void qn_json_fmt_disable_escape_utf8_string(qn_json_formatter_ptr restric
 static inline qn_bool qn_json_fmt_putc(qn_json_formatter_ptr fmt, char ch)
 {
     if (fmt->buf_size + 1 >= fmt->buf_capacity) {
-        qn_err_set_try_again();
+        qn_err_set_no_enough_buffer();
         return qn_false;
     } // if
 
@@ -110,16 +110,14 @@ static qn_bool qn_json_fmt_format_string(qn_json_formatter_ptr fmt)
     int ret = 0;
     qn_uint32 wch = 0;
 
-    if (pos == 0 && !qn_json_fmt_putc(fmt, '"')) {
-        qn_err_set_try_again();
-        goto FORMATTING_STRING_FAILED;
-    } // if
+    if (pos == 0 && !qn_json_fmt_putc(fmt, '"')) goto FORMATTING_STRING_FAILED;
+
     while (pos < end) {
         if ((c1 & 0x80) == 0 || ((fmt->flags & QN_JSON_FMT_ESCAPE_UTF8_STRING) == 0)) {
             // ASCII range: 0zzzzzzz（00-7F）
             if (c1 == '&') {
                 if ((fmt->buf_size + 6) >= fmt->buf_capacity) {
-                    qn_err_set_try_again();
+                    qn_err_set_no_enough_buffer();
                     goto FORMATTING_STRING_FAILED;
                 } // if
 
@@ -130,10 +128,7 @@ static qn_bool qn_json_fmt_format_string(qn_json_formatter_ptr fmt)
                 pos += 1;
                 fmt->buf_size += ret;
             } else {
-                if (!qn_json_fmt_putc(fmt, c1)) {
-                    qn_err_set_try_again();
-                    goto FORMATTING_STRING_FAILED;
-                } // if
+                if (!qn_json_fmt_putc(fmt, c1)) goto FORMATTING_STRING_FAILED;
                 pos += 1;
             } // if
 
@@ -181,7 +176,7 @@ static qn_bool qn_json_fmt_format_string(qn_json_formatter_ptr fmt)
         } // if
 
         if ((fmt->buf_size + 12) >= fmt->buf_capacity) {
-            qn_err_set_try_again();
+            qn_err_set_no_enough_buffer();
             goto FORMATTING_STRING_FAILED;
         } // if
 
@@ -193,10 +188,8 @@ static qn_bool qn_json_fmt_format_string(qn_json_formatter_ptr fmt)
         fmt->buf_size += ret;
     } // while
 
-    if (!qn_json_fmt_putc(fmt, '"')) {
-        qn_err_set_try_again();
-        goto FORMATTING_STRING_FAILED;
-    } // if
+    if (!qn_json_fmt_putc(fmt, '"')) goto FORMATTING_STRING_FAILED;
+
     fmt->string = NULL;
     fmt->string_pos = 0;
     return qn_true;
@@ -246,6 +239,7 @@ static qn_bool qn_json_fmt_format_ordinary(qn_json_formatter_ptr fmt)
     } // switch
 
     if (ret < 0) {
+        // TODO : Set appropriate errors to accord to each system error accurately.
         qn_err_set_try_again();
         return qn_false;
     } // if
@@ -396,10 +390,10 @@ QN_API qn_bool qn_json_fmt_format_array(qn_json_formatter_ptr restrict fmt, qn_j
 QN_API qn_string qn_json_object_to_string(qn_json_object_ptr restrict root)
 {
     qn_json_formatter_ptr fmt = NULL;
-    char * buf = NULL;
-    char * new_buf = NULL;
+    char * buf;
+    char * new_buf;
     size_t capacity = 4096;
-    size_t new_capacity = 0;
+    size_t new_capacity;
     size_t size = capacity;
     size_t final_size = 0;
 
@@ -411,11 +405,12 @@ QN_API qn_string qn_json_object_to_string(qn_json_object_ptr restrict root)
     buf = malloc(capacity);
     if (!buf) {
         qn_json_fmt_destroy(fmt);
+        qn_err_set_no_enough_memory();
         return NULL;
     } // if
 
     while (!qn_json_fmt_format_object(fmt, root, buf + final_size, &size)) {
-        if (qn_err_is_try_again()) {
+        if (qn_err_is_no_enough_buffer()) {
             final_size += size;
 
             new_capacity = capacity + (capacity >> 1);
@@ -448,10 +443,10 @@ QN_API qn_string qn_json_object_to_string(qn_json_object_ptr restrict root)
 QN_API qn_string qn_json_array_to_string(qn_json_array_ptr restrict root)
 {
     qn_json_formatter_ptr fmt = NULL;
-    char * buf = NULL;
-    char * new_buf = NULL;
+    char * buf;
+    char * new_buf;
     size_t capacity = 4096;
-    size_t new_capacity = 0;
+    size_t new_capacity;
     size_t size = capacity;
     size_t final_size = 0;
 
@@ -463,11 +458,12 @@ QN_API qn_string qn_json_array_to_string(qn_json_array_ptr restrict root)
     buf = malloc(capacity);
     if (!buf) {
         qn_json_fmt_destroy(fmt);
+        qn_err_set_no_enough_memory();
         return NULL;
     } // if
 
     while (!qn_json_fmt_format_array(fmt, root, buf + final_size, &size)) {
-        if (qn_err_is_try_again()) {
+        if (qn_err_is_no_enough_buffer()) {
             final_size += size;
 
             new_capacity = capacity + (capacity >> 1);
