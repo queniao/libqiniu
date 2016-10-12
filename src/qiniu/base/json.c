@@ -1,3 +1,16 @@
+/***************************************************************************//**
+* @file qiniu/base/json.c
+* @brief The header file declares all JSON-related basic types and functions.
+*
+* AUTHOR      : liangtao@qiniu.com (QQ: 510857)
+* COPYRIGHT   : 2016(c) Shanghai Qiniu Information Technologies Co., Ltd.
+* DESCRIPTION :
+*
+* This source file define all JSON-related basic functions, like that create
+* and manipulate JSON objects or arrays. A set of iterating functions are also
+* included for traversing each element in objects or arrays.
+*******************************************************************************/
+
 #include <assert.h>
 
 #include "qiniu/base/string.h"
@@ -9,6 +22,7 @@ extern "C"
 {
 #endif
 
+typedef qn_uint32 qn_json_hash;
 typedef unsigned short int qn_json_pos;
 
 // ---- Inplementation of object of JSON ----
@@ -41,6 +55,14 @@ static qn_json_hash qn_json_obj_calculate_hash(const char * restrict cstr)
     return hash;
 }
 
+/***************************************************************************//**
+* @ingroup JSON-Object
+*
+* Allocate and construct a new JSON object.
+*
+* @retval non-NULL A pointer to the new JSON object.
+* @retval NULL Fail in creation and an error code is set.
+*******************************************************************************/
 QN_API qn_json_object_ptr qn_json_create_object(void)
 {
     qn_json_object_ptr new_obj = calloc(1, sizeof(qn_json_object));
@@ -54,6 +76,14 @@ QN_API qn_json_object_ptr qn_json_create_object(void)
     return new_obj;
 }
 
+/***************************************************************************//**
+* @ingroup JSON-Object
+*
+* Destruct and deallocate a JSON object.
+*
+* @param [in] obj The object to destroy.
+* @retval NONE
+*******************************************************************************/
 QN_API void qn_json_destroy_object(qn_json_object_ptr restrict obj)
 {
     qn_json_pos i;
@@ -254,6 +284,16 @@ static qn_bool qn_json_arr_unshift(qn_json_array_ptr restrict arr, qn_json_class
 
 // ---- Inplementation of JSON ----
 
+/***************************************************************************//**
+* @ingroup JSON-Object
+*
+* Create a new object and then set it as an element of the given parent object.
+*
+* @param [in] obj A non-NULL pointer to the parent object.
+* @param [in] key The key of the new object.
+* @retval non-NULL The pointer to The new object.
+* @retval NULL Fail in creation or setting, and an error code is set.
+*******************************************************************************/
 QN_API qn_json_object_ptr qn_json_create_and_set_object(qn_json_object_ptr restrict obj, const char * restrict key)
 {
     qn_json_variant new_elem;
@@ -265,6 +305,16 @@ QN_API qn_json_object_ptr qn_json_create_and_set_object(qn_json_object_ptr restr
     return new_elem.object;
 }
 
+/***************************************************************************//**
+* @ingroup JSON-Object
+*
+* Create a new array and then set it as an element of the given parent object.
+*
+* @param [in] obj A non-NULL pointer to the parent object.
+* @param [in] key The key of the new array.
+* @retval non-NULL The pointer to The new array.
+* @retval NULL Fail in creation or setting, and an error code is set.
+*******************************************************************************/
 QN_API qn_json_array_ptr qn_json_create_and_set_array(qn_json_object_ptr restrict obj, const char * restrict key)
 {
     qn_json_variant new_elem;
@@ -320,6 +370,14 @@ QN_API qn_json_array_ptr qn_json_create_and_unshift_array(qn_json_array_ptr rest
     return new_elem.array;
 }
 
+/***************************************************************************//**
+* @ingroup JSON-Object
+*
+* Return the current quantity of pairs of the object.
+*
+* @param [in] obj A non-NULL pointer to the object.
+* @retval Integer-Value The current quantity of pairs of the object.
+*******************************************************************************/
 QN_API int qn_json_size_object(qn_json_object_ptr restrict obj)
 {
     return obj->cnt;
