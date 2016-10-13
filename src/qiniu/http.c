@@ -99,6 +99,7 @@ QN_API qn_http_form_ptr qn_http_form_create(void)
 QN_API void qn_http_form_destroy(qn_http_form_ptr restrict form)
 {
     if (form) {
+        qn_http_form_reset(form);
         free(form);
     } // form
 }

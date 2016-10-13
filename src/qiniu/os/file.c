@@ -17,6 +17,7 @@ typedef struct _QN_FL_INFO
 QN_API void qn_fl_info_destroy(qn_fl_info_ptr restrict fi)
 {
     if (fi) {
+        qn_str_destroy(fi->fname);
         free(fi);
     } // fi
 }

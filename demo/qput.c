@@ -78,6 +78,7 @@ int main(int argc, char * argv[])
     while ((hdr_ent = qn_http_hdr_itr_next_entry(hdr_itr))) {
         printf("%s\n", qn_str_cstr(hdr_ent));
     } // while
+    qn_http_hdr_itr_destroy(hdr_itr);
 
     put_ret = qn_json_object_to_string(qn_stor_get_object_body(stor));
     if (!put_ret) {
