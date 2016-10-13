@@ -39,12 +39,14 @@ int main(int argc, char * argv[])
 
     scope = qn_cs_sprintf("%s:%s", bucket, key);
     if (!scope) {
+        qn_mac_destroy(mac);
         qn_json_destroy_object(auth.server_end.put_policy);
         printf("Cannot format a valid scope for inserting the file.\n");
         return 1;
     } // if
 
     if (!qn_json_set_string(auth.server_end.put_policy, "scope", qn_str_cstr(scope))) {
+        qn_mac_destroy(mac);
         qn_str_destroy(scope);
         qn_json_destroy_object(auth.server_end.put_policy);
         printf("Cannot set the scope field.\n");
@@ -53,6 +55,7 @@ int main(int argc, char * argv[])
     qn_str_destroy(scope);
 
     if (!qn_json_set_integer(auth.server_end.put_policy, "deadline", time(NULL) + 3600)) {
+        qn_mac_destroy(mac);
         qn_str_destroy(scope);
         qn_json_destroy_object(auth.server_end.put_policy);
         printf("Cannot set the deadline field.\n");
@@ -61,17 +64,21 @@ int main(int argc, char * argv[])
 
     stor = qn_stor_create();
     if (!stor) {
+        qn_mac_destroy(mac);
         qn_json_destroy_object(auth.server_end.put_policy);
         printf("Cannot initialize a new storage object.\n");
         return 1;
     } // if
 
     if (!qn_stor_rp_put_file(stor, &auth, &ss, fname, &ext)) {
+        qn_stor_rs_destroy(ss);
+        qn_mac_destroy(mac);
         qn_stor_destroy(stor);
         qn_json_destroy_object(auth.server_end.put_policy);
         printf("Cannot put the file `%s` to `%s:%s`.\n", fname, bucket, key);
         return 2;
     } // if
+    qn_mac_destroy(mac);
     qn_stor_rs_destroy(ss);
 
     put_ret = qn_json_object_to_string(qn_stor_get_object_body(stor));

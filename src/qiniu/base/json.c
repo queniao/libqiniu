@@ -47,7 +47,7 @@ QN_API qn_json_object_ptr qn_json_create_object(void)
     if (!new_obj) {
         qn_err_set_no_enough_memory();
         return NULL;
-    }
+    } // if
 
     new_obj->itm = &new_obj->init_itm[0];
     new_obj->cap = sizeof(new_obj->init_itm) / sizeof(new_obj->init_itm[0]);
@@ -65,7 +65,7 @@ QN_API void qn_json_destroy_object(qn_json_object_ptr restrict obj)
             case QN_JSON_STRING: qn_str_destroy(obj->itm[i].elem.string); break;
             default: break;
         } // switch
-        free(obj->itm[i].key);
+        qn_str_destroy(obj->itm[i].key);
     } // for
     if (obj->itm != &obj->init_itm[0]) {
         free(obj->itm);
@@ -117,6 +117,7 @@ static qn_bool qn_json_obj_set(qn_json_object_ptr restrict obj, const char * res
 {
     qn_json_hash hash;
     qn_json_pos pos;
+    qn_string new_key;
     int existent = -2;
 
     hash = qn_json_obj_calculate_hash(key);
@@ -136,12 +137,13 @@ static qn_bool qn_json_obj_set(qn_json_object_ptr restrict obj, const char * res
     } // if
 
     if ((obj->cap - obj->cnt) <= 0 && !qn_json_obj_augment(obj)) return qn_false;
+    if (!(new_key = qn_cs_duplicate(key))) return qn_false;
 
     if (pos < obj->cnt) memmove(&obj->itm[pos+1], &obj->itm[pos], sizeof(qn_json_obj_item) * (obj->cnt - pos));
 
-    if (!(obj->itm[pos].key = qn_cs_duplicate(key))) return qn_false;
     obj->itm[pos].hash = hash;
     obj->itm[pos].class = cls;
+    obj->itm[pos].key = new_key;
     obj->itm[pos].elem = new_elem;
 
     obj->cnt += 1;
@@ -173,7 +175,7 @@ QN_API qn_json_array_ptr qn_json_create_array(void)
     if (!new_arr) {
         qn_err_set_no_enough_memory();
         return NULL;
-    }
+    } // if
 
     new_arr->itm = &new_arr->init_itm[0];
     new_arr->cap = sizeof(new_arr->init_itm) / sizeof(new_arr->init_itm[0]);
@@ -192,9 +194,7 @@ QN_API void qn_json_destroy_array(qn_json_array_ptr restrict arr)
             default: break;
         } // switch
     } // for
-    if (arr->itm != &arr->init_itm[0]) {
-        free(arr->itm);
-    } // if
+    if (arr->itm != &arr->init_itm[0]) free(arr->itm);
     free(arr);
 }
 
@@ -418,9 +418,7 @@ QN_API qn_bool qn_json_set_string(qn_json_object_ptr restrict obj, const char * 
 QN_API qn_bool qn_json_set_text(qn_json_object_ptr restrict obj, const char * restrict key, const char * restrict val, size_t size)
 {
     qn_json_variant elem;
-    if (size < 0) {
-        elem.string = qn_cs_duplicate(val);
-    } else if (size > 0) {
+    if (size > 0) {
         elem.string = qn_cs_clone(val, size);
     } else {
         elem.string = qn_str_empty_string;
@@ -471,9 +469,9 @@ QN_API void qn_json_unset(qn_json_object_ptr restrict obj, const char * restrict
         case QN_JSON_ARRAY: qn_json_destroy_array(obj->itm[pos].elem.array); break;
         case QN_JSON_STRING: qn_str_destroy(obj->itm[pos].elem.string); break;
         default: break;
-    }
-    free((void*)obj->itm[pos].key);
-    memmove(&obj->itm[pos], &obj->itm[pos+1], sizeof(qn_json_obj_item) * (obj->cnt - pos - 1));
+    } // switch
+    qn_str_destroy(obj->itm[pos].key);
+    if (pos < obj->cnt - 1) memmove(&obj->itm[pos], &obj->itm[pos+1], sizeof(qn_json_obj_item) * (obj->cnt - pos - 1));
     obj->cnt -= 1;
 }
 
@@ -487,9 +485,7 @@ QN_API qn_bool qn_json_push_string(qn_json_array_ptr restrict arr, const char * 
 QN_API qn_bool qn_json_push_text(qn_json_array_ptr restrict arr, const char * restrict val, size_t size)
 {
     qn_json_variant elem;
-    if (size < 0) {
-        elem.string = qn_cs_duplicate(val);
-    } else if (size > 0) {
+    if (size > 0) {
         elem.string = qn_cs_clone(val, size);
     } else {
         elem.string = qn_str_empty_string;
@@ -533,7 +529,9 @@ QN_API void qn_json_pop(qn_json_array_ptr restrict arr)
             qn_json_destroy_object(arr->itm[arr->end].elem.object);
         } else if (arr->itm[arr->end].class == QN_JSON_ARRAY) {
             qn_json_destroy_array(arr->itm[arr->end].elem.array);
-        }
+        } else if (arr->itm[arr->end].class == QN_JSON_STRING) {
+            qn_str_destroy(arr->itm[arr->end].elem.string);
+        } // if
         arr->cnt -= 1;
     } // if
 }
@@ -548,9 +546,7 @@ QN_API qn_bool qn_json_unshift_string(qn_json_array_ptr restrict arr, const char
 QN_API qn_bool qn_json_unshift_text(qn_json_array_ptr restrict arr, const char * restrict val, size_t size)
 {
     qn_json_variant elem;
-    if (size < 0) {
-        elem.string = qn_cs_duplicate(val);
-    } else if (size > 0) {
+    if (size > 0) {
         elem.string = qn_cs_clone(val, size);
     } else {
         elem.string = qn_str_empty_string;
@@ -593,7 +589,9 @@ QN_API void qn_json_shift(qn_json_array_ptr restrict arr)
             qn_json_destroy_object(arr->itm[arr->begin].elem.object);
         } else if (arr->itm[arr->begin].class == QN_JSON_ARRAY) {
             qn_json_destroy_array(arr->itm[arr->begin].elem.array);
-        }
+        } else if (arr->itm[arr->begin].class == QN_JSON_STRING) {
+            qn_str_destroy(arr->itm[arr->begin].elem.string);
+        } // if
         arr->begin += 1;
         arr->cnt -= 1;
     } // if
