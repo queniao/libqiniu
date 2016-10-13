@@ -61,7 +61,7 @@ static qn_json_hash qn_json_obj_calculate_hash(const char * restrict cstr)
 * Allocate and construct a new JSON object.
 *
 * @retval non-NULL A pointer to the new JSON object.
-* @retval NULL Fail in creation and an error code is set.
+* @retval NULL Failed in creation and an error code is set.
 *******************************************************************************/
 QN_API qn_json_object_ptr qn_json_create_object(void)
 {
@@ -81,7 +81,7 @@ QN_API qn_json_object_ptr qn_json_create_object(void)
 *
 * Destruct and deallocate a JSON object.
 *
-* @param [in] obj The object to destroy.
+* @param [in] obj The pointer to the object to destroy.
 * @retval NONE
 *******************************************************************************/
 QN_API void qn_json_destroy_object(qn_json_object_ptr restrict obj)
@@ -197,6 +197,14 @@ typedef struct _QN_JSON_ARRAY
     qn_json_arr_item init_itm[4];
 } qn_json_array, *qn_json_array_ptr;
 
+/***************************************************************************//**
+* @ingroup JSON-Array
+*
+* Allocate and construct a new JSON array.
+*
+* @retval non-NULL A pointer to the new JSON array.
+* @retval NULL Failed in creation and an error code is set.
+*******************************************************************************/
 QN_API qn_json_array_ptr qn_json_create_array(void)
 {
     qn_json_array_ptr new_arr = calloc(1, sizeof(qn_json_array));
@@ -210,6 +218,14 @@ QN_API qn_json_array_ptr qn_json_create_array(void)
     return new_arr;
 }
 
+/***************************************************************************//**
+* @ingroup JSON-Array
+*
+* Destruct and deallocate a JSON array.
+*
+* @param [in] arr The pointer to the array to destroy.
+* @retval NONE
+*******************************************************************************/
 QN_API void qn_json_destroy_array(qn_json_array_ptr restrict arr)
 {
     qn_json_pos i;
@@ -287,12 +303,12 @@ static qn_bool qn_json_arr_unshift(qn_json_array_ptr restrict arr, qn_json_class
 /***************************************************************************//**
 * @ingroup JSON-Object
 *
-* Create a new object and then set it as an element of the given parent object.
+* Create a new object and then set it as an element into the target object.
 *
-* @param [in] obj A non-NULL pointer to the parent object.
+* @param [in] obj The non-NULL pointer to the target object.
 * @param [in] key The key of the new object.
-* @retval non-NULL The pointer to The new object.
-* @retval NULL Fail in creation or setting, and an error code is set.
+* @retval non-NULL The pointer to the new object.
+* @retval NULL Failed in creation or setting, and an error code is set.
 *******************************************************************************/
 QN_API qn_json_object_ptr qn_json_create_and_set_object(qn_json_object_ptr restrict obj, const char * restrict key)
 {
@@ -308,12 +324,12 @@ QN_API qn_json_object_ptr qn_json_create_and_set_object(qn_json_object_ptr restr
 /***************************************************************************//**
 * @ingroup JSON-Object
 *
-* Create a new array and then set it as an element of the given parent object.
+* Create a new array and then set it as an element into the target object.
 *
-* @param [in] obj A non-NULL pointer to the parent object.
+* @param [in] obj The non-NULL pointer to the target object.
 * @param [in] key The key of the new array.
-* @retval non-NULL The pointer to The new array.
-* @retval NULL Fail in creation or setting, and an error code is set.
+* @retval non-NULL The pointer to the new array.
+* @retval NULL Failed in creation or setting, and an error code is set.
 *******************************************************************************/
 QN_API qn_json_array_ptr qn_json_create_and_set_array(qn_json_object_ptr restrict obj, const char * restrict key)
 {
@@ -326,6 +342,15 @@ QN_API qn_json_array_ptr qn_json_create_and_set_array(qn_json_object_ptr restric
     return new_elem.array;
 }
 
+/***************************************************************************//**
+* @ingroup JSON-Array
+*
+* Create a new object and then push it as an element into the target array.
+*
+* @param [in] obj The non-NULL pointer to the target array.
+* @retval non-NULL The pointer to the new object.
+* @retval NULL Failed in creation or setting, and an error code is set.
+*******************************************************************************/
 QN_API qn_json_object_ptr qn_json_create_and_push_object(qn_json_array_ptr restrict arr)
 {
     qn_json_variant new_elem;
@@ -337,6 +362,15 @@ QN_API qn_json_object_ptr qn_json_create_and_push_object(qn_json_array_ptr restr
     return new_elem.object;
 }
 
+/***************************************************************************//**
+* @ingroup JSON-Array
+*
+* Create a new array and then push it as an element into the target array.
+*
+* @param [in] obj The non-NULL pointer to the target array.
+* @retval non-NULL The pointer to the new array.
+* @retval NULL Failed in creation or setting, and an error code is set.
+*******************************************************************************/
 QN_API qn_json_array_ptr qn_json_create_and_push_array(qn_json_array_ptr restrict arr)
 {
     qn_json_variant new_elem;
@@ -348,6 +382,15 @@ QN_API qn_json_array_ptr qn_json_create_and_push_array(qn_json_array_ptr restric
     return new_elem.array;
 }
 
+/***************************************************************************//**
+* @ingroup JSON-Array
+*
+* Create a new object and then unshift it as an element into the target array.
+*
+* @param [in] obj The non-NULL pointer to the target array.
+* @retval non-NULL The pointer to the new object.
+* @retval NULL Failed in creation or setting, and an error code is set.
+*******************************************************************************/
 QN_API qn_json_object_ptr qn_json_create_and_unshift_object(qn_json_array_ptr restrict arr)
 {
     qn_json_variant new_elem;
@@ -359,6 +402,15 @@ QN_API qn_json_object_ptr qn_json_create_and_unshift_object(qn_json_array_ptr re
     return new_elem.object;
 }
 
+/***************************************************************************//**
+* @ingroup JSON-Array
+*
+* Create a new array and then unshift it as an element into the target array.
+*
+* @param [in] obj The non-NULL pointer to the target array.
+* @retval non-NULL The pointer to the new array.
+* @retval NULL Failed in creation or setting, and an error code is set.
+*******************************************************************************/
 QN_API qn_json_array_ptr qn_json_create_and_unshift_array(qn_json_array_ptr restrict arr)
 {
     qn_json_variant new_elem;
@@ -375,7 +427,7 @@ QN_API qn_json_array_ptr qn_json_create_and_unshift_array(qn_json_array_ptr rest
 *
 * Return the current quantity of pairs of the object.
 *
-* @param [in] obj A non-NULL pointer to the object.
+* @param [in] obj The non-NULL pointer to the object.
 * @retval Integer-Value The current quantity of pairs of the object.
 *******************************************************************************/
 QN_API int qn_json_size_object(qn_json_object_ptr restrict obj)
@@ -383,11 +435,30 @@ QN_API int qn_json_size_object(qn_json_object_ptr restrict obj)
     return obj->cnt;
 }
 
+/***************************************************************************//**
+* @ingroup JSON-Array
+*
+* Return the current quantity of values of the array.
+*
+* @param [in] obj The non-NULL pointer to the array.
+* @retval Integer-Value The current quantity of values of the array.
+*******************************************************************************/
 QN_API int qn_json_size_array(qn_json_array_ptr restrict arr)
 {
     return arr->cnt;
 }
 
+/***************************************************************************//**
+* @ingroup JSON-Object
+*
+* Get an object element from the source object.
+*
+* @param [in] obj The non-NULL pointer to the source object.
+* @param [in] key The key of the element.
+* @param [in] default_val The default value that will return in case that
+*                         the element does not exist.
+* @retval ANY The pointer to the element or the default value.
+*******************************************************************************/
 QN_API qn_json_object_ptr qn_json_get_object(qn_json_object_ptr restrict obj, const char * restrict key, qn_json_object_ptr restrict default_val)
 {
     int existent = -2;
@@ -395,6 +466,17 @@ QN_API qn_json_object_ptr qn_json_get_object(qn_json_object_ptr restrict obj, co
     return (existent != 0 || obj->itm[pos].class != QN_JSON_OBJECT) ? default_val : obj->itm[pos].elem.object;
 }
 
+/***************************************************************************//**
+* @ingroup JSON-Object
+*
+* Get an array element from the source object.
+*
+* @param [in] obj The non-NULL pointer to the source object.
+* @param [in] key The key of the element.
+* @param [in] default_val The default value that will return in case that
+*                         the element does not exist.
+* @retval ANY The pointer to the element or the default value.
+*******************************************************************************/
 QN_API qn_json_array_ptr qn_json_get_array(qn_json_object_ptr restrict obj, const char * restrict key, qn_json_array_ptr restrict default_val)
 {
     int existent = -2;
@@ -402,6 +484,17 @@ QN_API qn_json_array_ptr qn_json_get_array(qn_json_object_ptr restrict obj, cons
     return (existent != 0 || obj->itm[pos].class != QN_JSON_ARRAY) ? default_val : obj->itm[pos].elem.array;
 }
 
+/***************************************************************************//**
+* @ingroup JSON-Object
+*
+* Get a string element from the source object.
+*
+* @param [in] obj The non-NULL pointer to the source object.
+* @param [in] key The key of the element.
+* @param [in] default_val The default value that will return in case that
+*                         the element does not exist.
+* @retval ANY The pointer to the element or the default value.
+*******************************************************************************/
 QN_API qn_string qn_json_get_string(qn_json_object_ptr restrict obj, const char * restrict key, qn_string restrict default_val)
 {
     int existent = -2;
@@ -409,6 +502,17 @@ QN_API qn_string qn_json_get_string(qn_json_object_ptr restrict obj, const char 
     return (existent != 0 || obj->itm[pos].class != QN_JSON_STRING) ? default_val : obj->itm[pos].elem.string;
 }
 
+/***************************************************************************//**
+* @ingroup JSON-Object
+*
+* Get an integer element from the source object.
+*
+* @param [in] obj The non-NULL pointer to the source object.
+* @param [in] key The key of the element.
+* @param [in] default_val The default value that will return in case that
+*                         the element does not exist.
+* @retval ANY The pointer to the element or the default value.
+*******************************************************************************/
 QN_API qn_integer qn_json_get_integer(qn_json_object_ptr restrict obj, const char * restrict key, qn_integer default_val)
 {
     int existent = -2;
@@ -416,6 +520,17 @@ QN_API qn_integer qn_json_get_integer(qn_json_object_ptr restrict obj, const cha
     return (existent != 0 || obj->itm[pos].class != QN_JSON_INTEGER) ? default_val : obj->itm[pos].elem.integer;
 }
 
+/***************************************************************************//**
+* @ingroup JSON-Object
+*
+* Get a number element from the source object.
+*
+* @param [in] obj The non-NULL pointer to the source object.
+* @param [in] key The key of the element.
+* @param [in] default_val The default value that will return in case that
+*                         the element does not exist.
+* @retval ANY The pointer to the element or the default value.
+*******************************************************************************/
 QN_API qn_number qn_json_get_number(qn_json_object_ptr restrict obj, const char * restrict key, qn_number default_val)
 {
     int existent = -2;
@@ -423,6 +538,17 @@ QN_API qn_number qn_json_get_number(qn_json_object_ptr restrict obj, const char 
     return (existent != 0 || obj->itm[pos].class != QN_JSON_NUMBER) ? default_val : obj->itm[pos].elem.number;
 }
 
+/***************************************************************************//**
+* @ingroup JSON-Object
+*
+* Get a boolean element from the source object.
+*
+* @param [in] obj The non-NULL pointer to the source object.
+* @param [in] key The key of the element.
+* @param [in] default_val The default value that will return in case that
+*                         the element does not exist.
+* @retval ANY The pointer to the element or the default value.
+*******************************************************************************/
 QN_API qn_bool qn_json_get_boolean(qn_json_object_ptr restrict obj, const char * restrict key, qn_bool default_val)
 {
     int existent = -2;
@@ -430,42 +556,119 @@ QN_API qn_bool qn_json_get_boolean(qn_json_object_ptr restrict obj, const char *
     return (existent != 0 || obj->itm[pos].class != QN_JSON_BOOLEAN) ? default_val : obj->itm[pos].elem.boolean;
 }
 
+/***************************************************************************//**
+* @ingroup JSON-Array
+*
+* Get an object element from the source array at the specified position.
+*
+* @param [in] obj The non-NULL pointer to the source array.
+* @param [in] n The position of the element.
+* @param [in] default_val The default value that will return in case that
+*                         the element does not exist.
+* @retval ANY The pointer to the element or the default value.
+*******************************************************************************/
 QN_API qn_json_object_ptr qn_json_pick_object(qn_json_array_ptr restrict arr, int n, qn_json_object_ptr restrict default_val)
 {
     qn_json_pos pos = qn_json_arr_find(arr, n);
     return (pos == arr->cnt || arr->itm[pos].class != QN_JSON_OBJECT) ? default_val : arr->itm[pos].elem.object;
 }
 
+/***************************************************************************//**
+* @ingroup JSON-Array
+*
+* Get an array element from the source array at the specified position.
+*
+* @param [in] obj The non-NULL pointer to the source array.
+* @param [in] n The position of the element.
+* @param [in] default_val The default value that will return in case that
+*                         the element does not exist.
+* @retval ANY The pointer to the element or the default value.
+*******************************************************************************/
 QN_API qn_json_array_ptr qn_json_pick_array(qn_json_array_ptr restrict arr, int n, qn_json_array_ptr restrict default_val)
 {
     qn_json_pos pos = qn_json_arr_find(arr, n);
     return (pos == arr->cnt || arr->itm[pos].class != QN_JSON_ARRAY) ? default_val : arr->itm[pos].elem.array;
 }
 
+/***************************************************************************//**
+* @ingroup JSON-Array
+*
+* Get a string element from the source array at the specified position.
+*
+* @param [in] obj The non-NULL pointer to the source array.
+* @param [in] n The position of the element.
+* @param [in] default_val The default value that will return in case that
+*                         the element does not exist.
+* @retval ANY The pointer to the element or the default value.
+*******************************************************************************/
 QN_API qn_string qn_json_pick_string(qn_json_array_ptr restrict arr, int n, qn_string restrict default_val)
 {
     qn_json_pos pos = qn_json_arr_find(arr, n);
     return (pos == arr->cnt || arr->itm[pos].class != QN_JSON_STRING) ? default_val : arr->itm[pos].elem.string;
 }
 
+/***************************************************************************//**
+* @ingroup JSON-Array
+*
+* Get an integer element from the source array at the specified position.
+*
+* @param [in] obj The non-NULL pointer to the source array.
+* @param [in] n The position of the element.
+* @param [in] default_val The default value that will return in case that
+*                         the element does not exist.
+* @retval ANY The pointer to the element or the default value.
+*******************************************************************************/
 QN_API qn_integer qn_json_pick_integer(qn_json_array_ptr restrict arr, int n, qn_integer default_val)
 {
     qn_json_pos pos = qn_json_arr_find(arr, n);
     return (pos == arr->cnt || arr->itm[pos].class != QN_JSON_INTEGER) ? default_val : arr->itm[pos].elem.integer;
 }
 
+/***************************************************************************//**
+* @ingroup JSON-Array
+*
+* Get a number element from the source array at the specified position.
+*
+* @param [in] obj The non-NULL pointer to the source array.
+* @param [in] n The position of the element.
+* @param [in] default_val The default value that will return in case that
+*                         the element does not exist.
+* @retval ANY The pointer to the element or the default value.
+*******************************************************************************/
 QN_API qn_number qn_json_pick_number(qn_json_array_ptr restrict arr, int n, qn_number default_val)
 {
     qn_json_pos pos = qn_json_arr_find(arr, n);
     return (pos == arr->cnt || arr->itm[pos].class != QN_JSON_NUMBER) ? default_val : arr->itm[pos].elem.number;
 }
 
+/***************************************************************************//**
+* @ingroup JSON-Array
+*
+* Get a boolean element from the source array at the specified position.
+*
+* @param [in] obj The non-NULL pointer to the source array.
+* @param [in] n The position of the element.
+* @param [in] default_val The default value that will return in case that
+*                         the element does not exist.
+* @retval ANY The pointer to the element or the default value.
+*******************************************************************************/
 QN_API qn_bool qn_json_pick_boolean(qn_json_array_ptr restrict arr, int n, qn_bool default_val)
 {
     qn_json_pos pos = qn_json_arr_find(arr, n);
     return (pos == arr->cnt || arr->itm[pos].class != QN_JSON_BOOLEAN) ? default_val : arr->itm[pos].elem.boolean;
 }
 
+/***************************************************************************//**
+* @ingroup JSON-Object
+*
+* Set the string element into the target object.
+*
+* @param [in] obj The non-NULL pointer to the target object.
+* @param [in] key The key of the setting string.
+* @param [in] val The pointer to the setting string.
+* @retval true Operation succeed.
+* @retval false Failed in setting and an error code is set.
+*******************************************************************************/
 QN_API qn_bool qn_json_set_string(qn_json_object_ptr restrict obj, const char * restrict key, const char * restrict val)
 {
     qn_json_variant elem;
@@ -473,6 +676,18 @@ QN_API qn_bool qn_json_set_string(qn_json_object_ptr restrict obj, const char * 
     return (!elem.string) ? qn_false : qn_json_obj_set(obj, key, QN_JSON_STRING, elem);
 }
 
+/***************************************************************************//**
+* @ingroup JSON-Object
+*
+* Set the piece of text as string element into the target object.
+*
+* @param [in] obj The non-NULL pointer to the target object.
+* @param [in] key The key of the setting text.
+* @param [in] val The pointer to the setting text.
+* @param [in] size The size of the setting text.
+* @retval true Operation succeed.
+* @retval false Failed in setting and an error code is set.
+*******************************************************************************/
 QN_API qn_bool qn_json_set_text(qn_json_object_ptr restrict obj, const char * restrict key, const char * restrict val, size_t size)
 {
     qn_json_variant elem;
@@ -486,6 +701,17 @@ QN_API qn_bool qn_json_set_text(qn_json_object_ptr restrict obj, const char * re
     return (!elem.string) ? qn_false : qn_json_obj_set(obj, key, QN_JSON_STRING, elem);
 }
 
+/***************************************************************************//**
+* @ingroup JSON-Object
+*
+* Set the integer element into the target object.
+*
+* @param [in] obj The non-NULL pointer to the target object.
+* @param [in] key The key of the setting integer.
+* @param [in] val The value of the setting integer.
+* @retval true Operation succeed.
+* @retval false Failed in setting and an error code is set.
+*******************************************************************************/
 QN_API qn_bool qn_json_set_integer(qn_json_object_ptr restrict obj, const char * restrict key, qn_integer val)
 {
     qn_json_variant elem;
@@ -493,6 +719,17 @@ QN_API qn_bool qn_json_set_integer(qn_json_object_ptr restrict obj, const char *
     return qn_json_obj_set(obj, key, QN_JSON_INTEGER, elem);
 }
 
+/***************************************************************************//**
+* @ingroup JSON-Object
+*
+* Set the number element into the target object.
+*
+* @param [in] obj The non-NULL pointer to the target object.
+* @param [in] key The key of the setting number.
+* @param [in] val The value of the setting number.
+* @retval true Operation succeed.
+* @retval false Failed in setting and an error code is set.
+*******************************************************************************/
 QN_API qn_bool qn_json_set_number(qn_json_object_ptr restrict obj, const char * restrict key, qn_number val)
 {
     qn_json_variant elem;
@@ -500,6 +737,17 @@ QN_API qn_bool qn_json_set_number(qn_json_object_ptr restrict obj, const char * 
     return qn_json_obj_set(obj, key, QN_JSON_NUMBER, elem);
 }
 
+/***************************************************************************//**
+* @ingroup JSON-Object
+*
+* Set the boolean element into the target object.
+*
+* @param [in] obj The non-NULL pointer to the target object.
+* @param [in] key The key of the setting boolean.
+* @param [in] val The value of the setting boolean.
+* @retval true Operation succeed.
+* @retval false Failed in setting and an error code is set.
+*******************************************************************************/
 QN_API qn_bool qn_json_set_boolean(qn_json_object_ptr restrict obj, const char * restrict key, qn_bool val)
 {
     qn_json_variant elem;
@@ -507,6 +755,16 @@ QN_API qn_bool qn_json_set_boolean(qn_json_object_ptr restrict obj, const char *
     return qn_json_obj_set(obj, key, QN_JSON_BOOLEAN, elem);
 }
 
+/***************************************************************************//**
+* @ingroup JSON-Object
+*
+* Set the null element into the target object.
+*
+* @param [in] obj The non-NULL pointer to the target object.
+* @param [in] key The key of the setting null.
+* @retval true Operation succeed.
+* @retval false Failed in setting and an error code is set.
+*******************************************************************************/
 QN_API qn_bool qn_json_set_null(qn_json_object_ptr restrict obj, const char * restrict key)
 {
     qn_json_variant elem;
@@ -514,6 +772,15 @@ QN_API qn_bool qn_json_set_null(qn_json_object_ptr restrict obj, const char * re
     return qn_json_obj_set(obj, key, QN_JSON_NULL, elem);
 }
 
+/***************************************************************************//**
+* @ingroup JSON-Object
+*
+* Unset the element which corresponds to the key.
+*
+* @param [in] obj The non-NULL pointer to the target object.
+* @param [in] key The key of the unsetting element.
+* @retval NONE
+*******************************************************************************/
 QN_API void qn_json_unset(qn_json_object_ptr restrict obj, const char * restrict key)
 {
     qn_json_pos pos;
@@ -522,19 +789,29 @@ QN_API void qn_json_unset(qn_json_object_ptr restrict obj, const char * restrict
     if (obj->cnt == 0) return;
 
     pos = qn_json_obj_find(obj, qn_json_obj_calculate_hash(key), key, &existent);
-    if (existent != 0) return; // There is no element according to the given key.
+    if (existent != 0) return; // There is no element corresponds to the key.
 
     switch (obj->itm[pos].class) {
         case QN_JSON_OBJECT: qn_json_destroy_object(obj->itm[pos].elem.object); break;
         case QN_JSON_ARRAY: qn_json_destroy_array(obj->itm[pos].elem.array); break;
         case QN_JSON_STRING: qn_str_destroy(obj->itm[pos].elem.string); break;
         default: break;
-    }
+    } // switch
     free((void*)obj->itm[pos].key);
     memmove(&obj->itm[pos], &obj->itm[pos+1], sizeof(qn_json_obj_item) * (obj->cnt - pos - 1));
     obj->cnt -= 1;
 }
 
+/***************************************************************************//**
+* @ingroup JSON-Array
+*
+* Push the string value into the target array as the tail element.
+*
+* @param [in] arr The non-NULL pointer to the target array.
+* @param [in] val The pointer to the pushing string.
+* @retval true Operation succeed.
+* @retval false Failed in pushing and an error code is set.
+*******************************************************************************/
 QN_API qn_bool qn_json_push_string(qn_json_array_ptr restrict arr, const char * restrict val)
 {
     qn_json_variant elem;
@@ -542,6 +819,18 @@ QN_API qn_bool qn_json_push_string(qn_json_array_ptr restrict arr, const char * 
     return (!elem.string) ? qn_false : qn_json_arr_push(arr, QN_JSON_STRING, elem);
 }
 
+/***************************************************************************//**
+* @ingroup JSON-Array
+*
+* Push the piece of text like a string into the target array as the tail
+* element.
+*
+* @param [in] arr The non-NULL pointer to the target array.
+* @param [in] val The pointer to the pushing text.
+* @param [in] size The size of the pushing text.
+* @retval true Operation succeed.
+* @retval false Failed in pushing and an error code is set.
+*******************************************************************************/
 QN_API qn_bool qn_json_push_text(qn_json_array_ptr restrict arr, const char * restrict val, size_t size)
 {
     qn_json_variant elem;
@@ -555,6 +844,16 @@ QN_API qn_bool qn_json_push_text(qn_json_array_ptr restrict arr, const char * re
     return (!elem.string) ? qn_false : qn_json_arr_push(arr, QN_JSON_STRING, elem);
 }
 
+/***************************************************************************//**
+* @ingroup JSON-Array
+*
+* Push the integer value into the target array as the tail element.
+*
+* @param [in] arr The non-NULL pointer to the target array.
+* @param [in] val The pointer to the pushing integer.
+* @retval true Operation succeed.
+* @retval false Failed in pushing and an error code is set.
+*******************************************************************************/
 QN_API qn_bool qn_json_push_integer(qn_json_array_ptr restrict arr, qn_integer val)
 {
     qn_json_variant elem;
@@ -562,6 +861,16 @@ QN_API qn_bool qn_json_push_integer(qn_json_array_ptr restrict arr, qn_integer v
     return qn_json_arr_push(arr, QN_JSON_INTEGER, elem);
 }
 
+/***************************************************************************//**
+* @ingroup JSON-Array
+*
+* Push the number value into the target array as the tail element.
+*
+* @param [in] arr The non-NULL pointer to the target array.
+* @param [in] val The pointer to the pushing number.
+* @retval true Operation succeed.
+* @retval false Failed in pushing and an error code is set.
+*******************************************************************************/
 QN_API qn_bool qn_json_push_number(qn_json_array_ptr restrict arr, qn_number val)
 {
     qn_json_variant elem;
@@ -569,6 +878,16 @@ QN_API qn_bool qn_json_push_number(qn_json_array_ptr restrict arr, qn_number val
     return qn_json_arr_push(arr, QN_JSON_NUMBER, elem);
 }
 
+/***************************************************************************//**
+* @ingroup JSON-Array
+*
+* Push the boolean value into the target array as the tail element.
+*
+* @param [in] arr The non-NULL pointer to the target array.
+* @param [in] val The pointer to the pushing boolean.
+* @retval true Operation succeed.
+* @retval false Failed in pushing and an error code is set.
+*******************************************************************************/
 QN_API qn_bool qn_json_push_boolean(qn_json_array_ptr restrict arr, qn_bool val)
 {
     qn_json_variant elem;
@@ -576,6 +895,15 @@ QN_API qn_bool qn_json_push_boolean(qn_json_array_ptr restrict arr, qn_bool val)
     return qn_json_arr_push(arr, QN_JSON_BOOLEAN, elem);
 }
 
+/***************************************************************************//**
+* @ingroup JSON-Array
+*
+* Push the null value into the target array as the tail element.
+*
+* @param [in] arr The non-NULL pointer to the target array.
+* @retval true Operation succeed.
+* @retval false Failed in pushing and an error code is set.
+*******************************************************************************/
 QN_API qn_bool qn_json_push_null(qn_json_array_ptr restrict arr)
 {
     qn_json_variant elem;
@@ -583,6 +911,14 @@ QN_API qn_bool qn_json_push_null(qn_json_array_ptr restrict arr)
     return qn_json_arr_push(arr, QN_JSON_NULL, elem);
 }
 
+/***************************************************************************//**
+* @ingroup JSON-Array
+*
+* Pop and destroy the tail element of the array.
+*
+* @param [in] arr The non-NULL pointer to the target array.
+* @retval NONE
+*******************************************************************************/
 QN_API void qn_json_pop(qn_json_array_ptr restrict arr)
 {
     if (arr->cnt > 0) {
@@ -596,6 +932,16 @@ QN_API void qn_json_pop(qn_json_array_ptr restrict arr)
     } // if
 }
 
+/***************************************************************************//**
+* @ingroup JSON-Array
+*
+* Unshift the string value into the target array as the head element.
+*
+* @param [in] arr The non-NULL pointer to the target array.
+* @param [in] val The pointer to the unshifting string.
+* @retval true Operation succeed.
+* @retval false Failed in unshifting and an error code is set.
+*******************************************************************************/
 QN_API qn_bool qn_json_unshift_string(qn_json_array_ptr restrict arr, const char * restrict val)
 {
     qn_json_variant elem;
@@ -603,6 +949,18 @@ QN_API qn_bool qn_json_unshift_string(qn_json_array_ptr restrict arr, const char
     return (!elem.string) ? qn_false : qn_json_arr_unshift(arr, QN_JSON_STRING, elem);
 }
 
+/***************************************************************************//**
+* @ingroup JSON-Array
+*
+* Unshift the piece of text like a string into the target array as the head
+* element.
+*
+* @param [in] arr The non-NULL pointer to the target array.
+* @param [in] val The pointer to the unshifting text.
+* @param [in] size The size of the unshifting text.
+* @retval true Operation succeed.
+* @retval false Failed in unshifting and an error code is set.
+*******************************************************************************/
 QN_API qn_bool qn_json_unshift_text(qn_json_array_ptr restrict arr, const char * restrict val, size_t size)
 {
     qn_json_variant elem;
@@ -616,6 +974,16 @@ QN_API qn_bool qn_json_unshift_text(qn_json_array_ptr restrict arr, const char *
     return (!elem.string) ? qn_false : qn_json_arr_unshift(arr, QN_JSON_STRING, elem);
 }
 
+/***************************************************************************//**
+* @ingroup JSON-Array
+*
+* Unshift the integer element into the target array as the head element.
+*
+* @param [in] arr The non-NULL pointer to the target array.
+* @param [in] val The pointer to the unshifting integer.
+* @retval true Operation succeed.
+* @retval false Failed in unshifting and an error code is set.
+*******************************************************************************/
 QN_API qn_bool qn_json_unshift_integer(qn_json_array_ptr restrict arr, qn_integer val)
 {
     qn_json_variant elem;
@@ -623,6 +991,16 @@ QN_API qn_bool qn_json_unshift_integer(qn_json_array_ptr restrict arr, qn_intege
     return qn_json_arr_unshift(arr, QN_JSON_INTEGER, elem);
 }
 
+/***************************************************************************//**
+* @ingroup JSON-Array
+*
+* Unshift the number value into the target array as the head element.
+*
+* @param [in] arr The non-NULL pointer to the target array.
+* @param [in] val The pointer to the unshifting number.
+* @retval true Operation succeed.
+* @retval false Failed in unshifting and an error code is set.
+*******************************************************************************/
 QN_API qn_bool qn_json_unshift_number(qn_json_array_ptr restrict arr, qn_number val)
 {
     qn_json_variant elem;
@@ -630,6 +1008,16 @@ QN_API qn_bool qn_json_unshift_number(qn_json_array_ptr restrict arr, qn_number 
     return qn_json_arr_unshift(arr, QN_JSON_NUMBER, elem);
 }
 
+/***************************************************************************//**
+* @ingroup JSON-Array
+*
+* Unshift the boolean value into the target array as the head element.
+*
+* @param [in] arr The non-NULL pointer to the target array.
+* @param [in] val The pointer to the unshifting boolean.
+* @retval true Operation succeed.
+* @retval false Failed in unshifting and an error code is set.
+*******************************************************************************/
 QN_API qn_bool qn_json_unshift_boolean(qn_json_array_ptr restrict arr, qn_bool val)
 {
     qn_json_variant elem;
@@ -637,6 +1025,15 @@ QN_API qn_bool qn_json_unshift_boolean(qn_json_array_ptr restrict arr, qn_bool v
     return qn_json_arr_unshift(arr, QN_JSON_BOOLEAN, elem);
 }
 
+/***************************************************************************//**
+* @ingroup JSON-Array
+*
+* Unshift the null value into the target array as the head element.
+*
+* @param [in] arr The non-NULL pointer to the target array.
+* @retval true Operation succeed.
+* @retval false Failed in unshifting and an error code is set.
+*******************************************************************************/
 QN_API qn_bool qn_json_unshift_null(qn_json_array_ptr restrict arr)
 {
     qn_json_variant elem;
@@ -644,6 +1041,14 @@ QN_API qn_bool qn_json_unshift_null(qn_json_array_ptr restrict arr)
     return qn_json_arr_unshift(arr, QN_JSON_NULL, elem);
 }
 
+/***************************************************************************//**
+* @ingroup JSON-Array
+*
+* Shift and destroy the head element of the array.
+*
+* @param [in] arr The non-NULL pointer to the target array.
+* @retval NONE
+*******************************************************************************/
 QN_API void qn_json_shift(qn_json_array_ptr restrict arr)
 {
     if (arr->cnt > 0) {
