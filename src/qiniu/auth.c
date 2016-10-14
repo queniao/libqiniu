@@ -238,9 +238,14 @@ QN_API qn_bool qn_pp_auto_delete_after_days(qn_json_object_ptr restrict pp, qn_u
 
 QN_API qn_string qn_pp_to_uptoken(qn_json_object_ptr restrict pp, qn_mac_ptr restrict mac)
 {
+    qn_string uptoken;
     qn_string str = qn_json_object_to_string(pp);
+
     if (!str) return NULL;
-    return qn_mac_make_uptoken(mac, qn_str_cstr(str), qn_str_size(str));
+
+    uptoken = qn_mac_make_uptoken(mac, qn_str_cstr(str), qn_str_size(str));
+    qn_str_destroy(str);
+    return uptoken;
 }
 
 // ---- Definition of Authorization ----

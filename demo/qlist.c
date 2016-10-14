@@ -18,6 +18,7 @@ qn_bool item_processor_callback(void * user_data, qn_json_object_ptr item)
         return qn_false;
     } // if
     printf("%d %s\n", ++*i, str);
+    qn_str_destroy(str);
     return qn_true;
 }
 
@@ -67,6 +68,7 @@ int main(int argc, char * argv[])
         return 2;
     } // if
 
+    qn_stor_destroy(stor);
     qn_mac_destroy(mac);
     return 0;
 }

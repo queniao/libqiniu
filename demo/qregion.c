@@ -67,6 +67,7 @@ int main(int argc, char * argv[])
             printf("svc:[%s] host=[io] base_url:[%s] hostname:[%s]\n", name, base_url, hostname ? hostname : "");
         } // for
     } // while
+    qn_rgn_itr_destroy(rgn_itr);
 
     qn_rgn_svc_destroy(rgn_svc);
     qn_rgn_tbl_destroy(rgn_tbl);
