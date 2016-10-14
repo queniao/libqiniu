@@ -78,7 +78,6 @@ int main(int argc, char * argv[])
         printf("Cannot put the file `%s` to `%s:%s`.\n", fname, bucket, key);
         return 2;
     } // if
-    qn_mac_destroy(mac);
     qn_stor_rs_destroy(ss);
 
     put_ret = qn_json_object_to_string(qn_stor_get_object_body(stor));
