@@ -513,7 +513,7 @@ QN_API qn_string qn_json_get_string(qn_json_object_ptr restrict obj, const char 
 *                         the element does not exist.
 * @retval ANY The pointer to the element or the default value.
 *******************************************************************************/
-QN_API qn_integer qn_json_get_integer(qn_json_object_ptr restrict obj, const char * restrict key, qn_integer default_val)
+QN_API qn_json_integer qn_json_get_integer(qn_json_object_ptr restrict obj, const char * restrict key, qn_json_integer default_val)
 {
     int existent = -2;
     qn_json_pos pos = qn_json_obj_find(obj, qn_json_obj_calculate_hash(key), key, &existent);
@@ -531,7 +531,7 @@ QN_API qn_integer qn_json_get_integer(qn_json_object_ptr restrict obj, const cha
 *                         the element does not exist.
 * @retval ANY The pointer to the element or the default value.
 *******************************************************************************/
-QN_API qn_number qn_json_get_number(qn_json_object_ptr restrict obj, const char * restrict key, qn_number default_val)
+QN_API qn_json_number qn_json_get_number(qn_json_object_ptr restrict obj, const char * restrict key, qn_json_number default_val)
 {
     int existent = -2;
     qn_json_pos pos = qn_json_obj_find(obj, qn_json_obj_calculate_hash(key), key, &existent);
@@ -618,7 +618,7 @@ QN_API qn_string qn_json_pick_string(qn_json_array_ptr restrict arr, int n, qn_s
 *                         the element does not exist.
 * @retval ANY The pointer to the element or the default value.
 *******************************************************************************/
-QN_API qn_integer qn_json_pick_integer(qn_json_array_ptr restrict arr, int n, qn_integer default_val)
+QN_API qn_json_integer qn_json_pick_integer(qn_json_array_ptr restrict arr, int n, qn_json_integer default_val)
 {
     qn_json_pos pos = qn_json_arr_find(arr, n);
     return (pos == arr->cnt || arr->itm[pos].class != QN_JSON_INTEGER) ? default_val : arr->itm[pos].elem.integer;
@@ -635,7 +635,7 @@ QN_API qn_integer qn_json_pick_integer(qn_json_array_ptr restrict arr, int n, qn
 *                         the element does not exist.
 * @retval ANY The pointer to the element or the default value.
 *******************************************************************************/
-QN_API qn_number qn_json_pick_number(qn_json_array_ptr restrict arr, int n, qn_number default_val)
+QN_API qn_json_number qn_json_pick_number(qn_json_array_ptr restrict arr, int n, qn_json_number default_val)
 {
     qn_json_pos pos = qn_json_arr_find(arr, n);
     return (pos == arr->cnt || arr->itm[pos].class != QN_JSON_NUMBER) ? default_val : arr->itm[pos].elem.number;
@@ -710,7 +710,7 @@ QN_API qn_bool qn_json_set_text(qn_json_object_ptr restrict obj, const char * re
 * @retval true Operation succeed.
 * @retval false Failed in setting and an error code is set.
 *******************************************************************************/
-QN_API qn_bool qn_json_set_integer(qn_json_object_ptr restrict obj, const char * restrict key, qn_integer val)
+QN_API qn_bool qn_json_set_integer(qn_json_object_ptr restrict obj, const char * restrict key, qn_json_integer val)
 {
     qn_json_variant elem;
     elem.integer = val;
@@ -728,7 +728,7 @@ QN_API qn_bool qn_json_set_integer(qn_json_object_ptr restrict obj, const char *
 * @retval true Operation succeed.
 * @retval false Failed in setting and an error code is set.
 *******************************************************************************/
-QN_API qn_bool qn_json_set_number(qn_json_object_ptr restrict obj, const char * restrict key, qn_number val)
+QN_API qn_bool qn_json_set_number(qn_json_object_ptr restrict obj, const char * restrict key, qn_json_number val)
 {
     qn_json_variant elem;
     elem.number = val;
@@ -850,7 +850,7 @@ QN_API qn_bool qn_json_push_text(qn_json_array_ptr restrict arr, const char * re
 * @retval true Operation succeed.
 * @retval false Failed in pushing and an error code is set.
 *******************************************************************************/
-QN_API qn_bool qn_json_push_integer(qn_json_array_ptr restrict arr, qn_integer val)
+QN_API qn_bool qn_json_push_integer(qn_json_array_ptr restrict arr, qn_json_integer val)
 {
     qn_json_variant elem;
     elem.integer = val;
@@ -867,7 +867,7 @@ QN_API qn_bool qn_json_push_integer(qn_json_array_ptr restrict arr, qn_integer v
 * @retval true Operation succeed.
 * @retval false Failed in pushing and an error code is set.
 *******************************************************************************/
-QN_API qn_bool qn_json_push_number(qn_json_array_ptr restrict arr, qn_number val)
+QN_API qn_bool qn_json_push_number(qn_json_array_ptr restrict arr, qn_json_number val)
 {
     qn_json_variant elem;
     elem.number = val;
@@ -980,7 +980,7 @@ QN_API qn_bool qn_json_unshift_text(qn_json_array_ptr restrict arr, const char *
 * @retval true Operation succeed.
 * @retval false Failed in unshifting and an error code is set.
 *******************************************************************************/
-QN_API qn_bool qn_json_unshift_integer(qn_json_array_ptr restrict arr, qn_integer val)
+QN_API qn_bool qn_json_unshift_integer(qn_json_array_ptr restrict arr, qn_json_integer val)
 {
     qn_json_variant elem;
     elem.integer = val;
@@ -997,7 +997,7 @@ QN_API qn_bool qn_json_unshift_integer(qn_json_array_ptr restrict arr, qn_intege
 * @retval true Operation succeed.
 * @retval false Failed in unshifting and an error code is set.
 *******************************************************************************/
-QN_API qn_bool qn_json_unshift_number(qn_json_array_ptr restrict arr, qn_number val)
+QN_API qn_bool qn_json_unshift_number(qn_json_array_ptr restrict arr, qn_json_number val)
 {
     qn_json_variant elem;
     elem.number = val;
