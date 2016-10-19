@@ -1078,6 +1078,14 @@ typedef struct _QN_JSON_ITERATOR
     qn_json_itr_level init_lvl[3];
 } qn_json_iterator;
 
+/***************************************************************************//**
+* @ingroup JSON-Iterator
+*
+* Allocate and construct a new JSON iterator.
+*
+* @retval non-NULL A pointer to the new iterator.
+* @retval NULL Failed in creation and an error code is set.
+*******************************************************************************/
 QN_API qn_json_iterator_ptr qn_json_itr_create(void)
 {
     qn_json_iterator_ptr new_itr = calloc(1, sizeof(qn_json_iterator));
@@ -1091,6 +1099,14 @@ QN_API qn_json_iterator_ptr qn_json_itr_create(void)
     return new_itr;
 }
 
+/***************************************************************************//**
+* @ingroup JSON-Iterator
+*
+* Destruct and deallocate a JSON iterator.
+*
+* @param [in] itr The pointer to the iterator to destroy.
+* @retval NONE
+*******************************************************************************/
 QN_API void qn_json_itr_destroy(qn_json_iterator_ptr restrict itr)
 {
     if (itr) {
@@ -1101,23 +1117,57 @@ QN_API void qn_json_itr_destroy(qn_json_iterator_ptr restrict itr)
     } // if
 }
 
+/***************************************************************************//**
+* @ingroup JSON-Iterator
+*
+* Reset the given JSON iterator for next iteration.
+*
+* @param [in] itr The pointer to the iterator to reset.
+* @retval NONE
+*******************************************************************************/
 QN_API void qn_json_itr_reset(qn_json_iterator_ptr restrict itr)
 {
     itr->cnt = 0;
 }
 
+/***************************************************************************//**
+* @ingroup JSON-Iterator
+*
+* Rewind the current level for a new iteration.
+*
+* @param [in] itr The pointer to the iterator to rewind.
+* @retval NONE
+*******************************************************************************/
 QN_API void qn_json_itr_rewind(qn_json_iterator_ptr restrict itr)
 {
     if (itr->cnt <= 0) return;
     itr->lvl[itr->cnt - 1].pos = 0;
 }
 
+/***************************************************************************//**
+* @ingroup JSON-Iterator
+*
+* Test the given iterator whether it is in use.
+*
+* @param [in] itr The pointer to the iterator to test.
+* @retval true The iterator is not in use.
+* @retval false The iterator is in use.
+*******************************************************************************/
 QN_API qn_bool qn_json_itr_is_empty(qn_json_iterator_ptr restrict itr)
 {
     return itr->cnt == 0;
 }
 
-QN_API int qn_json_itr_steps(qn_json_iterator_ptr restrict itr)
+/***************************************************************************//**
+* @ingroup JSON-Iterator
+*
+* Get the count that how many pairs or values of the current level has been
+* iterated.
+*
+* @param [in] itr The pointer to the iterator.
+* @retval ANY The count of iterated pairs or values of the current level.
+*******************************************************************************/
+QN_API int qn_json_itr_done_steps(qn_json_iterator_ptr restrict itr)
 {
     return (itr->cnt <= 0) ? 0 : itr->lvl[itr->cnt - 1].pos;
 }
@@ -1212,7 +1262,7 @@ QN_API int qn_json_itr_advance(qn_json_iterator_ptr restrict itr, void * data, q
             lvl->pos += 1;
         } else {
             return QN_JSON_ITR_NO_MORE;
-        }
+        } // if
     } else {
         if (lvl->pos < lvl->parent.array->cnt) {
             class = lvl->parent.array->itm[lvl->pos + lvl->parent.array->begin].class;
@@ -1220,8 +1270,8 @@ QN_API int qn_json_itr_advance(qn_json_iterator_ptr restrict itr, void * data, q
             lvl->pos += 1;
         } else {
             return QN_JSON_ITR_NO_MORE;
-        }
-    }
+        } // if
+    } // if
     return cb(data, class, &elem);
 }
 

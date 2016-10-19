@@ -51,8 +51,8 @@ typedef struct _QN_JSON_ARRAY * qn_json_array_ptr;
 /***************************************************************************//**
 * @defgroup JSON-Variant Implementation of JSON Variant
 *
-* The **qn_json_variant_ptr** type represents a JSON variant to save a JSON
-* value.
+* The **qn_json_variant_ptr** type represents a JSON variant used to save a
+* JSON value.
 *******************************************************************************/
 
 typedef qn_bool qn_json_boolean;
@@ -156,9 +156,9 @@ QN_API extern void qn_json_shift(qn_json_array_ptr restrict arr);
 *
 * The **qn_json_iterator_ptr** represents a JSON iterator.  Use this
 * iterator type to iterate all elements reside in a JSON object or array.
-* Moreover, the iterator holds a status value for each level of the
+* Moreover, the iterator can hold one status value for each level of the
 * hierarchy, so the caller can implement some useful features based on this, 
-* like the JSON formatter and parser.
+* like the JSON formatter and parser provided by this SDK.
 *******************************************************************************/
 
 struct _QN_JSON_ITERATOR;
@@ -170,7 +170,7 @@ QN_API extern void qn_json_itr_reset(qn_json_iterator_ptr restrict itr);
 QN_API extern void qn_json_itr_rewind(qn_json_iterator_ptr restrict itr);
 
 QN_API extern qn_bool qn_json_itr_is_empty(qn_json_iterator_ptr restrict itr);
-QN_API extern int qn_json_itr_steps(qn_json_iterator_ptr restrict itr);
+QN_API extern int qn_json_itr_done_steps(qn_json_iterator_ptr restrict itr);
 
 QN_API extern qn_string qn_json_itr_get_key(qn_json_iterator_ptr restrict itr);
 

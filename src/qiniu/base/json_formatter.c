@@ -269,7 +269,7 @@ static qn_bool qn_json_fmt_format(qn_json_formatter_ptr fmt, char * restrict buf
             case QN_JSON_FORMATTING_NEXT:
                 itr_ret = qn_json_itr_advance(fmt->iterator, fmt, &qn_json_fmt_callback);
                 if (itr_ret == QN_JSON_ITR_OK) {
-                    if (qn_json_itr_steps(fmt->iterator) > 1 && !qn_json_fmt_putc(fmt, ',')) {
+                    if (qn_json_itr_done_steps(fmt->iterator) > 1 && !qn_json_fmt_putc(fmt, ',')) {
                         // Output the comma between each element.
                         return qn_false;
                     } // if
