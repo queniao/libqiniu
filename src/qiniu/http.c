@@ -29,7 +29,7 @@ QN_API qn_http_json_writer_ptr qn_http_json_wrt_create(void)
 {
     qn_http_json_writer_ptr new_body = malloc(sizeof(qn_http_json_writer));
     if (!new_body) {
-        qn_err_set_no_enough_memory();
+        qn_err_set_out_of_memory();
         return NULL;
     } // if
 
@@ -90,7 +90,7 @@ QN_API qn_http_form_ptr qn_http_form_create(void)
 {
     qn_http_form_ptr new_form = calloc(1, sizeof(qn_http_form));
     if (!new_form) {
-        qn_err_set_no_enough_memory();
+        qn_err_set_out_of_memory();
         return NULL;
     } // if
     return new_form;
@@ -191,7 +191,7 @@ QN_API qn_http_request_ptr qn_http_req_create(void)
 
     new_req = calloc(1, sizeof(qn_http_request));
     if (!new_req) {
-        qn_err_set_no_enough_memory();
+        qn_err_set_out_of_memory();
         return NULL;
     } // if
 
@@ -335,7 +335,7 @@ QN_API qn_http_response_ptr qn_http_resp_create(void)
 
     new_resp = calloc(1, sizeof(qn_http_response));
     if (!new_resp) {
-        qn_err_set_no_enough_memory();
+        qn_err_set_out_of_memory();
         return NULL;
     } // if
 
@@ -516,7 +516,7 @@ QN_API qn_http_connection_ptr qn_http_conn_create(void)
 
     new_conn = calloc(1, sizeof(qn_http_connection));
     if (!new_conn) {
-        qn_err_set_no_enough_memory();
+        qn_err_set_out_of_memory();
         return NULL;
     } // if
 

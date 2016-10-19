@@ -26,14 +26,14 @@ QN_API qn_rgn_host_ptr qn_rgn_host_create(void)
 {
     qn_rgn_host_ptr new_host = calloc(1, sizeof(qn_rgn_host));
     if (!new_host) {
-        qn_err_set_no_enough_memory();
+        qn_err_set_out_of_memory();
         return NULL;
     } // if
 
     new_host->cap = 4;
     new_host->entries = calloc(new_host->cap, sizeof(qn_rgn_entry));
     if (!new_host->entries) {
-        qn_err_set_no_enough_memory();
+        qn_err_set_out_of_memory();
         free(new_host);
         return NULL;
     } // if
@@ -63,7 +63,7 @@ static qn_bool qn_rgn_host_augment(qn_rgn_host_ptr restrict host)
     qn_rgn_pos new_cap = host->cap + (host->cap >> 1); // 1.5 times.
     qn_rgn_entry * new_entries = calloc(new_cap, sizeof(qn_rgn_entry));
     if (!new_entries) {
-        qn_err_set_no_enough_memory();
+        qn_err_set_out_of_memory();
         return qn_false;
     } // if
 
@@ -148,7 +148,7 @@ QN_API qn_region_ptr qn_rgn_create(const char * restrict name)
 {
     qn_region_ptr new_rgn = calloc(1, sizeof(qn_region));
     if (!new_rgn) {
-        qn_err_set_no_enough_memory();
+        qn_err_set_out_of_memory();
         return NULL;
     } // if
 
@@ -182,7 +182,7 @@ static qn_region_ptr qn_rgn_clone(qn_region_ptr rgn, const char * restrict name)
 {
     qn_region_ptr new_rgn = calloc(1, sizeof(qn_region));
     if (!new_rgn) {
-        qn_err_set_no_enough_memory();
+        qn_err_set_out_of_memory();
         return NULL;
     } // if
 
@@ -276,7 +276,7 @@ QN_API qn_rgn_table_ptr qn_rgn_tbl_create(void)
 {
     qn_rgn_table_ptr new_rtbl = calloc(1, sizeof(qn_rgn_table));
     if (!new_rtbl) {
-        qn_err_set_no_enough_memory();
+        qn_err_set_out_of_memory();
         return NULL;
     } // if
 
@@ -284,7 +284,7 @@ QN_API qn_rgn_table_ptr qn_rgn_tbl_create(void)
     new_rtbl->regions = calloc(new_rtbl->cap, sizeof(qn_region_ptr));
     if (!new_rtbl->regions) {
         free(new_rtbl);
-        qn_err_set_no_enough_memory();
+        qn_err_set_out_of_memory();
         return NULL;
     } // if
     return new_rtbl;
@@ -311,7 +311,7 @@ static qn_bool qn_rgn_tbl_augment(qn_rgn_table_ptr restrict rtbl)
     qn_rgn_pos new_cap = rtbl->cap + (rtbl->cap >> 1); // 1.5 times.
     qn_region_ptr * new_regions = calloc(new_cap, sizeof(qn_region_ptr));
     if (!new_regions) {
-        qn_err_set_no_enough_memory();
+        qn_err_set_out_of_memory();
         return qn_false;
     } // if
 
@@ -452,7 +452,7 @@ QN_API qn_rgn_iterator_ptr qn_rgn_itr_create(qn_rgn_table_ptr restrict rtbl)
 {
     qn_rgn_iterator_ptr new_itr = calloc(1, sizeof(qn_rgn_iterator));
     if (!new_itr) {
-        qn_err_set_no_enough_memory();
+        qn_err_set_out_of_memory();
         return NULL;
     } // if
 
@@ -496,7 +496,7 @@ QN_API qn_rgn_service_ptr qn_rgn_svc_create(void)
 {
     qn_rgn_service_ptr new_svc = calloc(1, sizeof(qn_rgn_service));
     if (!new_svc) {
-        qn_err_set_no_enough_memory();
+        qn_err_set_out_of_memory();
         return NULL;
     } // if
 

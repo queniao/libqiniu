@@ -530,7 +530,7 @@ QN_API qn_json_parser_ptr qn_json_prs_create(void)
 {
     qn_json_parser_ptr new_prs = calloc(1, sizeof(qn_json_parser));
     if (!new_prs) {
-        qn_err_set_no_enough_memory();
+        qn_err_set_out_of_memory();
         return NULL;
     }
     new_prs->lvl = &new_prs->init_lvl[0];
@@ -576,7 +576,7 @@ static qn_bool qn_json_prs_augment(qn_json_parser_ptr prs)
     int new_cap = prs->cap + (prs->cap >> 1);
     qn_json_prs_level_ptr new_lvl = calloc(1, sizeof(qn_json_prs_level) * new_cap);
     if (!new_lvl) {
-        qn_err_set_no_enough_memory();
+        qn_err_set_out_of_memory();
         return qn_false;
     } // if
 

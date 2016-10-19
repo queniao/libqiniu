@@ -51,7 +51,7 @@ QN_API qn_file_ptr qn_fl_open(const char * restrict fname, qn_fl_open_extra_ptr 
 {
     qn_file_ptr new_file = calloc(1, sizeof(qn_file));
     if (!new_file) {
-        qn_err_set_no_enough_memory();
+        qn_err_set_out_of_memory();
         return NULL;
     } // if
 
@@ -68,7 +68,7 @@ QN_API qn_file_ptr qn_fl_duplicate(qn_file_ptr restrict fl)
 {
     qn_file_ptr new_file = calloc(1, sizeof(qn_file));
     if (!new_file) {
-        qn_err_set_no_enough_memory();
+        qn_err_set_out_of_memory();
         return NULL;
     } // if
     
@@ -129,7 +129,7 @@ QN_API qn_fl_info_ptr qn_fl_info_stat(const char * restrict fname)
 
     qn_fl_info_ptr new_fi = calloc(1, sizeof(qn_file_info));
     if (!new_fi) {
-        qn_err_set_no_enough_memory();
+        qn_err_set_out_of_memory();
         return NULL;
     } // if
 
@@ -164,7 +164,7 @@ QN_API qn_fl_section_ptr qn_fl_sec_create(qn_file_ptr restrict fl)
 {
     qn_fl_section_ptr new_section = calloc(1, sizeof(qn_fl_section));
     if (!new_section) {
-        qn_err_set_no_enough_memory();
+        qn_err_set_out_of_memory();
         return NULL;
     } // if
 

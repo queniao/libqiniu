@@ -19,14 +19,14 @@ QN_API qn_http_query_ptr qn_http_qry_create(void)
 {
     qn_http_query_ptr new_qry = calloc(1, sizeof(qn_http_query));
     if (!new_qry) {
-        qn_err_set_no_enough_memory();
+        qn_err_set_out_of_memory();
         return NULL;
     } // if
 
     new_qry->etbl = qn_etbl_create("=");
     if (!new_qry->etbl) {
         free(new_qry);
-        qn_err_set_no_enough_memory();
+        qn_err_set_out_of_memory();
         return NULL;
     } // if
     return new_qry;

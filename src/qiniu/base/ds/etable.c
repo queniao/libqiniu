@@ -26,14 +26,14 @@ QN_API qn_etable_ptr qn_etbl_create(const char * restrict deli)
 {
     qn_etable_ptr new_etbl = calloc(1, sizeof(qn_etable));
     if (!new_etbl) {
-        qn_err_set_no_enough_memory();
+        qn_err_set_out_of_memory();
         return NULL;
     } // if
 
     new_etbl->deli = qn_cs_duplicate(deli);
     if (!new_etbl->deli) {
         free(new_etbl);
-        qn_err_set_no_enough_memory();
+        qn_err_set_out_of_memory();
         return NULL;
     } // if
 
@@ -43,7 +43,7 @@ QN_API qn_etable_ptr qn_etbl_create(const char * restrict deli)
     new_etbl->entries = calloc(new_etbl->cap, sizeof(qn_string));
     if (!new_etbl->entries) {
         free(new_etbl);
-        qn_err_set_no_enough_memory();
+        qn_err_set_out_of_memory();
         return NULL;
     } // if
     return new_etbl;
@@ -106,7 +106,7 @@ static qn_bool qn_etbl_augment(qn_etable_ptr restrict etbl)
     qn_etbl_pos new_cap = etbl->cap + (etbl->cap >> 1); // 1.5 times
     qn_string * new_entries = calloc(new_cap, sizeof(qn_string));
     if (!new_entries) {
-        qn_err_set_no_enough_memory();
+        qn_err_set_out_of_memory();
         return qn_false;
     } // if
 
@@ -141,7 +141,7 @@ static qn_bool qn_etbl_set_entry(qn_etable_ptr restrict etbl, const char * restr
 
     new_entry = qn_cs_sprintf("%.*s%s%.*s", key_size, key, etbl->deli, val_size, val);
     if (!new_entry) {
-        qn_err_set_no_enough_memory();
+        qn_err_set_out_of_memory();
         return qn_false;
     } // if
 
@@ -195,7 +195,7 @@ QN_API qn_etbl_iterator_ptr qn_etbl_itr_create(qn_etable_ptr restrict etbl)
 {
     qn_etbl_iterator_ptr new_itr = calloc(1, sizeof(qn_etbl_iterator));
     if (!new_itr) {
-        qn_err_set_no_enough_memory();
+        qn_err_set_out_of_memory();
         return NULL;
     } // if
 

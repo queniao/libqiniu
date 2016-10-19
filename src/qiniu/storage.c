@@ -34,7 +34,7 @@ QN_API qn_storage_ptr qn_stor_create(void)
 
     new_stor = calloc(1, sizeof(qn_storage));
     if (!new_stor) {
-        qn_err_set_no_enough_memory();
+        qn_err_set_out_of_memory();
         return NULL;
     } // if
 
@@ -690,7 +690,7 @@ QN_API qn_stor_batch_ptr qn_stor_bt_create(void)
 {
     qn_stor_batch_ptr new_bt = calloc(1, sizeof(qn_stor_batch));
     if (!new_bt) {
-        qn_err_set_no_enough_memory();
+        qn_err_set_out_of_memory();
         return NULL;
     } // if
 
@@ -698,7 +698,7 @@ QN_API qn_stor_batch_ptr qn_stor_bt_create(void)
     new_bt->ops = calloc(new_bt->cap, sizeof(qn_string));
     if (!new_bt->ops) {
         free(new_bt);
-        qn_err_set_no_enough_memory();
+        qn_err_set_out_of_memory();
         return NULL;
     } // if
     return new_bt;
@@ -723,7 +723,7 @@ static qn_bool qn_stor_bt_augment(qn_stor_batch_ptr restrict bt)
     int new_cap = bt->cnt + (bt->cnt >> 1); // 1.5 times
     qn_string * new_ops = calloc(new_cap, sizeof(qn_string));
     if (!new_ops) {
-        qn_err_set_no_enough_memory();
+        qn_err_set_out_of_memory();
         return NULL;
     } // if
 
@@ -1049,7 +1049,7 @@ QN_API qn_stor_rput_session_ptr qn_stor_rs_create(qn_fsize fsize)
     qn_json_object_ptr blk_info;
     qn_stor_rput_session_ptr new_ss = calloc(1, sizeof(qn_stor_rput_session));
     if (!new_ss) {
-        qn_err_set_no_enough_memory();
+        qn_err_set_out_of_memory();
         return NULL;
     } // if
 
@@ -1105,7 +1105,7 @@ QN_API qn_stor_rput_session_ptr qn_stor_rs_from_string(const char * restrict str
     qn_stor_rput_session_ptr new_ss = calloc(1, sizeof(qn_stor_rput_session));
 
     if (!new_ss) {
-        qn_err_set_no_enough_memory();
+        qn_err_set_out_of_memory();
         return NULL;
     } // if
     
@@ -1417,7 +1417,7 @@ QN_API qn_bool qn_stor_rp_make_file(qn_storage_ptr restrict stor, qn_stor_auth_p
     blk_count = qn_stor_rs_block_count(ss);
     ctx_list = calloc(blk_count, sizeof(qn_string));
     if (!ctx_list) {
-        qn_err_set_no_enough_memory();
+        qn_err_set_out_of_memory();
         return qn_false;
     } // if
 
@@ -1449,7 +1449,7 @@ QN_API qn_bool qn_stor_rp_make_file(qn_storage_ptr restrict stor, qn_stor_auth_p
     ctx_info = qn_str_join_list(",", ctx_list, blk_count);
     free(ctx_list);
     if (!ctx_info) {
-        qn_err_set_no_enough_memory();
+        qn_err_set_out_of_memory();
         return qn_false;
     } // if
 

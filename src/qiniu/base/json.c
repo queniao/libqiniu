@@ -67,7 +67,7 @@ QN_API qn_json_object_ptr qn_json_create_object(void)
 {
     qn_json_object_ptr new_obj = calloc(1, sizeof(qn_json_object));
     if (!new_obj) {
-        qn_err_set_no_enough_memory();
+        qn_err_set_out_of_memory();
         return NULL;
     } // if
 
@@ -131,7 +131,7 @@ static qn_bool qn_json_obj_augment(qn_json_object_ptr restrict obj)
     qn_json_pos new_cap = obj->cap * 2;
     qn_json_obj_item * new_itm = calloc(1, sizeof(qn_json_obj_item) * new_cap);
     if (!new_itm) {
-        qn_err_set_no_enough_memory();
+        qn_err_set_out_of_memory();
         return qn_false;
     } // if
 
@@ -211,7 +211,7 @@ QN_API qn_json_array_ptr qn_json_create_array(void)
 {
     qn_json_array_ptr new_arr = calloc(1, sizeof(qn_json_array));
     if (!new_arr) {
-        qn_err_set_no_enough_memory();
+        qn_err_set_out_of_memory();
         return NULL;
     } // if
 
@@ -255,7 +255,7 @@ static qn_bool qn_json_arr_augment(qn_json_array_ptr restrict arr, int direct)
     qn_json_pos new_cap = arr->cap * 2;
     qn_json_arr_item * new_itm = calloc(1, sizeof(qn_json_arr_item) * new_cap);
     if (!new_itm) {
-        qn_err_set_no_enough_memory();
+        qn_err_set_out_of_memory();
         return qn_false;
     } // if
 
@@ -1090,7 +1090,7 @@ QN_API qn_json_iterator_ptr qn_json_itr_create(void)
 {
     qn_json_iterator_ptr new_itr = calloc(1, sizeof(qn_json_iterator));
     if (!new_itr) {
-        qn_err_set_no_enough_memory();
+        qn_err_set_out_of_memory();
         return NULL;
     } // if
 
@@ -1198,7 +1198,7 @@ static qn_bool qn_json_itr_augment_levels(qn_json_iterator_ptr restrict itr)
     int new_capacity = itr->cap + (itr->cap >> 1); // 1.5 times of the last stack capacity.
     qn_json_itr_level_ptr new_lvl = calloc(1, sizeof(qn_json_itr_level) * new_capacity);
     if (!new_lvl) {
-        qn_err_set_no_enough_memory();
+        qn_err_set_out_of_memory();
         return qn_false;
     }  // if
 

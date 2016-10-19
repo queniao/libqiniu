@@ -60,7 +60,7 @@ QN_API qn_http_hdr_parser_ptr qn_http_hdr_prs_create(void)
 {
     qn_http_hdr_parser_ptr new_prs = calloc(1, sizeof(qn_http_hdr_parser));
     if (!new_prs) {
-        qn_err_set_no_enough_memory();
+        qn_err_set_out_of_memory();
         return NULL;
     } // if
     return new_prs;

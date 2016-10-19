@@ -20,7 +20,7 @@ QN_API qn_http_header_ptr qn_http_hdr_create(void)
 {
     qn_http_header_ptr new_hdr = calloc(1, sizeof(qn_http_header));
     if (!new_hdr) {
-        qn_err_set_no_enough_memory();
+        qn_err_set_out_of_memory();
         return NULL;
     } // if
 

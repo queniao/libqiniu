@@ -22,7 +22,7 @@ QN_API qn_string qn_misc_encode_uri(const char * restrict bucket, const char * r
 
     buf = malloc(buf_size + 1);
     if (!buf) {
-        qn_err_set_no_enough_memory();
+        qn_err_set_out_of_memory();
         return NULL;
     } // if
 

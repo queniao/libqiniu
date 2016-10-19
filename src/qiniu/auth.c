@@ -398,7 +398,7 @@ QN_API const qn_string qn_mac_make_dnurl(qn_mac_ptr restrict mac, const char * r
         // Need to percent encode the path of the url.
         buf = malloc(buf_size + 1);
         if (!buf) {
-            qn_err_set_no_enough_memory();
+            qn_err_set_out_of_memory();
             return NULL;
         } // if
         buf[buf_size + 1] = '\0';

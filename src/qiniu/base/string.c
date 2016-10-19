@@ -25,7 +25,7 @@ QN_API qn_string qn_cs_clone(const char * restrict s, size_t sz)
 {
     qn_string new_str = malloc(sz + 1);
     if (!new_str) {
-        qn_err_set_no_enough_memory();
+        qn_err_set_out_of_memory();
         return NULL;
     } // if
 
@@ -53,7 +53,7 @@ QN_API qn_string qn_cs_join_list(const char * restrict deli, const char ** restr
 
     pos = new_str = malloc(final_size + 1);
     if (!new_str) {
-        qn_err_set_no_enough_memory();
+        qn_err_set_out_of_memory();
         return NULL;
     } // if
 
@@ -100,7 +100,7 @@ QN_API qn_string qn_cs_join_va(const char * restrict deli, const char * restrict
 
     pos = new_str = malloc(final_size + 1);
     if (!new_str) {
-        qn_err_set_no_enough_memory();
+        qn_err_set_out_of_memory();
         return NULL;
     } // if
 
@@ -156,7 +156,7 @@ QN_API qn_string qn_cs_vprintf(const char * restrict format, va_list ap)
 
     new_str = malloc(printed_size + 1);
     if (!new_str) {
-        qn_err_set_no_enough_memory();
+        qn_err_set_out_of_memory();
         return NULL;
     }
 
@@ -234,7 +234,7 @@ QN_API qn_string qn_cs_encode_base64_urlsafe(const char * restrict bin, size_t b
 
     new_str = malloc(encoding_size + 1);
     if (!new_str) {
-        qn_err_set_no_enough_memory();
+        qn_err_set_out_of_memory();
         return NULL;
     }
 
@@ -254,7 +254,7 @@ QN_API qn_string qn_cs_decode_base64_urlsafe(const char * restrict str, size_t s
 
     new_str = malloc(decoding_size + 1);
     if (!new_str) {
-        qn_err_set_no_enough_memory();
+        qn_err_set_out_of_memory();
         return NULL;
     }
 
@@ -310,7 +310,7 @@ QN_API size_t qn_cs_percent_encode_in_buffer(char * restrict buf, size_t buf_siz
         } // for
         return ret;
     } else if (buf_size < bin_size) {
-        qn_err_set_no_enough_buffer();
+        qn_err_set_out_of_buffer();
         return -1;
     } // if
 
@@ -318,14 +318,14 @@ QN_API size_t qn_cs_percent_encode_in_buffer(char * restrict buf, size_t buf_siz
         if (qn_cs_need_to_percent_encode(bin[i])) {
             if (bin[i] == '%' && (i + 2 < bin_size) && isxdigit(bin[i+1]) && isxdigit(bin[i+2])) {
                     if (m + 1 > buf_size) {
-                        qn_err_set_no_enough_buffer();
+                        qn_err_set_out_of_buffer();
                         return -1;
                     } // if
 
                     buf[m++] = bin[i];
             } else {
                 if (m + 3 > buf_size) {
-                    qn_err_set_no_enough_buffer();
+                    qn_err_set_out_of_buffer();
                     return -1;
                 } // if
 
@@ -335,7 +335,7 @@ QN_API size_t qn_cs_percent_encode_in_buffer(char * restrict buf, size_t buf_siz
             } // if
         } else {
             if (m + 1 > buf_size) {
-                qn_err_set_no_enough_buffer();
+                qn_err_set_out_of_buffer();
                 return -1;
             } // if
 
@@ -354,7 +354,7 @@ QN_API qn_string qn_cs_percent_encode(const char * restrict bin, size_t bin_size
 
     new_str = malloc(buf_size + 1);
     if (!new_str) {
-        qn_err_set_no_enough_memory();
+        qn_err_set_out_of_memory();
         return NULL;
     }
     qn_cs_percent_encode_in_buffer(new_str, buf_size, bin, bin_size);
@@ -385,7 +385,7 @@ QN_API qn_string qn_str_join_list(const char * restrict deli, const qn_string * 
 
     pos = new_str = malloc(final_size + 1);
     if (!new_str) {
-        qn_err_set_no_enough_memory();
+        qn_err_set_out_of_memory();
         return NULL;
     }
 
@@ -426,7 +426,7 @@ QN_API qn_string qn_str_join_va(const char * restrict deli, const qn_string rest
 
     pos = new_str = malloc(final_size + 1);
     if (!new_str) {
-        qn_err_set_no_enough_memory();
+        qn_err_set_out_of_memory();
         return NULL;
     } // if
 

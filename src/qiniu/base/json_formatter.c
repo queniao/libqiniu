@@ -49,7 +49,7 @@ QN_API qn_json_formatter_ptr qn_json_fmt_create(void)
 
     new_fmt = calloc(1, sizeof(qn_json_formatter));
     if (!new_fmt) {
-        qn_err_set_no_enough_memory();
+        qn_err_set_out_of_memory();
         return NULL;
     } // if
 
@@ -57,7 +57,7 @@ QN_API qn_json_formatter_ptr qn_json_fmt_create(void)
     if (!new_fmt->iterator) {
         free(new_fmt->buf);
         free(new_fmt);
-        qn_err_set_no_enough_memory();
+        qn_err_set_out_of_memory();
         return NULL;
     } // if
 
@@ -86,7 +86,7 @@ QN_API void qn_json_fmt_disable_escape_utf8_string(qn_json_formatter_ptr restric
 static inline qn_bool qn_json_fmt_putc(qn_json_formatter_ptr fmt, char ch)
 {
     if (fmt->buf_size + 1 >= fmt->buf_capacity) {
-        qn_err_set_no_enough_buffer();
+        qn_err_set_out_of_buffer();
         return qn_false;
     } // if
 
@@ -117,7 +117,7 @@ static qn_bool qn_json_fmt_format_string(qn_json_formatter_ptr fmt)
             // ASCII range: 0zzzzzzz（00-7F）
             if (c1 == '&') {
                 if ((fmt->buf_size + 6) >= fmt->buf_capacity) {
-                    qn_err_set_no_enough_buffer();
+                    qn_err_set_out_of_buffer();
                     goto FORMATTING_STRING_FAILED;
                 } // if
 
@@ -176,7 +176,7 @@ static qn_bool qn_json_fmt_format_string(qn_json_formatter_ptr fmt)
         } // if
 
         if ((fmt->buf_size + 12) >= fmt->buf_capacity) {
-            qn_err_set_no_enough_buffer();
+            qn_err_set_out_of_buffer();
             goto FORMATTING_STRING_FAILED;
         } // if
 
@@ -405,12 +405,12 @@ QN_API qn_string qn_json_object_to_string(qn_json_object_ptr restrict root)
     buf = malloc(capacity);
     if (!buf) {
         qn_json_fmt_destroy(fmt);
-        qn_err_set_no_enough_memory();
+        qn_err_set_out_of_memory();
         return NULL;
     } // if
 
     while (!qn_json_fmt_format_object(fmt, root, buf + final_size, &size)) {
-        if (qn_err_is_no_enough_buffer()) {
+        if (qn_err_is_out_of_buffer()) {
             final_size += size;
 
             new_capacity = capacity + (capacity >> 1);
@@ -418,7 +418,7 @@ QN_API qn_string qn_json_object_to_string(qn_json_object_ptr restrict root)
             if (!new_buf) {
                 free(buf);
                 qn_json_fmt_destroy(fmt);
-                qn_err_set_no_enough_memory();
+                qn_err_set_out_of_memory();
                 return NULL;
             } // if
 
@@ -458,12 +458,12 @@ QN_API qn_string qn_json_array_to_string(qn_json_array_ptr restrict root)
     buf = malloc(capacity);
     if (!buf) {
         qn_json_fmt_destroy(fmt);
-        qn_err_set_no_enough_memory();
+        qn_err_set_out_of_memory();
         return NULL;
     } // if
 
     while (!qn_json_fmt_format_array(fmt, root, buf + final_size, &size)) {
-        if (qn_err_is_no_enough_buffer()) {
+        if (qn_err_is_out_of_buffer()) {
             final_size += size;
 
             new_capacity = capacity + (capacity >> 1);
@@ -471,7 +471,7 @@ QN_API qn_string qn_json_array_to_string(qn_json_array_ptr restrict root)
             if (!new_buf) {
                 free(buf);
                 qn_json_fmt_destroy(fmt);
-                qn_err_set_no_enough_memory();
+                qn_err_set_out_of_memory();
                 return NULL;
             } // if
 
