@@ -37,8 +37,8 @@ enum
     QN_ERR_STOR_LACK_OF_AUTHORIZATION_INFORMATION = 21001,
     QN_ERR_STOR_INVALID_RESUMABLE_SESSION_INFORMATION = 21002,
     QN_ERR_STOR_INVALID_LIST_RESULT = 21003,
-    QN_ERR_STOR_PUTTING_ABORTED_BY_DATA_CHECKER_PRE_CALLBACK = 21004,
-    QN_ERR_STOR_PUTTING_ABORTED_BY_DATA_CHECKER_POST_CALLBACK = 21005,
+    QN_ERR_STOR_PUTTING_ABORTED_BY_FILTER_PRE_CALLBACK = 21004,
+    QN_ERR_STOR_PUTTING_ABORTED_BY_FILTER_POST_CALLBACK = 21005,
     QN_ERR_STOR_INVALID_CHUNK_PUT_RESULT = 21006
 };
 
@@ -81,8 +81,8 @@ static qn_error qn_errors[] = {
     {QN_ERR_STOR_LACK_OF_AUTHORIZATION_INFORMATION, "Lack of auhorization information like token or put policy"},
     {QN_ERR_STOR_INVALID_RESUMABLE_SESSION_INFORMATION, "Invalid resumable session information"},
     {QN_ERR_STOR_INVALID_LIST_RESULT, "Invalid list result"},
-    {QN_ERR_STOR_PUTTING_ABORTED_BY_DATA_CHECKER_PRE_CALLBACK, "Putting file is aborted by data checker PRE callback"},
-    {QN_ERR_STOR_PUTTING_ABORTED_BY_DATA_CHECKER_POST_CALLBACK, "Putting file is aborted by data checker POST callback"},
+    {QN_ERR_STOR_PUTTING_ABORTED_BY_FILTER_PRE_CALLBACK, "Putting file is aborted by filter PRE callback"},
+    {QN_ERR_STOR_PUTTING_ABORTED_BY_FILTER_POST_CALLBACK, "Putting file is aborted by filter POST callback"},
     {QN_ERR_STOR_INVALID_CHUNK_PUT_RESULT, "Invalid chunk put result"}
 };
 
@@ -223,14 +223,14 @@ QN_API void qn_err_stor_set_invalid_list_result(void)
     qn_err_code = QN_ERR_STOR_INVALID_LIST_RESULT;
 }
 
-QN_API void qn_err_stor_set_putting_aborted_by_data_checker_pre_callback(void)
+QN_API void qn_err_stor_set_putting_aborted_by_filter_pre_callback(void)
 {
-    qn_err_code = QN_ERR_STOR_PUTTING_ABORTED_BY_DATA_CHECKER_PRE_CALLBACK;
+    qn_err_code = QN_ERR_STOR_PUTTING_ABORTED_BY_FILTER_PRE_CALLBACK;
 }
 
-QN_API void qn_err_stor_set_putting_aborted_by_data_checker_post_callback(void)
+QN_API void qn_err_stor_set_putting_aborted_by_filter_post_callback(void)
 {
-    qn_err_code = QN_ERR_STOR_PUTTING_ABORTED_BY_DATA_CHECKER_POST_CALLBACK;
+    qn_err_code = QN_ERR_STOR_PUTTING_ABORTED_BY_FILTER_POST_CALLBACK;
 }
 
 QN_API void qn_err_stor_set_invalid_chunk_put_result(void)
@@ -360,14 +360,14 @@ QN_API qn_bool qn_err_stor_is_invalid_list_result(void)
     return (qn_err_code == QN_ERR_STOR_INVALID_LIST_RESULT);
 }
 
-QN_API qn_bool qn_err_stor_is_putting_aborted_by_data_checker_pre_callback(void)
+QN_API qn_bool qn_err_stor_is_putting_aborted_by_filter_pre_callback(void)
 {
-    return (qn_err_code == QN_ERR_STOR_PUTTING_ABORTED_BY_DATA_CHECKER_PRE_CALLBACK);
+    return (qn_err_code == QN_ERR_STOR_PUTTING_ABORTED_BY_FILTER_PRE_CALLBACK);
 }
 
-QN_API qn_bool qn_err_stor_is_putting_aborted_by_data_checker_post_callback(void)
+QN_API qn_bool qn_err_stor_is_putting_aborted_by_filter_post_callback(void)
 {
-    return (qn_err_code == QN_ERR_STOR_PUTTING_ABORTED_BY_DATA_CHECKER_POST_CALLBACK);
+    return (qn_err_code == QN_ERR_STOR_PUTTING_ABORTED_BY_FILTER_POST_CALLBACK);
 }
 
 QN_API qn_bool qn_err_stor_is_invalid_chunk_put_result(void)

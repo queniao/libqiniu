@@ -36,6 +36,7 @@ QN_API qn_reader_ptr qn_rdr_create(qn_io_reader_ptr src_rdr, qn_rdr_pos filter_n
         return NULL;
     } // if
 
+    new_rdr->src_rdr = src_rdr;
     new_rdr->pre_end = 0;
     new_rdr->post_end = filter_num - 1;
     new_rdr->cap = filter_num;
@@ -91,6 +92,11 @@ QN_API ssize_t qn_rdr_read(qn_reader_ptr restrict rdr, char * restrict buf, size
 
     for (i = 0; i < rdr->pre_end; i += 1) {
         ret = rdr->entries[i].filter_cb(rdr->entries[i].filter_data, &real_buf, &real_size);
+        switch (ret) {
+            case QN_RDR_READING_ABORTED: qn_err_stor_set_putting_aborted_by_filter_pre_callback(); return ret;
+            case QN_RDR_READING_FAILED: qn_err_fl_set_reading_file_failed(); return ret;
+            default: break;
+        } // switch
         if (ret != QN_RDR_SUCCEED) return ret;
     } // for
 
@@ -103,6 +109,11 @@ QN_API ssize_t qn_rdr_read(qn_reader_ptr restrict rdr, char * restrict buf, size
 
     for (i = rdr->cap - 1; i > rdr->post_end; i -= 1) {
         ret = rdr->entries[i].filter_cb(rdr->entries[i].filter_data, &real_buf, &real_size);
+        switch (ret) {
+            case QN_RDR_READING_ABORTED: qn_err_stor_set_putting_aborted_by_filter_post_callback(); return ret;
+            case QN_RDR_READING_FAILED: qn_err_fl_set_reading_file_failed(); return ret;
+            default: break;
+        } // switch
         if (ret != QN_RDR_SUCCEED) return ret;
     } // for
 

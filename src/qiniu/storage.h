@@ -6,6 +6,7 @@
 #include "qiniu/auth.h"
 #include "qiniu/http.h"
 #include "qiniu/region.h"
+#include "qiniu/reader.h"
 
 #include "qiniu/macros.h"
 
@@ -22,20 +23,10 @@ typedef struct _QN_STOR_RGN
     qn_rgn_entry_ptr entry;
 } qn_stor_rgn, *qn_stor_rgn_ptr;
 
-enum
-{
-    QN_STOR_PUTTING_OK = 0,
-    QN_STOR_PUTTING_ABORT
-};
-
-typedef int (*qn_stor_data_checker_pre_callback)(void * data_checker, char * restrict buf, size_t * buf_size);
-typedef int (*qn_stor_data_checker_post_callback)(void * data_checker, char * restrict buf, size_t buf_size);
-
 typedef struct _QN_STOR_PUT_CTRL
 {
-    void * data_checker;
-    qn_stor_data_checker_pre_callback data_checker_pre_callback;
-    qn_stor_data_checker_post_callback data_checker_post_callback;
+    qn_fsize fsize;
+    qn_reader_ptr rdr;
 } qn_stor_put_ctrl, *qn_stor_put_ctrl_ptr;
 
 // ---- Declaration of Storage ----

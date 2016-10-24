@@ -858,41 +858,16 @@ QN_API qn_bool qn_stor_execute_batch_opertions(qn_storage_ptr restrict stor, con
 
 typedef struct _QN_STOR_PUT_READER
 {
-    qn_io_reader rdr;
     qn_stor_put_extra_ptr ext;
 } qn_stor_put_reader, *qn_stor_put_reader_ptr;
 
 static size_t qn_stor_put_body_reader_callback(void * user_data, char * buf, size_t size)
 {
-    qn_stor_put_reader_ptr body_rdr = (qn_stor_put_reader_ptr) user_data;
-    qn_stor_put_ctrl_ptr put_ctrl;
-    int code;
-    size_t ret;
-    size_t real_size = size;
+    qn_stor_put_reader_ptr prdr = (qn_stor_put_reader_ptr) user_data;
+    ssize_t ret;
 
-    if (body_rdr->ext) {
-        put_ctrl = &body_rdr->ext->put_ctrl;
-        if (put_ctrl->data_checker_pre_callback) {
-            code = put_ctrl->data_checker_pre_callback(put_ctrl->data_checker, buf, &real_size);
-            if (code == QN_STOR_PUTTING_ABORT) {
-                qn_err_stor_set_putting_aborted_by_data_checker_pre_callback();
-                return CURL_READFUNC_ABORT;
-            } // if
-        } // if
-    } // if
-
-    ret = body_rdr->rdr.read(body_rdr->rdr.user_data, buf, real_size);
-
-    if (body_rdr->ext) {
-        if (put_ctrl->data_checker_post_callback) {
-            code = put_ctrl->data_checker_post_callback(put_ctrl->data_checker, buf, ret);
-            if (code == QN_STOR_PUTTING_ABORT) {
-                qn_err_stor_set_putting_aborted_by_data_checker_post_callback();
-                return CURL_READFUNC_ABORT;
-            } // if
-        } // if
-    } // if
-
+    ret = qn_rdr_read(prdr->ext->put_ctrl.rdr, buf, size);
+    if (ret < 0) return CURL_READFUNC_ABORT;
     return ret;
 }
 
@@ -949,7 +924,6 @@ QN_API qn_bool qn_stor_put_file(qn_storage_ptr restrict stor, const qn_stor_auth
 {
     qn_bool ret;
     qn_fl_info_ptr fi;
-    qn_file_ptr fl;
     qn_http_form_ptr form;
     qn_rgn_entry_ptr rgn_entry;
     qn_stor_put_reader prdr;
@@ -958,15 +932,8 @@ QN_API qn_bool qn_stor_put_file(qn_storage_ptr restrict stor, const qn_stor_auth
     if (ext) {
         if (! (rgn_entry = ext->rgn.entry)) qn_rgn_tbl_choose_first_entry(ext->rgn.rtbl, QN_RGN_SVC_UP, NULL, &rgn_entry);
 
-        if (ext->put_ctrl.data_checker_pre_callback || ext->put_ctrl.data_checker_post_callback) {
-            fl = qn_fl_open(fname, NULL);
-            if (!fl) return qn_false;
-
-            prdr.rdr.user_data = fl;
-            prdr.rdr.read = (qn_io_read) &qn_fl_read;
-            prdr.rdr.advance = (qn_io_advance) &qn_fl_advance;
+        if (ext->put_ctrl.rdr) {
             prdr.ext = ext;
-
             pprdr = &prdr;
         } // if
     } else {
@@ -985,10 +952,7 @@ QN_API qn_bool qn_stor_put_file(qn_storage_ptr restrict stor, const qn_stor_auth
     if (pprdr) {
         ret = qn_http_form_add_file_reader(form, "file", qn_str_cstr(qn_fl_info_fname(fi)), NULL, qn_fl_info_fsize(fi), stor->req);
         qn_fl_info_destroy(fi);
-        if (!ret) {
-            qn_fl_close(fl);
-            return qn_false;
-        } // if
+        if (!ret) return qn_false;
 
         qn_http_req_set_body_reader(stor->req, pprdr, qn_stor_put_body_reader_callback, qn_fl_info_fsize(fi));
     } else {
@@ -1002,8 +966,6 @@ QN_API qn_bool qn_stor_put_file(qn_storage_ptr restrict stor, const qn_stor_auth
 
     // ----
     ret = qn_http_conn_post(stor->conn, qn_str_cstr(rgn_entry->base_url), stor->req, stor->resp);
-
-    if (pprdr) qn_fl_close(fl);
     return ret;
 }
 

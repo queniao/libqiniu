@@ -40,8 +40,8 @@ QN_API extern void qn_err_fl_info_set_stating_file_info_failed(void);
 QN_API extern void qn_err_stor_set_lack_of_authorization_information(void);
 QN_API extern void qn_err_stor_set_invalid_resumable_session_information(void);
 QN_API extern void qn_err_stor_set_invalid_list_result(void);
-QN_API extern void qn_err_stor_set_putting_aborted_by_data_checker_pre_callback(void);
-QN_API extern void qn_err_stor_set_putting_aborted_by_data_checker_post_callback(void);
+QN_API extern void qn_err_stor_set_putting_aborted_by_filter_pre_callback(void);
+QN_API extern void qn_err_stor_set_putting_aborted_by_filter_post_callback(void);
 QN_API extern void qn_err_stor_set_invalid_chunk_put_result(void);
 
 // ----
@@ -75,8 +75,8 @@ QN_API extern qn_bool qn_err_fl_info_is_stating_file_info_failed(void);
 QN_API extern qn_bool qn_err_stor_is_lack_of_authorization_information(void);
 QN_API extern qn_bool qn_err_stor_is_invalid_resumable_session_information(void);
 QN_API extern qn_bool qn_err_stor_is_invalid_list_result(void);
-QN_API extern qn_bool qn_err_stor_is_putting_aborted_by_data_checker_pre_callback(void);
-QN_API extern qn_bool qn_err_stor_is_putting_aborted_by_data_checker_post_callback(void);
+QN_API extern qn_bool qn_err_stor_is_putting_aborted_by_filter_pre_callback(void);
+QN_API extern qn_bool qn_err_stor_is_putting_aborted_by_filter_post_callback(void);
 QN_API extern qn_bool qn_err_stor_is_invalid_chunk_put_result(void);
 
 #ifdef __cplusplus

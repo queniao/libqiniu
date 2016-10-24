@@ -11,8 +11,9 @@ extern "C"
 
 enum
 {
-    QN_RDR_SUCCEED = 0,
-    QN_RDR_READING_FAILED = 1
+    QN_RDR_READING_ABORTED = -2,
+    QN_RDR_READING_FAILED = -1,
+    QN_RDR_SUCCEED = 0
 };
 
 typedef short int qn_rdr_pos;
