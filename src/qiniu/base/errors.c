@@ -39,7 +39,13 @@ enum
     QN_ERR_STOR_INVALID_LIST_RESULT = 21003,
     QN_ERR_STOR_PUTTING_ABORTED_BY_FILTER_PRE_CALLBACK = 21004,
     QN_ERR_STOR_PUTTING_ABORTED_BY_FILTER_POST_CALLBACK = 21005,
-    QN_ERR_STOR_INVALID_CHUNK_PUT_RESULT = 21006
+    QN_ERR_STOR_INVALID_CHUNK_PUT_RESULT = 21006,
+
+    QN_ERR_ETAG_INITIALIZING_CONTEXT_FAILED = 22001,
+    QN_ERR_ETAG_UPDATING_CONTEXT_FAILED = 22002,
+    QN_ERR_ETAG_INITIALIZING_BLOCK_FAILED = 22003,
+    QN_ERR_ETAG_UPDATING_BLOCK_FAILED = 22004,
+    QN_ERR_ETAG_MAKING_DIGEST_FAILED = 22005
 };
 
 typedef qn_uint32 qn_err_enum;
@@ -83,7 +89,13 @@ static qn_error qn_errors[] = {
     {QN_ERR_STOR_INVALID_LIST_RESULT, "Invalid list result"},
     {QN_ERR_STOR_PUTTING_ABORTED_BY_FILTER_PRE_CALLBACK, "Putting file is aborted by filter PRE callback"},
     {QN_ERR_STOR_PUTTING_ABORTED_BY_FILTER_POST_CALLBACK, "Putting file is aborted by filter POST callback"},
-    {QN_ERR_STOR_INVALID_CHUNK_PUT_RESULT, "Invalid chunk put result"}
+    {QN_ERR_STOR_INVALID_CHUNK_PUT_RESULT, "Invalid chunk put result"},
+
+    {QN_ERR_ETAG_INITIALIZING_CONTEXT_FAILED, "Failed in initializing a new qetag context"},
+    {QN_ERR_ETAG_UPDATING_CONTEXT_FAILED, "Failed in updating the qetag context"},
+    {QN_ERR_ETAG_INITIALIZING_BLOCK_FAILED, "Failed in initializing a new qetag block"},
+    {QN_ERR_ETAG_UPDATING_BLOCK_FAILED, "Failed in updating the qetag block"},
+    {QN_ERR_ETAG_MAKING_DIGEST_FAILED, "Failed in making the qetag digest"}
 };
 
 static int qn_err_compare(const void * restrict key, const void * restrict item)
@@ -238,6 +250,31 @@ QN_API void qn_err_stor_set_invalid_chunk_put_result(void)
     qn_err_code = QN_ERR_STOR_INVALID_CHUNK_PUT_RESULT;
 }
 
+QN_API void qn_err_etag_set_initializing_context_failed(void)
+{
+    qn_err_code = QN_ERR_ETAG_INITIALIZING_CONTEXT_FAILED;
+}
+
+QN_API void qn_err_etag_set_updating_context_failed(void)
+{
+    qn_err_code = QN_ERR_ETAG_UPDATING_CONTEXT_FAILED;
+}
+
+QN_API void qn_err_etag_set_initializing_block_failed(void)
+{
+    qn_err_code = QN_ERR_ETAG_INITIALIZING_BLOCK_FAILED;
+}
+
+QN_API void qn_err_etag_set_updating_block_failed(void)
+{
+    qn_err_code = QN_ERR_ETAG_UPDATING_BLOCK_FAILED;
+}
+
+QN_API void qn_err_etag_set_making_digest_failed(void)
+{
+    qn_err_code = QN_ERR_ETAG_MAKING_DIGEST_FAILED;
+}
+
 // ----
 
 QN_API qn_bool qn_err_is_succeed(void)
@@ -373,6 +410,31 @@ QN_API qn_bool qn_err_stor_is_putting_aborted_by_filter_post_callback(void)
 QN_API qn_bool qn_err_stor_is_invalid_chunk_put_result(void)
 {
     return (qn_err_code == QN_ERR_STOR_INVALID_CHUNK_PUT_RESULT);
+}
+
+QN_API qn_bool qn_err_etag_is_initializing_context_failed(void)
+{
+    return (qn_err_code == QN_ERR_ETAG_INITIALIZING_CONTEXT_FAILED);
+}
+
+QN_API qn_bool qn_err_etag_is_updating_context_failed(void)
+{
+    return (qn_err_code == QN_ERR_ETAG_UPDATING_CONTEXT_FAILED);
+}
+
+QN_API qn_bool qn_err_etag_is_initializing_block_failed(void)
+{
+    return (qn_err_code == QN_ERR_ETAG_INITIALIZING_BLOCK_FAILED);
+}
+
+QN_API qn_bool qn_err_etag_is_updating_block_failed(void)
+{
+    return (qn_err_code == QN_ERR_ETAG_UPDATING_BLOCK_FAILED);
+}
+
+QN_API qn_bool qn_err_etag_is_making_digest_failed(void)
+{
+    return (qn_err_code == QN_ERR_ETAG_MAKING_DIGEST_FAILED);
 }
 
 #ifdef __cplusplus
