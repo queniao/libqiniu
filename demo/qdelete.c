@@ -1,20 +1,19 @@
 #include <stdio.h>
-#include "qiniu/base/json_formatter.h"
 #include "qiniu/storage.h"
 
 int main(int argc, char * argv[])
 {
     qn_mac_ptr mac;
+    qn_stor_auth auth;
     qn_string bucket;
     qn_string key;
-    qn_string stat_ret;
     qn_storage_ptr stor;
-    qn_stor_auth auth;
+    qn_stor_delete_extra ext;
     qn_http_hdr_iterator_ptr hdr_itr;
     qn_string hdr_ent;
 
     if (argc < 5) {
-        printf("Usage: qstat <ACCESS_KEY> <SECRET_KEY> <BUCKET> <KEY>\n");
+        printf("Usage: qdelete <ACCESS_KEY> <SECRET_KEY> <BUCKET> <KEY>\n");
         return 0;
     } // if
 
@@ -28,10 +27,12 @@ int main(int argc, char * argv[])
         return 1;
     } // if
 
+    memset(&ext, 0, sizeof(ext));
+
     memset(&auth, 0, sizeof(auth));
     auth.server_end.mac = mac;
 
-    if (!qn_stor_stat(stor, &auth, bucket, key, NULL)) {
+    if (!qn_stor_delete(stor, &auth, bucket, key, &ext)) {
         printf("Cannot stat the `%s:%s` file.\n", bucket, key);
         return 2;
     } // if
@@ -41,15 +42,6 @@ int main(int argc, char * argv[])
         printf("%s\n", qn_str_cstr(hdr_ent));
     } // while
     qn_http_hdr_itr_destroy(hdr_itr);
-
-    stat_ret = qn_json_object_to_string(qn_stor_get_object_body(stor));
-    if (!stat_ret) {
-        printf("Cannot format the object body form /stat interface.\n");
-        return 3;
-    } // if
-
-    printf("%s\n", stat_ret);
-    qn_str_destroy(stat_ret);
 
     qn_stor_destroy(stor);
     qn_mac_destroy(mac);

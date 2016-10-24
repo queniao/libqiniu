@@ -5,22 +5,30 @@
 int main(int argc, char * argv[])
 {
     qn_mac_ptr mac;
-    qn_string bucket;
-    qn_string key;
-    qn_string stat_ret;
-    qn_storage_ptr stor;
     qn_stor_auth auth;
+    qn_string src_bucket;
+    qn_string src_key;
+    qn_string dest_bucket;
+    qn_string dest_key;
+    qn_string force = NULL;
+    qn_storage_ptr stor;
+    qn_stor_copy_extra ext;
     qn_http_hdr_iterator_ptr hdr_itr;
     qn_string hdr_ent;
 
-    if (argc < 5) {
-        printf("Usage: qstat <ACCESS_KEY> <SECRET_KEY> <BUCKET> <KEY>\n");
+    if (argc < 7) {
+        printf("Usage: qcopy <ACCESS_KEY> <SECRET_KEY> <SRC_BUCKET> <SRC_KEY> <DEST_BUCKET> <DEST_BUCKET> [FORCE]\n");
         return 0;
     } // if
 
     mac = qn_mac_create(argv[1], argv[2]);
-    bucket = argv[3];
-    key = argv[4];
+    src_bucket = argv[3];
+    src_key = argv[4];
+    dest_bucket = argv[5];
+    dest_key = argv[6];
+    if (argc == 7) {
+        force = argv[7];
+    } // if
 
     stor = qn_stor_create();
     if (!stor) {
@@ -28,11 +36,17 @@ int main(int argc, char * argv[])
         return 1;
     } // if
 
+    memset(&ext, 0, sizeof(ext));
+
     memset(&auth, 0, sizeof(auth));
     auth.server_end.mac = mac;
 
-    if (!qn_stor_stat(stor, &auth, bucket, key, NULL)) {
-        printf("Cannot stat the `%s:%s` file.\n", bucket, key);
+    if (force) {
+        ext.force = qn_true;
+    } // if
+
+    if (!qn_stor_copy(stor, &auth, src_bucket, src_key, dest_bucket, dest_key, &ext)) {
+        printf("Cannot copy the `%s:%s` file to `%s:%s`.\n", src_bucket, src_key, dest_bucket, dest_bucket);
         return 2;
     } // if
 
@@ -41,15 +55,6 @@ int main(int argc, char * argv[])
         printf("%s\n", qn_str_cstr(hdr_ent));
     } // while
     qn_http_hdr_itr_destroy(hdr_itr);
-
-    stat_ret = qn_json_object_to_string(qn_stor_get_object_body(stor));
-    if (!stat_ret) {
-        printf("Cannot format the object body form /stat interface.\n");
-        return 3;
-    } // if
-
-    printf("%s\n", stat_ret);
-    qn_str_destroy(stat_ret);
 
     qn_stor_destroy(stor);
     qn_mac_destroy(mac);

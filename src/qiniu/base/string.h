@@ -4,7 +4,9 @@
 #include <stdarg.h>
 #include <stdlib.h>
 #include <string.h>
-#include "qiniu/base/basic_types.h"
+
+#include "qiniu/os/types.h"
+#include "qiniu/macros.h"
 
 #define posix_strlen strlen
 #define posix_strcmp strcmp
@@ -18,12 +20,35 @@ extern "C"
 
 typedef char * qn_string;
 
+// ---- Declaration of C String ----
+
+QN_API extern qn_string qn_cs_duplicate(const char * restrict s);
+QN_API extern qn_string qn_cs_clone(const char * restrict s, size_t sz);
+
+QN_API extern qn_string qn_cs_join_list(const char * restrict delimiter, const char ** restrict ss, int n);
+QN_API extern qn_string qn_cs_join_va(const char * restrict delimiter, const char * restrict s1, const char * restrict s2, va_list ap);
+
+QN_API extern qn_string qn_cs_vprintf(const char * restrict format, va_list ap);
+QN_API extern qn_string qn_cs_sprintf(const char * restrict format, ...);
+QN_API extern int qn_cs_snprintf(char * restrict buf, size_t buf_size, const char * restrict format, ...);
+
+QN_API extern qn_string qn_cs_encode_base64_urlsafe(const char * restrict bin, size_t bin_size);
+QN_API extern qn_string qn_cs_decode_base64_urlsafe(const char * restrict str, size_t str_size);
+
+QN_API extern size_t qn_cs_percent_encode_in_buffer(char * restrict buf, size_t buf_size, const char * restrict bin, size_t bin_size);
+QN_API extern qn_string qn_cs_percent_encode(const char * restrict bin, size_t bin_size);
+
+// ---- Declaration of String ----
+
+QN_API extern const qn_string qn_str_empty_string;
+
 #define QN_STR_ARG_END (NULL)
 
 #define qn_str_cstr(s) (s)
 
-static inline int qn_str_size(const qn_string s)
+static inline size_t qn_str_size(const qn_string restrict s)
 {
+    if (!s) return 0;
     return posix_strlen(s);
 }
 
@@ -53,38 +78,42 @@ static inline int qn_str_compare_raw(const qn_string restrict s1, const char * r
     return posix_strcmp(s1, s2);
 }
 
-extern qn_string qn_str_duplicate(const char * s);
-extern qn_string qn_str_clone(const char * s, int sz);
-
-static inline void qn_str_destroy(const char * s)
+static inline qn_string qn_str_duplicate(const qn_string restrict s)
 {
-    free((void *)s);
+    return qn_cs_clone(qn_str_cstr(s), qn_str_size(s));
 }
 
-extern qn_string qn_str_join_list(const char * restrict delimiter, const qn_string strs[], int n);
-extern qn_string qn_str_join_va(const char * restrict delimiter, const qn_string restrict str1, const qn_string restrict str2, va_list ap);
+static inline void qn_str_destroy(const char * restrict s)
+{
+    if (s != qn_str_empty_string) {
+        free((void *)s);
+    } // if
+}
+
+QN_API extern qn_string qn_str_join_list(const char * restrict delimiter, const qn_string * restrict ss, int n);
+QN_API extern qn_string qn_str_join_va(const char * restrict delimiter, const qn_string restrict s1, const qn_string restrict s2, va_list ap);
 
 static inline qn_string qn_str_join(const char * restrict deli, const qn_string restrict s1, const qn_string restrict s2, ...)
 {
     va_list ap;
-    qn_string new_str = NULL;
+    qn_string new_str;
     va_start(ap, s2);
     new_str = qn_str_join_va(deli, s1, s2, ap);
     va_end(ap);
     return new_str;
 } // qn_str_join
 
-static inline qn_string qn_str_join_2(const char * d, const qn_string restrict s1, const qn_string restrict s2)
+static inline qn_string qn_str_join_2(const char * restrict d, const qn_string restrict s1, const qn_string restrict s2)
 {
     return qn_str_join(d, s1, s2, NULL);
 }
 
-static inline qn_string qn_str_join_3(const qn_string d, const qn_string restrict s1, const qn_string restrict s2, const qn_string restrict s3)
+static inline qn_string qn_str_join_3(const qn_string restrict d, const qn_string restrict s1, const qn_string restrict s2, const qn_string restrict s3)
 {
     return qn_str_join(d, s1, s2, s3, NULL);
 }
 
-static inline qn_string qn_str_concat_list(const qn_string strs[], int n)
+static inline qn_string qn_str_concat_list(const qn_string * restrict strs, int n)
 {
     return qn_str_join_list("", strs, n);
 }
@@ -104,25 +133,15 @@ static inline qn_string qn_str_concat(const qn_string restrict s1, const qn_stri
     return new_str;
 }
 
-static inline qn_string qn_str_concat_2(const qn_string s1, const qn_string s2)
+static inline qn_string qn_str_concat_2(const qn_string restrict s1, const qn_string restrict s2)
 {
     return qn_str_join("", s1, s2, NULL);
 }
 
-static inline qn_string qn_str_concat_3(const qn_string s1, const qn_string s2, const qn_string s3)
+static inline qn_string qn_str_concat_3(const qn_string restrict s1, const qn_string restrict s2, const qn_string restrict s3)
 {
     return qn_str_join("", s1, s2, s3, NULL);
 }
-
-extern qn_string qn_str_vprintf(const char * restrict format, va_list ap);
-extern qn_string qn_str_sprintf(const char * restrict format, ...);
-extern int qn_str_snprintf(char * restrict buf, int buf_size, const char * restrict format, ...);
-
-extern qn_string qn_str_encode_base64_urlsafe(const char * restrict bin, int bin_size);
-extern qn_string qn_str_decode_base64_urlsafe(const char * restrict str, int str_size);
-
-extern int qn_str_percent_encode_in_buffer(char * restrict buf, int buf_size, const char * restrict bin, int bin_size);
-extern qn_string qn_str_percent_encode(const char * restrict bin, int bin_size);
 
 #ifdef __cplusplus
 }

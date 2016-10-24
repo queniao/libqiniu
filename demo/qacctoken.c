@@ -8,7 +8,7 @@ int main(int argc, char * argv[])
     qn_string url = NULL;
     qn_string acctoken = NULL;
     qn_string body = NULL;
-    qn_size body_size = 0;
+    size_t body_size = 0;
 
     if (argc < 4) {
         printf("Usage: qdnurl <ACCESS_KEY> <SECRET_KEY> <URL> <BODY>\n");

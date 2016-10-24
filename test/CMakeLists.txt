@@ -14,6 +14,7 @@ add_executable (test_json test_json.c
 target_link_libraries (test_json cunit)
 
 add_executable (test_http_header test_http_header.c
+    ../src/qiniu/base/ds/etable.c
     ../src/qiniu/base/errors.c
     ../src/qiniu/base/base64.c
     ../src/qiniu/base/string.c

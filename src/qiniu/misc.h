@@ -2,13 +2,14 @@
 #define __QN_MISC_H__
 
 #include "qiniu/base/string.h"
+#include "qiniu/macros.h"
 
 #ifdef __cplusplus
 extern "C"
 {
 #endif
 
-extern qn_string qn_misc_encode_uri(const char * restrict bucket, const char * restrict key);
+QN_API extern qn_string qn_misc_encode_uri(const char * restrict bucket, const char * restrict key);
 
 #ifdef __cplusplus
 }

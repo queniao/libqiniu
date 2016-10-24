@@ -3,7 +3,8 @@
 
 #include <assert.h>
 
-#include "qiniu/base/basic_types.h"
+#include "qiniu/os/types.h"
+#include "qiniu/macros.h"
 
 #ifdef __cplusplus
 extern "C"
@@ -15,21 +16,21 @@ typedef void * qn_dqueue_element_ptr;
 struct _QN_JSON_DQUEUE;
 typedef struct _QN_JSON_DQUEUE * qn_dqueue_ptr;
 
-extern qn_dqueue_ptr qn_dqueue_create(qn_size init_capacity);
-extern void qn_dqueue_destroy(qn_dqueue_ptr queue);
-extern void qn_dqueue_reset(qn_dqueue_ptr queue);
+QN_API extern qn_dqueue_ptr qn_dqueue_create(int init_capacity);
+QN_API extern void qn_dqueue_destroy(qn_dqueue_ptr restrict queue);
+QN_API extern void qn_dqueue_reset(qn_dqueue_ptr restrict queue);
 
-extern qn_size qn_dqueue_size(qn_dqueue_ptr queue);
+QN_API extern int qn_dqueue_size(qn_dqueue_ptr restrict queue);
 #define qn_dqueue_is_empty(q) (qn_dqueue_size(q) == 0)
 
-extern qn_bool qn_dqueue_push(qn_dqueue_ptr queue, qn_dqueue_element_ptr element);
-extern qn_dqueue_element_ptr qn_dqueue_pop(qn_dqueue_ptr queue);
-extern qn_bool qn_dqueue_unshift(qn_dqueue_ptr queue, qn_dqueue_element_ptr element);
-extern qn_dqueue_element_ptr qn_dqueue_shift(qn_dqueue_ptr queue);
-extern qn_dqueue_element_ptr qn_dqueue_get(qn_dqueue_ptr queue, qn_size n);
-extern qn_dqueue_element_ptr qn_dqueue_last(qn_dqueue_ptr queue);
-extern void qn_dqueue_replace(qn_dqueue_ptr queue, qn_size n, qn_dqueue_element_ptr element);
-extern void qn_dqueue_remove(qn_dqueue_ptr queue, qn_size n);
+QN_API extern qn_bool qn_dqueue_push(qn_dqueue_ptr restrict queue, qn_dqueue_element_ptr restrict element);
+QN_API extern qn_dqueue_element_ptr qn_dqueue_pop(qn_dqueue_ptr restrict queue);
+QN_API extern qn_bool qn_dqueue_unshift(qn_dqueue_ptr restrict queue, qn_dqueue_element_ptr restrict element);
+QN_API extern qn_dqueue_element_ptr qn_dqueue_shift(qn_dqueue_ptr restrict queue);
+QN_API extern qn_dqueue_element_ptr qn_dqueue_get(qn_dqueue_ptr restrict queue, int n);
+QN_API extern qn_dqueue_element_ptr qn_dqueue_last(qn_dqueue_ptr restrict queue);
+QN_API extern void qn_dqueue_replace(qn_dqueue_ptr restrict queue, int n, qn_dqueue_element_ptr restrict element);
+QN_API extern void qn_dqueue_remove(qn_dqueue_ptr restrict queue, int n);
 
 #ifdef __cplusplus
 }

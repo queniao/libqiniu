@@ -11,18 +11,17 @@ extern "C"
 
 typedef struct _QN_JSON_DQUEUE
 {
-    qn_size capacity;
-    qn_size begin;
-    qn_size end;
+    int capacity;
+    int begin;
+    int end;
     qn_dqueue_element_ptr * elements;
     qn_dqueue_element_ptr elements_data[4];
 } qn_dqueue;
 
-static
-qn_bool qn_dqueue_augment_head(qn_dqueue_ptr queue)
+static qn_bool qn_dqueue_augment_head(qn_dqueue_ptr queue)
 {
-    qn_size delta = 0;
-    qn_size new_capacity = queue->capacity * ((queue->capacity < 16) ? 2 : 1.5);
+    int delta = 0;
+    int new_capacity = queue->capacity * ((queue->capacity < 16) ? 2 : 1.5);
     qn_dqueue_element_ptr * new_data = NULL;
 
     new_data = calloc(1, sizeof(queue->elements[0]) * new_capacity);
@@ -42,12 +41,11 @@ qn_bool qn_dqueue_augment_head(qn_dqueue_ptr queue)
     queue->end += delta;
     queue->capacity = new_capacity;
     return qn_true;
-} // qn_dqueue_augment_head
+}
 
-static
-qn_bool qn_dqueue_augment_tail(qn_dqueue_ptr queue)
+static qn_bool qn_dqueue_augment_tail(qn_dqueue_ptr queue)
 {
-    qn_size new_capacity = queue->capacity * ((queue->capacity < 16) ? 2 : 1.5);
+    int new_capacity = queue->capacity * ((queue->capacity < 16) ? 2 : 1.5);
     qn_dqueue_element_ptr * new_data = NULL;
 
     new_data = calloc(1, sizeof(queue->elements[0]) * new_capacity);
@@ -64,9 +62,9 @@ qn_bool qn_dqueue_augment_tail(qn_dqueue_ptr queue)
     queue->elements = new_data;
     queue->capacity = new_capacity;
     return qn_true;
-} // qn_dqueue_augment_tail
+}
 
-qn_dqueue_ptr qn_dqueue_create(qn_size init_capacity)
+QN_API qn_dqueue_ptr qn_dqueue_create(int init_capacity)
 {
     qn_dqueue_ptr new_queue = NULL;
 
@@ -92,9 +90,9 @@ qn_dqueue_ptr qn_dqueue_create(qn_size init_capacity)
 
     qn_dqueue_reset(new_queue);
     return new_queue;
-} // qn_dqueue_create
+}
 
-void qn_dqueue_destroy(qn_dqueue_ptr queue)
+QN_API void qn_dqueue_destroy(qn_dqueue_ptr restrict queue)
 {
     if (queue) {
         if (queue->elements != queue->elements_data) {
@@ -102,9 +100,9 @@ void qn_dqueue_destroy(qn_dqueue_ptr queue)
         } // if
         free(queue);
     } // if
-} // qn_dqueue_destroy
+}
 
-void qn_dqueue_reset(qn_dqueue_ptr queue)
+QN_API void qn_dqueue_reset(qn_dqueue_ptr restrict queue)
 {
     if (queue) {
         if (queue->begin == 0) {
@@ -115,9 +113,9 @@ void qn_dqueue_reset(qn_dqueue_ptr queue)
             queue->begin = queue->end = queue->capacity / 2;
         } // if
     } // if
-} // qn_dqueue_reset
+}
 
-qn_bool qn_dqueue_push(qn_dqueue_ptr queue, qn_dqueue_element_ptr element)
+QN_API qn_bool qn_dqueue_push(qn_dqueue_ptr restrict queue, qn_dqueue_element_ptr restrict element)
 {
     if (queue->end == queue->capacity) {
         if (!qn_dqueue_augment_tail(queue)) {
@@ -126,17 +124,17 @@ qn_bool qn_dqueue_push(qn_dqueue_ptr queue, qn_dqueue_element_ptr element)
     } // if
     queue->elements[queue->end++] = element;
     return qn_true;
-} // qn_dqueue_push
+}
 
-qn_dqueue_element_ptr qn_dqueue_pop(qn_dqueue_ptr queue)
+QN_API qn_dqueue_element_ptr qn_dqueue_pop(qn_dqueue_ptr restrict queue)
 {
     if (qn_dqueue_is_empty(queue)) {
         return NULL;
     } // if
     return queue->elements[--queue->end];
-} // qn_dqueue_pop
+}
 
-qn_bool qn_dqueue_unshift(qn_dqueue_ptr queue, qn_dqueue_element_ptr element)
+QN_API qn_bool qn_dqueue_unshift(qn_dqueue_ptr restrict queue, qn_dqueue_element_ptr restrict element)
 {
     if (queue->end == 0) {
         if (!qn_dqueue_augment_head(queue)) {
@@ -145,38 +143,38 @@ qn_bool qn_dqueue_unshift(qn_dqueue_ptr queue, qn_dqueue_element_ptr element)
     } // if
     queue->elements[--queue->begin] = element;
     return qn_true;
-} // qn_dqueue_unshift
+}
 
-qn_dqueue_element_ptr qn_dqueue_shift(qn_dqueue_ptr queue)
+QN_API qn_dqueue_element_ptr qn_dqueue_shift(qn_dqueue_ptr restrict queue)
 {
     if (qn_dqueue_is_empty(queue)) {
         return NULL;
     } // if
     return queue->elements[queue->begin++];
-} // qn_dqueue_shift
+}
 
-qn_dqueue_element_ptr qn_dqueue_get(qn_dqueue_ptr queue, qn_size n)
+QN_API qn_dqueue_element_ptr qn_dqueue_get(qn_dqueue_ptr restrict queue, int n)
 {
     if (n > qn_dqueue_size(queue)) {
         return NULL;
     } // if
     return queue->elements[queue->begin + n];
-} // qn_dqueue_get
+}
 
-qn_dqueue_element_ptr qn_dqueue_last(qn_dqueue_ptr queue)
+QN_API qn_dqueue_element_ptr qn_dqueue_last(qn_dqueue_ptr restrict queue)
 {
     if (qn_dqueue_is_empty(queue)) {
         return NULL;
     } // if
     return queue->elements[queue->end - 1];
-} // qn_dqueue_last
+}
 
-void qn_dqueue_replace(qn_dqueue_ptr queue, qn_size n, qn_dqueue_element_ptr element)
+QN_API void qn_dqueue_replace(qn_dqueue_ptr restrict queue, int n, qn_dqueue_element_ptr restrict element)
 {
     queue->elements[queue->begin + n] = element;
-} // qn_dqueue_replace
+}
 
-void qn_dqueue_remove(qn_dqueue_ptr queue, qn_size n)
+QN_API void qn_dqueue_remove(qn_dqueue_ptr restrict queue, int n)
 {
     if (n == 0) {
         qn_dqueue_shift(queue);
@@ -189,12 +187,12 @@ void qn_dqueue_remove(qn_dqueue_ptr queue, qn_size n)
         sizeof(queue->elements[0]) * (qn_dqueue_size(queue) - n - 1)
     );
     queue->end -= 1;
-} // qn_dqueue_remove
+}
 
-qn_size qn_dqueue_size(qn_dqueue_ptr queue)
+QN_API int qn_dqueue_size(qn_dqueue_ptr restrict queue)
 {
     return (queue->end - queue->begin);
-} // qn_dqueue_size
+}
 
 #ifdef __cplusplus
 }
