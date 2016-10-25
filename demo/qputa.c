@@ -4,6 +4,7 @@
 #include "qiniu/base/io.h"
 #include "qiniu/base/errors.h"
 #include "qiniu/reader.h"
+#include "qiniu/reader_filter.h"
 #include "qiniu/storage.h"
 
 typedef struct _FSIZE_CHECKER {
@@ -33,6 +34,7 @@ int main(int argc, char * argv[])
     qn_file_ptr fl = NULL;
     qn_io_reader base_rdr;
     qn_reader_ptr ctrl_rdr = NULL;
+    qn_flt_etag_ptr etag = NULL;
     qn_stor_put_extra ext;
     qn_http_hdr_iterator_ptr hdr_itr;
     qn_string hdr_ent;
@@ -65,7 +67,7 @@ int main(int argc, char * argv[])
         base_rdr.read = (qn_io_read) &qn_fl_read;
         base_rdr.advance = (qn_io_advance) &qn_fl_advance;
 
-        ctrl_rdr = qn_rdr_create(&base_rdr, 1);
+        ctrl_rdr = qn_rdr_create(&base_rdr, 2);
         if (!ctrl_rdr) {
             qn_fl_close(fl);
             printf("Cannot create a controllabl reader.\n");
@@ -74,7 +76,23 @@ int main(int argc, char * argv[])
         if (!qn_rdr_add_post_filter(ctrl_rdr, &fc, fsize_checker_post_callback)) {
             qn_rdr_destroy(ctrl_rdr);
             qn_fl_close(fl);
-            printf("Cannot add a the fsize checker.\n");
+            printf("Cannot add the fsize checker.\n");
+            return 1;
+        } // if
+
+        etag = qn_flt_etag_create();
+        if (!etag) {
+            qn_rdr_destroy(ctrl_rdr);
+            qn_fl_close(fl);
+            printf("Cannot create a new etag calculator.\n");
+            return 1;
+        } // if
+
+        if (!qn_rdr_add_post_filter(ctrl_rdr, etag, qn_flt_etag_callback)) {
+            qn_flt_etag_destroy(etag);
+            qn_rdr_destroy(ctrl_rdr);
+            qn_fl_close(fl);
+            printf("Cannot add the etag filter.\n");
             return 1;
         } // if
 
@@ -85,6 +103,11 @@ int main(int argc, char * argv[])
     auth.server_end.mac = mac;
     auth.server_end.put_policy = qn_json_create_object();
     if (!auth.server_end.put_policy) {
+        if (ctrl_rdr) {
+            qn_flt_etag_destroy(etag);
+            qn_rdr_destroy(ctrl_rdr);
+            qn_fl_close(fl);
+        } // if
         printf("Cannot create a put policy.\n");
         return 1;
     } // if
@@ -92,6 +115,7 @@ int main(int argc, char * argv[])
     scope = qn_cs_sprintf("%s:%s", bucket, key);
     if (!scope) {
         if (ctrl_rdr) {
+            qn_flt_etag_destroy(etag);
             qn_rdr_destroy(ctrl_rdr);
             qn_fl_close(fl);
         } // if
@@ -102,6 +126,7 @@ int main(int argc, char * argv[])
 
     if (!qn_json_set_string(auth.server_end.put_policy, "scope", qn_str_cstr(scope))) {
         if (ctrl_rdr) {
+            qn_flt_etag_destroy(etag);
             qn_rdr_destroy(ctrl_rdr);
             qn_fl_close(fl);
         } // if
@@ -114,6 +139,7 @@ int main(int argc, char * argv[])
 
     if (!qn_json_set_integer(auth.server_end.put_policy, "deadline", time(NULL) + 3600)) {
         if (ctrl_rdr) {
+            qn_flt_etag_destroy(etag);
             qn_rdr_destroy(ctrl_rdr);
             qn_fl_close(fl);
         } // if
@@ -125,6 +151,7 @@ int main(int argc, char * argv[])
     stor = qn_stor_create();
     if (!stor) {
         if (ctrl_rdr) {
+            qn_flt_etag_destroy(etag);
             qn_rdr_destroy(ctrl_rdr);
             qn_fl_close(fl);
         } // if
@@ -138,6 +165,7 @@ int main(int argc, char * argv[])
             printf("The '%s' file's size is larger than the given size limit %lu.\n", fname, fc.max_fsize);
         } // if
         if (ctrl_rdr) {
+            qn_flt_etag_destroy(etag);
             qn_rdr_destroy(ctrl_rdr);
             qn_fl_close(fl);
         } // if
@@ -156,6 +184,7 @@ int main(int argc, char * argv[])
     put_ret = qn_json_object_to_string(qn_stor_get_object_body(stor));
     if (!put_ret) {
         if (ctrl_rdr) {
+            qn_flt_etag_destroy(etag);
             qn_rdr_destroy(ctrl_rdr);
             qn_fl_close(fl);
         } // if
@@ -169,6 +198,11 @@ int main(int argc, char * argv[])
     qn_str_destroy(put_ret);
 
     if (ctrl_rdr) {
+        put_ret = qn_flt_etag_result(etag);
+        printf("The etag of the given local file is `%s`.\n", put_ret);
+        qn_str_destroy(put_ret);
+
+        qn_flt_etag_destroy(etag);
         qn_rdr_destroy(ctrl_rdr);
         qn_fl_close(fl);
     } // if
