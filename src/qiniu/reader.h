@@ -11,6 +11,7 @@ extern "C"
 
 enum
 {
+    QN_RDR_FILTERING_FAILED = -3,
     QN_RDR_READING_ABORTED = -2,
     QN_RDR_READING_FAILED = -1,
     QN_RDR_SUCCEED = 0
