@@ -1,16 +1,32 @@
 # Features in the Future
 
-## TCP/IP Features
+## Basic Functions
 
-## HTTP Features
+## Software Probject
 
-### HTTP/2
+## Network Performance
 
-HTTP/2 is the next generation HTTP specification and concentrates on the performance of applications as well as security. The C-SDK must support it to extend to scenes where performance and/or security is very sensitive. This can be done by using the abilities that CURL provides.
+### TCP/IP
+
+#### IPv6 Support
+
+### HTTP
+
+#### HTTP/2 Support
+
+HTTP/2 is the next generation HTTP specification and concentrates on the performance of applications as well as security. The C-SDK must support it to extend to scenes where performance and/or security is very sensitive. This can be done through the abilities that CURL provides.
+
+## Advanced Utilities
+
+### Multiplex Communication
+
+Usually, people maximize network bandwidth utility by using multiplex communication. A well-defined and fine tuned multiplex communication framework makes building applications much easier and faster.
+
+## Advanced Tools
 
 ## Programming Language Bindings
 
-The C-SDK can be used as a low level implementation to make bindings for other programming languages. By this way, any language that is C extensible can adopt the abilities to communicate with Qiniu Cloud Storage. The motivation to do this is purity and performance: the C-SDK does uploading and management in an uniform, controllable and meticulous way.
+The C-SDK is a good base as a low level implementation for making bindings to other programming languages. By this way, any language that is C extensible adopts the abilities to communicate with Qiniu Cloud Storage. The motivation to do this is purity and performance: the C-SDK does uploading and management in an uniform, controllable and meticulous way.
 
 If we have enough time to do this, the following languages' binding will be implemented:
 
