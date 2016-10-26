@@ -1130,7 +1130,7 @@ static size_t qn_stor_rp_chunk_body_reader_callback(void * user_data, char * buf
 {
     size_t ret;
     qn_stor_rput_reader_ptr chk_rdr = (qn_stor_rput_reader_ptr) user_data;
-    ret = chk_rdr->rdr->read(chk_rdr->rdr->user_data, buf, size);
+    ret = chk_rdr->rdr->read(chk_rdr->rdr, buf, size);
     return ret;
 }
 
@@ -1145,8 +1145,7 @@ static qn_bool qn_stor_rp_put_chunk_in_one_piece(qn_storage_ptr restrict stor, q
     qn_string host;
     qn_integer crc32;
     qn_integer offset;
-    qn_io_section_reader srdr;
-    qn_io_reader rdr2;
+    qn_io_section_reader_ptr srdr;
     qn_stor_rput_reader chk_rdr;
 
     // ---- Prepare request and response
@@ -1191,12 +1190,10 @@ static qn_bool qn_stor_rp_put_chunk_in_one_piece(qn_storage_ptr restrict stor, q
     } // if
     qn_str_destroy(content_length);
 
-    qn_io_srd_init(&srdr, rdr, chk_size);
-    rdr2.user_data = &srdr;
-    rdr2.read = &qn_io_srd_read;
+    srdr = qn_io_srdr_create(rdr, chk_size);
 
     memset(&chk_rdr, 0, sizeof(qn_stor_rput_reader));
-    chk_rdr.rdr = &rdr2;
+    chk_rdr.rdr = (qn_io_reader_ptr) srdr;
     chk_rdr.ext = ext;
     qn_http_req_set_body_reader(stor->req, &chk_rdr, qn_stor_rp_chunk_body_reader_callback, chk_size);
 
@@ -1214,6 +1211,7 @@ static qn_bool qn_stor_rp_put_chunk_in_one_piece(qn_storage_ptr restrict stor, q
         offset = qn_json_get_integer(stor->obj_body, "offset", -1);
 
         if (!ctx || !checksum || !host || crc32 < 0 || offset < 0) {
+            qn_io_srdr_destroy(srdr);
             qn_err_stor_set_invalid_chunk_put_result();
             return qn_false;
         } // if
@@ -1225,6 +1223,8 @@ static qn_bool qn_stor_rp_put_chunk_in_one_piece(qn_storage_ptr restrict stor, q
         if (!qn_json_set_integer(blk_info, "crc32", crc32)) return qn_false;
         if (!qn_json_set_integer(blk_info, "offset", offset)) return qn_false;
     } // if
+
+    qn_io_srdr_destroy(srdr);
     return ret;
 }
 
@@ -1452,16 +1452,10 @@ static qn_bool qn_stor_rp_put_file_in_serial_blocks(qn_storage_ptr restrict stor
     qn_integer blk_size;
     qn_integer chk_offset;
     qn_fsize blk_offset;
-    qn_io_reader rdr;
     int i;
 
     fl = qn_fl_open(fname, NULL);
     if (!fl) return qn_false;
-
-    memset(&rdr, 0, sizeof(qn_io_reader));
-    rdr.user_data = fl;
-    rdr.read = (qn_io_read) &qn_fl_read;
-    rdr.advance = (qn_io_advance) &qn_fl_advance;
 
     blk_offset = 0;
     blk_count = qn_stor_rs_block_count(ss);
@@ -1486,13 +1480,15 @@ static qn_bool qn_stor_rp_put_file_in_serial_blocks(qn_storage_ptr restrict stor
 
         // TODO: Refresh the uptoken for every block, in the case that the deadline may expires between puts.
 
-        ret = qn_stor_rp_put_block(stor, auth, blk_info, &rdr, ext);
+        ret = qn_stor_rp_put_block(stor, auth, blk_info, (qn_io_reader_ptr) fl, ext);
         if (!ret) {
             qn_fl_close(fl);
             return qn_false;
         } // if
         blk_offset += blk_size;
     } // for
+
+    qn_fl_close(fl);
     return qn_true;
 }
 

@@ -2,6 +2,7 @@
 #define __QN_OS_FILE_H__
 
 #include "qiniu/base/string.h"
+#include "qiniu/base/io.h"
 #include "qiniu/macros.h"
 
 #ifdef __cplusplus
@@ -24,7 +25,7 @@ QN_API extern void qn_fl_close(qn_file_ptr restrict fl);
 
 QN_API extern ssize_t qn_fl_read(qn_file_ptr restrict fl, char * restrict buf, size_t buf_size);
 QN_API extern qn_bool qn_fl_seek(qn_file_ptr restrict fl, qn_fsize offset);
-QN_API extern qn_bool qn_fl_advance(qn_file_ptr restrict fl, int delta);
+QN_API extern qn_bool qn_fl_advance(qn_file_ptr restrict fl, size_t delta);
 
 QN_API extern size_t qn_fl_reader_callback(void * restrict user_data, char * restrict buf, size_t size);
 

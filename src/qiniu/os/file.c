@@ -44,8 +44,14 @@ QN_API qn_string qn_fl_info_fname(qn_fl_info_ptr restrict fi)
 
 struct _QN_FILE
 {
+    qn_io_reader vtbl;
     int fd;
 } qn_file;
+
+static qn_io_reader qn_fl_rdr_vtable = {
+    (qn_io_read_fn) &qn_fl_read,
+    (qn_io_advance_fn) &qn_fl_advance
+};
 
 QN_API qn_file_ptr qn_fl_open(const char * restrict fname, qn_fl_open_extra_ptr restrict extra)
 {
@@ -61,6 +67,8 @@ QN_API qn_file_ptr qn_fl_open(const char * restrict fname, qn_fl_open_extra_ptr 
         free(new_file);
         return NULL;
     } // if
+
+    new_file->vtbl = qn_fl_rdr_vtable;
     return new_file;
 }
 
@@ -105,7 +113,7 @@ QN_API qn_bool qn_fl_seek(qn_file_ptr restrict fl, qn_fsize offset)
     return qn_true;
 }
 
-QN_API qn_bool qn_fl_advance(qn_file_ptr restrict fl, int delta)
+QN_API qn_bool qn_fl_advance(qn_file_ptr restrict fl, size_t delta)
 {
     if (lseek(fl->fd, delta, SEEK_CUR) < 0) {
         qn_err_fl_set_seeking_file_failed();

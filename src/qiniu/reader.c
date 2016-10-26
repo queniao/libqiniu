@@ -101,7 +101,7 @@ QN_API ssize_t qn_rdr_read(qn_reader_ptr restrict rdr, char * restrict buf, size
     } // for
 
     reserved_size = buf - real_buf;
-    ret = rdr->src_rdr->read(rdr->src_rdr->user_data, real_buf, real_size);
+    ret = rdr->src_rdr->read(rdr->src_rdr, real_buf, real_size);
     if (ret < 0) return QN_RDR_READING_FAILED;
 
     real_buf = buf;

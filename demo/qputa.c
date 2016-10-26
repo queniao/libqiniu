@@ -32,7 +32,6 @@ int main(int argc, char * argv[])
     qn_storage_ptr stor = NULL;
     qn_stor_auth auth;
     qn_file_ptr fl = NULL;
-    qn_io_reader base_rdr;
     qn_reader_ptr ctrl_rdr = NULL;
     qn_flt_etag_ptr etag = NULL;
     qn_stor_put_extra ext;
@@ -62,12 +61,7 @@ int main(int argc, char * argv[])
             return 1;
         } // if
 
-        memset(&base_rdr, 0, sizeof(base_rdr));
-        base_rdr.user_data = fl;
-        base_rdr.read = (qn_io_read) &qn_fl_read;
-        base_rdr.advance = (qn_io_advance) &qn_fl_advance;
-
-        ctrl_rdr = qn_rdr_create(&base_rdr, 2);
+        ctrl_rdr = qn_rdr_create((qn_io_reader_ptr) fl, 2);
         if (!ctrl_rdr) {
             qn_fl_close(fl);
             printf("Cannot create a controllabl reader.\n");
