@@ -34,6 +34,9 @@ target_link_libraries (qputf qiniu curl crypto)
 add_executable (qputfa qputfa.c)
 target_link_libraries (qputfa qiniu curl crypto)
 
+add_executable (qputfb qputfb.c)
+target_link_libraries (qputfb qiniu curl crypto)
+
 add_executable (qrputf qrputf.c)
 target_link_libraries (qrputf qiniu curl crypto)
 
