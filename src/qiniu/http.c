@@ -123,15 +123,26 @@ QN_API qn_bool qn_http_form_add_string(qn_http_form_ptr restrict form, const cha
     return qn_true;
 }
 
+static inline const char * qn_http_get_fname_utf8(const char * restrict fname)
+{
+    const char * fname_utf8;
+    if (!fname) return "LIBQINIU-MANDATORY-FILENAME";
+#ifdef QN_OS_WINDOWS
+    return ((fname_utf8 = strrchr(fname, '\\'))) ? fname_utf8 + 1 : fname;
+#else
+    return ((fname_utf8 = strrchr(fname, '/'))) ? fname_utf8 + 1 : fname;
+#endif
+}
+
 QN_API qn_bool qn_http_form_add_file(qn_http_form_ptr restrict form, const char * restrict field, const char * restrict fname, const char * restrict fname_utf8, size_t fsize)
 {
     CURLFORMcode ret;
 
-    if (fname_utf8) {
-        ret = curl_formadd(&form->first, &form->last, CURLFORM_COPYNAME, field, CURLFORM_FILE, fname, CURLFORM_FILENAME, fname_utf8, CURLFORM_END);
-    } else {
-        ret = curl_formadd(&form->first, &form->last, CURLFORM_COPYNAME, field, CURLFORM_FILE, fname, CURLFORM_END);
-    } // if
+    /// BUG NOTE 1 : Golang HTTP server will fail in case that the fsize is larger than 10MB and the `filename` attribute of the multipart-data section doesn't exist.
+    /// BUG FIX    : Use a mandatory filename value to prevent Golang HTTP server from failing.
+    if (!fname_utf8) fname_utf8 = qn_http_get_fname_utf8(fname);
+
+    ret = curl_formadd(&form->first, &form->last, CURLFORM_COPYNAME, field, CURLFORM_FILE, fname, CURLFORM_FILENAME, fname_utf8, CURLFORM_END);
     if (ret != 0) {
         qn_err_http_set_adding_file_field_failed();
         return qn_false;
@@ -143,11 +154,10 @@ QN_API qn_bool qn_http_form_add_file_reader(qn_http_form_ptr restrict form, cons
 {
     CURLFORMcode ret;
 
-    if (fname_utf8) {
-        ret = curl_formadd(&form->first, &form->last, CURLFORM_COPYNAME, field, CURLFORM_STREAM, rdr, CURLFORM_CONTENTSLENGTH, (long)fsize, CURLFORM_FILENAME, fname_utf8, CURLFORM_END);
-    } else {
-        ret = curl_formadd(&form->first, &form->last, CURLFORM_COPYNAME, field, CURLFORM_STREAM, rdr, CURLFORM_CONTENTSLENGTH, (long)fsize, CURLFORM_END);
-    } // if
+    /// See BUG NOTE 1.
+    if (!fname_utf8) fname_utf8 = qn_http_get_fname_utf8(fname);
+
+    ret = curl_formadd(&form->first, &form->last, CURLFORM_COPYNAME, field, CURLFORM_STREAM, rdr, CURLFORM_CONTENTSLENGTH, (long)fsize, CURLFORM_FILENAME, fname_utf8, CURLFORM_END);
     if (ret != 0) {
         qn_err_http_set_adding_file_field_failed();
         return qn_false;
