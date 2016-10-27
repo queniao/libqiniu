@@ -28,14 +28,14 @@ target_link_libraries (qchgm qiniu curl crypto)
 add_executable (qfetch qfetch.c)
 target_link_libraries (qfetch qiniu curl crypto)
 
-add_executable (qput qput.c)
-target_link_libraries (qput qiniu curl crypto)
+add_executable (qputf qputf.c)
+target_link_libraries (qputf qiniu curl crypto)
 
-add_executable (qputa qputa.c)
-target_link_libraries (qputa qiniu curl crypto)
+add_executable (qputfa qputfa.c)
+target_link_libraries (qputfa qiniu curl crypto)
 
-add_executable (qrput qrput.c)
-target_link_libraries (qrput qiniu curl crypto)
+add_executable (qrputf qrputf.c)
+target_link_libraries (qrputf qiniu curl crypto)
 
 add_executable (qregion qregion.c)
 target_link_libraries (qregion qiniu curl crypto)
