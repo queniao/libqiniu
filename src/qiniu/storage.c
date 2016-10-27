@@ -3,6 +3,7 @@
 #include "qiniu/base/errors.h"
 #include "qiniu/base/json_parser.h"
 #include "qiniu/base/json_formatter.h"
+#include "qiniu/version.h"
 #include "qiniu/http.h"
 #include "qiniu/http_query.h"
 #include "qiniu/storage.h"
@@ -103,6 +104,7 @@ static qn_bool qn_stor_prepare_common_request_headers(qn_storage_ptr restrict st
 {
     if (!qn_http_req_set_header(stor->req, "Expect", "")) return qn_false;
     if (!qn_http_req_set_header(stor->req, "Transfer-Encoding", "")) return qn_false;
+    if (!qn_http_req_set_header(stor->req, "User-Agent", qn_ver_get_full_string())) return qn_false;
     return qn_true;
 }
 
