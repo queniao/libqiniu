@@ -193,7 +193,8 @@ QN_API qn_json_object_ptr qn_stor_stat(qn_storage_ptr restrict stor, const qn_st
 
     ret = qn_http_conn_get(stor->conn, url, stor->req, stor->resp);
     qn_str_destroy(url);
-    return (ret) ? stor->obj_body : NULL;
+    if (!ret) return NULL;
+    return (stor->obj_body) ? stor->obj_body : qn_json_immutable_empty_object();
 }
 
 static const qn_string qn_stor_make_copy_op(const char * restrict src_bucket, const char * restrict src_key, const char * restrict dest_bucket, const char * restrict dest_key)
@@ -649,11 +650,7 @@ QN_API qn_json_object_ptr qn_stor_list(qn_storage_ptr restrict stor, const qn_st
         ret = qn_http_conn_post(stor->conn, url, stor->req, stor->resp);
         qn_str_destroy(url);
 
-        if (!ret) {
-            qn_http_qry_destroy(qry);
-            return NULL;
-        } // if
-        if (!ext->item_processor_callback) break;
+        if (!ret || !ext->item_processor_callback) break;
 
         if (!stor->obj_body || qn_json_is_empty_object(stor->obj_body)) {
             // No list result.
@@ -683,7 +680,8 @@ QN_API qn_json_object_ptr qn_stor_list(qn_storage_ptr restrict stor, const qn_st
     } while (qn_json_size_array(items) == limit);
 
     qn_http_qry_destroy(qry);
-    return (ret) ? stor->obj_body : NULL;
+    if (!ret) return NULL;
+    return (stor->obj_body) ? stor->obj_body : qn_json_immutable_empty_object();
 }
 
 // ----
@@ -975,7 +973,8 @@ QN_API qn_json_object_ptr qn_stor_put_file(qn_storage_ptr restrict stor, const q
 
     // ----
     ret = qn_http_conn_post(stor->conn, qn_str_cstr(rgn_entry->base_url), stor->req, stor->resp);
-    return (ret) ? stor->obj_body : NULL;
+    if (!ret) return NULL;
+    return (stor->obj_body) ? stor->obj_body : qn_json_immutable_empty_object();
 }
 
 QN_API qn_json_object_ptr qn_stor_put_buffer(qn_storage_ptr restrict stor, const qn_stor_auth_ptr restrict auth, const char * restrict buf, int buf_size, qn_stor_put_extra_ptr restrict ext)
@@ -1000,7 +999,8 @@ QN_API qn_json_object_ptr qn_stor_put_buffer(qn_storage_ptr restrict stor, const
     // ----
     if (rgn_entry->hostname && !qn_http_req_set_header(stor->req, "Host", qn_str_cstr(rgn_entry->hostname))) return NULL;
     ret = qn_http_conn_post(stor->conn, qn_str_cstr(rgn_entry->base_url), stor->req, stor->resp);
-    return (ret) ? stor->obj_body : NULL;
+    if (!ret) return NULL;
+    return (stor->obj_body) ? stor->obj_body : qn_json_immutable_empty_object();
 }
 
 // ----
