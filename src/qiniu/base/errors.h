@@ -24,6 +24,8 @@ QN_API extern void qn_err_set_out_of_capacity(void);
 QN_API extern void qn_err_json_set_bad_text_input(void);
 QN_API extern void qn_err_json_set_too_many_parsing_levels(void);
 QN_API extern void qn_err_json_set_need_more_text_input(void);
+QN_API extern void qn_err_json_set_modifying_immutable_object(void);
+QN_API extern void qn_err_json_set_modifying_immutable_array(void);
 
 QN_API extern void qn_err_http_set_invalid_header_syntax(void);
 QN_API extern void qn_err_http_set_adding_string_field_failed(void);
@@ -65,6 +67,8 @@ QN_API extern qn_bool qn_err_is_out_of_capacity(void);
 QN_API extern qn_bool qn_err_json_is_bad_text_input(void);
 QN_API extern qn_bool qn_err_json_is_too_many_parsing_levels(void);
 QN_API extern qn_bool qn_err_json_is_need_more_text_input(void);
+QN_API extern qn_bool qn_err_json_is_modifying_immutable_object(void);
+QN_API extern qn_bool qn_err_json_is_modifying_immutable_array(void);
 
 QN_API extern qn_bool qn_err_http_is_invalid_header_syntax(void);
 QN_API extern qn_bool qn_err_http_is_adding_string_field_failed(void);

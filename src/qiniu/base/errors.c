@@ -22,6 +22,8 @@ enum
     QN_ERR_JSON_BAD_TEXT_INPUT  = 2001,
     QN_ERR_JSON_TOO_MANY_PARSING_LEVELS = 2002,
     QN_ERR_JSON_NEED_MORE_TEXT_INPUT = 2003,
+    QN_ERR_JSON_MODIFYING_IMMUTABLE_OBJECT = 2004,
+    QN_ERR_JSON_MODIFYING_IMMUTABLE_ARRAY = 2005,
 
     QN_ERR_HTTP_INVALID_HEADER_SYNTAX = 3001,
     QN_ERR_HTTP_ADDING_STRING_FIELD_FAILED = 3002,
@@ -72,6 +74,8 @@ static qn_error qn_errors[] = {
     {QN_ERR_JSON_BAD_TEXT_INPUT, "Bad text input of a JSON string is read"},
     {QN_ERR_JSON_TOO_MANY_PARSING_LEVELS, "Parsing too many levels in a piece of JSON text"},
     {QN_ERR_JSON_NEED_MORE_TEXT_INPUT, "Need more text input to parse a JSON object or array"},
+    {QN_ERR_JSON_MODIFYING_IMMUTABLE_OBJECT, "Modifying an immutable JSON object"},
+    {QN_ERR_JSON_MODIFYING_IMMUTABLE_ARRAY, "Modifying an immutable JSON array"},
 
     {QN_ERR_HTTP_INVALID_HEADER_SYNTAX, "Invalid HTTP header syntax"},
     {QN_ERR_HTTP_ADDING_STRING_FIELD_FAILED, "Adding string field to HTTP form failed"},
@@ -173,6 +177,16 @@ QN_API void qn_err_json_set_too_many_parsing_levels(void)
 QN_API void qn_err_json_set_need_more_text_input(void)
 {
     qn_err_code = QN_ERR_JSON_NEED_MORE_TEXT_INPUT;
+}
+
+QN_API void qn_err_json_set_modifying_immutable_object(void)
+{
+    qn_err_code = QN_ERR_JSON_MODIFYING_IMMUTABLE_OBJECT;
+}
+
+QN_API void qn_err_json_set_modifying_immutable_array(void)
+{
+    qn_err_code = QN_ERR_JSON_MODIFYING_IMMUTABLE_ARRAY;
 }
 
 QN_API void qn_err_http_set_invalid_header_syntax(void)
@@ -335,6 +349,16 @@ QN_API qn_bool qn_err_json_is_too_many_parsing_levels(void)
 QN_API qn_bool qn_err_json_is_need_more_text_input(void)
 {
     return (qn_err_code == QN_ERR_JSON_NEED_MORE_TEXT_INPUT);
+}
+
+QN_API qn_bool qn_err_json_is_modifying_immutable_object(void)
+{
+    return (qn_err_code == QN_ERR_JSON_MODIFYING_IMMUTABLE_OBJECT);
+}
+
+QN_API qn_bool qn_err_json_is_modifying_immutable_array(void)
+{
+    return (qn_err_code == QN_ERR_JSON_MODIFYING_IMMUTABLE_ARRAY);
 }
 
 QN_API qn_bool qn_err_http_is_invalid_header_syntax(void)

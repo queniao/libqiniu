@@ -83,6 +83,7 @@ typedef union _QN_JSON_VARIANT
 
 // ---- Declaration of JSON Object ----
 
+QN_API extern qn_json_object_ptr qn_json_immutable_empty_object(void);
 QN_API extern qn_json_object_ptr qn_json_create_object(void);
 QN_API extern qn_json_object_ptr qn_json_create_and_set_object(qn_json_object_ptr restrict obj, const char * restrict key);
 QN_API extern qn_json_array_ptr qn_json_create_and_set_array(qn_json_object_ptr restrict obj, const char * restrict key);
@@ -112,6 +113,7 @@ QN_API extern void qn_json_unset(qn_json_object_ptr restrict obj, const char * r
 
 // ---- Declaration of JSON Array ----
 
+QN_API extern qn_json_array_ptr qn_json_immutable_empty_array(void);
 QN_API extern qn_json_array_ptr qn_json_create_array(void);
 
 QN_API extern qn_json_object_ptr qn_json_create_and_push_object(qn_json_array_ptr restrict arr);
