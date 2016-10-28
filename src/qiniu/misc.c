@@ -6,13 +6,13 @@ extern "C"
 {
 #endif
 
-qn_string qn_misc_encode_uri(const char * restrict bucket, const char * restrict key)
+QN_API qn_string qn_misc_encode_uri(const char * restrict bucket, const char * restrict key)
 {
-    char * buf = NULL;
-    int buf_size = 0;
-    int bkt_size = 0;
-    int key_size = 0;
-    qn_string encoded_uri = NULL;
+    char * buf;
+    size_t buf_size;
+    size_t bkt_size;
+    size_t key_size;
+    qn_string encoded_uri;
 
     buf_size = bkt_size = strlen(bucket);
     if (key) {
@@ -22,7 +22,7 @@ qn_string qn_misc_encode_uri(const char * restrict bucket, const char * restrict
 
     buf = malloc(buf_size + 1);
     if (!buf) {
-        qn_err_set_no_enough_memory();
+        qn_err_set_out_of_memory();
         return NULL;
     } // if
 
@@ -34,7 +34,7 @@ qn_string qn_misc_encode_uri(const char * restrict bucket, const char * restrict
 
     buf[buf_size] = '\0';
 
-    encoded_uri = qn_str_encode_base64_urlsafe(buf, buf_size);
+    encoded_uri = qn_cs_encode_base64_urlsafe(buf, buf_size);
     free(buf);
     return encoded_uri;
 }

@@ -1,59 +1,236 @@
 #ifndef __QN_STORAGE_H__
 #define __QN_STORAGE_H__
 
+#include "qiniu/base/io.h"
 #include "qiniu/base/json.h"
 #include "qiniu/auth.h"
+#include "qiniu/http.h"
+#include "qiniu/region.h"
+#include "qiniu/reader.h"
+
+#include "qiniu/macros.h"
 
 #ifdef __cplusplus
 extern "C"
 {
 #endif
 
+// ---- Declaration of Storage Extension ----
+
+typedef struct _QN_STOR_RGN
+{
+    qn_rgn_table_ptr rtbl;
+    qn_rgn_entry_ptr entry;
+} qn_stor_rgn, *qn_stor_rgn_ptr;
+
+typedef struct _QN_STOR_PUT_CTRL
+{
+    qn_fsize fsize;
+    qn_reader_ptr rdr;
+} qn_stor_put_ctrl, *qn_stor_put_ctrl_ptr;
+
+// ---- Declaration of Storage ----
+
 struct _QN_STORAGE;
 typedef struct _QN_STORAGE * qn_storage_ptr;
 
-extern qn_storage_ptr qn_stor_mn_create(void);
-extern void qn_stor_mn_destroy(qn_storage_ptr stor);
+QN_API extern qn_storage_ptr qn_stor_create(void);
+QN_API extern void qn_stor_destroy(qn_storage_ptr restrict stor);
 
-extern qn_json_object_ptr qn_stor_get_object_body(qn_storage_ptr stor);
+QN_API extern qn_json_object_ptr qn_stor_get_object_body(const qn_storage_ptr restrict stor);
+QN_API extern qn_json_array_ptr qn_stor_get_array_body(const qn_storage_ptr restrict stor);
+QN_API extern qn_http_hdr_iterator_ptr qn_stor_resp_get_header_iterator(const qn_storage_ptr restrict stor);
 
-typedef struct _QN_STOR_QUERY_EXTRA
+// ---- Declaration of Management ----
+
+typedef struct _QN_STOR_AUTH
 {
-    qn_mac_ptr mac;
-    const qn_string acctoken;
-} qn_stor_query_extra, *qn_stor_query_extra_ptr;
+    struct {
+        qn_mac_ptr mac;
+        qn_json_object_ptr put_policy;
+    } server_end;
 
-extern qn_bool qn_stor_mn_stat(qn_storage_ptr stor, const char * restrict bucket, const char * restrict key, const qn_stor_query_extra_ptr ext);
+    struct {
+        union {
+            const qn_string acctoken;
+            const qn_string uptoken;
+        };
+    } client_end;
+} qn_stor_auth, *qn_stor_auth_ptr;
 
-extern qn_bool qn_stor_mn_copy(qn_storage_ptr stor, const char * restrict src_bucket, const char * restrict src_key, const char * restrict dest_bucket, const char * restrict dest_key, const qn_stor_query_extra_ptr ext);
-extern qn_bool qn_stor_mn_move(qn_storage_ptr stor, const char * restrict src_bucket, const char * restrict src_key, const char * restrict dest_bucket, const char * restrict dest_key, const qn_stor_query_extra_ptr ext);
-extern qn_bool qn_stor_mn_delete(qn_storage_ptr stor, const char * restrict bucket, const char * restrict key, const qn_stor_query_extra_ptr ext);
-extern qn_bool qn_stor_mn_change_mime(qn_storage_ptr stor, const char * restrict bucket, const char * restrict key, const char * restrict mime, const qn_stor_query_extra_ptr ext);
+// ----
+
+typedef struct _QN_STOR_STAT_EXTRA
+{
+    // ---- Extensions ----
+    // Multi-Region : Pass the host entry information of a storage region.
+    qn_stor_rgn rgn;
+} qn_stor_stat_extra, *qn_stor_stat_extra_ptr;
+
+QN_API extern qn_bool qn_stor_stat(qn_storage_ptr restrict stor, const qn_stor_auth_ptr restrict auth, const char * restrict bucket, const char * restrict key, qn_stor_stat_extra_ptr restrict ext);
+
+// ----
+
+typedef struct _QN_STOR_COPY_EXTRA
+{
+    qn_bool force;
+
+    // ---- Extensions ----
+    // Multi-Region : Pass the host entry information of a storage region.
+    qn_stor_rgn rgn;
+} qn_stor_copy_extra, *qn_stor_copy_extra_ptr;
+
+QN_API extern qn_bool qn_stor_copy(qn_storage_ptr restrict stor, const qn_stor_auth_ptr restrict auth, const char * restrict src_bucket, const char * restrict src_key, const char * restrict dest_bucket, const char * restrict dest_key, qn_stor_copy_extra_ptr restrict ext);
+
+// ----
+
+typedef struct _QN_STOR_MOVE_EXTRA
+{
+    // ---- Extensions ----
+    // Multi-Region : Pass the host entry information of a storage region.
+    qn_stor_rgn rgn;
+} qn_stor_move_extra, *qn_stor_move_extra_ptr;
+
+QN_API extern qn_bool qn_stor_move(qn_storage_ptr restrict stor, const qn_stor_auth_ptr restrict auth, const char * restrict src_bucket, const char * restrict src_key, const char * restrict dest_bucket, const char * restrict dest_key, qn_stor_move_extra_ptr restrict ext);
+
+// ----
+
+typedef struct _QN_STOR_DELETE_EXTRA
+{
+    // ---- Extensions ----
+    // Multi-Region : Pass the host entry information of a storage region.
+    qn_stor_rgn rgn;
+} qn_stor_delete_extra, *qn_stor_delete_extra_ptr;
+
+QN_API extern qn_bool qn_stor_delete(qn_storage_ptr restrict stor, const qn_stor_auth_ptr restrict auth, const char * restrict bucket, const char * restrict key, qn_stor_delete_extra_ptr restrict ext);
+
+// ----
+
+typedef struct _QN_STOR_CHANGE_MIME_EXTRA
+{
+    // ---- Extensions ----
+    // Multi-Region : Pass the host entry information of a storage region.
+    qn_stor_rgn rgn;
+} qn_stor_change_mime_extra, *qn_stor_change_mime_extra_ptr;
+
+QN_API extern qn_bool qn_stor_change_mime(qn_storage_ptr restrict stor, const qn_stor_auth_ptr restrict auth, const char * restrict bucket, const char * restrict key, const char * restrict mime, qn_stor_change_mime_extra_ptr restrict ext);
+
+// ----
 
 typedef struct _QN_STOR_FETCH_EXTRA
 {
+    // ---- Extensions ----
+    // Multi-Region : Pass the host entry information of a storage region.
+    qn_stor_rgn rgn;
 } qn_stor_fetch_extra, *qn_stor_fetch_extra_ptr;
 
-extern qn_bool qn_stor_mn_fetch(qn_storage_ptr stor, const char * restrict url, const char * restrict bucket, const char * restrict key, qn_stor_fetch_extra_ptr ext);
-extern qn_bool qn_stor_mn_prefetch(qn_storage_ptr stor, const char * restrict bucket, const char * restrict key, qn_stor_fetch_extra_ptr ext);
+QN_API extern qn_bool qn_stor_fetch(qn_storage_ptr restrict stor, const qn_stor_auth_ptr restrict auth, const char * restrict src_url, const char * restrict dest_bucket, const char * restrict dest_key, qn_stor_fetch_extra_ptr restrict ext);
+QN_API extern qn_bool qn_stor_prefetch(qn_storage_ptr restrict stor, const qn_stor_auth_ptr restrict auth, const char * restrict dest_bucket, const char * restrict dest_key, qn_stor_fetch_extra_ptr restrict ext);
+
+// ----
+
+typedef qn_bool (*qn_stor_item_processor_callback)(void * user_data, qn_json_object_ptr item);
 
 typedef struct _QN_STOR_LIST_EXTRA
 {
     const char * prefix;
     const char * delimiter;
     int limit;
+
+    void * item_processor;
+    qn_stor_item_processor_callback item_processor_callback;
+
+    // ---- Extensions ----
+    // Multi-Region : Pass the host entry information of a storage region.
+    qn_stor_rgn rgn;
 } qn_stor_list_extra, *qn_stor_list_extra_ptr;
 
-extern qn_bool qn_stor_mn_list(qn_storage_ptr stor, const char * restrict bucket, qn_stor_list_extra_ptr ext);
+QN_API extern qn_bool qn_stor_list(qn_storage_ptr restrict stor, const qn_stor_auth_ptr restrict auth, const char * restrict bucket, qn_stor_list_extra_ptr restrict ext);
+
+// ----
 
 struct _QN_STOR_BATCH;
 typedef struct _QN_STOR_BATCH * qn_stor_batch_ptr;
 
-extern qn_stor_batch_ptr qn_stor_mn_create_batch(void);
-extern void qn_stor_mn_destroy_batch(qn_stor_batch_ptr bt);
-extern void qn_stor_mn_reset_batch(qn_stor_batch_ptr bt);
+typedef struct _QN_STOR_BATCH_EXTRA
+{
+    // ---- Extensions ----
+    // Multi-Region : Pass the host entry information of a storage region.
+    qn_stor_rgn rgn;
+} qn_stor_batch_extra, *qn_stor_batch_extra_ptr;
 
-extern qn_bool qn_stor_mn_batch_operate(qn_storage_ptr stor, qn_stor_batch_ptr bt);
+QN_API extern qn_stor_batch_ptr qn_stor_bt_create(void);
+QN_API extern void qn_stor_bt_destroy(qn_stor_batch_ptr restrict bt);
+QN_API extern void qn_stor_bt_reset(qn_stor_batch_ptr restrict bt);
+
+QN_API extern qn_bool qn_stor_bt_add_stat_op(qn_stor_batch_ptr restrict bt, const char * restrict bucket, const char * restrict key);
+QN_API extern qn_bool qn_stor_bt_add_copy_op(qn_stor_batch_ptr restrict bt, const char * restrict src_bucket, const char * restrict src_key, const char * restrict dest_bucket, const char * restrict dest_key);
+QN_API extern qn_bool qn_stor_bt_add_move_op(qn_stor_batch_ptr restrict bt, const char * restrict src_bucket, const char * restrict src_key, const char * restrict dest_bucket, const char * restrict dest_key);
+QN_API extern qn_bool qn_stor_bt_add_delete_op(qn_stor_batch_ptr restrict bt, const char * restrict bucket, const char * restrict key);
+
+QN_API extern qn_bool qn_stor_execute_batch_opertions(qn_storage_ptr restrict stor, const qn_stor_auth_ptr restrict auth, const qn_stor_batch_ptr restrict bt, qn_stor_batch_extra_ptr restrict ext);
+
+// ---- Declaration of Upload ----
+
+typedef enum _QN_STOR_PUT_METHOD
+{
+    QN_STOR_PUT_RESUMABLE = 0x1,
+    QN_STOR_PUT_BASE64 = 0x2,
+    QN_STOR_PUT_CHUNKED = 0x4
+} qn_stor_put_method;
+
+// ----
+
+typedef struct _QN_STOR_PUT_EXTRA
+{
+    qn_stor_put_method method;
+
+    const char * final_key;
+    const char * crc32;
+    const char * accept_type;
+
+    // ---- Extensions ----
+    // Multi-Region : Pass the host entry information of a storage region.
+    qn_stor_rgn rgn;
+
+    // Put-Control : Control the progress of putting a file.
+    qn_stor_put_ctrl put_ctrl;
+} qn_stor_put_extra, *qn_stor_put_extra_ptr;
+
+QN_API extern qn_bool qn_stor_put_file(qn_storage_ptr restrict stor, const qn_stor_auth_ptr restrict auth, const char * restrict fname, qn_stor_put_extra_ptr restrict ext);
+QN_API extern qn_bool qn_stor_put_buffer(qn_storage_ptr restrict stor, const qn_stor_auth_ptr restrict auth, const char * restrict buf, int buf_size, qn_stor_put_extra_ptr restrict ext);
+
+// ----
+
+struct _QN_STOR_RESUMABLE_PUT_SESSION;
+typedef struct _QN_STOR_RESUMABLE_PUT_SESSION * qn_stor_rput_session_ptr;
+
+QN_API extern qn_stor_rput_session_ptr qn_stor_rs_create(qn_fsize fsize);
+QN_API extern void qn_stor_rs_destroy(qn_stor_rput_session_ptr restrict ss);
+
+QN_API extern qn_stor_rput_session_ptr qn_stor_rs_from_string(const char * restrict str, size_t str_size);
+QN_API extern qn_string qn_stor_rs_to_string(const qn_stor_rput_session_ptr restrict ss);
+
+QN_API extern int qn_stor_rs_block_count(const qn_stor_rput_session_ptr restrict ss);
+QN_API extern int qn_stor_rs_block_size(const qn_stor_rput_session_ptr restrict ss, int n);
+QN_API extern qn_json_object_ptr qn_stor_rs_block_info(const qn_stor_rput_session_ptr restrict ss, int n);
+QN_API extern qn_bool qn_stor_rs_is_putting_block_done(const qn_stor_rput_session_ptr restrict ss, int n);
+
+typedef struct _QN_STOR_RESUMABLE_PUT_EXTRA
+{
+    int chk_size;
+    const char * final_key;
+
+    // ---- Extensions ----
+    // Multi-Region : Pass the host entry information of a storage region.
+    qn_stor_rgn rgn;
+} qn_stor_rput_extra, *qn_stor_rput_extra_ptr;
+
+QN_API extern qn_bool qn_stor_rp_put_chunk(qn_storage_ptr restrict stor, qn_stor_auth_ptr restrict auth, qn_json_object_ptr restrict blk_info, qn_io_reader_ptr restrict rdr, int chk_size, qn_stor_rput_extra_ptr restrict ext);
+QN_API extern qn_bool qn_stor_rp_put_block(qn_storage_ptr restrict stor, qn_stor_auth_ptr restrict auth, qn_json_object_ptr restrict blk_info, qn_io_reader_ptr restrict rdr, qn_stor_rput_extra_ptr restrict ext);
+QN_API extern qn_bool qn_stor_rp_make_file(qn_storage_ptr restrict stor, qn_stor_auth_ptr restrict auth, qn_stor_rput_session_ptr restrict ss, qn_stor_rput_extra_ptr restrict ext);
+
+QN_API extern qn_bool qn_stor_rp_put_file(qn_storage_ptr restrict stor, qn_stor_auth_ptr restrict auth, qn_stor_rput_session_ptr * restrict ss, const char * restrict fname, qn_stor_rput_extra_ptr restrict ext);
 
 #ifdef __cplusplus
 }
