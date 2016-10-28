@@ -7,7 +7,8 @@ int main(int argc, char * argv[])
     qn_mac_ptr mac;
     qn_string bucket;
     qn_string key;
-    qn_string stat_ret;
+    qn_string stat_ret_str;
+    qn_json_object_ptr stat_ret;
     qn_storage_ptr stor;
     qn_stor_auth auth;
     qn_http_hdr_iterator_ptr hdr_itr;
@@ -31,10 +32,13 @@ int main(int argc, char * argv[])
     memset(&auth, 0, sizeof(auth));
     auth.server_end.mac = mac;
 
-    if (!qn_stor_stat(stor, &auth, bucket, key, NULL)) {
+    if (! (stat_ret = qn_stor_stat(stor, &auth, bucket, key, NULL))) {
+        qn_stor_destroy(stor);
+        qn_mac_destroy(mac);
         printf("Cannot stat the `%s:%s` file.\n", bucket, key);
         return 2;
     } // if
+    qn_mac_destroy(mac);
 
     hdr_itr = qn_stor_resp_get_header_iterator(stor);
     while ((hdr_ent = qn_http_hdr_itr_next_entry(hdr_itr))) {
@@ -42,16 +46,15 @@ int main(int argc, char * argv[])
     } // while
     qn_http_hdr_itr_destroy(hdr_itr);
 
-    stat_ret = qn_json_object_to_string(qn_stor_get_object_body(stor));
-    if (!stat_ret) {
+    stat_ret_str = qn_json_object_to_string(stat_ret);
+    qn_stor_destroy(stor);
+    if (!stat_ret_str) {
         printf("Cannot format the object body form /stat interface.\n");
         return 3;
     } // if
 
-    printf("%s\n", stat_ret);
-    qn_str_destroy(stat_ret);
+    printf("%s\n", stat_ret_str);
+    qn_str_destroy(stat_ret_str);
 
-    qn_stor_destroy(stor);
-    qn_mac_destroy(mac);
     return 0;
 }

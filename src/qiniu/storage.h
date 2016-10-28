@@ -67,7 +67,7 @@ typedef struct _QN_STOR_STAT_EXTRA
     qn_stor_rgn rgn;
 } qn_stor_stat_extra, *qn_stor_stat_extra_ptr;
 
-QN_API extern qn_bool qn_stor_stat(qn_storage_ptr restrict stor, const qn_stor_auth_ptr restrict auth, const char * restrict bucket, const char * restrict key, qn_stor_stat_extra_ptr restrict ext);
+QN_API extern qn_json_object_ptr qn_stor_stat(qn_storage_ptr restrict stor, const qn_stor_auth_ptr restrict auth, const char * restrict bucket, const char * restrict key, qn_stor_stat_extra_ptr restrict ext);
 
 // ----
 
