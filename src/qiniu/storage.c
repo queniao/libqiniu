@@ -455,7 +455,7 @@ QN_API qn_bool qn_stor_change_mime(qn_storage_ptr restrict stor, const qn_stor_a
 
 // ----
 
-QN_API qn_bool qn_stor_fetch(qn_storage_ptr restrict stor, const qn_stor_auth_ptr restrict auth, const char * restrict src_url, const char * restrict dest_bucket, const char * restrict dest_key, qn_stor_fetch_extra_ptr restrict ext)
+QN_API qn_json_object_ptr qn_stor_fetch(qn_storage_ptr restrict stor, const qn_stor_auth_ptr restrict auth, const char * restrict src_url, const char * restrict dest_bucket, const char * restrict dest_key, qn_stor_fetch_extra_ptr restrict ext)
 {
     qn_bool ret;
     qn_string encoded_src_url;
@@ -472,18 +472,18 @@ QN_API qn_bool qn_stor_fetch(qn_storage_ptr restrict stor, const qn_stor_auth_pt
 
     // ---- Prepare the query URL
     encoded_src_url = qn_cs_encode_base64_urlsafe(src_url, strlen(src_url));
-    if (!encoded_src_url) return qn_false;
+    if (!encoded_src_url) return NULL;
 
     encoded_dest_uri = qn_misc_encode_uri(dest_bucket, dest_key);
     if (!encoded_dest_uri) {
         qn_str_destroy(encoded_src_url);
-        return qn_false;
+        return NULL;
     } // if
 
     url = qn_cs_sprintf("%.*s/fetch/%.*s/to/%.*s", qn_str_size(rgn_entry->base_url), qn_str_cstr(rgn_entry->base_url), qn_str_size(encoded_src_url), qn_str_cstr(encoded_src_url), qn_str_size(encoded_dest_uri), qn_str_cstr(encoded_dest_uri));
     qn_str_destroy(encoded_src_url);
     qn_str_destroy(encoded_dest_uri);
-    if (!url) return qn_false;
+    if (!url) return NULL;
 
     // ---- Prepare the request and response
     qn_http_req_reset(stor->req);
@@ -493,7 +493,7 @@ QN_API qn_bool qn_stor_fetch(qn_storage_ptr restrict stor, const qn_stor_auth_pt
 
     if (!qn_stor_prepare_managment(stor, url, rgn_entry->hostname, auth->client_end.acctoken, auth->server_end.mac)) {
         qn_str_destroy(url);
-        return qn_false;
+        return NULL;
     } // if
 
     if (stor->obj_body) {
@@ -506,10 +506,11 @@ QN_API qn_bool qn_stor_fetch(qn_storage_ptr restrict stor, const qn_stor_auth_pt
 
     ret = qn_http_conn_post(stor->conn, url, stor->req, stor->resp);
     qn_str_destroy(url);
-    return ret;
+    if (!ret) return NULL;
+    return (stor->obj_body) ? stor->obj_body : qn_json_immutable_empty_object();
 }
 
-QN_API qn_bool qn_stor_prefetch(qn_storage_ptr restrict stor, const qn_stor_auth_ptr restrict auth, const char * restrict dest_bucket, const char * restrict dest_key, qn_stor_fetch_extra_ptr restrict ext)
+QN_API qn_json_object_ptr qn_stor_prefetch(qn_storage_ptr restrict stor, const qn_stor_auth_ptr restrict auth, const char * restrict dest_bucket, const char * restrict dest_key, qn_stor_fetch_extra_ptr restrict ext)
 {
     qn_bool ret;
     qn_string encoded_dest_uri;
@@ -525,11 +526,11 @@ QN_API qn_bool qn_stor_prefetch(qn_storage_ptr restrict stor, const qn_stor_auth
 
     // ---- Prepare the query URL
     encoded_dest_uri = qn_misc_encode_uri(dest_bucket, dest_key);
-    if (!encoded_dest_uri) return qn_false;
+    if (!encoded_dest_uri) return NULL;
 
     url = qn_cs_sprintf("%.s/prefetch/%.s", qn_str_size(rgn_entry->base_url), qn_str_cstr(rgn_entry->base_url), qn_str_size(encoded_dest_uri), qn_str_cstr(encoded_dest_uri));
     qn_str_destroy(encoded_dest_uri);
-    if (!url) return qn_false;
+    if (!url) return NULL;
 
     // ---- Prepare the request and response
     qn_http_req_reset(stor->req);
@@ -539,7 +540,7 @@ QN_API qn_bool qn_stor_prefetch(qn_storage_ptr restrict stor, const qn_stor_auth
 
     if (!qn_stor_prepare_managment(stor, url, rgn_entry->hostname, auth->client_end.acctoken, auth->server_end.mac)) {
         qn_str_destroy(url);
-        return qn_false;
+        return NULL;
     } // if
 
     if (stor->obj_body) {
@@ -552,7 +553,8 @@ QN_API qn_bool qn_stor_prefetch(qn_storage_ptr restrict stor, const qn_stor_auth
 
     ret = qn_http_conn_post(stor->conn, url, stor->req, stor->resp);
     qn_str_destroy(url);
-    return ret;
+    if (!ret) return NULL;
+    return (stor->obj_body) ? stor->obj_body : qn_json_immutable_empty_object();
 }
 
 // ----
