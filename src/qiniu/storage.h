@@ -197,8 +197,8 @@ typedef struct _QN_STOR_PUT_EXTRA
     qn_stor_put_ctrl put_ctrl;
 } qn_stor_put_extra, *qn_stor_put_extra_ptr;
 
-QN_API extern qn_bool qn_stor_put_file(qn_storage_ptr restrict stor, const qn_stor_auth_ptr restrict auth, const char * restrict fname, qn_stor_put_extra_ptr restrict ext);
-QN_API extern qn_bool qn_stor_put_buffer(qn_storage_ptr restrict stor, const qn_stor_auth_ptr restrict auth, const char * restrict buf, int buf_size, qn_stor_put_extra_ptr restrict ext);
+QN_API extern qn_json_object_ptr qn_stor_put_file(qn_storage_ptr restrict stor, const qn_stor_auth_ptr restrict auth, const char * restrict fname, qn_stor_put_extra_ptr restrict ext);
+QN_API extern qn_json_object_ptr qn_stor_put_buffer(qn_storage_ptr restrict stor, const qn_stor_auth_ptr restrict auth, const char * restrict buf, int buf_size, qn_stor_put_extra_ptr restrict ext);
 
 // ----
 

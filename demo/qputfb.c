@@ -5,12 +5,13 @@
 
 int main(int argc, char * argv[])
 {
-    qn_mac_ptr mac;
-    qn_string scope;
-    qn_string put_ret;
     const char * bucket;
     const char * key;
     const char * fname;
+    qn_mac_ptr mac;
+    qn_string scope;
+    qn_string put_ret_str;
+    qn_json_object_ptr put_ret;
     qn_file_ptr fl;
     qn_fl_info_ptr fi;
     qn_storage_ptr stor;
@@ -115,7 +116,7 @@ int main(int argc, char * argv[])
         return 1;
     } // if
 
-    if (!qn_stor_put_buffer(stor, &auth, buf, buf_size, &ext)) {
+    if (! (put_ret = qn_stor_put_buffer(stor, &auth, buf, buf_size, &ext))) {
         qn_stor_destroy(stor);
         qn_json_destroy_object(auth.server_end.put_policy);
         free(buf);
@@ -133,15 +134,15 @@ int main(int argc, char * argv[])
     } // while
     qn_http_hdr_itr_destroy(hdr_itr);
 
-    put_ret = qn_json_object_to_string(qn_stor_get_object_body(stor));
+    put_ret_str = qn_json_object_to_string(put_ret);
     qn_stor_destroy(stor);
-    if (!put_ret) {
+    if (!put_ret_str) {
         printf("Cannot format the object body from upload interface.\n");
         return 3;
     } // if
 
-    printf("%s\n", put_ret);
-    qn_str_destroy(put_ret);
+    printf("%s\n", put_ret_str);
+    qn_str_destroy(put_ret_str);
 
     return 0;
 }

@@ -922,7 +922,7 @@ static qn_bool qn_stor_prepare_for_putting_file(qn_storage_ptr restrict stor, co
     return qn_true;
 }
 
-QN_API qn_bool qn_stor_put_file(qn_storage_ptr restrict stor, const qn_stor_auth_ptr restrict auth, const char * restrict fname, qn_stor_put_extra_ptr restrict ext)
+QN_API qn_json_object_ptr qn_stor_put_file(qn_storage_ptr restrict stor, const qn_stor_auth_ptr restrict auth, const char * restrict fname, qn_stor_put_extra_ptr restrict ext)
 {
     qn_bool ret;
     qn_fl_info_ptr fi;
@@ -943,36 +943,37 @@ QN_API qn_bool qn_stor_put_file(qn_storage_ptr restrict stor, const qn_stor_auth
         qn_rgn_tbl_choose_first_entry(NULL, QN_RGN_SVC_UP, NULL, &rgn_entry);
     } // if
 
-    if (!qn_stor_prepare_for_putting_file(stor, auth, ext)) return qn_false;
+    if (!qn_stor_prepare_for_putting_file(stor, auth, ext)) return NULL;
 
     // ----
     form = qn_http_req_get_form(stor->req);
 
     fi = qn_fl_info_stat(fname);
-    if (!fi) return qn_false;
+    if (!fi) return NULL;
 
     if (pprdr) {
         ret = qn_http_form_add_file_reader(form, "file", qn_str_cstr(qn_fl_info_fname(fi)), NULL, qn_fl_info_fsize(fi), stor->req);
         qn_fl_info_destroy(fi);
-        if (!ret) return qn_false;
+        if (!ret) return NULL;
 
         qn_http_req_set_body_reader(stor->req, pprdr, qn_stor_put_body_reader_callback, qn_fl_info_fsize(fi));
     } else {
         ret = qn_http_form_add_file(form, "file", qn_str_cstr(qn_fl_info_fname(fi)), NULL, qn_fl_info_fsize(fi));
         qn_fl_info_destroy(fi);
-        if (!ret) return qn_false;
+        if (!ret) return NULL;
     } // if
 
     // ----
-    if (rgn_entry->hostname && !qn_http_req_set_header(stor->req, "Host", qn_str_cstr(rgn_entry->hostname))) return qn_false;
+    if (rgn_entry->hostname && !qn_http_req_set_header(stor->req, "Host", qn_str_cstr(rgn_entry->hostname))) return NULL;
 
     // ----
     ret = qn_http_conn_post(stor->conn, qn_str_cstr(rgn_entry->base_url), stor->req, stor->resp);
-    return ret;
+    return (ret) ? stor->obj_body : NULL;
 }
 
-QN_API qn_bool qn_stor_put_buffer(qn_storage_ptr restrict stor, const qn_stor_auth_ptr restrict auth, const char * restrict buf, int buf_size, qn_stor_put_extra_ptr restrict ext)
+QN_API qn_json_object_ptr qn_stor_put_buffer(qn_storage_ptr restrict stor, const qn_stor_auth_ptr restrict auth, const char * restrict buf, int buf_size, qn_stor_put_extra_ptr restrict ext)
 {
+    qn_bool ret;
     qn_http_form_ptr form;
     qn_rgn_entry_ptr rgn_entry;
     
@@ -983,15 +984,16 @@ QN_API qn_bool qn_stor_put_buffer(qn_storage_ptr restrict stor, const qn_stor_au
         qn_rgn_tbl_choose_first_entry(NULL, QN_RGN_SVC_UP, NULL, &rgn_entry);
     } // if
 
-    if (!qn_stor_prepare_for_putting_file(stor, auth, ext)) return qn_false;
+    if (!qn_stor_prepare_for_putting_file(stor, auth, ext)) return NULL;
 
     form = qn_http_req_get_form(stor->req);
 
-    if (!qn_http_form_add_buffer(form, "file", "<null>", buf, buf_size)) return qn_false;
+    if (!qn_http_form_add_buffer(form, "file", "<null>", buf, buf_size)) return NULL;
 
     // ----
-    if (rgn_entry->hostname && !qn_http_req_set_header(stor->req, "Host", qn_str_cstr(rgn_entry->hostname))) return qn_false;
-    return qn_http_conn_post(stor->conn, qn_str_cstr(rgn_entry->base_url), stor->req, stor->resp);
+    if (rgn_entry->hostname && !qn_http_req_set_header(stor->req, "Host", qn_str_cstr(rgn_entry->hostname))) return NULL;
+    ret = qn_http_conn_post(stor->conn, qn_str_cstr(rgn_entry->base_url), stor->req, stor->resp);
+    return (ret) ? stor->obj_body : NULL;
 }
 
 // ----
