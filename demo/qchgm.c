@@ -8,12 +8,15 @@ int main(int argc, char * argv[])
     qn_string bucket;
     qn_string key;
     qn_string mime;
+    qn_string api_error;
+    qn_json_object_ptr chgm_ret;
     qn_storage_ptr stor;
     qn_stor_change_mime_extra ext;
     qn_http_hdr_iterator_ptr hdr_itr;
     qn_string hdr_ent;
 
     if (argc < 6) {
+        printf("Demo qchgm - Change the mime type of the given file.\n");
         printf("Usage: qchgm <ACCESS_KEY> <SECRET_KEY> <BUCKET> <KEY> <MIME>\n");
         return 0;
     } // if
@@ -25,6 +28,7 @@ int main(int argc, char * argv[])
 
     stor = qn_stor_create();
     if (!stor) {
+        qn_mac_destroy(mac);
         printf("Cannot initialize a new storage object.\n");
         return 1;
     } // if
@@ -34,8 +38,17 @@ int main(int argc, char * argv[])
     memset(&auth, 0, sizeof(auth));
     auth.server_end.mac = mac;
 
-    if (!qn_stor_change_mime(stor, &auth, bucket, key, mime, &ext)) {
+    chgm_ret = qn_stor_change_mime(stor, &auth, bucket, key, mime, &ext);
+    qn_mac_destroy(mac);
+    if (!chgm_ret) {
+        qn_stor_destroy(stor);
         printf("Cannot change the mime type of the `%s:%s` file.\n", bucket, key);
+        return 2;
+    } // if
+    api_error = qn_json_get_string(chgm_ret, "error", NULL);
+    if (api_error) {
+        qn_stor_destroy(stor);
+        printf("Cannot change the mime type of the `%s:%s` file due to application error `%s`.\n", bucket, key, api_error);
         return 2;
     } // if
 
@@ -46,6 +59,6 @@ int main(int argc, char * argv[])
     qn_http_hdr_itr_destroy(hdr_itr);
 
     qn_stor_destroy(stor);
-    qn_mac_destroy(mac);
+
     return 0;
 }

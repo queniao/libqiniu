@@ -400,7 +400,7 @@ QN_API qn_bool qn_stor_delete(qn_storage_ptr restrict stor, const qn_stor_auth_p
     return ret;
 }
 
-QN_API qn_bool qn_stor_change_mime(qn_storage_ptr restrict stor, const qn_stor_auth_ptr restrict auth, const char * restrict bucket, const char * restrict key, const char * restrict mime, qn_stor_change_mime_extra_ptr restrict ext)
+QN_API qn_json_object_ptr qn_stor_change_mime(qn_storage_ptr restrict stor, const qn_stor_auth_ptr restrict auth, const char * restrict bucket, const char * restrict key, const char * restrict mime, qn_stor_change_mime_extra_ptr restrict ext)
 {
     qn_bool ret;
     qn_string encoded_uri;
@@ -417,18 +417,18 @@ QN_API qn_bool qn_stor_change_mime(qn_storage_ptr restrict stor, const qn_stor_a
 
     // ---- Prepare the query URL
     encoded_uri = qn_misc_encode_uri(bucket, key);
-    if (!encoded_uri) return qn_false;
+    if (!encoded_uri) return NULL;
 
     encoded_mime = qn_cs_encode_base64_urlsafe(mime, strlen(mime));
     if (!encoded_mime) {
         qn_str_destroy(encoded_uri);
-        return qn_false;
+        return NULL;
     } // if
 
     url = qn_cs_sprintf("%.*s/chgm/%.*s/mime/%.*s", qn_str_size(rgn_entry->base_url), qn_str_cstr(rgn_entry->base_url), qn_str_size(encoded_uri), qn_str_cstr(encoded_uri), qn_str_size(encoded_mime), qn_str_cstr(encoded_mime));
     qn_str_destroy(encoded_uri);
     qn_str_destroy(encoded_mime);
-    if (!url) return qn_false;
+    if (!url) return NULL;
 
     // ---- Prepare the request and response
     qn_http_req_reset(stor->req);
@@ -438,7 +438,7 @@ QN_API qn_bool qn_stor_change_mime(qn_storage_ptr restrict stor, const qn_stor_a
 
     if (!qn_stor_prepare_managment(stor, url, rgn_entry->hostname, auth->client_end.acctoken, auth->server_end.mac)) {
         qn_str_destroy(url);
-        return qn_false;
+        return NULL;
     } // if
 
     if (stor->obj_body) {
@@ -451,7 +451,8 @@ QN_API qn_bool qn_stor_change_mime(qn_storage_ptr restrict stor, const qn_stor_a
 
     ret = qn_http_conn_post(stor->conn, url, stor->req, stor->resp);
     qn_str_destroy(url);
-    return ret;
+    if (!ret) return NULL;
+    return (stor->obj_body) ? stor->obj_body : qn_json_immutable_empty_object();
 }
 
 // ----

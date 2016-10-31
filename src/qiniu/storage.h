@@ -113,7 +113,7 @@ typedef struct _QN_STOR_CHANGE_MIME_EXTRA
     qn_stor_rgn rgn;
 } qn_stor_change_mime_extra, *qn_stor_change_mime_extra_ptr;
 
-QN_API extern qn_bool qn_stor_change_mime(qn_storage_ptr restrict stor, const qn_stor_auth_ptr restrict auth, const char * restrict bucket, const char * restrict key, const char * restrict mime, qn_stor_change_mime_extra_ptr restrict ext);
+QN_API extern qn_json_object_ptr qn_stor_change_mime(qn_storage_ptr restrict stor, const qn_stor_auth_ptr restrict auth, const char * restrict bucket, const char * restrict key, const char * restrict mime, qn_stor_change_mime_extra_ptr restrict ext);
 
 // ----
 
