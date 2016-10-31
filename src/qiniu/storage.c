@@ -936,14 +936,14 @@ QN_API qn_json_object_ptr qn_stor_put_file(qn_storage_ptr restrict stor, const q
     qn_http_form_ptr form;
     qn_rgn_entry_ptr rgn_entry;
     qn_stor_put_reader prdr;
-    qn_stor_put_reader_ptr pprdr = NULL;
+    qn_bool use_controllable_reader = qn_false;
     
     if (ext) {
         if (! (rgn_entry = ext->rgn.entry)) qn_rgn_tbl_choose_first_entry(ext->rgn.rtbl, QN_RGN_SVC_UP, NULL, &rgn_entry);
 
         if (ext->put_ctrl.rdr) {
             prdr.ext = ext;
-            pprdr = &prdr;
+            use_controllable_reader = qn_true;
         } // if
     } else {
         rgn_entry = NULL;
@@ -958,12 +958,12 @@ QN_API qn_json_object_ptr qn_stor_put_file(qn_storage_ptr restrict stor, const q
     fi = qn_fl_info_stat(fname);
     if (!fi) return NULL;
 
-    if (pprdr) {
+    if (use_controllable_reader) {
         ret = qn_http_form_add_file_reader(form, "file", qn_str_cstr(qn_fl_info_fname(fi)), NULL, qn_fl_info_fsize(fi), stor->req);
         qn_fl_info_destroy(fi);
         if (!ret) return NULL;
 
-        qn_http_req_set_body_reader(stor->req, pprdr, qn_stor_put_body_reader_callback, qn_fl_info_fsize(fi));
+        qn_http_req_set_body_reader(stor->req, &prdr, qn_stor_put_body_reader_callback, qn_fl_info_fsize(fi));
     } else {
         ret = qn_http_form_add_file(form, "file", qn_str_cstr(qn_fl_info_fname(fi)), NULL, qn_fl_info_fsize(fi));
         qn_fl_info_destroy(fi);
