@@ -9,6 +9,7 @@ int main(int argc, char * argv[])
     qn_string bucket;
     qn_string key;
     qn_string fetch_ret_str;
+    qn_string api_error;
     qn_json_object_ptr fetch_ret;
     qn_storage_ptr stor;
     qn_stor_auth auth;
@@ -39,11 +40,14 @@ int main(int argc, char * argv[])
     fetch_ret = qn_stor_fetch(stor, &auth, src_url, bucket, key, NULL);
     qn_mac_destroy(mac);
     if (!fetch_ret) {
+        qn_stor_destroy(stor);
         printf("Cannot fetch the `%s` to the `%s:%s` file.\n", src_url, bucket, key);
         return 2;
     } // if
-    if (qn_json_get_string(fetch_ret, "error", NULL)) {
-        printf("Cannot fetch the `%s` to the `%s:%s` file due to application error `%s`.\n", src_url, bucket, key, qn_json_get_string(fetch_ret, "error", NULL));
+    api_error = qn_json_get_string(fetch_ret, "error", NULL);
+    if (api_error) {
+        qn_stor_destroy(stor);
+        printf("Cannot fetch the `%s` to the `%s:%s` file due to application error `%s`.\n", src_url, bucket, key, api_error);
         return 3;
     } // if
 
