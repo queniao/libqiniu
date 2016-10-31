@@ -621,11 +621,13 @@ QN_API qn_json_object_ptr qn_stor_list(qn_storage_ptr restrict stor, const qn_st
             qn_http_qry_destroy(qry);
             return NULL;
         } // if
-        if (! (url = qn_cs_sprintf("%.*s/list?%.*s", qn_str_size(rgn_entry->base_url), qn_str_cstr(rgn_entry->base_url), qn_str_size(qry_str), qn_str_cstr(qry_str)))) {
+
+        url = qn_cs_sprintf("%.*s/list?%.*s", qn_str_size(rgn_entry->base_url), qn_str_cstr(rgn_entry->base_url), qn_str_size(qry_str), qn_str_cstr(qry_str));
+        qn_str_destroy(qry_str);
+        if (!url) {
             qn_http_qry_destroy(qry);
             return NULL;
         } // if
-        qn_str_destroy(qry_str);
 
         // ---- Prepare the request and response
         qn_http_req_reset(stor->req);
