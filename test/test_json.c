@@ -597,6 +597,25 @@ void test_format_empty_object(void)
     qn_json_fmt_destroy(fmt);
 }
 
+void test_format_immutable_object(void)
+{
+    qn_bool ret = qn_false;
+    qn_json_object_ptr obj_root = qn_json_immutable_empty_object();
+    qn_json_formatter_ptr fmt = NULL;
+    char buf[128];
+    size_t buf_size = sizeof(buf);
+
+    fmt = qn_json_fmt_create();
+    CU_ASSERT_FATAL(fmt != NULL);
+
+    ret = qn_json_fmt_format_object(fmt, obj_root, buf, &buf_size);
+    CU_ASSERT_TRUE(ret);
+    CU_ASSERT_EQUAL_FATAL(buf_size, 2);
+    CU_ASSERT_EQUAL_FATAL(memcmp(buf, "{}", 2), 0);
+
+    qn_json_fmt_destroy(fmt);
+}
+
 void test_format_object_holding_string_element(void)
 {
     qn_bool ret = qn_false;
@@ -756,6 +775,25 @@ void test_format_empty_array(void)
     CU_ASSERT_EQUAL_FATAL(memcmp(buf, "[]", 2), 0);
 
     qn_json_destroy_array(arr_root);
+    qn_json_fmt_destroy(fmt);
+}
+
+void test_format_immutable_array(void)
+{
+    qn_bool ret = qn_false;
+    qn_json_array_ptr arr_root = qn_json_immutable_empty_array();
+    qn_json_formatter_ptr fmt = NULL;
+    char buf[128];
+    size_t buf_size = sizeof(buf);
+
+    fmt = qn_json_fmt_create();
+    CU_ASSERT_FATAL(fmt != NULL);
+
+    ret = qn_json_fmt_format_array(fmt, arr_root, buf, &buf_size);
+    CU_ASSERT_TRUE(ret);
+    CU_ASSERT_EQUAL_FATAL(buf_size, 2);
+    CU_ASSERT_EQUAL_FATAL(memcmp(buf, "[]", 2), 0);
+
     qn_json_fmt_destroy(fmt);
 }
 
@@ -968,12 +1006,14 @@ void test_format_array_holding_complex_element(void)
 
 CU_TestInfo test_normal_cases_of_json_formatting[] = {
     {"test_format_empty_object()", test_format_empty_object},
+    {"test_format_immutable_object()", test_format_immutable_object},
     {"test_format_object_holding_string_element()", test_format_object_holding_string_element},
     {"test_format_object_holding_integer_element()", test_format_object_holding_integer_element},
     {"test_format_object_holding_number_element()", test_format_object_holding_number_element},
     {"test_format_object_holding_boolean_element()", test_format_object_holding_boolean_element},
     {"test_format_object_holding_null_element()", test_format_object_holding_null_element},
     {"test_format_empty_array()", test_format_empty_array},
+    {"test_format_immutable_array()", test_format_immutable_array},
     {"test_format_array_holding_string_element()", test_format_array_holding_string_element},
     {"test_format_array_holding_integer_element()", test_format_array_holding_integer_element},
     {"test_format_array_holding_number_element()", test_format_array_holding_number_element},
