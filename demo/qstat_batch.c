@@ -7,7 +7,9 @@ int main(int argc, char * argv[])
     qn_mac_ptr mac;
     qn_string bucket;
     qn_string key;
-    qn_string stat_ret;
+    qn_string stat_ret_str;
+    qn_string api_error;
+    qn_json_object_ptr stat_ret;
     qn_stor_batch_ptr bt;
     qn_storage_ptr stor;
     qn_stor_auth auth;
@@ -25,6 +27,7 @@ int main(int argc, char * argv[])
 
     stor = qn_stor_create();
     if (!stor) {
+        qn_mac_destroy(mac);
         printf("Cannot initialize a new storage object.\n");
         return 1;
     } // if
@@ -32,6 +35,7 @@ int main(int argc, char * argv[])
     bt = qn_stor_bt_create();
     if (!bt) {
         qn_stor_destroy(stor);
+        qn_mac_destroy(mac);
         printf("Cannot initialize a new storage batch object.\n");
         return 1;
     } // if
@@ -44,13 +48,25 @@ int main(int argc, char * argv[])
         if (!qn_stor_bt_add_stat_op(bt, bucket, key)) {
             qn_stor_bt_destroy(bt);
             qn_stor_destroy(stor);
+            qn_mac_destroy(mac);
             printf("Cannot add a new stat operation into the batch object.\n");
             return 1;
         } // if
     } // if
 
-    if (!qn_stor_execute_batch_opertions(stor, &auth, bt, NULL)) {
-        printf("Cannot stat the `%s:%s` file.\n", bucket, key);
+    stat_ret = qn_stor_execute_batch_opertions(stor, &auth, bt, NULL);
+    qn_stor_bt_destroy(bt);
+    qn_mac_destroy(mac);
+    if (!stat_ret) {
+        qn_stor_bt_destroy(bt);
+        qn_stor_destroy(stor);
+        printf("Cannot stat the given files.\n");
+        return 2;
+    } // if
+
+    if ((api_error = qn_json_get_string(stat_ret, "error", NULL))) {
+        qn_stor_destroy(stor);
+        printf("Cannot stat the given files due to application error `%s`.\n", api_error);
         return 2;
     } // if
 
@@ -60,17 +76,15 @@ int main(int argc, char * argv[])
     } // while
     qn_http_hdr_itr_destroy(hdr_itr);
 
-    stat_ret = qn_json_array_to_string(qn_stor_get_array_body(stor));
+    stat_ret_str = qn_json_object_to_string(stat_ret);
+    qn_stor_destroy(stor);
     if (!stat_ret) {
-        printf("Cannot format the object body form /stat interface.\n");
+        printf("Cannot format the object body return from batch interface.\n");
         return 3;
     } // if
 
-    printf("%s\n", stat_ret);
-    qn_str_destroy(stat_ret);
+    printf("%s\n", stat_ret_str);
+    qn_str_destroy(stat_ret_str);
 
-    qn_stor_bt_destroy(bt);
-    qn_stor_destroy(stor);
-    qn_mac_destroy(mac);
     return 0;
 }
