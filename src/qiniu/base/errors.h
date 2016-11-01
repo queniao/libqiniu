@@ -45,6 +45,7 @@ QN_API extern void qn_err_stor_set_invalid_list_result(void);
 QN_API extern void qn_err_stor_set_putting_aborted_by_filter_pre_callback(void);
 QN_API extern void qn_err_stor_set_putting_aborted_by_filter_post_callback(void);
 QN_API extern void qn_err_stor_set_invalid_chunk_put_result(void);
+QN_API extern void qn_err_stor_set_api_return_no_value(void);
 
 QN_API extern void qn_err_etag_set_initializing_context_failed(void);
 QN_API extern void qn_err_etag_set_updating_context_failed(void);
@@ -88,6 +89,7 @@ QN_API extern qn_bool qn_err_stor_is_invalid_list_result(void);
 QN_API extern qn_bool qn_err_stor_is_putting_aborted_by_filter_pre_callback(void);
 QN_API extern qn_bool qn_err_stor_is_putting_aborted_by_filter_post_callback(void);
 QN_API extern qn_bool qn_err_stor_is_invalid_chunk_put_result(void);
+QN_API extern qn_bool qn_err_stor_is_api_return_no_value(void);
 
 QN_API extern qn_bool qn_err_etag_is_initializing_context_failed(void);
 QN_API extern qn_bool qn_err_etag_is_updating_context_failed(void);

@@ -18,8 +18,18 @@ extern "C"
 
 // ---- Definition of body reader and writer ----
 
+typedef enum _QN_HTTP_JSON_WRT_STATUS
+{
+    QN_HTTP_JSON_WRT_PARSING_READY = 0,
+    QN_HTTP_JSON_WRT_PARSING_OBJECT = 1,
+    QN_HTTP_JSON_WRT_PARSING_ARRAY = 2,
+    QN_HTTP_JSON_WRT_PARSING_DONE = 3,
+    QN_HTTP_JSON_WRT_PARSING_ERROR = 4
+} qn_http_json_wrt_status;
+
 typedef struct _QN_HTTP_JSON_WRITER
 {
+    qn_http_json_wrt_status sts;
     qn_json_object_ptr * obj;
     qn_json_array_ptr * arr;
     qn_json_parser_ptr prs;
@@ -47,34 +57,82 @@ QN_API void qn_http_json_wrt_destroy(qn_http_json_writer_ptr restrict writer)
     free(writer);
 }
 
-QN_API void qn_http_json_wrt_prepare_for_object(qn_http_json_writer_ptr restrict writer, qn_json_object_ptr * restrict obj)
+QN_API void qn_http_json_wrt_prepare(qn_http_json_writer_ptr restrict writer, qn_json_object_ptr * restrict obj, qn_json_array_ptr * restrict arr)
 {
     writer->obj = obj;
-    writer->arr = NULL;
+    writer->arr = arr;
+    writer->sts = QN_HTTP_JSON_WRT_PARSING_READY;
 }
 
-QN_API void qn_http_json_wrt_prepare_for_array(qn_http_json_writer_ptr restrict writer, qn_json_array_ptr * restrict arr)
+static size_t qn_http_json_wrt_parse_object(qn_http_json_writer_ptr w, char * restrict buf, size_t buf_size)
 {
-    writer->obj = NULL;
-    writer->arr = arr;
+    size_t size = buf_size;
+    if (qn_json_prs_parse_object(w->prs, buf, &size, w->obj)) {
+        // ---- Parsing object is done.
+        w->sts = QN_HTTP_JSON_WRT_PARSING_DONE;
+        qn_err_set_succeed();
+        return buf_size;
+    } // if
+
+    // ---- Handle errors.
+    if (qn_err_json_is_need_more_text_input()) {
+        w->sts = QN_HTTP_JSON_WRT_PARSING_OBJECT;
+        return buf_size;
+    } // if
+
+    // ---- Parsing object failed in other chunks of the body.
+    if (!qn_err_json_is_bad_text_input()) w->sts = QN_HTTP_JSON_WRT_PARSING_ERROR;
+    return 0;
+}
+
+static size_t qn_http_json_wrt_parse_array(qn_http_json_writer_ptr w, char * restrict buf, size_t buf_size)
+{
+    size_t size = buf_size;
+    if (qn_json_prs_parse_array(w->prs, buf, &size, w->arr)) {
+        // ---- Parsing array is done.
+        w->sts = QN_HTTP_JSON_WRT_PARSING_DONE;
+        qn_err_set_succeed();
+        return buf_size;
+    } // if
+
+    // ---- Handle errors.
+    if (qn_err_json_is_need_more_text_input()) {
+        w->sts = QN_HTTP_JSON_WRT_PARSING_ARRAY;
+        return buf_size;
+    } // if
+
+    // ---- Parsing array failed in other chunks of the body.
+    if (!qn_err_json_is_bad_text_input()) w->sts = QN_HTTP_JSON_WRT_PARSING_ERROR;
+    return 0;
 }
 
 QN_API size_t qn_http_json_wrt_callback(void * user_data, char * restrict buf, size_t buf_size)
 {
-    size_t size = buf_size;
+    size_t ret;
     qn_http_json_writer_ptr w = (qn_http_json_writer_ptr) user_data;
-    if (w->obj) {
-        if (!qn_json_prs_parse_object(w->prs, buf, &size, w->obj)) {
-            if (qn_err_json_is_need_more_text_input()) return buf_size;
-            return 0;
-        } // if
-    } else {
-        if (!qn_json_prs_parse_array(w->prs, buf, &size, w->arr)) {
-            if (qn_err_json_is_need_more_text_input()) return buf_size;
-            return 0;
-        } // if
-    } // if
-    qn_err_set_succeed();
+
+    switch (w->sts) {
+        case QN_HTTP_JSON_WRT_PARSING_READY:
+            // ---- Try to parse as a JSON object first.
+            ret = qn_http_json_wrt_parse_object(w, buf, buf_size);
+
+            if (w->sts == QN_HTTP_JSON_WRT_PARSING_READY) {
+                // ---- If the first chunk of the body does not start a JSON object,
+                //      try to parse as a JSON array.
+
+                ret = qn_http_json_wrt_parse_array(w, buf, buf_size);
+                if (w->sts == QN_HTTP_JSON_WRT_PARSING_READY) {
+                    qn_err_json_set_bad_text_input();
+                    ret = 0;
+                } // if
+            } // if
+            return ret;
+
+        case QN_HTTP_JSON_WRT_PARSING_OBJECT: return qn_http_json_wrt_parse_object(w, buf, buf_size);
+        case QN_HTTP_JSON_WRT_PARSING_ARRAY: return qn_http_json_wrt_parse_array(w, buf, buf_size);
+        case QN_HTTP_JSON_WRT_PARSING_DONE: ret = buf_size; break;
+        case QN_HTTP_JSON_WRT_PARSING_ERROR: ret = 0; break;
+    } // switch
     return buf_size;
 }
 

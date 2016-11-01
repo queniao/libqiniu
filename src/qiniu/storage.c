@@ -203,7 +203,7 @@ QN_API qn_json_object_ptr qn_stor_stat(qn_storage_ptr restrict stor, const qn_st
         stor->obj_body = NULL;
     } // if
 
-    qn_http_json_wrt_prepare_for_object(stor->resp_json_wrt, &stor->obj_body);
+    qn_http_json_wrt_prepare(stor->resp_json_wrt, &stor->obj_body, &stor->arr_body);
     qn_http_resp_set_data_writer(stor->resp, stor->resp_json_wrt, &qn_http_json_wrt_callback);
 
     ret = qn_http_conn_get(stor->conn, url, stor->req, stor->resp);
@@ -266,8 +266,7 @@ QN_API qn_json_object_ptr qn_stor_copy(qn_storage_ptr restrict stor, const qn_st
     } // if
 
     // ---- Prepare the request and response
-    qn_http_req_reset(stor->req);
-    qn_http_resp_reset(stor->resp);
+    qn_stor_reset(stor);
 
     qn_http_req_set_body_data(stor->req, "", 0);
 
@@ -276,18 +275,17 @@ QN_API qn_json_object_ptr qn_stor_copy(qn_storage_ptr restrict stor, const qn_st
         return NULL;
     } // if
 
-    if (stor->obj_body) {
-        qn_json_destroy_object(stor->obj_body);
-        stor->obj_body = NULL;
+    if (! (stor->obj_body = qn_json_create_object())) {
+        qn_str_destroy(url);
+        return NULL;
     } // if
 
-    qn_http_json_wrt_prepare_for_object(stor->resp_json_wrt, &stor->obj_body);
+    qn_http_json_wrt_prepare(stor->resp_json_wrt, &stor->obj_body, NULL);
     qn_http_resp_set_data_writer(stor->resp, stor->resp_json_wrt, &qn_http_json_wrt_callback);
 
     ret = qn_http_conn_post(stor->conn, url, stor->req, stor->resp);
     qn_str_destroy(url);
-    if (!ret) return NULL;
-    return (stor->obj_body) ? stor->obj_body : qn_json_immutable_empty_object();
+    return (ret) ? stor->obj_body : NULL;
 }
 
 static const qn_string qn_stor_make_move_op(const char * restrict src_bucket, const char * restrict src_key, const char * restrict dest_bucket, const char * restrict dest_key)
@@ -334,8 +332,7 @@ QN_API qn_json_object_ptr qn_stor_move(qn_storage_ptr restrict stor, const qn_st
     if (!url) return NULL;
 
     // ---- Prepare the request and response
-    qn_http_req_reset(stor->req);
-    qn_http_resp_reset(stor->resp);
+    qn_stor_reset(stor);
 
     qn_http_req_set_body_data(stor->req, "", 0);
 
@@ -344,18 +341,17 @@ QN_API qn_json_object_ptr qn_stor_move(qn_storage_ptr restrict stor, const qn_st
         return NULL;
     } // if
 
-    if (stor->obj_body) {
-        qn_json_destroy_object(stor->obj_body);
-        stor->obj_body = NULL;
+    if (! (stor->obj_body = qn_json_create_object())) {
+        qn_str_destroy(url);
+        return NULL;
     } // if
 
-    qn_http_json_wrt_prepare_for_object(stor->resp_json_wrt, &stor->obj_body);
+    qn_http_json_wrt_prepare(stor->resp_json_wrt, &stor->obj_body, NULL);
     qn_http_resp_set_data_writer(stor->resp, stor->resp_json_wrt, &qn_http_json_wrt_callback);
 
     ret = qn_http_conn_post(stor->conn, url, stor->req, stor->resp);
     qn_str_destroy(url);
-    if (!ret) return NULL;
-    return (stor->obj_body) ? stor->obj_body : qn_json_immutable_empty_object();
+    return (ret) ? stor->obj_body : NULL;
 }
 
 static qn_string qn_stor_make_delete_op(const char * restrict bucket, const char * restrict key)
@@ -394,8 +390,7 @@ QN_API qn_json_object_ptr qn_stor_delete(qn_storage_ptr restrict stor, const qn_
     if (!url) return NULL;
 
     // ---- Prepare the request and response
-    qn_http_req_reset(stor->req);
-    qn_http_resp_reset(stor->resp);
+    qn_stor_reset(stor);
 
     qn_http_req_set_body_data(stor->req, "", 0);
 
@@ -404,18 +399,17 @@ QN_API qn_json_object_ptr qn_stor_delete(qn_storage_ptr restrict stor, const qn_
         return NULL;
     } // if
 
-    if (stor->obj_body) {
-        qn_json_destroy_object(stor->obj_body);
-        stor->obj_body = NULL;
+    if (! (stor->obj_body = qn_json_create_object())) {
+        qn_str_destroy(url);
+        return NULL;
     } // if
 
-    qn_http_json_wrt_prepare_for_object(stor->resp_json_wrt, &stor->obj_body);
+    qn_http_json_wrt_prepare(stor->resp_json_wrt, &stor->obj_body, NULL);
     qn_http_resp_set_data_writer(stor->resp, stor->resp_json_wrt, &qn_http_json_wrt_callback);
 
     ret = qn_http_conn_post(stor->conn, url, stor->req, stor->resp);
     qn_str_destroy(url);
-    if (!ret) return NULL;
-    return (stor->obj_body) ? stor->obj_body : qn_json_immutable_empty_object();
+    return (ret) ? stor->obj_body : NULL;
 }
 
 QN_API qn_json_object_ptr qn_stor_change_mime(qn_storage_ptr restrict stor, const qn_stor_auth_ptr restrict auth, const char * restrict bucket, const char * restrict key, const char * restrict mime, qn_stor_change_mime_extra_ptr restrict ext)
@@ -449,8 +443,7 @@ QN_API qn_json_object_ptr qn_stor_change_mime(qn_storage_ptr restrict stor, cons
     if (!url) return NULL;
 
     // ---- Prepare the request and response
-    qn_http_req_reset(stor->req);
-    qn_http_resp_reset(stor->resp);
+    qn_stor_reset(stor);
 
     qn_http_req_set_body_data(stor->req, "", 0);
 
@@ -459,18 +452,17 @@ QN_API qn_json_object_ptr qn_stor_change_mime(qn_storage_ptr restrict stor, cons
         return NULL;
     } // if
 
-    if (stor->obj_body) {
-        qn_json_destroy_object(stor->obj_body);
-        stor->obj_body = NULL;
+    if (! (stor->obj_body = qn_json_create_object())) {
+        qn_str_destroy(url);
+        return NULL;
     } // if
 
-    qn_http_json_wrt_prepare_for_object(stor->resp_json_wrt, &stor->obj_body);
+    qn_http_json_wrt_prepare(stor->resp_json_wrt, &stor->obj_body, NULL);
     qn_http_resp_set_data_writer(stor->resp, stor->resp_json_wrt, &qn_http_json_wrt_callback);
 
     ret = qn_http_conn_post(stor->conn, url, stor->req, stor->resp);
     qn_str_destroy(url);
-    if (!ret) return NULL;
-    return (stor->obj_body) ? stor->obj_body : qn_json_immutable_empty_object();
+    return (ret) ? stor->obj_body : NULL;
 }
 
 // ----
@@ -506,8 +498,7 @@ QN_API qn_json_object_ptr qn_stor_fetch(qn_storage_ptr restrict stor, const qn_s
     if (!url) return NULL;
 
     // ---- Prepare the request and response
-    qn_http_req_reset(stor->req);
-    qn_http_resp_reset(stor->resp);
+    qn_stor_reset(stor);
 
     qn_http_req_set_body_data(stor->req, "", 0);
 
@@ -516,18 +507,18 @@ QN_API qn_json_object_ptr qn_stor_fetch(qn_storage_ptr restrict stor, const qn_s
         return NULL;
     } // if
 
-    if (stor->obj_body) {
-        qn_json_destroy_object(stor->obj_body);
-        stor->obj_body = NULL;
-    } // if
-
-    qn_http_json_wrt_prepare_for_object(stor->resp_json_wrt, &stor->obj_body);
+    qn_http_json_wrt_prepare(stor->resp_json_wrt, &stor->obj_body, NULL);
     qn_http_resp_set_data_writer(stor->resp, stor->resp_json_wrt, &qn_http_json_wrt_callback);
 
     ret = qn_http_conn_post(stor->conn, url, stor->req, stor->resp);
     qn_str_destroy(url);
+
     if (!ret) return NULL;
-    return (stor->obj_body) ? stor->obj_body : qn_json_immutable_empty_object();
+    if (!stor->obj_body) {
+        qn_err_stor_set_api_return_no_value();
+        return NULL;
+    } // if
+    return stor->obj_body;
 }
 
 QN_API qn_json_object_ptr qn_stor_prefetch(qn_storage_ptr restrict stor, const qn_stor_auth_ptr restrict auth, const char * restrict dest_bucket, const char * restrict dest_key, qn_stor_fetch_extra_ptr restrict ext)
@@ -553,8 +544,7 @@ QN_API qn_json_object_ptr qn_stor_prefetch(qn_storage_ptr restrict stor, const q
     if (!url) return NULL;
 
     // ---- Prepare the request and response
-    qn_http_req_reset(stor->req);
-    qn_http_resp_reset(stor->resp);
+    qn_stor_reset(stor);
 
     qn_http_req_set_body_data(stor->req, "", 0);
 
@@ -563,18 +553,17 @@ QN_API qn_json_object_ptr qn_stor_prefetch(qn_storage_ptr restrict stor, const q
         return NULL;
     } // if
 
-    if (stor->obj_body) {
-        qn_json_destroy_object(stor->obj_body);
-        stor->obj_body = NULL;
+    if (! (stor->obj_body = qn_json_create_object())) {
+        qn_str_destroy(url);
+        return NULL;
     } // if
 
-    qn_http_json_wrt_prepare_for_object(stor->resp_json_wrt, &stor->obj_body);
+    qn_http_json_wrt_prepare(stor->resp_json_wrt, &stor->obj_body, NULL);
     qn_http_resp_set_data_writer(stor->resp, stor->resp_json_wrt, &qn_http_json_wrt_callback);
 
     ret = qn_http_conn_post(stor->conn, url, stor->req, stor->resp);
     qn_str_destroy(url);
-    if (!ret) return NULL;
-    return (stor->obj_body) ? stor->obj_body : qn_json_immutable_empty_object();
+    return (ret) ? stor->obj_body : NULL;
 }
 
 // ----
@@ -649,8 +638,7 @@ QN_API qn_json_object_ptr qn_stor_list(qn_storage_ptr restrict stor, const qn_st
         } // if
 
         // ---- Prepare the request and response
-        qn_http_req_reset(stor->req);
-        qn_http_resp_reset(stor->resp);
+        qn_stor_reset(stor);
 
         qn_http_req_set_body_data(stor->req, "", 0);
 
@@ -660,12 +648,13 @@ QN_API qn_json_object_ptr qn_stor_list(qn_storage_ptr restrict stor, const qn_st
             return NULL;
         } // if
 
-        if (stor->obj_body) {
-            qn_json_destroy_object(stor->obj_body);
-            stor->obj_body = NULL;
+        if (! (stor->obj_body = qn_json_create_object())) {
+            qn_str_destroy(url);
+            qn_http_qry_destroy(qry);
+            return NULL;
         } // if
 
-        qn_http_json_wrt_prepare_for_object(stor->resp_json_wrt, &stor->obj_body);
+        qn_http_json_wrt_prepare(stor->resp_json_wrt, &stor->obj_body, NULL);
         qn_http_resp_set_data_writer(stor->resp, stor->resp_json_wrt, &qn_http_json_wrt_callback);
 
         ret = qn_http_conn_post(stor->conn, url, stor->req, stor->resp);
@@ -882,7 +871,7 @@ QN_API qn_json_object_ptr qn_stor_execute_batch_opertions(qn_storage_ptr restric
         return NULL;
     } // if
 
-    qn_http_json_wrt_prepare_for_array(stor->resp_json_wrt, &stor->arr_body);
+    qn_http_json_wrt_prepare(stor->resp_json_wrt, &stor->obj_body, &stor->arr_body);
     qn_http_resp_set_data_writer(stor->resp, stor->resp_json_wrt, &qn_http_json_wrt_callback);
 
     ret = qn_http_conn_post(stor->conn, url, stor->req, stor->resp);
@@ -928,13 +917,7 @@ static qn_bool qn_stor_prepare_for_putting_file(qn_storage_ptr restrict stor, co
     qn_http_form_ptr form;
 
     // ---- Prepare request and response
-    qn_http_req_reset(stor->req);
-    qn_http_resp_reset(stor->resp);
-
-    if (stor->obj_body) {
-        qn_json_destroy_object(stor->obj_body);
-        stor->obj_body = NULL;
-    } // if
+    qn_stor_reset(stor);
 
     // ----
     if (!qn_stor_prepare_common_request_headers(stor)) return qn_false;
@@ -964,7 +947,7 @@ static qn_bool qn_stor_prepare_for_putting_file(qn_storage_ptr restrict stor, co
     // TODO: User defined variabales.
 
     // ----
-    qn_http_json_wrt_prepare_for_object(stor->resp_json_wrt, &stor->obj_body);
+    qn_http_json_wrt_prepare(stor->resp_json_wrt, &stor->obj_body, NULL);
     qn_http_resp_set_data_writer(stor->resp, stor->resp_json_wrt, &qn_http_json_wrt_callback);
 
     return qn_true;
@@ -1017,7 +1000,11 @@ QN_API qn_json_object_ptr qn_stor_put_file(qn_storage_ptr restrict stor, const q
     // ----
     ret = qn_http_conn_post(stor->conn, qn_str_cstr(rgn_entry->base_url), stor->req, stor->resp);
     if (!ret) return NULL;
-    return (stor->obj_body) ? stor->obj_body : qn_json_immutable_empty_object();
+    if (!stor->obj_body) {
+        qn_err_stor_set_api_return_no_value();
+        return NULL;
+    } // if
+    return stor->obj_body;
 }
 
 QN_API qn_json_object_ptr qn_stor_put_buffer(qn_storage_ptr restrict stor, const qn_stor_auth_ptr restrict auth, const char * restrict buf, int buf_size, qn_stor_put_extra_ptr restrict ext)
@@ -1043,7 +1030,11 @@ QN_API qn_json_object_ptr qn_stor_put_buffer(qn_storage_ptr restrict stor, const
     if (rgn_entry->hostname && !qn_http_req_set_header(stor->req, "Host", qn_str_cstr(rgn_entry->hostname))) return NULL;
     ret = qn_http_conn_post(stor->conn, qn_str_cstr(rgn_entry->base_url), stor->req, stor->resp);
     if (!ret) return NULL;
-    return (stor->obj_body) ? stor->obj_body : qn_json_immutable_empty_object();
+    if (!stor->obj_body) {
+        qn_err_stor_set_api_return_no_value();
+        return NULL;
+    } // if
+    return stor->obj_body;
 }
 
 // ----
@@ -1251,13 +1242,17 @@ static qn_json_object_ptr qn_stor_rp_put_chunk_in_one_piece(qn_storage_ptr restr
     qn_http_req_set_body_reader(stor->req, &chk_rdr, qn_stor_rp_chunk_body_reader_callback, chk_size);
 
     // ---- Prepare the JSON body writer.
-    qn_http_json_wrt_prepare_for_object(stor->resp_json_wrt, &stor->obj_body);
+    qn_http_json_wrt_prepare(stor->resp_json_wrt, &stor->obj_body, NULL);
     qn_http_resp_set_data_writer(stor->resp, stor->resp_json_wrt, &qn_http_json_wrt_callback);
 
     // ---- Do the put action.
     ret = qn_http_conn_post(stor->conn, url, stor->req, stor->resp);
     qn_io_srdr_destroy(srdr);
     if (!ret) return NULL;
+    if (!stor->obj_body) {
+        qn_err_stor_set_api_return_no_value();
+        return NULL;
+    } // if
 
     // ---- Get and set the returned block information back into the blk_info object.
     ctx = qn_json_get_string(stor->obj_body, "ctx", NULL);
@@ -1279,7 +1274,7 @@ static qn_json_object_ptr qn_stor_rp_put_chunk_in_one_piece(qn_storage_ptr restr
     if (!qn_json_set_integer(blk_info, "offset", offset)) return NULL;
 
     // ---- Return the put result.
-    return (stor->obj_body) ? stor->obj_body : qn_json_immutable_empty_object();
+    return stor->obj_body;
 }
 
 QN_API qn_json_object_ptr qn_stor_rp_put_chunk(qn_storage_ptr restrict stor, qn_stor_auth_ptr restrict auth, qn_json_object_ptr restrict blk_info, qn_io_reader_ptr restrict rdr, int chk_size, qn_stor_rput_extra_ptr restrict ext)
@@ -1414,13 +1409,17 @@ static qn_json_object_ptr qn_stor_rp_make_file_to_one_piece(qn_storage_ptr restr
     qn_http_req_set_body_data(stor->req, qn_str_cstr(ctx_info), qn_str_size(ctx_info));
 
     // ---- Prepare the JSON body writer.
-    qn_http_json_wrt_prepare_for_object(stor->resp_json_wrt, &stor->obj_body);
+    qn_http_json_wrt_prepare(stor->resp_json_wrt, &stor->obj_body, NULL);
     qn_http_resp_set_data_writer(stor->resp, stor->resp_json_wrt, &qn_http_json_wrt_callback);
 
     // ---- Do the put action.
     ret = qn_http_conn_post(stor->conn, url, stor->req, stor->resp);
     if (!ret) return NULL;
-    return (stor->obj_body) ? stor->obj_body : qn_json_immutable_empty_object();
+    if (!stor->obj_body) {
+        qn_err_stor_set_api_return_no_value();
+        return NULL;
+    } // if
+    return stor->obj_body;
 }
 
 QN_API qn_json_object_ptr qn_stor_rp_make_file(qn_storage_ptr restrict stor, qn_stor_auth_ptr restrict auth, qn_stor_rput_session_ptr restrict ss, qn_stor_rput_extra_ptr restrict ext)
@@ -1570,7 +1569,6 @@ static qn_json_object_ptr qn_stor_rp_put_file_in_serial_blocks(qn_storage_ptr re
 
 QN_API qn_json_object_ptr qn_stor_rp_put_file(qn_storage_ptr restrict stor, qn_stor_auth_ptr restrict auth, qn_stor_rput_session_ptr * restrict ss, const char * restrict fname, qn_stor_rput_extra_ptr restrict ext)
 {
-    qn_bool ret;
     qn_rgn_entry_ptr old_entry;
     qn_json_object_ptr put_ret;
     qn_json_object_ptr make_ret;

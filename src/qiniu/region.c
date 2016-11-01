@@ -646,10 +646,11 @@ QN_API qn_bool qn_rgn_svc_grab_bucket_region(qn_rgn_service_ptr restrict svc, qn
         qn_str_destroy(url);
         return qn_false;
     } // if
+    // TODO: Add User-Agent header.
 
     qn_http_req_set_body_data(svc->req, "", 0);
 
-    qn_http_json_wrt_prepare_for_object(svc->resp_json_wrt, &root);
+    qn_http_json_wrt_prepare(svc->resp_json_wrt, &root, NULL);
     qn_http_resp_set_data_writer(svc->resp, svc->resp_json_wrt, &qn_http_json_wrt_callback);
 
     ret = qn_http_conn_get(svc->conn, url, svc->req, svc->resp);
@@ -672,6 +673,7 @@ QN_API qn_bool qn_rgn_svc_grab_bucket_region(qn_rgn_service_ptr restrict svc, qn
         ret = qn_rgn_tbl_set_region(rtbl, bucket, new_rgn);
         qn_rgn_destroy(new_rgn);
     } // if
+    // TODO: Deal with the case that API return no value.
     qn_json_destroy_object(root);
     return ret;
 }

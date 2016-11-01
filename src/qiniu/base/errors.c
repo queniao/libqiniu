@@ -42,6 +42,7 @@ enum
     QN_ERR_STOR_PUTTING_ABORTED_BY_FILTER_PRE_CALLBACK = 21004,
     QN_ERR_STOR_PUTTING_ABORTED_BY_FILTER_POST_CALLBACK = 21005,
     QN_ERR_STOR_INVALID_CHUNK_PUT_RESULT = 21006,
+    QN_ERR_STOR_API_RETURN_NO_VALUE = 21007,
 
     QN_ERR_ETAG_INITIALIZING_CONTEXT_FAILED = 22001,
     QN_ERR_ETAG_UPDATING_CONTEXT_FAILED = 22002,
@@ -94,6 +95,7 @@ static qn_error qn_errors[] = {
     {QN_ERR_STOR_PUTTING_ABORTED_BY_FILTER_PRE_CALLBACK, "Putting file is aborted by filter PRE callback"},
     {QN_ERR_STOR_PUTTING_ABORTED_BY_FILTER_POST_CALLBACK, "Putting file is aborted by filter POST callback"},
     {QN_ERR_STOR_INVALID_CHUNK_PUT_RESULT, "Invalid chunk put result"},
+    {QN_ERR_STOR_API_RETURN_NO_VALUE, "API return no value"},
 
     {QN_ERR_ETAG_INITIALIZING_CONTEXT_FAILED, "Failed in initializing a new qetag context"},
     {QN_ERR_ETAG_UPDATING_CONTEXT_FAILED, "Failed in updating the qetag context"},
@@ -262,6 +264,11 @@ QN_API void qn_err_stor_set_putting_aborted_by_filter_post_callback(void)
 QN_API void qn_err_stor_set_invalid_chunk_put_result(void)
 {
     qn_err_code = QN_ERR_STOR_INVALID_CHUNK_PUT_RESULT;
+}
+
+QN_API void qn_err_stor_set_api_return_no_value(void)
+{
+    qn_err_code = QN_ERR_STOR_API_RETURN_NO_VALUE;
 }
 
 QN_API void qn_err_etag_set_initializing_context_failed(void)
@@ -434,6 +441,11 @@ QN_API qn_bool qn_err_stor_is_putting_aborted_by_filter_post_callback(void)
 QN_API qn_bool qn_err_stor_is_invalid_chunk_put_result(void)
 {
     return (qn_err_code == QN_ERR_STOR_INVALID_CHUNK_PUT_RESULT);
+}
+
+QN_API qn_bool qn_err_stor_is_api_return_no_value(void)
+{
+    return (qn_err_code == QN_ERR_STOR_API_RETURN_NO_VALUE);
 }
 
 QN_API qn_bool qn_err_etag_is_initializing_context_failed(void)
