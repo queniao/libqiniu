@@ -932,8 +932,9 @@ QN_API qn_bool qn_json_prs_parse_object(qn_json_parser_ptr restrict prs, const c
                 prs->elem.object = *root;
             } else if (! (prs->elem.object = qn_json_create_object()) ) {
                 return qn_false;
-            }
+            } // if
             if (!qn_json_prs_push(prs, QN_JSON_OBJECT, prs->elem, QN_JSON_PARSING_KEY)) {
+                if (!*root) qn_json_destroy_object(prs->elem.object);
                 return qn_false;
             }
         } else {
@@ -943,7 +944,10 @@ QN_API qn_bool qn_json_prs_parse_object(qn_json_parser_ptr restrict prs, const c
         } // if
     } // if
 
-    if (!qn_json_prs_parse(prs)) return qn_false;
+    if (!qn_json_prs_parse(prs)) {
+        if (!*root) qn_json_destroy_object(prs->elem.object);
+        return qn_false;
+    } // if
     *root = prs->elem.object;
     *buf_size = prs->scanner.buf_pos;
     return qn_true;
@@ -966,10 +970,11 @@ QN_API qn_bool qn_json_prs_parse_array(qn_json_parser_ptr restrict prs, const ch
                 prs->elem.array = *root;
             } else if (! (prs->elem.array = qn_json_create_array()) ) {
                 return qn_false;
-            }
+            } // if
             if (!qn_json_prs_push(prs, QN_JSON_ARRAY, prs->elem, QN_JSON_PARSING_VALUE)) {
+                if (!*root) qn_json_destroy_array(prs->elem.array);
                 return qn_false;
-            }
+            } // if
         } else {
             // Not a valid piece of JSON text.
             qn_err_json_set_bad_text_input();
@@ -977,7 +982,10 @@ QN_API qn_bool qn_json_prs_parse_array(qn_json_parser_ptr restrict prs, const ch
         } // if
     } // if
 
-    if (!qn_json_prs_parse(prs)) return qn_false;
+    if (!qn_json_prs_parse(prs)) {
+        if (!*root) qn_json_destroy_array(prs->elem.array);
+        return qn_false;
+    } // if
     *root = prs->elem.array;
     *buf_size = prs->scanner.buf_pos;
     return qn_true;
