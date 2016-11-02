@@ -557,10 +557,10 @@ QN_API void qn_json_prs_destroy(qn_json_parser_ptr restrict prs)
     } // if
 }
 
-QN_API void qn_json_prs_reset(qn_json_parser_ptr restrict prs)
+static void qn_json_prs_destroy_semi_finished_target(qn_json_parser_ptr restrict prs, int root_level)
 {
     if (prs) {
-        while (prs->size > 0) {
+        while (prs->size > root_level) {
             prs->size -= 1;
             if (prs->lvl[prs->size].class == QN_JSON_OBJECT) {
                 qn_json_destroy_object(prs->lvl[prs->size].elem.object);
@@ -945,7 +945,11 @@ QN_API qn_bool qn_json_prs_parse_object(qn_json_parser_ptr restrict prs, const c
     } // if
 
     if (!qn_json_prs_parse(prs)) {
-        if (!*root) qn_json_destroy_object(prs->elem.object);
+        if (!qn_err_json_is_need_more_text_input()) {
+            qn_json_prs_destroy_semi_finished_target(prs, 1);
+            qn_json_prs_pop(prs);
+            if (!*root) qn_json_destroy_object(prs->elem.object);
+        } // if
         return qn_false;
     } // if
     *root = prs->elem.object;
@@ -983,7 +987,11 @@ QN_API qn_bool qn_json_prs_parse_array(qn_json_parser_ptr restrict prs, const ch
     } // if
 
     if (!qn_json_prs_parse(prs)) {
-        if (!*root) qn_json_destroy_array(prs->elem.array);
+        if (!qn_err_json_is_need_more_text_input()) {
+            qn_json_prs_destroy_semi_finished_target(prs, 1);
+            qn_json_prs_pop(prs);
+            if (!*root) qn_json_destroy_array(prs->elem.array);
+        } // if
         return qn_false;
     } // if
     *root = prs->elem.array;
