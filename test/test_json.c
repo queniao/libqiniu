@@ -567,8 +567,30 @@ void test_parse_object_without_enough_input_of_key(void)
     } // if
 }
 
+void test_parse_object_without_enough_input_of_integer(void)
+{
+    qn_bool ret;
+    const char buf[] = {"{\"_key\":1"};
+    size_t buf_len = strlen(buf);
+    qn_json_object_ptr obj_root = NULL;
+    qn_json_parser_ptr prs = NULL;
+
+    prs = qn_json_prs_create();
+    CU_ASSERT_FATAL(prs != NULL);
+
+    ret = qn_json_prs_parse_object(prs, buf, &buf_len, &obj_root);
+    qn_json_prs_destroy(prs);
+    CU_ASSERT_FALSE(ret);
+
+    if (!qn_err_json_is_need_more_text_input()) {
+        CU_FAIL("The error is not `need more text input`.");
+        return;
+    } // if
+}
+
 CU_TestInfo test_abnormal_cases_of_json_parsing[] = {
     {"test_parse_object_without_enough_input_of_key()", test_parse_object_without_enough_input_of_key},
+    {"test_parse_object_without_enough_input_of_integer()", test_parse_object_without_enough_input_of_integer},
     CU_TEST_INFO_NULL
 };
 
