@@ -483,14 +483,26 @@ static qn_json_token qn_json_scan(qn_json_scanner_ptr s, char ** txt, size_t * t
 
             case 't': case 'T':
                 s->tkn_sts = QN_JSON_TKNSTS_TRUE_T;
+                if (s->buf_pos == s->buf_size) {
+                    s->tkn_scanner = &qn_json_scan_true;
+                    return QN_JSON_TKNERR_NEED_MORE_TEXT;
+                } // if
                 return qn_json_scan_true(s, txt, txt_size);
 
             case 'f': case 'F':
                 s->tkn_sts = QN_JSON_TKNSTS_FALSE_F;
+                if (s->buf_pos == s->buf_size) {
+                    s->tkn_scanner = &qn_json_scan_false;
+                    return QN_JSON_TKNERR_NEED_MORE_TEXT;
+                } // if
                 return qn_json_scan_false(s, txt, txt_size);
 
             case 'n': case 'N':
                 s->tkn_sts = QN_JSON_TKNSTS_NULL_N;
+                if (s->buf_pos == s->buf_size) {
+                    s->tkn_scanner = &qn_json_scan_null;
+                    return QN_JSON_TKNERR_NEED_MORE_TEXT;
+                } // if
                 return qn_json_scan_null(s, txt, txt_size);
         } // switch
     } else {

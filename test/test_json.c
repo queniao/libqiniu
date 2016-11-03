@@ -624,6 +624,168 @@ void test_parse_object_integer_value_input_in_two_chunks(void)
     qn_json_destroy_object(obj_root);
 }
 
+void test_parse_object_true_value_input_in_two_chunks_1(void)
+{
+    qn_bool ret;
+    const char buf[] = {"{\"_true\":t"};
+    size_t buf_len = strlen(buf);
+    const char buf2[] = {"rue}"};
+    size_t buf2_len = strlen(buf2);
+    qn_json_boolean val;
+    qn_json_object_ptr obj_root = NULL;
+    qn_json_parser_ptr prs = NULL;
+
+    prs = qn_json_prs_create();
+    CU_ASSERT_FATAL(prs != NULL);
+
+    ret = qn_json_prs_parse_object(prs, buf, &buf_len, &obj_root);
+    CU_ASSERT_FALSE(ret);
+    CU_ASSERT_TRUE(qn_err_json_is_need_more_text_input());
+
+    ret = qn_json_prs_parse_object(prs, buf2, &buf2_len, &obj_root);
+    CU_ASSERT_TRUE(ret);
+
+    val = qn_json_get_boolean(obj_root, "_true", qn_false);
+    CU_ASSERT_TRUE(val);
+
+    qn_json_destroy_object(obj_root);
+}
+
+void test_parse_object_true_value_input_in_two_chunks_2(void)
+{
+    qn_bool ret;
+    const char buf[] = {"{\"_true\":tr"};
+    size_t buf_len = strlen(buf);
+    const char buf2[] = {"ue}"};
+    size_t buf2_len = strlen(buf2);
+    qn_json_boolean val;
+    qn_json_object_ptr obj_root = NULL;
+    qn_json_parser_ptr prs = NULL;
+
+    prs = qn_json_prs_create();
+    CU_ASSERT_FATAL(prs != NULL);
+
+    ret = qn_json_prs_parse_object(prs, buf, &buf_len, &obj_root);
+    CU_ASSERT_FALSE(ret);
+    CU_ASSERT_TRUE(qn_err_json_is_need_more_text_input());
+
+    ret = qn_json_prs_parse_object(prs, buf2, &buf2_len, &obj_root);
+    CU_ASSERT_TRUE(ret);
+
+    val = qn_json_get_boolean(obj_root, "_true", qn_false);
+    CU_ASSERT_TRUE(val);
+
+    qn_json_destroy_object(obj_root);
+}
+
+void test_parse_object_true_value_input_in_two_chunks_3(void)
+{
+    qn_bool ret;
+    const char buf[] = {"{\"_true\":tru"};
+    size_t buf_len = strlen(buf);
+    const char buf2[] = {"e}"};
+    size_t buf2_len = strlen(buf2);
+    qn_json_boolean val;
+    qn_json_object_ptr obj_root = NULL;
+    qn_json_parser_ptr prs = NULL;
+
+    prs = qn_json_prs_create();
+    CU_ASSERT_FATAL(prs != NULL);
+
+    ret = qn_json_prs_parse_object(prs, buf, &buf_len, &obj_root);
+    CU_ASSERT_FALSE(ret);
+    CU_ASSERT_TRUE(qn_err_json_is_need_more_text_input());
+
+    ret = qn_json_prs_parse_object(prs, buf2, &buf2_len, &obj_root);
+    CU_ASSERT_TRUE(ret);
+
+    val = qn_json_get_boolean(obj_root, "_true", qn_false);
+    CU_ASSERT_TRUE(val);
+
+    qn_json_destroy_object(obj_root);
+}
+
+void test_parse_object_false_value_input_in_two_chunks_1(void)
+{
+    qn_bool ret;
+    const char buf[] = {"{\"_false\":f"};
+    size_t buf_len = strlen(buf);
+    const char buf2[] = {"alse}"};
+    size_t buf2_len = strlen(buf2);
+    qn_json_boolean val;
+    qn_json_object_ptr obj_root = NULL;
+    qn_json_parser_ptr prs = NULL;
+
+    prs = qn_json_prs_create();
+    CU_ASSERT_FATAL(prs != NULL);
+
+    ret = qn_json_prs_parse_object(prs, buf, &buf_len, &obj_root);
+    CU_ASSERT_FALSE(ret);
+    CU_ASSERT_TRUE(qn_err_json_is_need_more_text_input());
+
+    ret = qn_json_prs_parse_object(prs, buf2, &buf2_len, &obj_root);
+    CU_ASSERT_TRUE(ret);
+
+    val = qn_json_get_boolean(obj_root, "_false", qn_true);
+    CU_ASSERT_FALSE(val);
+
+    qn_json_destroy_object(obj_root);
+}
+
+void test_parse_object_false_value_input_in_two_chunks_2(void)
+{
+    qn_bool ret;
+    const char buf[] = {"{\"_false\":fal"};
+    size_t buf_len = strlen(buf);
+    const char buf2[] = {"se}"};
+    size_t buf2_len = strlen(buf2);
+    qn_json_boolean val;
+    qn_json_object_ptr obj_root = NULL;
+    qn_json_parser_ptr prs = NULL;
+
+    prs = qn_json_prs_create();
+    CU_ASSERT_FATAL(prs != NULL);
+
+    ret = qn_json_prs_parse_object(prs, buf, &buf_len, &obj_root);
+    CU_ASSERT_FALSE(ret);
+    CU_ASSERT_TRUE(qn_err_json_is_need_more_text_input());
+
+    ret = qn_json_prs_parse_object(prs, buf2, &buf2_len, &obj_root);
+    CU_ASSERT_TRUE(ret);
+
+    val = qn_json_get_boolean(obj_root, "_false", qn_true);
+    CU_ASSERT_FALSE(val);
+
+    qn_json_destroy_object(obj_root);
+}
+
+void test_parse_object_false_value_input_in_two_chunks_3(void)
+{
+    qn_bool ret;
+    const char buf[] = {"{\"_false\":fals"};
+    size_t buf_len = strlen(buf);
+    const char buf2[] = {"e}"};
+    size_t buf2_len = strlen(buf2);
+    qn_json_boolean val;
+    qn_json_object_ptr obj_root = NULL;
+    qn_json_parser_ptr prs = NULL;
+
+    prs = qn_json_prs_create();
+    CU_ASSERT_FATAL(prs != NULL);
+
+    ret = qn_json_prs_parse_object(prs, buf, &buf_len, &obj_root);
+    CU_ASSERT_FALSE(ret);
+    CU_ASSERT_TRUE(qn_err_json_is_need_more_text_input());
+
+    ret = qn_json_prs_parse_object(prs, buf2, &buf2_len, &obj_root);
+    CU_ASSERT_TRUE(ret);
+
+    val = qn_json_get_boolean(obj_root, "_false", qn_true);
+    CU_ASSERT_FALSE(val);
+
+    qn_json_destroy_object(obj_root);
+}
+
 // ----
 
 void test_parse_empty_array(void)
@@ -819,6 +981,12 @@ CU_TestInfo test_normal_cases_of_json_parsing[] = {
     {"test_parse_object_string_input_in_two_chunks_3()", test_parse_object_string_input_in_two_chunks_3},
     {"test_parse_object_string_input_in_two_chunks_4()", test_parse_object_string_input_in_two_chunks_4},
     {"test_parse_object_integer_value_input_in_two_chunks()", test_parse_object_integer_value_input_in_two_chunks},
+    {"test_parse_object_true_value_input_in_two_chunks_1()", test_parse_object_true_value_input_in_two_chunks_1},
+    {"test_parse_object_true_value_input_in_two_chunks_2()", test_parse_object_true_value_input_in_two_chunks_2},
+    {"test_parse_object_true_value_input_in_two_chunks_3()", test_parse_object_true_value_input_in_two_chunks_3},
+    {"test_parse_object_false_value_input_in_two_chunks_1()", test_parse_object_false_value_input_in_two_chunks_1},
+    {"test_parse_object_false_value_input_in_two_chunks_2()", test_parse_object_false_value_input_in_two_chunks_2},
+    {"test_parse_object_false_value_input_in_two_chunks_3()", test_parse_object_false_value_input_in_two_chunks_3},
     {"test_parse_empty_array()", test_parse_empty_array},
     {"test_parse_array_holding_one_element()", test_parse_array_holding_one_element},
     {"test_parse_array_holding_two_elements()", test_parse_array_holding_two_elements},
