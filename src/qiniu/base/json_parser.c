@@ -454,13 +454,20 @@ static qn_json_token qn_json_scan(qn_json_scanner_ptr s, char ** txt, size_t * t
             case '"':
                 s->tkn_sts = QN_JSON_TKNSTS_STR_CHAR;
                 s->txt_size = 0;
+                if (s->buf_pos == s->buf_size) {
+                    s->tkn_scanner = &qn_json_scan_string;
+                    return QN_JSON_TKNERR_NEED_MORE_TEXT;
+                } // if
                 return qn_json_scan_string(s, txt, txt_size);
 
             case '+': case '-':
                 s->tkn_sts = QN_JSON_TKNSTS_NUM_SIGN;
                 s->txt_size = 0;
                 s->txt[s->txt_size++] = s->buf[s->buf_pos - 1];
-                if (s->buf_pos == s->buf_size) return QN_JSON_TKNERR_NEED_MORE_TEXT;
+                if (s->buf_pos == s->buf_size) {
+                    s->tkn_scanner = &qn_json_scan_number;
+                    return QN_JSON_TKNERR_NEED_MORE_TEXT;
+                } // if
                 return qn_json_scan_number(s, txt, txt_size);
 
             case '0': case '1': case '2': case '3': case '4':
@@ -468,7 +475,10 @@ static qn_json_token qn_json_scan(qn_json_scanner_ptr s, char ** txt, size_t * t
                 s->tkn_sts = QN_JSON_TKNSTS_NUM_INT_DIGITAL;
                 s->txt_size = 0;
                 s->txt[s->txt_size++] = s->buf[s->buf_pos - 1];
-                if (s->buf_pos == s->buf_size) return QN_JSON_TKNERR_NEED_MORE_TEXT;
+                if (s->buf_pos == s->buf_size) {
+                    s->tkn_scanner = &qn_json_scan_number;
+                    return QN_JSON_TKNERR_NEED_MORE_TEXT;
+                } // if
                 return qn_json_scan_number(s, txt, txt_size);
 
             case 't': case 'T':
