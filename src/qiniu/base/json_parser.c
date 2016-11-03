@@ -299,7 +299,7 @@ static qn_json_token qn_json_scan_number(qn_json_scanner_ptr s, char ** txt, siz
                     break;
                 } else {
                     s->buf_pos -= 1;
-                    s->txt[s->txt_size] = '\0';
+                    s->txt[--s->txt_size] = '\0';
                     s->tkn_scanner = NULL;
                     *txt = s->txt;
                     *txt_size = s->txt_size;
