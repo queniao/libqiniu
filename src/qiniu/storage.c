@@ -170,7 +170,7 @@ static const qn_string qn_stor_make_stat_op(const char * restrict bucket, const 
 /***************************************************************************//**
 * @ingroup Storage-Management
 *
-* Retrieve the meta information of the given file.
+* Retrieve the meta information of a specified file.
 *
 * @param [in] stor The pointer to the storage object.
 * @param [in] auth The pointer to the authorization information. The function
@@ -215,6 +215,8 @@ static const qn_string qn_stor_make_stat_op(const char * restrict bucket, const 
 *                 "putTime": 14189752051828104
 *             }
 *
+*         The caller MUST NOT destroy the empty object because the storage object
+*         will do that in next invocation.
 *******************************************************************************/
 QN_API qn_json_object_ptr qn_stor_stat(qn_storage_ptr restrict stor, const qn_stor_auth_ptr restrict auth, const char * restrict bucket, const char * restrict key, qn_stor_stat_extra_ptr restrict ext)
 {
@@ -223,6 +225,7 @@ QN_API qn_json_object_ptr qn_stor_stat(qn_storage_ptr restrict stor, const qn_st
     qn_string url;
     qn_rgn_entry_ptr rgn_entry;
     
+    // ---- Process all extra arguments.
     if (ext) {
         if (! (rgn_entry = ext->rgn.entry)) qn_rgn_tbl_choose_first_entry(ext->rgn.rtbl, QN_RGN_SVC_RS, NULL, &rgn_entry);
     } else {
@@ -230,7 +233,7 @@ QN_API qn_json_object_ptr qn_stor_stat(qn_storage_ptr restrict stor, const qn_st
         qn_rgn_tbl_choose_first_entry(NULL, QN_RGN_SVC_RS, NULL, &rgn_entry);
     } // if
 
-    // ---- Prepare the query URL
+    // ---- Prepare appropriate stat URL.
     op = qn_stor_make_stat_op(bucket, key);
     if (!op) return NULL;
 
@@ -238,7 +241,7 @@ QN_API qn_json_object_ptr qn_stor_stat(qn_storage_ptr restrict stor, const qn_st
     qn_str_destroy(op);
     if (!url) return NULL;
 
-    // ---- Prepare the request and response
+    // ---- Prepare the request and response.
     qn_stor_reset(stor);
 
     if (!qn_stor_prepare_managment(stor, url, rgn_entry->hostname, auth->client_end.acctoken, auth->server_end.mac)) {
@@ -249,6 +252,7 @@ QN_API qn_json_object_ptr qn_stor_stat(qn_storage_ptr restrict stor, const qn_st
     qn_http_json_wrt_prepare(stor->resp_json_wrt, &stor->obj_body, &stor->arr_body);
     qn_http_resp_set_data_writer(stor->resp, stor->resp_json_wrt, &qn_http_json_wrt_callback);
 
+    // ---- Do the stat action.
     ret = qn_http_conn_get(stor->conn, url, stor->req, stor->resp);
     qn_str_destroy(url);
 
@@ -281,6 +285,47 @@ static const qn_string qn_stor_make_copy_op(const char * restrict src_bucket, co
     return op;
 }
 
+/***************************************************************************//**
+* @ingroup Storage-Management
+*
+* Copy a source file to make a new one.
+*
+* @param [in] stor The pointer to the storage object.
+* @param [in] auth The pointer to the authorization information. The function
+*                  uses its content to archieve or generate appropriate access
+*                  token.
+* @param [in] src_bucket The pointer to a string names the source bucket where
+*                        the file resides.
+* @param [in] src_key The pointer to a string names the source file itself.
+* @param [in] dest_bucket The pointer to a string names the destionation bucket
+*                         where the file resides.
+* @param [in] dest_key The pointer to a string names the destination file itself.
+* @param [in] ext The pointer to an extra option struct. The function uses
+*                 options set in it to tune actual behaviors.
+*
+* @retval non-NULL The pointer to an empty object indicates success, or an API
+*                  error message object(see REMARK section).
+* @retval NULL Failed in copying the file.
+* 
+* @remark The qn_stor_copy() funciton makes a copy of a file.
+*
+*         In the case that the source file doesn't exist, or the API failed due
+*         to any reason, this function return an API error information object
+*         which contains two fields: 1) the `code` field holds an HTTP code
+*         indicates the situation and 2) the `error` field holds a trivial
+*         string message describes the reason. This object looks like
+*
+*             {
+*                 "code": 614,
+*                 "error": "Directory or file doesn't exist"
+*             }
+*
+*         In the other case that the API returns nothing to indicate the success,
+*         this function returns an empty object instead.
+*
+*         The caller MUST NOT destroy the empty object because the storage object
+*         will do that in next invocation.
+*******************************************************************************/
 QN_API qn_json_object_ptr qn_stor_copy(qn_storage_ptr restrict stor, const qn_stor_auth_ptr restrict auth, const char * restrict src_bucket, const char * restrict src_key, const char * restrict dest_bucket, const char * restrict dest_key, qn_stor_copy_extra_ptr restrict ext)
 {
     qn_bool ret;
@@ -289,6 +334,7 @@ QN_API qn_json_object_ptr qn_stor_copy(qn_storage_ptr restrict stor, const qn_st
     qn_string url_tmp;
     qn_rgn_entry_ptr rgn_entry;
     
+    // ---- Process all extra arguments.
     if (ext) {
         if (! (rgn_entry = ext->rgn.entry)) qn_rgn_tbl_choose_first_entry(ext->rgn.rtbl, QN_RGN_SVC_RS, NULL, &rgn_entry);
     } else {
@@ -296,7 +342,7 @@ QN_API qn_json_object_ptr qn_stor_copy(qn_storage_ptr restrict stor, const qn_st
         qn_rgn_tbl_choose_first_entry(NULL, QN_RGN_SVC_RS, NULL, &rgn_entry);
     } // if
 
-    // ---- Prepare the query URL
+    // ---- Prepare appropriate copy URL.
     op = qn_stor_make_copy_op(src_bucket, src_key, dest_bucket, dest_key);
     if (!op) return NULL;
 
@@ -313,7 +359,7 @@ QN_API qn_json_object_ptr qn_stor_copy(qn_storage_ptr restrict stor, const qn_st
         } // if
     } // if
 
-    // ---- Prepare the request and response
+    // ---- Prepare the request and response.
     qn_stor_reset(stor);
 
     qn_http_req_set_body_data(stor->req, "", 0);
@@ -331,6 +377,7 @@ QN_API qn_json_object_ptr qn_stor_copy(qn_storage_ptr restrict stor, const qn_st
     qn_http_json_wrt_prepare(stor->resp_json_wrt, &stor->obj_body, NULL);
     qn_http_resp_set_data_writer(stor->resp, stor->resp_json_wrt, &qn_http_json_wrt_callback);
 
+    // ---- Do the copy action.
     ret = qn_http_conn_post(stor->conn, url, stor->req, stor->resp);
     qn_str_destroy(url);
     return (ret) ? stor->obj_body : NULL;
