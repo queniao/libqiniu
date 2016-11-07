@@ -167,6 +167,55 @@ static const qn_string qn_stor_make_stat_op(const char * restrict bucket, const 
     return op;
 }
 
+/***************************************************************************//**
+* @ingroup Storage-Management
+*
+* Retrieve the meta information of the given file.
+*
+* @param [in] stor The pointer to the storage object.
+* @param [in] auth The pointer to the authorization information. The function
+*                  uses its content to archieve or generate appropriate access
+*                  token.
+* @param [in] bucket The pointer to a string names the bucket where the file
+*                    resides.
+* @param [in] key The pointer to a string names the file itself.
+* @param [in] ext The pointer to an extra option struct. The function uses
+*                 options set in it to tune actual behaviors.
+*
+* @retval non-NULL The pointer to the meta information object about the given
+*                  file, or an API error message object(see REMARK section).
+* @retval NULL Failed in stating the given file.
+* 
+* @remark The qn_stor_stat() funciton can be used for two purposes: 1) detect
+*         whether a given file exists or 2) retrieve the meta information of
+*         it.
+*
+*         In the case that the given file doesn't exist, or the API failed due
+*         to any reason, this function return an API error information object
+*         which contains two fields: 1) the `code` field holds an HTTP code
+*         indicates the situation and 2) the `error` field holds a trivial
+*         string message describes the reason. This object looks like
+*
+*             {
+*                 "code": 614,
+*                 "error": "Directory or file doesn't exist"
+*             }
+*
+*         In the other case that the API return an meta information of the
+*         given file, it contains four fields so far: 1) the `fsize` field
+*         holds the total bytes, 2) the `hash` field holds the Qiniu-ETAG
+*         digest, 3) the `mimeType` field indicates the real type and 4) the
+*         `putTime` field holds the upload timestamp(in a hundred-nano unit).
+*         This object looks like
+*
+*             {
+*                 "fsize": 165092,
+*                 "hash": "FjJuuG41Tc9HOppahgsZ-zRsIYKD",
+*                 "mimeType": "image/jpeg",
+*                 "putTime": 14189752051828104
+*             }
+*
+*******************************************************************************/
 QN_API qn_json_object_ptr qn_stor_stat(qn_storage_ptr restrict stor, const qn_stor_auth_ptr restrict auth, const char * restrict bucket, const char * restrict key, qn_stor_stat_extra_ptr restrict ext)
 {
     qn_bool ret;
@@ -190,17 +239,11 @@ QN_API qn_json_object_ptr qn_stor_stat(qn_storage_ptr restrict stor, const qn_st
     if (!url) return NULL;
 
     // ---- Prepare the request and response
-    qn_http_req_reset(stor->req);
-    qn_http_resp_reset(stor->resp);
+    qn_stor_reset(stor);
 
     if (!qn_stor_prepare_managment(stor, url, rgn_entry->hostname, auth->client_end.acctoken, auth->server_end.mac)) {
         qn_str_destroy(url);
         return NULL;
-    } // if
-
-    if (stor->obj_body) {
-        qn_json_destroy_object(stor->obj_body);
-        stor->obj_body = NULL;
     } // if
 
     qn_http_json_wrt_prepare(stor->resp_json_wrt, &stor->obj_body, &stor->arr_body);
@@ -208,8 +251,13 @@ QN_API qn_json_object_ptr qn_stor_stat(qn_storage_ptr restrict stor, const qn_st
 
     ret = qn_http_conn_get(stor->conn, url, stor->req, stor->resp);
     qn_str_destroy(url);
+
     if (!ret) return NULL;
-    return (stor->obj_body) ? stor->obj_body : qn_json_immutable_empty_object();
+    if (!stor->obj_body) {
+        qn_err_stor_set_api_return_no_value();
+        return NULL;
+    } // if
+    return stor->obj_body;
 }
 
 static const qn_string qn_stor_make_copy_op(const char * restrict src_bucket, const char * restrict src_key, const char * restrict dest_bucket, const char * restrict dest_key)
