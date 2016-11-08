@@ -51,6 +51,7 @@ int main(int argc, char * argv[])
     copy_ret = qn_stor_copy(stor, &auth, src_bucket, src_key, dest_bucket, dest_key, &ext);
     qn_mac_destroy(mac);
     if (!copy_ret) {
+        qn_stor_destroy(stor);
         printf("Cannot copy the `%s:%s` file to `%s:%s`.\n", src_bucket, src_key, dest_bucket, dest_bucket);
         return 2;
     } // if

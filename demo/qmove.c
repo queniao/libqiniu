@@ -1,16 +1,19 @@
 #include <stdio.h>
 #include "qiniu/base/json_formatter.h"
+#include "qiniu/base/errors.h"
 #include "qiniu/storage.h"
 
 int main(int argc, char * argv[])
 {
     qn_mac_ptr mac;
     qn_stor_auth auth;
-    qn_string src_bucket = NULL;
-    qn_string src_key = NULL;
-    qn_string dest_bucket = NULL;
-    qn_string dest_key = NULL;
-    qn_storage_ptr stor = NULL;
+    qn_string src_bucket;
+    qn_string src_key;
+    qn_string dest_bucket;
+    qn_string dest_key;
+    qn_string move_ret_str;
+    qn_json_object_ptr move_ret;
+    qn_storage_ptr stor;
     qn_stor_move_extra ext;
     qn_http_hdr_iterator_ptr hdr_itr;
     qn_string hdr_ent;
@@ -37,7 +40,11 @@ int main(int argc, char * argv[])
     memset(&auth, 0, sizeof(auth));
     auth.server_end.mac = mac;
 
-    if (!qn_stor_move(stor, &auth, src_bucket, src_key, dest_bucket, dest_key, &ext)) {
+    
+    move_ret = qn_stor_move(stor, &auth, src_bucket, src_key, dest_bucket, dest_key, &ext);
+    qn_mac_destroy(mac);
+    if (!move_ret) {
+        qn_stor_destroy(stor);
         printf("Cannot move the `%s:%s` file to `%s:%s`.\n", src_bucket, src_key, dest_bucket, dest_bucket);
         return 2;
     } // if
@@ -48,7 +55,16 @@ int main(int argc, char * argv[])
     } // while
     qn_http_hdr_itr_destroy(hdr_itr);
 
+    move_ret_str = qn_json_object_to_string(move_ret);
     qn_stor_destroy(stor);
-    qn_mac_destroy(mac);
+
+    if (!move_ret_str) {
+        printf("Cannot format move result string due to error `%s`\n", qn_err_get_message());
+        return 1;
+    } // if
+
+    printf("%s\n", move_ret_str);
+    qn_str_destroy(move_ret_str);
+    
     return 0;
 }

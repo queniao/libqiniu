@@ -256,7 +256,7 @@ QN_API qn_json_object_ptr qn_stor_stat(qn_storage_ptr restrict stor, const qn_st
     qn_string url;
     qn_rgn_entry_ptr rgn_entry;
     
-    // ---- Process all extra arguments.
+    // ---- Process all extra options.
     if (ext) {
         if (! (rgn_entry = ext->rgn.entry)) qn_rgn_tbl_choose_first_entry(ext->rgn.rtbl, QN_RGN_SVC_RS, NULL, &rgn_entry);
     } else {
@@ -387,7 +387,7 @@ static const qn_string qn_stor_make_copy_op(const char * restrict src_bucket, co
 *         +-------+-------------------------------------------------------+
 *         | 614   | Destination file exists                               |
 *         +-------+-------------------------------------------------------+
-*         | 631   | Source bucket doesn't exist                           |
+*         | 631   | Source or destination bucket doesn't exist            |
 *         +-------+-------------------------------------------------------+
 *
 *         NOTE: The caller MUST NOT destroy the result object because the storage
@@ -401,7 +401,7 @@ QN_API qn_json_object_ptr qn_stor_copy(qn_storage_ptr restrict stor, const qn_st
     qn_string url_tmp;
     qn_rgn_entry_ptr rgn_entry;
     
-    // ---- Process all extra arguments.
+    // ---- Process all extra options.
     if (ext) {
         if (! (rgn_entry = ext->rgn.entry)) qn_rgn_tbl_choose_first_entry(ext->rgn.rtbl, QN_RGN_SVC_RS, NULL, &rgn_entry);
     } else {
@@ -487,6 +487,70 @@ static const qn_string qn_stor_make_move_op(const char * restrict src_bucket, co
     return op;
 }
 
+/***************************************************************************//**
+* @ingroup Storage-Management
+*
+* Move the source file to the destination file.
+*
+* @param [in] stor The pointer to the storage object.
+* @param [in] auth The pointer to the authorization information. The function
+*                  uses its content to archieve or generate appropriate access
+*                  token.
+* @param [in] src_bucket The pointer to a string specifies the bucket where the
+*                        source file resides.
+* @param [in] src_key The pointer to a string specifies the source file itself.
+* @param [in] dest_bucket The pointer to a string specifies the bucket where
+*                         the destination file saves to.
+* @param [in] dest_key The pointer to a string specifies the destination file
+*                      itself.
+* @param [in] ext The pointer to an extra option structure. The function uses
+*                 options set in it to tune actual behaviors.
+*
+* @retval non-NULL The pointer to the result information object about the copy
+*                  operation, or an error message object(see REMARK section).
+* @retval NULL Failed in copying the source file.
+* 
+* @remark The qn_stor_move() funciton move the specified file from the source
+*         bucket to the destination bucket. If there is a file with the same 
+*         key exists in the destination bucket, it will be overwritten.
+*         This behavior is used to rename an existing file.
+*
+*         No data will be returned if the API succeeds, instead the function
+*         will return a JSON object to describe the situation, which contains
+*         two error-related fields:
+*             1) an `fn-code` field holds the HTTP code and,
+*             2) an `fn-error` field holds a string as the trivial error
+*                message.
+*         So it looks like
+*
+*         ```
+*             {
+*                 "fn-code": 612,
+*                 "fn-error": "no such file or directory"
+*             }
+*         ```
+*
+*         All error codes and messages list as follow.
+*
+*         +-------+-------------------------------------------------------+
+*         | Code  | Message                                               |
+*         +-------+-------------------------------------------------------+
+*         | 200   | OK                                                    |
+*         +-------+-------------------------------------------------------+
+*         | 400   | Invalid HTTP request                                  |
+*         +-------+-------------------------------------------------------+
+*         | 401   | Bad access token (failed in authorization check)      |
+*         +-------+-------------------------------------------------------+
+*         | 599   | Server failed due to unknown reason (Contact us!)     |
+*         +-------+-------------------------------------------------------+
+*         | 612   | Source file doesn't exist                             |
+*         +-------+-------------------------------------------------------+
+*         | 631   | Source or destination bucket doesn't exist            |
+*         +-------+-------------------------------------------------------+
+*
+*         NOTE: The caller MUST NOT destroy the result object because the storage
+*         object will do that in next invocation.
+*******************************************************************************/
 QN_API qn_json_object_ptr qn_stor_move(qn_storage_ptr restrict stor, const qn_stor_auth_ptr restrict auth, const char * restrict src_bucket, const char * restrict src_key, const char * restrict dest_bucket, const char * restrict dest_key, qn_stor_move_extra_ptr restrict ext)
 {
     qn_bool ret;
@@ -494,7 +558,7 @@ QN_API qn_json_object_ptr qn_stor_move(qn_storage_ptr restrict stor, const qn_st
     qn_string url;
     qn_rgn_entry_ptr rgn_entry;
     
-    // ---- Process all extra arguments.
+    // ---- Process all extra options.
     if (ext) {
         if (! (rgn_entry = ext->rgn.entry)) qn_rgn_tbl_choose_first_entry(ext->rgn.rtbl, QN_RGN_SVC_RS, NULL, &rgn_entry);
     } else {
@@ -521,9 +585,20 @@ QN_API qn_json_object_ptr qn_stor_move(qn_storage_ptr restrict stor, const qn_st
         return NULL;
     } // if
 
-    if (! (stor->obj_body = qn_json_create_object())) return NULL;
-    if (! (qn_json_set_integer(stor->obj_body, "fn-code", 0))) return NULL;
-    if (! (qn_json_set_string(stor->obj_body, "fn-error", "OK"))) return NULL;
+    if (! (stor->obj_body = qn_json_create_object())) {
+        qn_str_destroy(url);
+        return NULL;
+    } // if
+
+    if (! (qn_json_set_integer(stor->obj_body, "fn-code", 0))) {
+        qn_str_destroy(url);
+        return NULL;
+    } // if
+
+    if (! (qn_json_set_string(stor->obj_body, "fn-error", "OK"))) {
+        qn_str_destroy(url);
+        return NULL;
+    } // if
 
     qn_http_json_wrt_prepare(stor->resp_json_wrt, &stor->obj_body, NULL);
     qn_http_resp_set_data_writer(stor->resp, stor->resp_json_wrt, &qn_http_json_wrt_callback);
@@ -558,7 +633,7 @@ QN_API qn_json_object_ptr qn_stor_delete(qn_storage_ptr restrict stor, const qn_
     qn_string url;
     qn_rgn_entry_ptr rgn_entry;
     
-    // ---- Process all extra arguments.
+    // ---- Process all extra options.
     if (ext) {
         if (! (rgn_entry = ext->rgn.entry)) qn_rgn_tbl_choose_first_entry(ext->rgn.rtbl, QN_RGN_SVC_RS, NULL, &rgn_entry);
     } else {
@@ -610,7 +685,7 @@ QN_API qn_json_object_ptr qn_stor_change_mime(qn_storage_ptr restrict stor, cons
     qn_string url;
     qn_rgn_entry_ptr rgn_entry;
     
-    // ---- Process all extra arguments.
+    // ---- Process all extra options.
     if (ext) {
         if (! (rgn_entry = ext->rgn.entry)) qn_rgn_tbl_choose_first_entry(ext->rgn.rtbl, QN_RGN_SVC_RS, NULL, &rgn_entry);
     } else {
@@ -670,7 +745,7 @@ QN_API qn_json_object_ptr qn_stor_fetch(qn_storage_ptr restrict stor, const qn_s
     qn_string url;
     qn_rgn_entry_ptr rgn_entry;
     
-    // ---- Process all extra arguments.
+    // ---- Process all extra options.
     if (ext) {
         if (! (rgn_entry = ext->rgn.entry)) qn_rgn_tbl_choose_first_entry(ext->rgn.rtbl, QN_RGN_SVC_IO, NULL, &rgn_entry);
     } else {
@@ -728,7 +803,7 @@ QN_API qn_json_object_ptr qn_stor_prefetch(qn_storage_ptr restrict stor, const q
     qn_string url;
     qn_rgn_entry_ptr rgn_entry;
     
-    // ---- Process all extra arguments.
+    // ---- Process all extra options.
     if (ext) {
         if (! (rgn_entry = ext->rgn.entry)) qn_rgn_tbl_choose_first_entry(ext->rgn.rtbl, QN_RGN_SVC_IO, NULL, &rgn_entry);
     } else {
@@ -787,7 +862,7 @@ QN_API qn_json_object_ptr qn_stor_list(qn_storage_ptr restrict stor, const qn_st
     int i;
     int limit = 1000;
     
-    // ---- Process all extra arguments.
+    // ---- Process all extra options.
     if (ext) {
         if (! (rgn_entry = ext->rgn.entry)) qn_rgn_tbl_choose_first_entry(ext->rgn.rtbl, QN_RGN_SVC_RSF, NULL, &rgn_entry);
     } else {
@@ -1032,7 +1107,7 @@ QN_API qn_json_object_ptr qn_stor_execute_batch_opertions(qn_storage_ptr restric
     qn_json_object_ptr fake_obj_body;
     qn_rgn_entry_ptr rgn_entry;
     
-    // ---- Process all extra arguments.
+    // ---- Process all extra options.
     if (ext) {
         if (! (rgn_entry = ext->rgn.entry)) qn_rgn_tbl_choose_first_entry(ext->rgn.rtbl, QN_RGN_SVC_RS, NULL, &rgn_entry);
     } else {
@@ -1514,7 +1589,7 @@ QN_API qn_json_object_ptr qn_stor_rp_put_chunk(qn_storage_ptr restrict stor, qn_
 
     if (chk_offset == blk_size) return qn_json_immutable_empty_object();
 
-    // ---- Process all extra arguments.
+    // ---- Process all extra options.
     if (ext) {
         if (! (rgn_entry = ext->rgn.entry)) qn_rgn_tbl_choose_first_entry(ext->rgn.rtbl, QN_RGN_SVC_UP, NULL, &rgn_entry);
     } else {
@@ -1553,7 +1628,7 @@ QN_API qn_json_object_ptr qn_stor_rp_put_block(qn_storage_ptr restrict stor, qn_
 
     if (chk_offset == blk_size) return qn_json_immutable_empty_object();
 
-    // ---- Process all extra arguments.
+    // ---- Process all extra options.
     if (ext) {
         old_entry = ext->rgn.entry;
         if (!ext->rgn.entry) qn_rgn_tbl_choose_first_entry(ext->rgn.rtbl, QN_RGN_SVC_UP, NULL, &ext->rgn.entry);
