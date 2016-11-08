@@ -111,6 +111,8 @@ QN_API extern qn_bool qn_json_set_boolean(qn_json_object_ptr restrict obj, const
 QN_API extern qn_bool qn_json_set_null(qn_json_object_ptr restrict obj, const char * restrict key);
 QN_API extern void qn_json_unset(qn_json_object_ptr restrict obj, const char * restrict key);
 
+QN_API extern qn_bool qn_json_rename(qn_json_object_ptr restrict obj, const char * restrict old_key, const char * new_key);
+
 // ---- Declaration of JSON Array ----
 
 QN_API extern qn_json_array_ptr qn_json_immutable_empty_array(void);

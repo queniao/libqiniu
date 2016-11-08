@@ -154,6 +154,13 @@ static inline void qn_stor_reset(qn_storage_ptr restrict stor)
     } // if
 }
 
+static inline qn_json_object_ptr qn_stor_format_result(qn_json_object_ptr restrict ret)
+{
+    if (!qn_json_rename(ret, "error", "fn-error")) return (qn_err_is_no_such_entry()) ? ret : NULL;
+    qn_json_rename(ret, "code", "fn-code");
+    return ret;
+}
+
 static const qn_string qn_stor_make_stat_op(const char * restrict bucket, const char * restrict key)
 {
     qn_string op;
@@ -167,6 +174,89 @@ static const qn_string qn_stor_make_stat_op(const char * restrict bucket, const 
     return op;
 }
 
+/***************************************************************************//**
+* @ingroup Storage-Management
+*
+* Retrieve the meta information of a specified file.
+*
+* @param [in] stor The pointer to the storage object.
+* @param [in] auth The pointer to the authorization information. The function
+*                  uses its content to archieve or generate appropriate access
+*                  token.
+* @param [in] bucket The pointer to a string names the bucket where the file
+*                    resides.
+* @param [in] key The pointer to a string names the file itself.
+* @param [in] ext The pointer to an extra option struct. The function uses
+*                 options set in it to tune actual behaviors.
+*
+* @retval non-NULL The pointer to the meta information object about the given
+*                  file, or an API error message object(see REMARK section).
+* @retval NULL Failed in stating the given file.
+* 
+* @remark The qn_stor_stat() funciton can be used for two purposes: 1) detect
+*         whether a given file exists or 2) retrieve the meta information of
+*         it.
+*
+*         In the case that the API succeeds and returns an meta information
+*         of the file, qn_stor_stat() returns a JSON object that contains six
+*         fields:
+*             1) an `fn-code` field holding the API or HTTP code,
+*             2) an `fn-error` field hodling a string as the trivial error
+*                message,
+*             3) a `fsize` field holding the total bytes,
+*             4) a `hash` field holding the Qiniu-ETAG digest to the file,
+*             5) a `mimeType` field holding the real file type and
+*             6) a `putTime` field holding the upload timestamp (in a
+*                hundred-nano unit).
+*         So this object looks like
+*
+*         ```
+*             {
+*                 "fn-code": 200,
+*                 "fn-message": "OK",
+*                 "fsize": 165092,
+*                 "hash": "FjJuuG41Tc9HOppahgsZ-zRsIYKD",
+*                 "mimeType": "image/jpeg",
+*                 "putTime": 14189752051828104
+*             }
+*         ```
+*
+*         In the other case that any error occured in the communication, or the
+*         API failed due to any reason, the function returns a JSON object containing
+*         two error-related fields:
+*             1) an `fn-code` field holding the API or HTTP code and,
+*             2) an `fn-error` field hodling a string as the trivial error
+*                message.
+*         So this object looks like
+*
+*         ```
+*             {
+*                 "fn-code": 612,
+*                 "fn-error": "Directory or file doesn't exist"
+*             }
+*         ```
+*
+*         All error codes and messages list as follow.
+*
+*         +-------+-------------------------------------------------------+
+*         | Code  | Message                                               |
+*         +-------+-------------------------------------------------------+
+*         | 200   | OK                                                    |
+*         +-------+-------------------------------------------------------+
+*         | 400   | Invalid HTTP request                                  |
+*         +-------+-------------------------------------------------------+
+*         | 401   | Bad access token (failed in authorization check)      |
+*         +-------+-------------------------------------------------------+
+*         | 403   | Access to private file                                |
+*         +-------+-------------------------------------------------------+
+*         | 599   | Server failed due to unknown reason (Contact us!)     |
+*         +-------+-------------------------------------------------------+
+*         | 612   | File doesn't exist                                    |
+*         +-------+-------------------------------------------------------+
+*
+*         NOTE: The caller MUST NOT destroy the empty object because the storage
+*         object will do that in next invocation.
+*******************************************************************************/
 QN_API qn_json_object_ptr qn_stor_stat(qn_storage_ptr restrict stor, const qn_stor_auth_ptr restrict auth, const char * restrict bucket, const char * restrict key, qn_stor_stat_extra_ptr restrict ext)
 {
     qn_bool ret;
@@ -198,10 +288,9 @@ QN_API qn_json_object_ptr qn_stor_stat(qn_storage_ptr restrict stor, const qn_st
         return NULL;
     } // if
 
-    if (stor->obj_body) {
-        qn_json_destroy_object(stor->obj_body);
-        stor->obj_body = NULL;
-    } // if
+    if (! (stor->obj_body = qn_json_create_object())) return NULL;
+    if (! (qn_json_set_integer(stor->obj_body, "fn-code", 200))) return NULL;
+    if (! (qn_json_set_string(stor->obj_body, "fn-message", "OK"))) return NULL;
 
     qn_http_json_wrt_prepare(stor->resp_json_wrt, &stor->obj_body, &stor->arr_body);
     qn_http_resp_set_data_writer(stor->resp, stor->resp_json_wrt, &qn_http_json_wrt_callback);
@@ -209,7 +298,11 @@ QN_API qn_json_object_ptr qn_stor_stat(qn_storage_ptr restrict stor, const qn_st
     ret = qn_http_conn_get(stor->conn, url, stor->req, stor->resp);
     qn_str_destroy(url);
     if (!ret) return NULL;
-    return (stor->obj_body) ? stor->obj_body : qn_json_immutable_empty_object();
+    if (!stor->obj_body) {
+        qn_err_stor_set_api_return_no_value();
+        return NULL;
+    } // if
+    return qn_stor_format_result(stor->obj_body);
 }
 
 static const qn_string qn_stor_make_copy_op(const char * restrict src_bucket, const char * restrict src_key, const char * restrict dest_bucket, const char * restrict dest_key)

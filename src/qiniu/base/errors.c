@@ -18,6 +18,7 @@ enum
     QN_ERR_BAD_UTF8_SEQUENCE = 1006,
     QN_ERR_OUT_OF_BUFFER = 1007,
     QN_ERR_OUT_OF_CAPACITY = 1008,
+    QN_ERR_NO_SUCH_ENTRY = 1009,
 
     QN_ERR_JSON_BAD_TEXT_INPUT  = 2001,
     QN_ERR_JSON_TOO_MANY_PARSING_LEVELS = 2002,
@@ -71,6 +72,7 @@ static qn_error qn_errors[] = {
     {QN_ERR_BAD_UTF8_SEQUENCE, "The string contains a bad UTF-8 sequence"},
     {QN_ERR_OUT_OF_BUFFER, "Out of buffer"},
     {QN_ERR_OUT_OF_CAPACITY, "Out of capacity"},
+    {QN_ERR_NO_SUCH_ENTRY, "No such entry to the specified key or name"},
 
     {QN_ERR_JSON_BAD_TEXT_INPUT, "Bad text input of a JSON string is read"},
     {QN_ERR_JSON_TOO_MANY_PARSING_LEVELS, "Parsing too many levels in a piece of JSON text"},
@@ -164,6 +166,11 @@ QN_API void qn_err_set_out_of_buffer(void)
 QN_API void qn_err_set_out_of_capacity(void)
 {
     qn_err_code = QN_ERR_OUT_OF_CAPACITY;
+}
+
+QN_API void qn_err_set_no_such_entry(void)
+{
+    qn_err_code = QN_ERR_NO_SUCH_ENTRY;
 }
 
 QN_API void qn_err_json_set_bad_text_input(void)
@@ -341,6 +348,11 @@ QN_API qn_bool qn_err_is_out_of_buffer(void)
 QN_API qn_bool qn_err_is_out_of_capacity(void)
 {
     return (qn_err_code == QN_ERR_OUT_OF_CAPACITY);
+}
+
+QN_API qn_bool qn_err_is_no_such_entry(void)
+{
+    return (qn_err_code == QN_ERR_NO_SUCH_ENTRY);
 }
 
 QN_API qn_bool qn_err_json_is_bad_text_input(void)

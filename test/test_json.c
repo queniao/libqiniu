@@ -78,6 +78,277 @@ void test_manipulate_object(void)
     qn_json_destroy_object(obj_root);
 }
 
+void test_obj_rename_alone_field_1_new_key_greater_than_old_key(void)
+{
+    qn_bool ret;
+    qn_json_object_ptr obj_root;
+
+    obj_root = qn_json_create_object();
+    if (!obj_root) CU_FAIL_FATAL("Cannot create a new object");
+
+    ret = qn_json_set_string(obj_root, "A", "A line for testing.");
+    if (!ret) CU_FAIL_FATAL("Cannot set a new string field");
+
+    ret = qn_json_rename(obj_root, "A", "B");
+    CU_ASSERT_TRUE(ret);
+    CU_ASSERT_PTR_NULL(qn_json_get_string(obj_root, "A", NULL));
+    CU_ASSERT_PTR_NOT_NULL(qn_json_get_string(obj_root, "B", NULL));
+
+    qn_json_destroy_object(obj_root);
+}
+
+void test_obj_rename_alone_field_2_new_key_less_than_old_key(void)
+{
+    qn_bool ret;
+    qn_json_object_ptr obj_root;
+
+    obj_root = qn_json_create_object();
+    if (!obj_root) CU_FAIL_FATAL("Cannot create a new object");
+
+    ret = qn_json_set_string(obj_root, "Z", "A line for testing.");
+    if (!ret) CU_FAIL_FATAL("Cannot set a new string field");
+
+    ret = qn_json_rename(obj_root, "Z", "Y");
+    CU_ASSERT_TRUE(ret);
+    CU_ASSERT_PTR_NULL(qn_json_get_string(obj_root, "Z", NULL));
+    CU_ASSERT_PTR_NOT_NULL(qn_json_get_string(obj_root, "Y", NULL));
+
+    qn_json_destroy_object(obj_root);
+}
+
+void test_obj_rename_alone_field_3_new_key_equals_to_old_key(void)
+{
+    qn_bool ret;
+    qn_json_object_ptr obj_root;
+
+    obj_root = qn_json_create_object();
+    if (!obj_root) CU_FAIL_FATAL("Cannot create a new object");
+
+    ret = qn_json_set_string(obj_root, "X", "A line for testing.");
+    if (!ret) CU_FAIL_FATAL("Cannot set a new string field");
+
+    ret = qn_json_rename(obj_root, "X", "X");
+    CU_ASSERT_TRUE(ret);
+    CU_ASSERT_PTR_NOT_NULL(qn_json_get_string(obj_root, "X", NULL));
+
+    qn_json_destroy_object(obj_root);
+}
+
+void test_obj_rename_accompanied_field_1_new_key_greater_than_old_key_1(void)
+{
+    qn_bool ret;
+    qn_json_object_ptr obj_root;
+
+    obj_root = qn_json_create_object();
+    if (!obj_root) CU_FAIL_FATAL("Cannot create a new object");
+
+    ret = qn_json_set_string(obj_root, "A", "A line for testing.");
+    if (!ret) CU_FAIL_FATAL("Cannot set a new string field");
+
+    ret = qn_json_set_string(obj_root, "B", "Both are ready.");
+    if (!ret) CU_FAIL_FATAL("Cannot set a new string field");
+
+    ret = qn_json_set_string(obj_root, "C", "Call it ready.");
+    if (!ret) CU_FAIL_FATAL("Cannot set a new string field");
+
+    ret = qn_json_rename(obj_root, "C", "D");
+    CU_ASSERT_TRUE(ret);
+    CU_ASSERT_PTR_NULL(qn_json_get_string(obj_root, "C", NULL));
+    CU_ASSERT_PTR_NOT_NULL(qn_json_get_string(obj_root, "D", NULL));
+    CU_ASSERT_PTR_NOT_NULL(qn_json_get_string(obj_root, "B", NULL));
+    CU_ASSERT_PTR_NOT_NULL(qn_json_get_string(obj_root, "A", NULL));
+
+    qn_json_destroy_object(obj_root);
+}
+
+void test_obj_rename_accompanied_field_1_new_key_greater_than_old_key_2(void)
+{
+    qn_bool ret;
+    qn_json_object_ptr obj_root;
+
+    obj_root = qn_json_create_object();
+    if (!obj_root) CU_FAIL_FATAL("Cannot create a new object");
+
+    ret = qn_json_set_string(obj_root, "A", "A line for testing.");
+    if (!ret) CU_FAIL_FATAL("Cannot set a new string field");
+
+    ret = qn_json_set_string(obj_root, "B", "Both are ready.");
+    if (!ret) CU_FAIL_FATAL("Cannot set a new string field");
+
+    ret = qn_json_set_string(obj_root, "C", "Call it ready.");
+    if (!ret) CU_FAIL_FATAL("Cannot set a new string field");
+
+    ret = qn_json_rename(obj_root, "B", "D");
+    CU_ASSERT_TRUE(ret);
+    CU_ASSERT_PTR_NULL(qn_json_get_string(obj_root, "B", NULL));
+    CU_ASSERT_PTR_NOT_NULL(qn_json_get_string(obj_root, "D", NULL));
+    CU_ASSERT_PTR_NOT_NULL(qn_json_get_string(obj_root, "C", NULL));
+    CU_ASSERT_PTR_NOT_NULL(qn_json_get_string(obj_root, "A", NULL));
+
+    qn_json_destroy_object(obj_root);
+}
+
+void test_obj_rename_accompanied_field_1_new_key_greater_than_old_key_3(void)
+{
+    qn_bool ret;
+    qn_json_object_ptr obj_root;
+
+    obj_root = qn_json_create_object();
+    if (!obj_root) CU_FAIL_FATAL("Cannot create a new object");
+
+    ret = qn_json_set_string(obj_root, "A", "A line for testing.");
+    if (!ret) CU_FAIL_FATAL("Cannot set a new string field");
+
+    ret = qn_json_set_string(obj_root, "B", "Both are ready.");
+    if (!ret) CU_FAIL_FATAL("Cannot set a new string field");
+
+    ret = qn_json_set_string(obj_root, "C", "Call it ready.");
+    if (!ret) CU_FAIL_FATAL("Cannot set a new string field");
+
+    ret = qn_json_rename(obj_root, "A", "D");
+    CU_ASSERT_TRUE(ret);
+    CU_ASSERT_PTR_NULL(qn_json_get_string(obj_root, "A", NULL));
+    CU_ASSERT_PTR_NOT_NULL(qn_json_get_string(obj_root, "D", NULL));
+    CU_ASSERT_PTR_NOT_NULL(qn_json_get_string(obj_root, "C", NULL));
+    CU_ASSERT_PTR_NOT_NULL(qn_json_get_string(obj_root, "B", NULL));
+
+    qn_json_destroy_object(obj_root);
+}
+
+void test_obj_rename_accompanied_field_2_new_key_less_than_old_key_1(void)
+{
+    qn_bool ret;
+    qn_json_object_ptr obj_root;
+
+    obj_root = qn_json_create_object();
+    if (!obj_root) CU_FAIL_FATAL("Cannot create a new object");
+
+    ret = qn_json_set_string(obj_root, "X", "A line for testing.");
+    if (!ret) CU_FAIL_FATAL("Cannot set a new string field");
+
+    ret = qn_json_set_string(obj_root, "Y", "Both are ready.");
+    if (!ret) CU_FAIL_FATAL("Cannot set a new string field");
+
+    ret = qn_json_set_string(obj_root, "Z", "Call it ready.");
+    if (!ret) CU_FAIL_FATAL("Cannot set a new string field");
+
+    ret = qn_json_rename(obj_root, "X", "W");
+    CU_ASSERT_TRUE(ret);
+    CU_ASSERT_PTR_NULL(qn_json_get_string(obj_root, "X", NULL));
+    CU_ASSERT_PTR_NOT_NULL(qn_json_get_string(obj_root, "W", NULL));
+    CU_ASSERT_PTR_NOT_NULL(qn_json_get_string(obj_root, "Y", NULL));
+    CU_ASSERT_PTR_NOT_NULL(qn_json_get_string(obj_root, "Z", NULL));
+
+    qn_json_destroy_object(obj_root);
+}
+
+void test_obj_rename_accompanied_field_2_new_key_less_than_old_key_2(void)
+{
+    qn_bool ret;
+    qn_json_object_ptr obj_root;
+
+    obj_root = qn_json_create_object();
+    if (!obj_root) CU_FAIL_FATAL("Cannot create a new object");
+
+    ret = qn_json_set_string(obj_root, "X", "A line for testing.");
+    if (!ret) CU_FAIL_FATAL("Cannot set a new string field");
+
+    ret = qn_json_set_string(obj_root, "Y", "Both are ready.");
+    if (!ret) CU_FAIL_FATAL("Cannot set a new string field");
+
+    ret = qn_json_set_string(obj_root, "Z", "Call it ready.");
+    if (!ret) CU_FAIL_FATAL("Cannot set a new string field");
+
+    ret = qn_json_rename(obj_root, "Y", "W");
+    CU_ASSERT_TRUE(ret);
+    CU_ASSERT_PTR_NULL(qn_json_get_string(obj_root, "Y", NULL));
+    CU_ASSERT_PTR_NOT_NULL(qn_json_get_string(obj_root, "W", NULL));
+    CU_ASSERT_PTR_NOT_NULL(qn_json_get_string(obj_root, "X", NULL));
+    CU_ASSERT_PTR_NOT_NULL(qn_json_get_string(obj_root, "Z", NULL));
+
+    qn_json_destroy_object(obj_root);
+}
+
+void test_obj_rename_accompanied_field_2_new_key_less_than_old_key_3(void)
+{
+    qn_bool ret;
+    qn_json_object_ptr obj_root;
+
+    obj_root = qn_json_create_object();
+    if (!obj_root) CU_FAIL_FATAL("Cannot create a new object");
+
+    ret = qn_json_set_string(obj_root, "X", "A line for testing.");
+    if (!ret) CU_FAIL_FATAL("Cannot set a new string field");
+
+    ret = qn_json_set_string(obj_root, "Y", "Both are ready.");
+    if (!ret) CU_FAIL_FATAL("Cannot set a new string field");
+
+    ret = qn_json_set_string(obj_root, "Z", "Call it ready.");
+    if (!ret) CU_FAIL_FATAL("Cannot set a new string field");
+
+    ret = qn_json_rename(obj_root, "Z", "W");
+    CU_ASSERT_TRUE(ret);
+    CU_ASSERT_PTR_NULL(qn_json_get_string(obj_root, "Z", NULL));
+    CU_ASSERT_PTR_NOT_NULL(qn_json_get_string(obj_root, "W", NULL));
+    CU_ASSERT_PTR_NOT_NULL(qn_json_get_string(obj_root, "X", NULL));
+    CU_ASSERT_PTR_NOT_NULL(qn_json_get_string(obj_root, "Y", NULL));
+
+    qn_json_destroy_object(obj_root);
+}
+
+void test_obj_rename_accompanied_field_3_new_key_equals_to_old_key(void)
+{
+    qn_bool ret;
+    qn_json_object_ptr obj_root;
+
+    obj_root = qn_json_create_object();
+    if (!obj_root) CU_FAIL_FATAL("Cannot create a new object");
+
+    ret = qn_json_set_string(obj_root, "X", "A line for testing.");
+    if (!ret) CU_FAIL_FATAL("Cannot set a new string field");
+
+    ret = qn_json_set_string(obj_root, "Y", "Both are ready.");
+    if (!ret) CU_FAIL_FATAL("Cannot set a new string field");
+
+    ret = qn_json_set_string(obj_root, "Z", "Call it ready.");
+    if (!ret) CU_FAIL_FATAL("Cannot set a new string field");
+
+    ret = qn_json_rename(obj_root, "Y", "Y");
+    CU_ASSERT_TRUE(ret);
+    CU_ASSERT_PTR_NOT_NULL(qn_json_get_string(obj_root, "X", NULL));
+    CU_ASSERT_PTR_NOT_NULL(qn_json_get_string(obj_root, "Y", NULL));
+    CU_ASSERT_PTR_NOT_NULL(qn_json_get_string(obj_root, "Z", NULL));
+
+    qn_json_destroy_object(obj_root);
+}
+
+void test_obj_rename_accompanied_field_4_new_key_replace_old_key_in_place(void)
+{
+    qn_bool ret;
+    qn_json_object_ptr obj_root;
+
+    obj_root = qn_json_create_object();
+    if (!obj_root) CU_FAIL_FATAL("Cannot create a new object");
+
+    ret = qn_json_set_string(obj_root, "X", "A line for testing.");
+    if (!ret) CU_FAIL_FATAL("Cannot set a new string field");
+
+    ret = qn_json_set_string(obj_root, "Y", "Both are ready.");
+    if (!ret) CU_FAIL_FATAL("Cannot set a new string field");
+
+    ret = qn_json_set_string(obj_root, "Z", "Call it ready.");
+    if (!ret) CU_FAIL_FATAL("Cannot set a new string field");
+
+    ret = qn_json_rename(obj_root, "Y", "YYYY");
+    CU_ASSERT_TRUE(ret);
+    CU_ASSERT_PTR_NULL(qn_json_get_string(obj_root, "Y", NULL));
+    CU_ASSERT_PTR_NOT_NULL(qn_json_get_string(obj_root, "X", NULL));
+    CU_ASSERT_PTR_NOT_NULL(qn_json_get_string(obj_root, "YYYY", NULL));
+    CU_ASSERT_PTR_NOT_NULL(qn_json_get_string(obj_root, "Z", NULL));
+
+    qn_json_destroy_object(obj_root);
+}
+
 void test_manipulate_array(void)
 {
     qn_bool ret = qn_false;
@@ -145,6 +416,17 @@ void test_manipulate_array(void)
 
 CU_TestInfo test_normal_cases_of_json_manipulating[] = {
     {"test_manipulate_object()", test_manipulate_object},
+    {"test_obj_rename_alone_field_1_new_key_greater_than_old_key()", test_obj_rename_alone_field_1_new_key_greater_than_old_key},
+    {"test_obj_rename_alone_field_2_new_key_less_than_old_key()", test_obj_rename_alone_field_2_new_key_less_than_old_key},
+    {"test_obj_rename_alone_field_3_new_key_equals_to_old_key()", test_obj_rename_alone_field_3_new_key_equals_to_old_key},
+    {"test_obj_rename_accompanied_field_1_new_key_greater_than_old_key_1()", test_obj_rename_accompanied_field_1_new_key_greater_than_old_key_1},
+    {"test_obj_rename_accompanied_field_1_new_key_greater_than_old_key_2()", test_obj_rename_accompanied_field_1_new_key_greater_than_old_key_2},
+    {"test_obj_rename_accompanied_field_1_new_key_greater_than_old_key_3()", test_obj_rename_accompanied_field_1_new_key_greater_than_old_key_3},
+    {"test_obj_rename_accompanied_field_2_new_key_less_than_old_key_1()", test_obj_rename_accompanied_field_2_new_key_less_than_old_key_1},
+    {"test_obj_rename_accompanied_field_2_new_key_less_than_old_key_2()", test_obj_rename_accompanied_field_2_new_key_less_than_old_key_2},
+    {"test_obj_rename_accompanied_field_2_new_key_less_than_old_key_3()", test_obj_rename_accompanied_field_2_new_key_less_than_old_key_3},
+    {"test_obj_rename_accompanied_field_3_new_key_equals_to_old_key()", test_obj_rename_accompanied_field_3_new_key_equals_to_old_key},
+    {"test_obj_rename_accompanied_field_4_new_key_replace_old_key_in_place()", test_obj_rename_accompanied_field_4_new_key_replace_old_key_in_place},
     {"test_manipulate_array()", test_manipulate_array},
     CU_TEST_INFO_NULL
 };

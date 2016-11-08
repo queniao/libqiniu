@@ -129,6 +129,8 @@ static qn_json_pos qn_json_obj_bsearch(qn_json_obj_item * restrict itm, qn_json_
             end = mid;
         } // if
     } // while
+    // -- Finally, the `begin` variable points to the first key that is equal to or larger than the given key,
+    //    as an insert point.
     return begin;
 }
 
@@ -872,6 +874,84 @@ QN_API void qn_json_unset(qn_json_object_ptr restrict obj, const char * restrict
     qn_str_destroy(obj->itm[pos].key);
     if (pos < obj->cnt - 1) memmove(&obj->itm[pos], &obj->itm[pos+1], sizeof(qn_json_obj_item) * (obj->cnt - pos - 1));
     obj->cnt -= 1;
+}
+
+QN_API qn_bool qn_json_rename(qn_json_object_ptr restrict obj, const char * restrict old_key, const char * new_key)
+{
+    qn_json_pos old_pos;
+    qn_json_pos new_pos;
+    qn_json_hash old_hash;
+    qn_json_hash new_hash;
+    qn_json_obj_item tmp_item;
+    qn_string new_key_str;
+    int existence;
+
+    if (obj->cnt == 0) {
+        qn_err_set_no_such_entry();
+        return qn_false;
+    } // if
+
+    old_hash = qn_json_obj_calculate_hash(old_key);
+    new_hash = qn_json_obj_calculate_hash(new_key);
+
+    if (old_hash == new_hash && strcmp(old_key, new_key) == 0) return qn_true; // The old key is exactly the same to the new key.
+
+    existence = -2;
+    old_pos = qn_json_obj_find(obj, old_hash, old_key, &existence);
+    if (existence != 0) {
+        // ---- There is no element corresponds to the old key.
+        qn_err_set_no_such_entry();
+        return qn_false;
+    } // if
+
+    existence = -2;
+    new_pos = qn_json_obj_find(obj, new_hash, new_key, &existence);
+    if (existence == 0) {
+        // ---- There is an element corresponds to the new key.
+        // -- Destroy the element to be replaced.
+        if (obj->itm[new_pos].class == QN_JSON_OBJECT) {
+            qn_json_destroy_object(obj->itm[new_pos].elem.object);
+        } else if (obj->itm[new_pos].class == QN_JSON_ARRAY) {
+            qn_json_destroy_array(obj->itm[new_pos].elem.array);
+        } else if (obj->itm[new_pos].class == QN_JSON_STRING) {
+            qn_str_destroy(obj->itm[new_pos].elem.string);
+        } // if
+
+        // -- Replace the element.
+        obj->itm[new_pos].class = obj->itm[old_pos].class;
+        obj->itm[new_pos].elem = obj->itm[old_pos].elem;
+
+        // -- Destroy the old key.
+        qn_str_destroy(obj->itm[old_pos].key);
+
+        if (old_pos < obj->cnt - 1) memmove(&obj->itm[old_pos], &obj->itm[old_pos+1], sizeof(qn_json_obj_item) * (obj->cnt - old_pos - 1));
+        obj->cnt -= 1;
+
+        return qn_true;
+    } // if
+
+    // ---- There is no element corresponds to the new key.
+    // -- Replace the old key.
+    new_key_str = qn_cs_duplicate(new_key);
+    if (!new_key_str) return qn_false;
+
+    qn_str_destroy(obj->itm[old_pos].key);
+    obj->itm[old_pos].key = new_key_str;
+    obj->itm[old_pos].hash = new_hash;
+
+    if (old_pos == new_pos) return qn_true; // -- The two keys reside in the same position.
+
+    tmp_item = obj->itm[old_pos];
+    if (old_pos < new_pos) {
+        // -- The old key resides in a position before the new key.
+        new_pos -= 1;
+        if (old_pos < new_pos) memmove(&obj->itm[old_pos], &obj->itm[old_pos+1], sizeof(qn_json_obj_item) * (new_pos - old_pos));
+    } else {
+        // -- The old key resides in a position after the new key.
+        memmove(&obj->itm[new_pos+1], &obj->itm[new_pos], sizeof(qn_json_obj_item) * (old_pos - new_pos));
+    } // if
+    obj->itm[new_pos] = tmp_item;
+    return qn_true;
 }
 
 /***************************************************************************//**
