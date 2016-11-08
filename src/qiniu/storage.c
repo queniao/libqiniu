@@ -176,14 +176,14 @@ static const qn_string qn_stor_make_stat_op(const char * restrict bucket, const 
 * @param [in] auth The pointer to the authorization information. The function
 *                  uses its content to archieve or generate appropriate access
 *                  token.
-* @param [in] bucket The pointer to a string names the bucket where the file
+* @param [in] bucket The pointer to a string specifies the bucket where the file
 *                    resides.
-* @param [in] key The pointer to a string names the file itself.
-* @param [in] ext The pointer to an extra option struct. The function uses
+* @param [in] key The pointer to a string specifies the file itself.
+* @param [in] ext The pointer to an extra option structure. The function uses
 *                 options set in it to tune actual behaviors.
 *
 * @retval non-NULL The pointer to the meta information object about the given
-*                  file, or an API error message object(see REMARK section).
+*                  file, or an error message object(see REMARK section).
 * @retval NULL Failed in stating the given file.
 * 
 * @remark The qn_stor_stat() funciton can be used for two purposes: 1) detect
@@ -193,15 +193,15 @@ static const qn_string qn_stor_make_stat_op(const char * restrict bucket, const 
 *         In the case that the API succeeds and returns an meta information
 *         of the file, qn_stor_stat() returns a JSON object that contains six
 *         fields:
-*             1) an `fn-code` field holding the API or HTTP code,
-*             2) an `fn-error` field hodling a string as the trivial error
+*             1) an `fn-code` field holds the API or HTTP code,
+*             2) an `fn-error` field holds a string as the trivial error
 *                message,
-*             3) a `fsize` field holding the total bytes,
-*             4) a `hash` field holding the Qiniu-ETAG digest to the file,
-*             5) a `mimeType` field holding the real file type and
-*             6) a `putTime` field holding the upload timestamp (in a
+*             3) a `fsize` field holds the total bytes,
+*             4) a `hash` field holds the Qiniu-ETAG digest to the file,
+*             5) a `mimeType` field holds the real file type and
+*             6) a `putTime` field holds the upload timestamp (in a
 *                hundred-nano unit).
-*         So this object looks like
+*         So it looks like
 *
 *         ```
 *             {
@@ -215,12 +215,11 @@ static const qn_string qn_stor_make_stat_op(const char * restrict bucket, const 
 *         ```
 *
 *         In the other case that any error occured in the communication, or the
-*         API failed due to any reason, the function returns a JSON object containing
+*         API failed due to any reason, the function returns a JSON object contains
 *         two error-related fields:
-*             1) an `fn-code` field holding the API or HTTP code and,
-*             2) an `fn-error` field hodling a string as the trivial error
-*                message.
-*         So this object looks like
+*             1) an `fn-code` field holds the API or HTTP code and,
+*             2) an `fn-error` field holds a string as the trivial error message.
+*         So it looks like
 *
 *         ```
 *             {
@@ -244,8 +243,10 @@ static const qn_string qn_stor_make_stat_op(const char * restrict bucket, const 
 *         +-------+-------------------------------------------------------+
 *         | 612   | File doesn't exist                                    |
 *         +-------+-------------------------------------------------------+
+*         | 631   | Bucket doesn't exist                                  |
+*         +-------+-------------------------------------------------------+
 *
-*         NOTE: The caller MUST NOT destroy the empty object because the storage
+*         NOTE: The caller MUST NOT destroy the result object because the storage
 *         object will do that in next invocation.
 *******************************************************************************/
 QN_API qn_json_object_ptr qn_stor_stat(qn_storage_ptr restrict stor, const qn_stor_auth_ptr restrict auth, const char * restrict bucket, const char * restrict key, qn_stor_stat_extra_ptr restrict ext)
@@ -279,9 +280,20 @@ QN_API qn_json_object_ptr qn_stor_stat(qn_storage_ptr restrict stor, const qn_st
         return NULL;
     } // if
 
-    if (! (stor->obj_body = qn_json_create_object())) return NULL;
-    if (! (qn_json_set_integer(stor->obj_body, "fn-code", 0))) return NULL;
-    if (! (qn_json_set_string(stor->obj_body, "fn-error", "OK"))) return NULL;
+    if (! (stor->obj_body = qn_json_create_object())) {
+        qn_str_destroy(url);
+        return NULL;
+    } // if
+
+    if (! (qn_json_set_integer(stor->obj_body, "fn-code", 0))) {
+        qn_str_destroy(url);
+        return NULL;
+    } // if
+
+    if (! (qn_json_set_string(stor->obj_body, "fn-error", "OK"))) {
+        qn_str_destroy(url);
+        return NULL;
+    } // if
 
     qn_http_json_wrt_prepare(stor->resp_json_wrt, &stor->obj_body, NULL);
     qn_http_resp_set_data_writer(stor->resp, stor->resp_json_wrt, &qn_http_json_wrt_callback);
@@ -317,6 +329,70 @@ static const qn_string qn_stor_make_copy_op(const char * restrict src_bucket, co
     return op;
 }
 
+/***************************************************************************//**
+* @ingroup Storage-Management
+*
+* Copy the source file to the destination file.
+*
+* @param [in] stor The pointer to the storage object.
+* @param [in] auth The pointer to the authorization information. The function
+*                  uses its content to archieve or generate appropriate access
+*                  token.
+* @param [in] src_bucket The pointer to a string specifies the bucket where the
+*                        source file resides.
+* @param [in] src_key The pointer to a string specifies the source file itself.
+* @param [in] dest_bucket The pointer to a string specifies the bucket where
+*                         the destination file saves to.
+* @param [in] dest_key The pointer to a string specifies the destination file
+*                      itself.
+* @param [in] ext The pointer to an extra option structure. The function uses
+*                 options set in it to tune actual behaviors.
+*
+* @retval non-NULL The pointer to the result information object about the copy
+*                  operation, or an error message object(see REMARK section).
+* @retval NULL Failed in copying the source file.
+* 
+* @remark The qn_stor_copy() funciton make a total copy of a file, include
+*         the meta and body data.
+*
+*         No data will be returned if the API succeeds, instead the function
+*         will return a JSON object to describe the situation, which contains
+*         two error-related fields:
+*             1) an `fn-code` field holds the HTTP code and,
+*             2) an `fn-error` field holds a string as the trivial error
+*                message.
+*         So it looks like
+*
+*         ```
+*             {
+*                 "fn-code": 612,
+*                 "fn-error": "no such file or directory"
+*             }
+*         ```
+*
+*         All error codes and messages list as follow.
+*
+*         +-------+-------------------------------------------------------+
+*         | Code  | Message                                               |
+*         +-------+-------------------------------------------------------+
+*         | 200   | OK                                                    |
+*         +-------+-------------------------------------------------------+
+*         | 400   | Invalid HTTP request                                  |
+*         +-------+-------------------------------------------------------+
+*         | 401   | Bad access token (failed in authorization check)      |
+*         +-------+-------------------------------------------------------+
+*         | 599   | Server failed due to unknown reason (Contact us!)     |
+*         +-------+-------------------------------------------------------+
+*         | 612   | Source file doesn't exist                             |
+*         +-------+-------------------------------------------------------+
+*         | 614   | Destination file exists                               |
+*         +-------+-------------------------------------------------------+
+*         | 631   | Source bucket doesn't exist                           |
+*         +-------+-------------------------------------------------------+
+*
+*         NOTE: The caller MUST NOT destroy the result object because the storage
+*         object will do that in next invocation.
+*******************************************************************************/
 QN_API qn_json_object_ptr qn_stor_copy(qn_storage_ptr restrict stor, const qn_stor_auth_ptr restrict auth, const char * restrict src_bucket, const char * restrict src_key, const char * restrict dest_bucket, const char * restrict dest_key, qn_stor_copy_extra_ptr restrict ext)
 {
     qn_bool ret;
@@ -362,9 +438,20 @@ QN_API qn_json_object_ptr qn_stor_copy(qn_storage_ptr restrict stor, const qn_st
         return NULL;
     } // if
 
-    if (! (stor->obj_body = qn_json_create_object())) return NULL;
-    if (! (qn_json_set_integer(stor->obj_body, "fn-code", 0))) return NULL;
-    if (! (qn_json_set_string(stor->obj_body, "fn-error", "OK"))) return NULL;
+    if (! (stor->obj_body = qn_json_create_object())) {
+        qn_str_destroy(url);
+        return NULL;
+    } // if
+
+    if (! (qn_json_set_integer(stor->obj_body, "fn-code", 0))) {
+        qn_str_destroy(url);
+        return NULL;
+    } // if
+
+    if (! (qn_json_set_string(stor->obj_body, "fn-error", "OK"))) {
+        qn_str_destroy(url);
+        return NULL;
+    } // if
 
     qn_http_json_wrt_prepare(stor->resp_json_wrt, &stor->obj_body, NULL);
     qn_http_resp_set_data_writer(stor->resp, stor->resp_json_wrt, &qn_http_json_wrt_callback);

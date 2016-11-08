@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include "qiniu/base/json_formatter.h"
+#include "qiniu/base/errors.h"
 #include "qiniu/storage.h"
 
 int main(int argc, char * argv[])
@@ -11,6 +12,8 @@ int main(int argc, char * argv[])
     qn_string dest_bucket;
     qn_string dest_key;
     qn_string force = NULL;
+    qn_string copy_ret_str;
+    qn_json_object_ptr copy_ret;
     qn_storage_ptr stor;
     qn_stor_copy_extra ext;
     qn_http_hdr_iterator_ptr hdr_itr;
@@ -45,7 +48,9 @@ int main(int argc, char * argv[])
         ext.force = qn_true;
     } // if
 
-    if (!qn_stor_copy(stor, &auth, src_bucket, src_key, dest_bucket, dest_key, &ext)) {
+    copy_ret = qn_stor_copy(stor, &auth, src_bucket, src_key, dest_bucket, dest_key, &ext);
+    qn_mac_destroy(mac);
+    if (!copy_ret) {
         printf("Cannot copy the `%s:%s` file to `%s:%s`.\n", src_bucket, src_key, dest_bucket, dest_bucket);
         return 2;
     } // if
@@ -56,7 +61,16 @@ int main(int argc, char * argv[])
     } // while
     qn_http_hdr_itr_destroy(hdr_itr);
 
+    copy_ret_str = qn_json_object_to_string(copy_ret);
     qn_stor_destroy(stor);
-    qn_mac_destroy(mac);
+
+    if (!copy_ret_str) {
+        printf("Cannot format copy result string due to error `%s`\n", qn_err_get_message());
+        return 1;
+    } // if
+
+    printf("%s\n", copy_ret_str);
+    qn_str_destroy(copy_ret_str);
+
     return 0;
 }
