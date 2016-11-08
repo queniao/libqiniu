@@ -154,13 +154,6 @@ static inline void qn_stor_reset(qn_storage_ptr restrict stor)
     } // if
 }
 
-static inline qn_json_object_ptr qn_stor_format_result(qn_json_object_ptr restrict ret)
-{
-    if (!qn_json_rename(ret, "error", "fn-error")) return (qn_err_is_no_such_entry()) ? ret : NULL;
-    qn_json_rename(ret, "code", "fn-code");
-    return ret;
-}
-
 static const qn_string qn_stor_make_stat_op(const char * restrict bucket, const char * restrict key)
 {
     qn_string op;
@@ -213,7 +206,7 @@ static const qn_string qn_stor_make_stat_op(const char * restrict bucket, const 
 *         ```
 *             {
 *                 "fn-code": 200,
-*                 "fn-message": "OK",
+*                 "fn-error": "OK",
 *                 "fsize": 165092,
 *                 "hash": "FjJuuG41Tc9HOppahgsZ-zRsIYKD",
 *                 "mimeType": "image/jpeg",
@@ -232,7 +225,7 @@ static const qn_string qn_stor_make_stat_op(const char * restrict bucket, const 
 *         ```
 *             {
 *                 "fn-code": 612,
-*                 "fn-error": "Directory or file doesn't exist"
+*                 "fn-error": "no such file or directory"
 *             }
 *         ```
 *
@@ -246,8 +239,6 @@ static const qn_string qn_stor_make_stat_op(const char * restrict bucket, const 
 *         | 400   | Invalid HTTP request                                  |
 *         +-------+-------------------------------------------------------+
 *         | 401   | Bad access token (failed in authorization check)      |
-*         +-------+-------------------------------------------------------+
-*         | 403   | Access to private file                                |
 *         +-------+-------------------------------------------------------+
 *         | 599   | Server failed due to unknown reason (Contact us!)     |
 *         +-------+-------------------------------------------------------+
@@ -264,6 +255,7 @@ QN_API qn_json_object_ptr qn_stor_stat(qn_storage_ptr restrict stor, const qn_st
     qn_string url;
     qn_rgn_entry_ptr rgn_entry;
     
+    // ---- Process all extra arguments.
     if (ext) {
         if (! (rgn_entry = ext->rgn.entry)) qn_rgn_tbl_choose_first_entry(ext->rgn.rtbl, QN_RGN_SVC_RS, NULL, &rgn_entry);
     } else {
@@ -271,7 +263,7 @@ QN_API qn_json_object_ptr qn_stor_stat(qn_storage_ptr restrict stor, const qn_st
         qn_rgn_tbl_choose_first_entry(NULL, QN_RGN_SVC_RS, NULL, &rgn_entry);
     } // if
 
-    // ---- Prepare the query URL
+    // ---- Prepare the stat URL.
     op = qn_stor_make_stat_op(bucket, key);
     if (!op) return NULL;
 
@@ -279,9 +271,8 @@ QN_API qn_json_object_ptr qn_stor_stat(qn_storage_ptr restrict stor, const qn_st
     qn_str_destroy(op);
     if (!url) return NULL;
 
-    // ---- Prepare the request and response
-    qn_http_req_reset(stor->req);
-    qn_http_resp_reset(stor->resp);
+    // ---- Prepare the request and response.
+    qn_stor_reset(stor);
 
     if (!qn_stor_prepare_managment(stor, url, rgn_entry->hostname, auth->client_end.acctoken, auth->server_end.mac)) {
         qn_str_destroy(url);
@@ -289,20 +280,20 @@ QN_API qn_json_object_ptr qn_stor_stat(qn_storage_ptr restrict stor, const qn_st
     } // if
 
     if (! (stor->obj_body = qn_json_create_object())) return NULL;
-    if (! (qn_json_set_integer(stor->obj_body, "fn-code", 200))) return NULL;
-    if (! (qn_json_set_string(stor->obj_body, "fn-message", "OK"))) return NULL;
+    if (! (qn_json_set_integer(stor->obj_body, "fn-code", 0))) return NULL;
+    if (! (qn_json_set_string(stor->obj_body, "fn-error", "OK"))) return NULL;
 
-    qn_http_json_wrt_prepare(stor->resp_json_wrt, &stor->obj_body, &stor->arr_body);
+    qn_http_json_wrt_prepare(stor->resp_json_wrt, &stor->obj_body, NULL);
     qn_http_resp_set_data_writer(stor->resp, stor->resp_json_wrt, &qn_http_json_wrt_callback);
 
+    // ---- Do the stat action.
     ret = qn_http_conn_get(stor->conn, url, stor->req, stor->resp);
     qn_str_destroy(url);
+
     if (!ret) return NULL;
-    if (!stor->obj_body) {
-        qn_err_stor_set_api_return_no_value();
-        return NULL;
-    } // if
-    return qn_stor_format_result(stor->obj_body);
+    qn_json_set_integer(stor->obj_body, "fn-code", qn_http_resp_get_code(stor->resp));
+    if (!qn_json_rename(stor->obj_body, "error", "fn-error")) return (qn_err_is_no_such_entry()) ? stor->obj_body : NULL;
+    return stor->obj_body;
 }
 
 static const qn_string qn_stor_make_copy_op(const char * restrict src_bucket, const char * restrict src_key, const char * restrict dest_bucket, const char * restrict dest_key)
@@ -334,6 +325,7 @@ QN_API qn_json_object_ptr qn_stor_copy(qn_storage_ptr restrict stor, const qn_st
     qn_string url_tmp;
     qn_rgn_entry_ptr rgn_entry;
     
+    // ---- Process all extra arguments.
     if (ext) {
         if (! (rgn_entry = ext->rgn.entry)) qn_rgn_tbl_choose_first_entry(ext->rgn.rtbl, QN_RGN_SVC_RS, NULL, &rgn_entry);
     } else {
@@ -341,7 +333,7 @@ QN_API qn_json_object_ptr qn_stor_copy(qn_storage_ptr restrict stor, const qn_st
         qn_rgn_tbl_choose_first_entry(NULL, QN_RGN_SVC_RS, NULL, &rgn_entry);
     } // if
 
-    // ---- Prepare the query URL
+    // ---- Prepare the copy URL.
     op = qn_stor_make_copy_op(src_bucket, src_key, dest_bucket, dest_key);
     if (!op) return NULL;
 
@@ -349,6 +341,7 @@ QN_API qn_json_object_ptr qn_stor_copy(qn_storage_ptr restrict stor, const qn_st
     qn_str_destroy(op);
     if (!url) return NULL;
 
+    // -- Handle the request to overwrite an existing file.
     if (ext) {
         if (ext->force) {
             url_tmp = qn_cs_sprintf("%s/force/true", url);
@@ -358,9 +351,10 @@ QN_API qn_json_object_ptr qn_stor_copy(qn_storage_ptr restrict stor, const qn_st
         } // if
     } // if
 
-    // ---- Prepare the request and response
+    // ---- Prepare the request and response.
     qn_stor_reset(stor);
 
+    // -- Nothing to post.
     qn_http_req_set_body_data(stor->req, "", 0);
 
     if (!qn_stor_prepare_managment(stor, url, rgn_entry->hostname, auth->client_end.acctoken, auth->server_end.mac)) {
@@ -368,17 +362,21 @@ QN_API qn_json_object_ptr qn_stor_copy(qn_storage_ptr restrict stor, const qn_st
         return NULL;
     } // if
 
-    if (! (stor->obj_body = qn_json_create_object())) {
-        qn_str_destroy(url);
-        return NULL;
-    } // if
+    if (! (stor->obj_body = qn_json_create_object())) return NULL;
+    if (! (qn_json_set_integer(stor->obj_body, "fn-code", 0))) return NULL;
+    if (! (qn_json_set_string(stor->obj_body, "fn-error", "OK"))) return NULL;
 
     qn_http_json_wrt_prepare(stor->resp_json_wrt, &stor->obj_body, NULL);
     qn_http_resp_set_data_writer(stor->resp, stor->resp_json_wrt, &qn_http_json_wrt_callback);
 
+    // ---- Do the copy action.
     ret = qn_http_conn_post(stor->conn, url, stor->req, stor->resp);
     qn_str_destroy(url);
-    return (ret) ? stor->obj_body : NULL;
+
+    if (!ret) return NULL;
+    qn_json_set_integer(stor->obj_body, "fn-code", qn_http_resp_get_code(stor->resp));
+    if (!qn_json_rename(stor->obj_body, "error", "fn-error")) return (qn_err_is_no_such_entry()) ? stor->obj_body : NULL;
+    return stor->obj_body;
 }
 
 static const qn_string qn_stor_make_move_op(const char * restrict src_bucket, const char * restrict src_key, const char * restrict dest_bucket, const char * restrict dest_key)
@@ -409,6 +407,7 @@ QN_API qn_json_object_ptr qn_stor_move(qn_storage_ptr restrict stor, const qn_st
     qn_string url;
     qn_rgn_entry_ptr rgn_entry;
     
+    // ---- Process all extra arguments.
     if (ext) {
         if (! (rgn_entry = ext->rgn.entry)) qn_rgn_tbl_choose_first_entry(ext->rgn.rtbl, QN_RGN_SVC_RS, NULL, &rgn_entry);
     } else {
@@ -416,7 +415,7 @@ QN_API qn_json_object_ptr qn_stor_move(qn_storage_ptr restrict stor, const qn_st
         qn_rgn_tbl_choose_first_entry(NULL, QN_RGN_SVC_RS, NULL, &rgn_entry);
     } // if
 
-    // ---- Prepare the query URL
+    // ---- Prepare the move URL.
     op = qn_stor_make_move_op(src_bucket, src_key, dest_bucket, dest_key);
     if (!op) return NULL;
 
@@ -424,9 +423,10 @@ QN_API qn_json_object_ptr qn_stor_move(qn_storage_ptr restrict stor, const qn_st
     qn_str_destroy(op);
     if (!url) return NULL;
 
-    // ---- Prepare the request and response
+    // ---- Prepare the request and response.
     qn_stor_reset(stor);
 
+    // -- Nothing to post.
     qn_http_req_set_body_data(stor->req, "", 0);
 
     if (!qn_stor_prepare_managment(stor, url, rgn_entry->hostname, auth->client_end.acctoken, auth->server_end.mac)) {
@@ -434,17 +434,21 @@ QN_API qn_json_object_ptr qn_stor_move(qn_storage_ptr restrict stor, const qn_st
         return NULL;
     } // if
 
-    if (! (stor->obj_body = qn_json_create_object())) {
-        qn_str_destroy(url);
-        return NULL;
-    } // if
+    if (! (stor->obj_body = qn_json_create_object())) return NULL;
+    if (! (qn_json_set_integer(stor->obj_body, "fn-code", 0))) return NULL;
+    if (! (qn_json_set_string(stor->obj_body, "fn-error", "OK"))) return NULL;
 
     qn_http_json_wrt_prepare(stor->resp_json_wrt, &stor->obj_body, NULL);
     qn_http_resp_set_data_writer(stor->resp, stor->resp_json_wrt, &qn_http_json_wrt_callback);
 
+    // ---- Do the move action.
     ret = qn_http_conn_post(stor->conn, url, stor->req, stor->resp);
     qn_str_destroy(url);
-    return (ret) ? stor->obj_body : NULL;
+
+    if (!ret) return NULL;
+    qn_json_set_integer(stor->obj_body, "fn-code", qn_http_resp_get_code(stor->resp));
+    if (!qn_json_rename(stor->obj_body, "error", "fn-error")) return (qn_err_is_no_such_entry()) ? stor->obj_body : NULL;
+    return stor->obj_body;
 }
 
 static qn_string qn_stor_make_delete_op(const char * restrict bucket, const char * restrict key)
@@ -467,6 +471,7 @@ QN_API qn_json_object_ptr qn_stor_delete(qn_storage_ptr restrict stor, const qn_
     qn_string url;
     qn_rgn_entry_ptr rgn_entry;
     
+    // ---- Process all extra arguments.
     if (ext) {
         if (! (rgn_entry = ext->rgn.entry)) qn_rgn_tbl_choose_first_entry(ext->rgn.rtbl, QN_RGN_SVC_RS, NULL, &rgn_entry);
     } else {
@@ -474,7 +479,7 @@ QN_API qn_json_object_ptr qn_stor_delete(qn_storage_ptr restrict stor, const qn_
         qn_rgn_tbl_choose_first_entry(NULL, QN_RGN_SVC_RS, NULL, &rgn_entry);
     } // if
 
-    // ---- Prepare the query URL
+    // ---- Prepare the delete URL.
     op = qn_stor_make_delete_op(bucket, key);
     if (!op) return NULL;
 
@@ -482,9 +487,10 @@ QN_API qn_json_object_ptr qn_stor_delete(qn_storage_ptr restrict stor, const qn_
     qn_str_destroy(op);
     if (!url) return NULL;
 
-    // ---- Prepare the request and response
+    // ---- Prepare the request and response.
     qn_stor_reset(stor);
 
+    // -- Nothing to post.
     qn_http_req_set_body_data(stor->req, "", 0);
 
     if (!qn_stor_prepare_managment(stor, url, rgn_entry->hostname, auth->client_end.acctoken, auth->server_end.mac)) {
@@ -492,17 +498,21 @@ QN_API qn_json_object_ptr qn_stor_delete(qn_storage_ptr restrict stor, const qn_
         return NULL;
     } // if
 
-    if (! (stor->obj_body = qn_json_create_object())) {
-        qn_str_destroy(url);
-        return NULL;
-    } // if
+    if (! (stor->obj_body = qn_json_create_object())) return NULL;
+    if (! (qn_json_set_integer(stor->obj_body, "fn-code", 0))) return NULL;
+    if (! (qn_json_set_string(stor->obj_body, "fn-error", "OK"))) return NULL;
 
     qn_http_json_wrt_prepare(stor->resp_json_wrt, &stor->obj_body, NULL);
     qn_http_resp_set_data_writer(stor->resp, stor->resp_json_wrt, &qn_http_json_wrt_callback);
 
+    // ---- Do the delete action.
     ret = qn_http_conn_post(stor->conn, url, stor->req, stor->resp);
     qn_str_destroy(url);
-    return (ret) ? stor->obj_body : NULL;
+
+    if (!ret) return NULL;
+    qn_json_set_integer(stor->obj_body, "fn-code", qn_http_resp_get_code(stor->resp));
+    if (!qn_json_rename(stor->obj_body, "error", "fn-error")) return (qn_err_is_no_such_entry()) ? stor->obj_body : NULL;
+    return stor->obj_body;
 }
 
 QN_API qn_json_object_ptr qn_stor_change_mime(qn_storage_ptr restrict stor, const qn_stor_auth_ptr restrict auth, const char * restrict bucket, const char * restrict key, const char * restrict mime, qn_stor_change_mime_extra_ptr restrict ext)
@@ -513,6 +523,7 @@ QN_API qn_json_object_ptr qn_stor_change_mime(qn_storage_ptr restrict stor, cons
     qn_string url;
     qn_rgn_entry_ptr rgn_entry;
     
+    // ---- Process all extra arguments.
     if (ext) {
         if (! (rgn_entry = ext->rgn.entry)) qn_rgn_tbl_choose_first_entry(ext->rgn.rtbl, QN_RGN_SVC_RS, NULL, &rgn_entry);
     } else {
@@ -520,7 +531,7 @@ QN_API qn_json_object_ptr qn_stor_change_mime(qn_storage_ptr restrict stor, cons
         qn_rgn_tbl_choose_first_entry(NULL, QN_RGN_SVC_RS, NULL, &rgn_entry);
     } // if
 
-    // ---- Prepare the query URL
+    // ---- Prepare the change mime URL.
     encoded_uri = qn_misc_encode_uri(bucket, key);
     if (!encoded_uri) return NULL;
 
@@ -545,17 +556,21 @@ QN_API qn_json_object_ptr qn_stor_change_mime(qn_storage_ptr restrict stor, cons
         return NULL;
     } // if
 
-    if (! (stor->obj_body = qn_json_create_object())) {
-        qn_str_destroy(url);
-        return NULL;
-    } // if
+    if (! (stor->obj_body = qn_json_create_object())) return NULL;
+    if (! (qn_json_set_integer(stor->obj_body, "fn-code", 0))) return NULL;
+    if (! (qn_json_set_string(stor->obj_body, "fn-error", "OK"))) return NULL;
 
     qn_http_json_wrt_prepare(stor->resp_json_wrt, &stor->obj_body, NULL);
     qn_http_resp_set_data_writer(stor->resp, stor->resp_json_wrt, &qn_http_json_wrt_callback);
 
+    // ---- Do the change mime action.
     ret = qn_http_conn_post(stor->conn, url, stor->req, stor->resp);
     qn_str_destroy(url);
-    return (ret) ? stor->obj_body : NULL;
+
+    if (!ret) return NULL;
+    qn_json_set_integer(stor->obj_body, "fn-code", qn_http_resp_get_code(stor->resp));
+    if (!qn_json_rename(stor->obj_body, "error", "fn-error")) return (qn_err_is_no_such_entry()) ? stor->obj_body : NULL;
+    return stor->obj_body;
 }
 
 // ----
@@ -568,6 +583,7 @@ QN_API qn_json_object_ptr qn_stor_fetch(qn_storage_ptr restrict stor, const qn_s
     qn_string url;
     qn_rgn_entry_ptr rgn_entry;
     
+    // ---- Process all extra arguments.
     if (ext) {
         if (! (rgn_entry = ext->rgn.entry)) qn_rgn_tbl_choose_first_entry(ext->rgn.rtbl, QN_RGN_SVC_IO, NULL, &rgn_entry);
     } else {
@@ -575,7 +591,7 @@ QN_API qn_json_object_ptr qn_stor_fetch(qn_storage_ptr restrict stor, const qn_s
         qn_rgn_tbl_choose_first_entry(NULL, QN_RGN_SVC_IO, NULL, &rgn_entry);
     } // if
 
-    // ---- Prepare the query URL
+    // ---- Prepare the fetch URL.
     encoded_src_url = qn_cs_encode_base64_urlsafe(src_url, strlen(src_url));
     if (!encoded_src_url) return NULL;
 
@@ -590,9 +606,10 @@ QN_API qn_json_object_ptr qn_stor_fetch(qn_storage_ptr restrict stor, const qn_s
     qn_str_destroy(encoded_dest_uri);
     if (!url) return NULL;
 
-    // ---- Prepare the request and response
+    // ---- Prepare the request and response.
     qn_stor_reset(stor);
 
+    // -- Nothing to post.
     qn_http_req_set_body_data(stor->req, "", 0);
 
     if (!qn_stor_prepare_managment(stor, url, rgn_entry->hostname, auth->client_end.acctoken, auth->server_end.mac)) {
@@ -600,17 +617,20 @@ QN_API qn_json_object_ptr qn_stor_fetch(qn_storage_ptr restrict stor, const qn_s
         return NULL;
     } // if
 
+    if (! (stor->obj_body = qn_json_create_object())) return NULL;
+    if (! (qn_json_set_integer(stor->obj_body, "fn-code", 0))) return NULL;
+    if (! (qn_json_set_string(stor->obj_body, "fn-error", "OK"))) return NULL;
+
     qn_http_json_wrt_prepare(stor->resp_json_wrt, &stor->obj_body, NULL);
     qn_http_resp_set_data_writer(stor->resp, stor->resp_json_wrt, &qn_http_json_wrt_callback);
 
+    // ---- Do the fetch action.
     ret = qn_http_conn_post(stor->conn, url, stor->req, stor->resp);
     qn_str_destroy(url);
 
     if (!ret) return NULL;
-    if (!stor->obj_body) {
-        qn_err_stor_set_api_return_no_value();
-        return NULL;
-    } // if
+    qn_json_set_integer(stor->obj_body, "fn-code", qn_http_resp_get_code(stor->resp));
+    if (!qn_json_rename(stor->obj_body, "error", "fn-error")) return (qn_err_is_no_such_entry()) ? stor->obj_body : NULL;
     return stor->obj_body;
 }
 
@@ -621,6 +641,7 @@ QN_API qn_json_object_ptr qn_stor_prefetch(qn_storage_ptr restrict stor, const q
     qn_string url;
     qn_rgn_entry_ptr rgn_entry;
     
+    // ---- Process all extra arguments.
     if (ext) {
         if (! (rgn_entry = ext->rgn.entry)) qn_rgn_tbl_choose_first_entry(ext->rgn.rtbl, QN_RGN_SVC_IO, NULL, &rgn_entry);
     } else {
@@ -628,7 +649,7 @@ QN_API qn_json_object_ptr qn_stor_prefetch(qn_storage_ptr restrict stor, const q
         qn_rgn_tbl_choose_first_entry(NULL, QN_RGN_SVC_IO, NULL, &rgn_entry);
     } // if
 
-    // ---- Prepare the query URL
+    // ---- Prepare the prefetch URL.
     encoded_dest_uri = qn_misc_encode_uri(dest_bucket, dest_key);
     if (!encoded_dest_uri) return NULL;
 
@@ -636,9 +657,10 @@ QN_API qn_json_object_ptr qn_stor_prefetch(qn_storage_ptr restrict stor, const q
     qn_str_destroy(encoded_dest_uri);
     if (!url) return NULL;
 
-    // ---- Prepare the request and response
+    // ---- Prepare the request and response.
     qn_stor_reset(stor);
 
+    // -- Nothing to post.
     qn_http_req_set_body_data(stor->req, "", 0);
 
     if (!qn_stor_prepare_managment(stor, url, rgn_entry->hostname, auth->client_end.acctoken, auth->server_end.mac)) {
@@ -646,17 +668,21 @@ QN_API qn_json_object_ptr qn_stor_prefetch(qn_storage_ptr restrict stor, const q
         return NULL;
     } // if
 
-    if (! (stor->obj_body = qn_json_create_object())) {
-        qn_str_destroy(url);
-        return NULL;
-    } // if
+    if (! (stor->obj_body = qn_json_create_object())) return NULL;
+    if (! (qn_json_set_integer(stor->obj_body, "fn-code", 0))) return NULL;
+    if (! (qn_json_set_string(stor->obj_body, "fn-error", "OK"))) return NULL;
 
     qn_http_json_wrt_prepare(stor->resp_json_wrt, &stor->obj_body, NULL);
     qn_http_resp_set_data_writer(stor->resp, stor->resp_json_wrt, &qn_http_json_wrt_callback);
 
+    // ---- Do the prefetch action.
     ret = qn_http_conn_post(stor->conn, url, stor->req, stor->resp);
     qn_str_destroy(url);
-    return (ret) ? stor->obj_body : NULL;
+
+    if (!ret) return NULL;
+    qn_json_set_integer(stor->obj_body, "fn-code", qn_http_resp_get_code(stor->resp));
+    if (!qn_json_rename(stor->obj_body, "error", "fn-error")) return (qn_err_is_no_such_entry()) ? stor->obj_body : NULL;
+    return stor->obj_body;
 }
 
 // ----
@@ -674,6 +700,7 @@ QN_API qn_json_object_ptr qn_stor_list(qn_storage_ptr restrict stor, const qn_st
     int i;
     int limit = 1000;
     
+    // ---- Process all extra arguments.
     if (ext) {
         if (! (rgn_entry = ext->rgn.entry)) qn_rgn_tbl_choose_first_entry(ext->rgn.rtbl, QN_RGN_SVC_RSF, NULL, &rgn_entry);
     } else {
@@ -708,7 +735,6 @@ QN_API qn_json_object_ptr qn_stor_list(qn_storage_ptr restrict stor, const qn_st
         return NULL;
     } // if
 
-    // ---- Prepare the query URL
     do {
         if (stor->obj_body) {
             marker = qn_json_get_string(stor->obj_body, marker, qn_str_empty_string);
@@ -723,6 +749,7 @@ QN_API qn_json_object_ptr qn_stor_list(qn_storage_ptr restrict stor, const qn_st
             return NULL;
         } // if
 
+        // ---- Prepare the copy URL.
         url = qn_cs_sprintf("%.*s/list?%.*s", qn_str_size(rgn_entry->base_url), qn_str_cstr(rgn_entry->base_url), qn_str_size(qry_str), qn_str_cstr(qry_str));
         qn_str_destroy(qry_str);
         if (!url) {
@@ -730,7 +757,7 @@ QN_API qn_json_object_ptr qn_stor_list(qn_storage_ptr restrict stor, const qn_st
             return NULL;
         } // if
 
-        // ---- Prepare the request and response
+        // ---- Prepare the request and response.
         qn_stor_reset(stor);
 
         qn_http_req_set_body_data(stor->req, "", 0);
@@ -741,25 +768,22 @@ QN_API qn_json_object_ptr qn_stor_list(qn_storage_ptr restrict stor, const qn_st
             return NULL;
         } // if
 
-        if (! (stor->obj_body = qn_json_create_object())) {
-            qn_str_destroy(url);
-            qn_http_qry_destroy(qry);
-            return NULL;
-        } // if
+        if (! (stor->obj_body = qn_json_create_object())) return NULL;
+        if (! (qn_json_set_integer(stor->obj_body, "fn-code", 0))) return NULL;
+        if (! (qn_json_set_string(stor->obj_body, "fn-error", "OK"))) return NULL;
 
         qn_http_json_wrt_prepare(stor->resp_json_wrt, &stor->obj_body, NULL);
         qn_http_resp_set_data_writer(stor->resp, stor->resp_json_wrt, &qn_http_json_wrt_callback);
 
+        // ---- Do the list action.
         ret = qn_http_conn_post(stor->conn, url, stor->req, stor->resp);
         qn_str_destroy(url);
 
-        if (!ret || !ext->item_processor_callback) break;
+        if (!ret) return NULL;
+        qn_json_set_integer(stor->obj_body, "fn-code", qn_http_resp_get_code(stor->resp));
+        if (!qn_json_rename(stor->obj_body, "error", "fn-error") && !qn_err_is_no_such_entry()) return NULL;
 
-        if (!stor->obj_body || qn_json_is_empty_object(stor->obj_body)) {
-            // No list result.
-            qn_http_qry_destroy(qry);
-            return qn_json_immutable_empty_object();
-        } // if
+        if (qn_http_resp_get_code(stor->resp) != 200 || !ext->item_processor_callback) break;
 
         items = qn_json_get_array(stor->obj_body, "items", NULL);
         if (!items) {
@@ -783,8 +807,7 @@ QN_API qn_json_object_ptr qn_stor_list(qn_storage_ptr restrict stor, const qn_st
     } while (qn_json_size_array(items) == limit);
 
     qn_http_qry_destroy(qry);
-    if (!ret) return NULL;
-    return (stor->obj_body) ? stor->obj_body : qn_json_immutable_empty_object();
+    return stor->obj_body;
 }
 
 // ----
@@ -922,6 +945,7 @@ QN_API qn_json_object_ptr qn_stor_execute_batch_opertions(qn_storage_ptr restric
     qn_json_object_ptr fake_obj_body;
     qn_rgn_entry_ptr rgn_entry;
     
+    // ---- Process all extra arguments.
     if (ext) {
         if (! (rgn_entry = ext->rgn.entry)) qn_rgn_tbl_choose_first_entry(ext->rgn.rtbl, QN_RGN_SVC_RS, NULL, &rgn_entry);
     } else {
@@ -929,7 +953,7 @@ QN_API qn_json_object_ptr qn_stor_execute_batch_opertions(qn_storage_ptr restric
         qn_rgn_tbl_choose_first_entry(NULL, QN_RGN_SVC_RS, NULL, &rgn_entry);
     } // if
 
-    // ---- Prepare the query URL
+    // ---- Prepare the batch URL.
     body = qn_str_join_list("&", bt->ops, bt->cnt);
     if (!body) return NULL;
 
@@ -939,7 +963,7 @@ QN_API qn_json_object_ptr qn_stor_execute_batch_opertions(qn_storage_ptr restric
         return NULL;
     } // if
 
-    // ---- Prepare the request and response
+    // ---- Prepare the request and response.
     qn_stor_reset(stor);
 
     qn_http_req_set_body_data(stor->req, qn_str_cstr(body), qn_str_size(body));
@@ -957,8 +981,19 @@ QN_API qn_json_object_ptr qn_stor_execute_batch_opertions(qn_storage_ptr restric
         return NULL;
     } // if
 
+    if (! (qn_json_set_integer(fake_obj_body, "fn-code", 0))) {
+        qn_str_destroy(url);
+        qn_str_destroy(body);
+        return NULL;
+    } // if
+
+    if (! (qn_json_set_string(fake_obj_body, "fn-error", "OK"))) {
+        qn_str_destroy(url);
+        qn_str_destroy(body);
+        return NULL;
+    } // if
+
     if (! (stor->arr_body = qn_json_create_and_set_array(fake_obj_body, "items"))) {
-        qn_json_destroy_object(fake_obj_body);
         qn_str_destroy(url);
         qn_str_destroy(body);
         return NULL;
@@ -967,23 +1002,24 @@ QN_API qn_json_object_ptr qn_stor_execute_batch_opertions(qn_storage_ptr restric
     qn_http_json_wrt_prepare(stor->resp_json_wrt, &stor->obj_body, &stor->arr_body);
     qn_http_resp_set_data_writer(stor->resp, stor->resp_json_wrt, &qn_http_json_wrt_callback);
 
+    // ---- Do the batch action.
     ret = qn_http_conn_post(stor->conn, url, stor->req, stor->resp);
     qn_str_destroy(url);
     qn_str_destroy(body);
-    stor->arr_body = NULL;
+    stor->arr_body = NULL; // Keep from destroying the array twice.
 
-    if (!ret) {
-        qn_json_destroy_object(fake_obj_body);
-        return NULL;
-    } // if
-
+    if (!ret) return NULL;
     if (stor->obj_body) {
         // Get an object rather than an array.
         // TODO: Trace the change of return value to this API and make the corresponding fix.
         qn_json_destroy_object(fake_obj_body);
-        return stor->obj_body;
+    } else {
+        stor->obj_body = fake_obj_body;
     } // if
-    return (stor->obj_body = fake_obj_body);
+
+    qn_json_set_integer(stor->obj_body, "fn-code", qn_http_resp_get_code(stor->resp));
+    if (!qn_json_rename(stor->obj_body, "error", "fn-error")) return (qn_err_is_no_such_entry()) ? stor->obj_body : NULL;
+    return stor->obj_body;
 }
 
 // ---- Definition of Upload ----
@@ -1040,6 +1076,10 @@ static qn_bool qn_stor_prepare_for_putting_file(qn_storage_ptr restrict stor, co
     // TODO: User defined variabales.
 
     // ----
+    if (! (stor->obj_body = qn_json_create_object())) return NULL;
+    if (! (qn_json_set_integer(stor->obj_body, "fn-code", 0))) return NULL;
+    if (! (qn_json_set_string(stor->obj_body, "fn-error", "OK"))) return NULL;
+
     qn_http_json_wrt_prepare(stor->resp_json_wrt, &stor->obj_body, NULL);
     qn_http_resp_set_data_writer(stor->resp, stor->resp_json_wrt, &qn_http_json_wrt_callback);
 
@@ -1093,10 +1133,8 @@ QN_API qn_json_object_ptr qn_stor_put_file(qn_storage_ptr restrict stor, const q
     // ----
     ret = qn_http_conn_post(stor->conn, qn_str_cstr(rgn_entry->base_url), stor->req, stor->resp);
     if (!ret) return NULL;
-    if (!stor->obj_body) {
-        qn_err_stor_set_api_return_no_value();
-        return NULL;
-    } // if
+    qn_json_set_integer(stor->obj_body, "fn-code", qn_http_resp_get_code(stor->resp));
+    if (!qn_json_rename(stor->obj_body, "error", "fn-error")) return (qn_err_is_no_such_entry()) ? stor->obj_body : NULL;
     return stor->obj_body;
 }
 
@@ -1123,10 +1161,8 @@ QN_API qn_json_object_ptr qn_stor_put_buffer(qn_storage_ptr restrict stor, const
     if (rgn_entry->hostname && !qn_http_req_set_header(stor->req, "Host", qn_str_cstr(rgn_entry->hostname))) return NULL;
     ret = qn_http_conn_post(stor->conn, qn_str_cstr(rgn_entry->base_url), stor->req, stor->resp);
     if (!ret) return NULL;
-    if (!stor->obj_body) {
-        qn_err_stor_set_api_return_no_value();
-        return NULL;
-    } // if
+    qn_json_set_integer(stor->obj_body, "fn-code", qn_http_resp_get_code(stor->resp));
+    if (!qn_json_rename(stor->obj_body, "error", "fn-error")) return (qn_err_is_no_such_entry()) ? stor->obj_body : NULL;
     return stor->obj_body;
 }
 
@@ -1335,17 +1371,22 @@ static qn_json_object_ptr qn_stor_rp_put_chunk_in_one_piece(qn_storage_ptr restr
     qn_http_req_set_body_reader(stor->req, &chk_rdr, qn_stor_rp_chunk_body_reader_callback, chk_size);
 
     // ---- Prepare the JSON body writer.
+    if (! (stor->obj_body = qn_json_create_object())) return NULL;
+    if (! (qn_json_set_integer(stor->obj_body, "fn-code", 0))) return NULL;
+    if (! (qn_json_set_string(stor->obj_body, "fn-error", "OK"))) return NULL;
+
     qn_http_json_wrt_prepare(stor->resp_json_wrt, &stor->obj_body, NULL);
     qn_http_resp_set_data_writer(stor->resp, stor->resp_json_wrt, &qn_http_json_wrt_callback);
 
     // ---- Do the put action.
     ret = qn_http_conn_post(stor->conn, url, stor->req, stor->resp);
     qn_io_srdr_destroy(srdr);
+
     if (!ret) return NULL;
-    if (!stor->obj_body) {
-        qn_err_stor_set_api_return_no_value();
-        return NULL;
-    } // if
+    qn_json_set_integer(stor->obj_body, "fn-code", qn_http_resp_get_code(stor->resp));
+    if (!qn_json_rename(stor->obj_body, "error", "fn-error") && !qn_err_is_no_such_entry()) return NULL;
+    
+    if (qn_http_resp_get_code(stor->resp) != 200) return stor->obj_body;
 
     // ---- Get and set the returned block information back into the blk_info object.
     ctx = qn_json_get_string(stor->obj_body, "ctx", NULL);
@@ -1502,16 +1543,18 @@ static qn_json_object_ptr qn_stor_rp_make_file_to_one_piece(qn_storage_ptr restr
     qn_http_req_set_body_data(stor->req, qn_str_cstr(ctx_info), qn_str_size(ctx_info));
 
     // ---- Prepare the JSON body writer.
+    if (! (stor->obj_body = qn_json_create_object())) return NULL;
+    if (! (qn_json_set_integer(stor->obj_body, "fn-code", 0))) return NULL;
+    if (! (qn_json_set_string(stor->obj_body, "fn-error", "OK"))) return NULL;
+
     qn_http_json_wrt_prepare(stor->resp_json_wrt, &stor->obj_body, NULL);
     qn_http_resp_set_data_writer(stor->resp, stor->resp_json_wrt, &qn_http_json_wrt_callback);
 
     // ---- Do the put action.
     ret = qn_http_conn_post(stor->conn, url, stor->req, stor->resp);
     if (!ret) return NULL;
-    if (!stor->obj_body) {
-        qn_err_stor_set_api_return_no_value();
-        return NULL;
-    } // if
+    qn_json_set_integer(stor->obj_body, "fn-code", qn_http_resp_get_code(stor->resp));
+    if (!qn_json_rename(stor->obj_body, "error", "fn-error")) return (qn_err_is_no_such_entry()) ? stor->obj_body : NULL;
     return stor->obj_body;
 }
 
