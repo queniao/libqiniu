@@ -876,6 +876,92 @@ QN_API qn_json_object_ptr qn_stor_change_mime(qn_storage_ptr restrict stor, cons
 
 // ----
 
+/***************************************************************************//**
+* @ingroup Storage-Management
+*
+* Fetch a file from a third-party origin site and save it to Qiniu Cloud Storage.
+*
+* @param [in] stor The pointer to the storage object.
+* @param [in] auth The pointer to the authorization information. The function
+*                  uses its content to archieve or generate appropriate access
+*                  token.
+* @param [in] src_url The pointer to a string gives the source file's URL.
+* @param [in] dest_bucket The pointer to a string specifies the bucket where
+*                         the destination file saves to.
+* @param [in] dest_key The pointer to a string specifies the destination file
+* @param [in] ext The pointer to an extra option structure. The function uses
+*                 options set in it to tune actual behaviors.
+*
+* @retval non-NULL The pointer to the result object about the fetch operation,
+*                  or an error message object(see REMARK section).
+* @retval NULL Failed in fetching file.
+* 
+* @remark The qn_stor_fetch() funciton fetches a file from the specified URL
+*         and save it. It is a good way to do data transfering.
+*
+*         **NOTE**: The destination file will be overwritten if it exists.
+*
+*         In the case that the API succeeds and returns an meta information
+*         of the file, qn_stor_stat() returns a JSON object that contains six
+*         fields:
+*             1) an `fn-code` field holds the API or HTTP code,
+*             2) an `fn-error` field holds a string as the trivial error
+*                message,
+*             3) a `fsize` field holds the total bytes,
+*             4) a `hash` field holds the Qiniu-ETAG digest to the file,
+*             5) a `mimeType` field holds the real file type and
+*             6) a `key` field holds the final key of the file.
+*         So it looks like
+*
+*         ```
+*             {
+*                 "fn-code": 200,
+*                 "fn-error": "OK",
+*                 "fsize": 165092,
+*                 "hash": "FjJuuG41Tc9HOppahgsZ-zRsIYKD",
+*                 "mimeType": "image/jpeg",
+*                 "key": "file/from/somewhere.jpg"
+*             }
+*         ```
+*
+*         In the other case that the API fails due to any reason, the function
+*         returns a JSON object contains two error-related fields:
+*             1) an `fn-code` field holds the API or HTTP code and,
+*             2) an `fn-error` field holds a string as the trivial error message.
+*         So it looks like
+*
+*         ```
+*             {
+*                 "fn-code": 404,
+*                 "fn-error": "Not found"
+*             }
+*         ```
+*
+*         All error codes and messages list as follow.
+*
+*         +-------+-------------------------------------------------------+
+*         | Code  | Message                                               |
+*         +-------+-------------------------------------------------------+
+*         | 200   | OK                                                    |
+*         +-------+-------------------------------------------------------+
+*         | 400   | Invalid HTTP request                                  |
+*         +-------+-------------------------------------------------------+
+*         | 401   | Bad access token (failed in authorization check)      |
+*         +-------+-------------------------------------------------------+
+*         | 404   | The specfied file or resource doesn't exist           |
+*         +-------+-------------------------------------------------------+
+*         | 478   | Any HTTP code other than 404 from the origin site     |
+*         |       | will turn to this one                                 |
+*         +-------+-------------------------------------------------------+
+*         | 599   | Server failed due to unknown reason (Contact us!)     |
+*         +-------+-------------------------------------------------------+
+*         |       | In the case of other HTTP-codes, check the            |
+*         |       | Availability of the origin site                       |
+*         +-------+-------------------------------------------------------+
+*
+*         NOTE: The caller MUST NOT destroy the result object because the storage
+*         object will do that in next invocation.
+*******************************************************************************/
 QN_API qn_json_object_ptr qn_stor_fetch(qn_storage_ptr restrict stor, const qn_stor_auth_ptr restrict auth, const char * restrict src_url, const char * restrict dest_bucket, const char * restrict dest_key, qn_stor_fetch_extra_ptr restrict ext)
 {
     qn_bool ret;
@@ -918,9 +1004,20 @@ QN_API qn_json_object_ptr qn_stor_fetch(qn_storage_ptr restrict stor, const qn_s
         return NULL;
     } // if
 
-    if (! (stor->obj_body = qn_json_create_object())) return NULL;
-    if (! (qn_json_set_integer(stor->obj_body, "fn-code", 0))) return NULL;
-    if (! (qn_json_set_string(stor->obj_body, "fn-error", "OK"))) return NULL;
+    if (! (stor->obj_body = qn_json_create_object())) {
+        qn_str_destroy(url);
+        return NULL;
+    } // if
+
+    if (! (qn_json_set_integer(stor->obj_body, "fn-code", 0))) {
+        qn_str_destroy(url);
+        return NULL;
+    } // if
+
+    if (! (qn_json_set_string(stor->obj_body, "fn-error", "OK"))) {
+        qn_str_destroy(url);
+        return NULL;
+    } // if
 
     qn_http_json_wrt_prepare(stor->resp_json_wrt, &stor->obj_body, NULL);
     qn_http_resp_set_data_writer(stor->resp, stor->resp_json_wrt, &qn_http_json_wrt_callback);
