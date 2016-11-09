@@ -1032,6 +1032,81 @@ QN_API qn_json_object_ptr qn_stor_fetch(qn_storage_ptr restrict stor, const qn_s
     return stor->obj_body;
 }
 
+/***************************************************************************//**
+* @ingroup Storage-Management
+*
+* Fetch a file from the binding origin site of a bucket and save it.
+*
+* @param [in] stor The pointer to the storage object.
+* @param [in] auth The pointer to the authorization information. The function
+*                  uses its content to archieve or generate appropriate access
+*                  token.
+* @param [in] bucket The pointer to a string specifies the bucket where the
+*                    destination file saves to.
+* @param [in] key The pointer to a string specifies the name of the source and
+*                 destination file.
+* @param [in] ext The pointer to an extra option structure. The function uses
+*                 options set in it to tune actual behaviors.
+*
+* @retval non-NULL The pointer to a result object about the prefetch operation,
+*                  or an error object (see REMARK section).
+* @retval NULL Failed in prefetching file.
+* 
+* @remark The qn_stor_prefetch() funciton causes the server to fetch a file
+*         specified by the key from the binding origin site of the bucket. It
+*         is a good way to do file transfering.
+*
+*         The origin site must be binded to the bucket first via
+*         http://portal.qiniu.com before call this function. And the final URL
+*         of the source file will be http://<site_domain>/<key>.
+*
+*         **NOTE**: The destination file will be overwritten if it exists.
+*         **NOTE**: The HTTP session will block when the server is fetching the
+*                   file. So it may time out if the origin site takes too much
+*                   time to return the file.
+*
+*         No data will be returned if the API succeeds, instead the function
+*         returns a JSON object to describe the situation, which contains
+*         two error-related fields:
+*             1) an `fn-code` field holds the HTTP code and,
+*             2) an `fn-error` field holds a string as the trivial error
+*                message.
+*
+*         So it looks like
+*
+*         ```
+*             {
+*                 "fn-code": 404,
+*                 "fn-error": "Not found"
+*             }
+*         ```
+*
+*         All error codes and messages list as follow.
+*
+*         +-------+-------------------------------------------------------+
+*         | Code  | Message                                               |
+*         +-------+-------------------------------------------------------+
+*         | 200   | OK.                                                   |
+*         +-------+-------------------------------------------------------+
+*         | 400   | Invalid HTTP request.                                 |
+*         +-------+-------------------------------------------------------+
+*         | 401   | Bad access token (failed in authorization check).     |
+*         +-------+-------------------------------------------------------+
+*         | 404   | The specfied file or resource doesn't exist.          |
+*         +-------+-------------------------------------------------------+
+*         | 478   | Any HTTP code other than 404 from the origin site     |
+*         |       | will turn to this one.                                |
+*         +-------+-------------------------------------------------------+
+*         | 599   | Server failed due to unknown reason and contact us!   |
+*         +-------+-------------------------------------------------------+
+*         |       | In the case of other HTTP-codes, check the            |
+*         |       | availability of the origin site.                      |
+*         +-------+-------------------------------------------------------+
+*
+*         **NOTE**: The caller MUST NOT destroy the result or error object
+*                   because the next call to storage core functions will do
+*                   that.
+*******************************************************************************/
 QN_API qn_json_object_ptr qn_stor_prefetch(qn_storage_ptr restrict stor, const qn_stor_auth_ptr restrict auth, const char * restrict dest_bucket, const char * restrict dest_key, qn_stor_fetch_extra_ptr restrict ext)
 {
     qn_bool ret;
@@ -1066,9 +1141,20 @@ QN_API qn_json_object_ptr qn_stor_prefetch(qn_storage_ptr restrict stor, const q
         return NULL;
     } // if
 
-    if (! (stor->obj_body = qn_json_create_object())) return NULL;
-    if (! (qn_json_set_integer(stor->obj_body, "fn-code", 0))) return NULL;
-    if (! (qn_json_set_string(stor->obj_body, "fn-error", "OK"))) return NULL;
+    if (! (stor->obj_body = qn_json_create_object())) {
+        qn_str_destroy(url);
+        return NULL;
+    } // if
+
+    if (! (qn_json_set_integer(stor->obj_body, "fn-code", 0))) {
+        qn_str_destroy(url);
+        return NULL;
+    } // if
+
+    if (! (qn_json_set_string(stor->obj_body, "fn-error", "OK"))) {
+        qn_str_destroy(url);
+        return NULL;
+    } // if
 
     qn_http_json_wrt_prepare(stor->resp_json_wrt, &stor->obj_body, NULL);
     qn_http_resp_set_data_writer(stor->resp, stor->resp_json_wrt, &qn_http_json_wrt_callback);
