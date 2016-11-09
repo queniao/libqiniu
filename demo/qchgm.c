@@ -1,4 +1,6 @@
 #include <stdio.h>
+#include "qiniu/base/json_formatter.h"
+#include "qiniu/base/errors.h"
 #include "qiniu/storage.h"
 
 int main(int argc, char * argv[])
@@ -8,7 +10,7 @@ int main(int argc, char * argv[])
     qn_string bucket;
     qn_string key;
     qn_string mime;
-    qn_string api_error;
+    qn_string chgm_ret_str;
     qn_json_object_ptr chgm_ret;
     qn_storage_ptr stor;
     qn_stor_change_mime_extra ext;
@@ -42,13 +44,7 @@ int main(int argc, char * argv[])
     qn_mac_destroy(mac);
     if (!chgm_ret) {
         qn_stor_destroy(stor);
-        printf("Cannot change the mime type of the `%s:%s` file.\n", bucket, key);
-        return 2;
-    } // if
-    api_error = qn_json_get_string(chgm_ret, "error", NULL);
-    if (api_error) {
-        qn_stor_destroy(stor);
-        printf("Cannot change the mime type of the `%s:%s` file due to application error `%s`.\n", bucket, key, api_error);
+        printf("Cannot change the mime type of the `%s:%s` file due to application error `%s`.\n", bucket, key, qn_err_get_message());
         return 2;
     } // if
 
@@ -58,7 +54,16 @@ int main(int argc, char * argv[])
     } // while
     qn_http_hdr_itr_destroy(hdr_itr);
 
+    chgm_ret_str = qn_json_object_to_string(chgm_ret);
     qn_stor_destroy(stor);
+
+    if (!chgm_ret_str) {
+        printf("Cannot format the change mime result object due to application error `%s`.\n", qn_err_get_message());
+        return 1;
+    } // if
+
+    printf("%s\n", chgm_ret_str);
+    qn_str_destroy(chgm_ret_str);
 
     return 0;
 }

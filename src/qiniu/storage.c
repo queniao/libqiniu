@@ -508,7 +508,7 @@ static const qn_string qn_stor_make_move_op(const char * restrict src_bucket, co
 *
 * @retval non-NULL The pointer to the result object about the copy operation,
 *                  or an error message object(see REMARK section).
-* @retval NULL Failed in copying the source file.
+* @retval NULL Failed in moving the source file.
 * 
 * @remark The qn_stor_move() funciton move the specified file from the source
 *         bucket to the destination bucket. If there is a file with the same 
@@ -641,9 +641,9 @@ static qn_string qn_stor_make_delete_op(const char * restrict bucket, const char
 * @param [in] ext The pointer to an extra option structure. The function uses
 *                 options set in it to tune actual behaviors.
 *
-* @retval non-NULL The pointer to the result object about the move operation,
+* @retval non-NULL The pointer to the result object about the delete operation,
 *                  or an error message object(see REMARK section).
-* @retval NULL Failed in copying the source file.
+* @retval NULL Failed in deleting the source file.
 * 
 * @remark The qn_stor_delete() funciton delete the specified file. The deleted
 *         file can not be restored.
@@ -746,6 +746,65 @@ QN_API qn_json_object_ptr qn_stor_delete(qn_storage_ptr restrict stor, const qn_
     return stor->obj_body;
 }
 
+/***************************************************************************//**
+* @ingroup Storage-Management
+*
+* Change the MIME type of the specified file.
+*
+* @param [in] stor The pointer to the storage object.
+* @param [in] auth The pointer to the authorization information. The function
+*                  uses its content to archieve or generate appropriate access
+*                  token.
+* @param [in] bucket The pointer to a string specifies the bucket where the
+*                    file resides.
+* @param [in] key The pointer to a string specifies the source file itself.
+* @param [in] mime The pointer to a string gives the new MIME type.
+* @param [in] ext The pointer to an extra option structure. The function uses
+*                 options set in it to tune actual behaviors.
+*
+* @retval non-NULL The pointer to the result object about the change-mime
+*                  operation, or an error message object(see REMARK section).
+* @retval NULL Failed in changing MIME type.
+* 
+* @remark The qn_stor_change_mime() funciton change the MIME type of the 
+*         specified file to a new one.
+*
+*         No data will be returned if the API succeeds, instead the function
+*         will return a JSON object to describe the situation, which contains
+*         two error-related fields:
+*             1) an `fn-code` field holds the HTTP code and,
+*             2) an `fn-error` field holds a string as the trivial error
+*                message.
+*         So it looks like
+*
+*         ```
+*             {
+*                 "fn-code": 612,
+*                 "fn-error": "no such file or directory"
+*             }
+*         ```
+*
+*         All error codes and messages list as follow.
+*
+*         +-------+-------------------------------------------------------+
+*         | Code  | Message                                               |
+*         +-------+-------------------------------------------------------+
+*         | 200   | OK                                                    |
+*         +-------+-------------------------------------------------------+
+*         | 400   | Invalid HTTP request                                  |
+*         +-------+-------------------------------------------------------+
+*         | 401   | Bad access token (failed in authorization check)      |
+*         +-------+-------------------------------------------------------+
+*         | 599   | Server failed due to unknown reason (Contact us!)     |
+*         +-------+-------------------------------------------------------+
+*         | 612   | File doesn't exist                                    |
+*         +-------+-------------------------------------------------------+
+*         | 631   | Bucket doesn't exist                                  |
+*         +-------+-------------------------------------------------------+
+*
+*         NOTE: The caller MUST NOT destroy the result object because the storage
+*         object will do that in next invocation.
+*******************************************************************************/
 QN_API qn_json_object_ptr qn_stor_change_mime(qn_storage_ptr restrict stor, const qn_stor_auth_ptr restrict auth, const char * restrict bucket, const char * restrict key, const char * restrict mime, qn_stor_change_mime_extra_ptr restrict ext)
 {
     qn_bool ret;
@@ -787,9 +846,20 @@ QN_API qn_json_object_ptr qn_stor_change_mime(qn_storage_ptr restrict stor, cons
         return NULL;
     } // if
 
-    if (! (stor->obj_body = qn_json_create_object())) return NULL;
-    if (! (qn_json_set_integer(stor->obj_body, "fn-code", 0))) return NULL;
-    if (! (qn_json_set_string(stor->obj_body, "fn-error", "OK"))) return NULL;
+    if (! (stor->obj_body = qn_json_create_object())) {
+        qn_str_destroy(url);
+        return NULL;
+    } // if
+
+    if (! (qn_json_set_integer(stor->obj_body, "fn-code", 0))) {
+        qn_str_destroy(url);
+        return NULL;
+    } // if
+
+    if (! (qn_json_set_string(stor->obj_body, "fn-error", "OK"))) {
+        qn_str_destroy(url);
+        return NULL;
+    } // if
 
     qn_http_json_wrt_prepare(stor->resp_json_wrt, &stor->obj_body, NULL);
     qn_http_resp_set_data_writer(stor->resp, stor->resp_json_wrt, &qn_http_json_wrt_callback);
