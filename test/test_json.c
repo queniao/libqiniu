@@ -1802,6 +1802,241 @@ CU_TestInfo test_normal_cases_of_json_formatting[] = {
     CU_TEST_INFO_NULL
 };
 
+void test_format_integer_value_without_enough_buffer(void)
+{
+    qn_bool ret = qn_false;
+    qn_json_object_ptr obj_root = NULL;
+    qn_json_formatter_ptr fmt = NULL;
+    char buf[128];
+    size_t buf_size = sizeof(buf);
+
+    fmt = qn_json_fmt_create();
+    if (!fmt) CU_FAIL_FATAL("Cannot create a new formatter");
+
+    obj_root = qn_json_create_object();
+    if (!obj_root) CU_FAIL_FATAL("Cannot create a new object");
+
+    ret = qn_json_set_integer(obj_root, "_int", 123);
+    if (!ret) CU_FAIL_FATAL("Cannot create a new integer value");
+
+    buf_size = 8;
+    ret = qn_json_fmt_format_object(fmt, obj_root, buf, &buf_size);
+    CU_ASSERT_FALSE(ret);
+    CU_ASSERT_TRUE(qn_err_is_out_of_buffer());
+
+    qn_json_fmt_reset(fmt);
+    buf_size = 9;
+    ret = qn_json_fmt_format_object(fmt, obj_root, buf, &buf_size);
+    CU_ASSERT_FALSE(ret);
+    CU_ASSERT_TRUE(qn_err_is_out_of_buffer());
+
+    qn_json_fmt_reset(fmt);
+    buf_size = 10;
+    ret = qn_json_fmt_format_object(fmt, obj_root, buf, &buf_size);
+    CU_ASSERT_FALSE(ret);
+    CU_ASSERT_TRUE(qn_err_is_out_of_buffer());
+
+    qn_json_destroy_object(obj_root);
+    qn_json_fmt_destroy(fmt);
+}
+
+void test_format_number_value_without_enough_buffer(void)
+{
+    qn_bool ret = qn_false;
+    qn_json_object_ptr obj_root = NULL;
+    qn_json_formatter_ptr fmt = NULL;
+    char buf[128];
+    size_t buf_size = sizeof(buf);
+
+    fmt = qn_json_fmt_create();
+    if (!fmt) CU_FAIL_FATAL("Cannot create a new formatter");
+
+    obj_root = qn_json_create_object();
+    if (!obj_root) CU_FAIL_FATAL("Cannot create a new object");
+
+    ret = qn_json_set_number(obj_root, "_num", 123.4);
+    if (!ret) CU_FAIL_FATAL("Cannot create a new number value");
+
+    buf_size = 8;
+    ret = qn_json_fmt_format_object(fmt, obj_root, buf, &buf_size);
+    CU_ASSERT_FALSE(ret);
+    CU_ASSERT_TRUE(qn_err_is_out_of_buffer());
+
+    qn_json_fmt_reset(fmt);
+    buf_size = 9;
+    ret = qn_json_fmt_format_object(fmt, obj_root, buf, &buf_size);
+    CU_ASSERT_FALSE(ret);
+    CU_ASSERT_TRUE(qn_err_is_out_of_buffer());
+
+    qn_json_fmt_reset(fmt);
+    buf_size = 10;
+    ret = qn_json_fmt_format_object(fmt, obj_root, buf, &buf_size);
+    CU_ASSERT_FALSE(ret);
+    CU_ASSERT_TRUE(qn_err_is_out_of_buffer());
+
+    qn_json_fmt_reset(fmt);
+    buf_size = 11;
+    ret = qn_json_fmt_format_object(fmt, obj_root, buf, &buf_size);
+    CU_ASSERT_FALSE(ret);
+    CU_ASSERT_TRUE(qn_err_is_out_of_buffer());
+
+    qn_json_fmt_reset(fmt);
+    buf_size = 12;
+    ret = qn_json_fmt_format_object(fmt, obj_root, buf, &buf_size);
+    CU_ASSERT_FALSE(ret);
+    CU_ASSERT_TRUE(qn_err_is_out_of_buffer());
+
+    qn_json_destroy_object(obj_root);
+    qn_json_fmt_destroy(fmt);
+}
+
+void test_format_true_value_without_enough_buffer(void)
+{
+    qn_bool ret = qn_false;
+    qn_json_object_ptr obj_root = NULL;
+    qn_json_formatter_ptr fmt = NULL;
+    char buf[128];
+    size_t buf_size = sizeof(buf);
+
+    fmt = qn_json_fmt_create();
+    if (!fmt) CU_FAIL_FATAL("Cannot create a new formatter");
+
+    obj_root = qn_json_create_object();
+    if (!obj_root) CU_FAIL_FATAL("Cannot create a new object");
+
+    ret = qn_json_set_boolean(obj_root, "_true", qn_true);
+    if (!ret) CU_FAIL_FATAL("Cannot create a new true value");
+
+    buf_size = 9;
+    ret = qn_json_fmt_format_object(fmt, obj_root, buf, &buf_size);
+    CU_ASSERT_FALSE(ret);
+    CU_ASSERT_TRUE(qn_err_is_out_of_buffer());
+
+    qn_json_fmt_reset(fmt);
+    buf_size = 10;
+    ret = qn_json_fmt_format_object(fmt, obj_root, buf, &buf_size);
+    CU_ASSERT_FALSE(ret);
+    CU_ASSERT_TRUE(qn_err_is_out_of_buffer());
+
+    qn_json_fmt_reset(fmt);
+    buf_size = 11;
+    ret = qn_json_fmt_format_object(fmt, obj_root, buf, &buf_size);
+    CU_ASSERT_FALSE(ret);
+    CU_ASSERT_TRUE(qn_err_is_out_of_buffer());
+
+    qn_json_fmt_reset(fmt);
+    buf_size = 12;
+    ret = qn_json_fmt_format_object(fmt, obj_root, buf, &buf_size);
+    CU_ASSERT_FALSE(ret);
+    CU_ASSERT_TRUE(qn_err_is_out_of_buffer());
+
+    qn_json_destroy_object(obj_root);
+    qn_json_fmt_destroy(fmt);
+}
+
+void test_format_false_value_without_enough_buffer(void)
+{
+    qn_bool ret = qn_false;
+    qn_json_object_ptr obj_root = NULL;
+    qn_json_formatter_ptr fmt = NULL;
+    char buf[128];
+    size_t buf_size = sizeof(buf);
+
+    fmt = qn_json_fmt_create();
+    if (!fmt) CU_FAIL_FATAL("Cannot create a new formatter");
+
+    obj_root = qn_json_create_object();
+    if (!obj_root) CU_FAIL_FATAL("Cannot create a new object");
+
+    ret = qn_json_set_boolean(obj_root, "_false", qn_false);
+    if (!ret) CU_FAIL_FATAL("Cannot create a new false value");
+
+    buf_size = 10;
+    ret = qn_json_fmt_format_object(fmt, obj_root, buf, &buf_size);
+    CU_ASSERT_FALSE(ret);
+    CU_ASSERT_TRUE(qn_err_is_out_of_buffer());
+
+    qn_json_fmt_reset(fmt);
+    buf_size = 11;
+    ret = qn_json_fmt_format_object(fmt, obj_root, buf, &buf_size);
+    CU_ASSERT_FALSE(ret);
+    CU_ASSERT_TRUE(qn_err_is_out_of_buffer());
+
+    qn_json_fmt_reset(fmt);
+    buf_size = 12;
+    ret = qn_json_fmt_format_object(fmt, obj_root, buf, &buf_size);
+    CU_ASSERT_FALSE(ret);
+    CU_ASSERT_TRUE(qn_err_is_out_of_buffer());
+
+    qn_json_fmt_reset(fmt);
+    buf_size = 13;
+    ret = qn_json_fmt_format_object(fmt, obj_root, buf, &buf_size);
+    CU_ASSERT_FALSE(ret);
+    CU_ASSERT_TRUE(qn_err_is_out_of_buffer());
+
+    qn_json_fmt_reset(fmt);
+    buf_size = 14;
+    ret = qn_json_fmt_format_object(fmt, obj_root, buf, &buf_size);
+    CU_ASSERT_FALSE(ret);
+    CU_ASSERT_TRUE(qn_err_is_out_of_buffer());
+
+    qn_json_destroy_object(obj_root);
+    qn_json_fmt_destroy(fmt);
+}
+
+void test_format_null_value_without_enough_buffer(void)
+{
+    qn_bool ret = qn_false;
+    qn_json_object_ptr obj_root = NULL;
+    qn_json_formatter_ptr fmt = NULL;
+    char buf[128];
+    size_t buf_size = sizeof(buf);
+
+    fmt = qn_json_fmt_create();
+    if (!fmt) CU_FAIL_FATAL("Cannot create a new formatter");
+
+    obj_root = qn_json_create_object();
+    if (!obj_root) CU_FAIL_FATAL("Cannot create a new object");
+
+    ret = qn_json_set_null(obj_root, "_null");
+    if (!ret) CU_FAIL_FATAL("Cannot create a new null value");
+
+    buf_size = 9;
+    ret = qn_json_fmt_format_object(fmt, obj_root, buf, &buf_size);
+    CU_ASSERT_FALSE(ret);
+    CU_ASSERT_TRUE(qn_err_is_out_of_buffer());
+
+    qn_json_fmt_reset(fmt);
+    buf_size = 10;
+    ret = qn_json_fmt_format_object(fmt, obj_root, buf, &buf_size);
+    CU_ASSERT_FALSE(ret);
+    CU_ASSERT_TRUE(qn_err_is_out_of_buffer());
+
+    qn_json_fmt_reset(fmt);
+    buf_size = 11;
+    ret = qn_json_fmt_format_object(fmt, obj_root, buf, &buf_size);
+    CU_ASSERT_FALSE(ret);
+    CU_ASSERT_TRUE(qn_err_is_out_of_buffer());
+
+    qn_json_fmt_reset(fmt);
+    buf_size = 12;
+    ret = qn_json_fmt_format_object(fmt, obj_root, buf, &buf_size);
+    CU_ASSERT_FALSE(ret);
+    CU_ASSERT_TRUE(qn_err_is_out_of_buffer());
+
+    qn_json_destroy_object(obj_root);
+    qn_json_fmt_destroy(fmt);
+}
+
+CU_TestInfo test_abnormal_cases_of_json_formatting[] = {
+    {"test_format_integer_value_without_enough_buffer()", test_format_integer_value_without_enough_buffer},
+    {"test_format_number_value_without_enough_buffer()", test_format_number_value_without_enough_buffer},
+    {"test_format_true_value_without_enough_buffer()", test_format_true_value_without_enough_buffer},
+    {"test_format_false_value_without_enough_buffer()", test_format_false_value_without_enough_buffer},
+    {"test_format_null_value_without_enough_buffer()", test_format_null_value_without_enough_buffer},
+    CU_TEST_INFO_NULL
+};
+
 // ---- test suites ----
 
 CU_SuiteInfo suites[] = {
@@ -1809,6 +2044,7 @@ CU_SuiteInfo suites[] = {
     {"test_normal_cases_of_json_parsing", NULL, NULL, test_normal_cases_of_json_parsing},
     {"test_abnormal_cases_of_json_parsing", NULL, NULL, test_abnormal_cases_of_json_parsing},
     {"test_normal_cases_of_json_formatting", NULL, NULL, test_normal_cases_of_json_formatting},
+    {"test_abnormal_cases_of_json_formatting", NULL, NULL, test_abnormal_cases_of_json_formatting},
     CU_SUITE_INFO_NULL
 };
 

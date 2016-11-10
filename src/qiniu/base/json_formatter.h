@@ -16,6 +16,7 @@ typedef struct _QN_JSON_FORMATTER * qn_json_formatter_ptr;
 
 QN_API extern qn_json_formatter_ptr qn_json_fmt_create(void);
 QN_API extern void qn_json_fmt_destroy(qn_json_formatter_ptr restrict fmt);
+QN_API extern void qn_json_fmt_reset(qn_json_formatter_ptr restrict fmt);
 
 QN_API extern void qn_json_fmt_enable_escape_utf8_string(qn_json_formatter_ptr restrict fmt);
 QN_API extern void qn_json_fmt_disable_escape_utf8_string(qn_json_formatter_ptr restrict fmt);

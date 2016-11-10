@@ -30,8 +30,6 @@ typedef struct _QN_JSON_FORMATTER {
     char * buf;
     size_t buf_size;
     size_t buf_capacity;
-    size_t buf_pages;
-    size_t buf_page_size;
 
     qn_string string;
     size_t string_pos;
@@ -73,6 +71,12 @@ QN_API void qn_json_fmt_destroy(qn_json_formatter_ptr restrict fmt)
     } // for
 }
 
+QN_API void qn_json_fmt_reset(qn_json_formatter_ptr restrict fmt)
+{
+    qn_json_itr_reset(fmt->iterator);
+    fmt->flags = 0;
+}
+
 QN_API void qn_json_fmt_enable_escape_utf8_string(qn_json_formatter_ptr restrict fmt)
 {
     fmt->flags |= QN_JSON_FMT_ESCAPE_UTF8_STRING;
@@ -103,6 +107,7 @@ static qn_bool qn_json_fmt_format_string(qn_json_formatter_ptr fmt)
 #define head_code (0xD800 + (((wch - 0x10000) & 0xFFC00) >> 10))
 #define tail_code (0xDC00 + ((wch - 0x10000) & 0x003FF))
 
+    size_t free_size;
     size_t pos = fmt->string_pos;
     size_t end = qn_str_size(fmt->string);
     const char * str = qn_str_cstr(fmt->string);
@@ -113,6 +118,8 @@ static qn_bool qn_json_fmt_format_string(qn_json_formatter_ptr fmt)
     if (pos == 0 && !qn_json_fmt_putc(fmt, '"')) goto FORMATTING_STRING_FAILED;
 
     while (pos < end) {
+        free_size = fmt->buf_capacity - fmt->buf_size;
+
         if ((c1 & 0x80) == 0 || ((fmt->flags & QN_JSON_FMT_ESCAPE_UTF8_STRING) == 0)) {
             // ASCII range: 0zzzzzzz（00-7F）
             if (c1 == '&') {
@@ -121,10 +128,13 @@ static qn_bool qn_json_fmt_format_string(qn_json_formatter_ptr fmt)
                     goto FORMATTING_STRING_FAILED;
                 } // if
 
-                ret = qn_cs_snprintf(fmt->buf + fmt->buf_size, (fmt->buf_capacity - fmt->buf_size), "\\u%4X", c1);
-                if (ret < 0) {
+                ret = qn_cs_snprintf(fmt->buf + fmt->buf_size, free_size, "\\u%4X", c1);
+                if (ret < 0) goto FORMATTING_STRING_FAILED;
+                if (ret >= free_size) {
+                    qn_err_set_out_of_buffer();
                     goto FORMATTING_STRING_FAILED;
                 } // if
+
                 pos += 1;
                 fmt->buf_size += ret;
             } else {
@@ -180,10 +190,13 @@ static qn_bool qn_json_fmt_format_string(qn_json_formatter_ptr fmt)
             goto FORMATTING_STRING_FAILED;
         } // if
 
-        ret = qn_cs_snprintf(fmt->buf + fmt->buf_size, (fmt->buf_capacity - fmt->buf_size), "\\u%4X\\u%4X", head_code, tail_code);
-        if (ret < 0) {
+        ret = qn_cs_snprintf(fmt->buf + fmt->buf_size, free_size, "\\u%4X\\u%4X", head_code, tail_code);
+        if (ret < 0) goto FORMATTING_STRING_FAILED;
+        if (ret >= free_size) {
+            qn_err_set_out_of_buffer();
             goto FORMATTING_STRING_FAILED;
         } // if
+
         pos += chars;
         fmt->buf_size += ret;
     } // while
@@ -210,27 +223,28 @@ static qn_bool qn_json_fmt_format_ordinary(qn_json_formatter_ptr fmt)
 {
     int ret = 0;
     const char * str = NULL;
+    size_t free_size = fmt->buf_capacity - fmt->buf_size;
 
     switch (fmt->class) {
         case QN_JSON_INTEGER:
-            ret = qn_cs_snprintf(fmt->buf + fmt->buf_size, (fmt->buf_capacity - fmt->buf_size) - 1, "%lld", fmt->val.integer);
+            ret = qn_cs_snprintf(fmt->buf + fmt->buf_size, free_size, "%lld", fmt->val.integer);
             break;
 
         case QN_JSON_NUMBER:
 #ifndef QN_CFG_BIG_NUMBERS
-            ret = qn_cs_snprintf(fmt->buf + fmt->buf_size, (fmt->buf_capacity - fmt->buf_size) - 1, "%lf", fmt->val.number);
+            ret = qn_cs_snprintf(fmt->buf + fmt->buf_size, free_size, "%lf", fmt->val.number);
 #else
-            ret = qn_cs_snprintf(fmt->buf + fmt->buf_size, (fmt->buf_capacity - fmt->buf_size) - 1, "%Lf", fmt->val.number);
+            ret = qn_cs_snprintf(fmt->buf + fmt->buf_size, free_size, "%Lf", fmt->val.number);
 #endif
             break;
 
         case QN_JSON_BOOLEAN:
             str = (fmt->val.boolean) ? "true" : "false";
-            ret = qn_cs_snprintf(fmt->buf + fmt->buf_size, (fmt->buf_capacity - fmt->buf_size) - 1, str);
+            ret = qn_cs_snprintf(fmt->buf + fmt->buf_size, free_size, str);
             break;
 
         case QN_JSON_NULL:
-            ret = qn_cs_snprintf(fmt->buf + fmt->buf_size, (fmt->buf_capacity - fmt->buf_size) - 1, "null");
+            ret = qn_cs_snprintf(fmt->buf + fmt->buf_size, free_size, "null");
             break;
 
         default:
@@ -241,6 +255,12 @@ static qn_bool qn_json_fmt_format_ordinary(qn_json_formatter_ptr fmt)
     if (ret < 0) {
         // TODO : Set appropriate errors to accord to each system error accurately.
         qn_err_set_try_again();
+        return qn_false;
+    } // if
+
+    if (ret >= free_size) {
+        // -- Out of buffer.
+        qn_err_set_out_of_buffer();
         return qn_false;
     } // if
 
