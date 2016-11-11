@@ -49,6 +49,8 @@ QN_API extern qn_bool qn_pp_key_make_from_template(qn_json_object_ptr restrict p
 
 QN_API extern qn_bool qn_pp_auto_delete_after_days(qn_json_object_ptr restrict pp, qn_uint32 days);
 
+QN_API extern qn_bool qn_pp_upload_message(qn_json_object_ptr restrict pp, const char * restrict msg_queue, const char * restrict msg_body, const char * restrict msg_mime_type);
+
 QN_API extern qn_string qn_pp_to_uptoken(qn_json_object_ptr restrict pp, qn_mac_ptr restrict mac);
 
 // ---- Declaration of Authorization ----

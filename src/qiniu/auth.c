@@ -236,6 +236,14 @@ QN_API qn_bool qn_pp_auto_delete_after_days(qn_json_object_ptr restrict pp, qn_u
     return qn_json_set_integer(pp, "deleteAfterDays", days);
 }
 
+QN_API qn_bool qn_pp_upload_message(qn_json_object_ptr restrict pp, const char * restrict msg_queue, const char * restrict msg_body, const char * restrict msg_mime_type)
+{
+    if (! qn_json_set_string(pp, "notifyQueue", msg_queue)) return qn_false;
+    if (! qn_json_set_string(pp, "notifyMessage", msg_body)) return qn_false;
+    if (msg_mime_type) return qn_json_set_string(pp, "notifyMessageType", msg_mime_type);
+    return qn_true;
+}
+
 QN_API qn_string qn_pp_to_uptoken(qn_json_object_ptr restrict pp, qn_mac_ptr restrict mac)
 {
     qn_string uptoken;

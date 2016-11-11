@@ -25,7 +25,7 @@ int main(int argc, char * argv[])
 
     if (argc < 5) {
         printf("Demo qputf - Put single file in one HTTP session.\n");
-        printf("Usage: qputf <ACCESS_KEY> <SECRET_KEY> <BUCKET> <KEY> <FNAME>\n");
+        printf("Usage: qputf <ACCESS_KEY> <SECRET_KEY> <BUCKET> <KEY> <FNAME> [MSG_QUEUE MSG_BODY MSG_MIME_TYPE]\n");
         return 0;
     } // if
 
@@ -97,6 +97,32 @@ int main(int argc, char * argv[])
         qn_rgn_tbl_destroy(rgn_tbl);
         printf("Cannot set the deadline field.\n");
         return 1;
+    } // if
+
+    if (argc > 6) {
+        if (!qn_json_set_string(auth.server_end.put_policy, "notifyQueue", argv[6])) {
+            qn_json_destroy_object(auth.server_end.put_policy);
+            qn_mac_destroy(mac);
+            qn_rgn_tbl_destroy(rgn_tbl);
+            printf("Cannot set the deadline field.\n");
+            return 1;
+        } // if
+
+        if (!qn_json_set_string(auth.server_end.put_policy, "notifyMessage", argv[7])) {
+            qn_json_destroy_object(auth.server_end.put_policy);
+            qn_mac_destroy(mac);
+            qn_rgn_tbl_destroy(rgn_tbl);
+            printf("Cannot set the deadline field.\n");
+            return 1;
+        } // if
+
+        if (!qn_json_set_string(auth.server_end.put_policy, "notifyMessageType", argv[8])) {
+            qn_json_destroy_object(auth.server_end.put_policy);
+            qn_mac_destroy(mac);
+            qn_rgn_tbl_destroy(rgn_tbl);
+            printf("Cannot set the deadline field.\n");
+            return 1;
+        } // if
     } // if
 
     stor = qn_stor_create();
