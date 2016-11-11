@@ -650,6 +650,7 @@ QN_API qn_bool qn_rgn_svc_grab_bucket_region(qn_rgn_service_ptr restrict svc, qn
 
     qn_http_req_set_body_data(svc->req, "", 0);
 
+    root = NULL;
     qn_http_json_wrt_prepare(svc->resp_json_wrt, &root, NULL);
     qn_http_resp_set_data_writer(svc->resp, svc->resp_json_wrt, &qn_http_json_wrt_callback);
 
