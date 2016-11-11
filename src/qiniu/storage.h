@@ -1,3 +1,15 @@
+/***************************************************************************//**
+* @file qiniu/storage.h
+* @brief This header file declares all core functions of Qiniu Cloud Storage.
+*
+* AUTHOR      : liangtao@qiniu.com (QQ: 510857)
+* COPYRIGHT   : 2016(c) Shanghai Qiniu Information Technologies Co., Ltd.
+* DESCRIPTION :
+*
+* This header file declares all core functions of Qiniu Cloud Storage, that 
+* are used to upload and manage files.
+*******************************************************************************/
+
 #ifndef __QN_STORAGE_H__
 #define __QN_STORAGE_H__
 
@@ -17,6 +29,11 @@ extern "C"
 
 // ---- Declaration of Storage Extension ----
 
+/***************************************************************************//**
+* @defgroup Storage-Extension Storage Extension Interface
+*
+*******************************************************************************/
+
 typedef struct _QN_STOR_RGN
 {
     qn_rgn_table_ptr rtbl;
@@ -29,7 +46,12 @@ typedef struct _QN_STOR_PUT_CTRL
     qn_reader_ptr rdr;
 } qn_stor_put_ctrl, *qn_stor_put_ctrl_ptr;
 
-// ---- Declaration of Storage ----
+// ---- Declaration of Storage Basic Functions ----
+
+/***************************************************************************//**
+* @defgroup Storage-Basic Storage Basic Functions
+*
+*******************************************************************************/
 
 struct _QN_STORAGE;
 typedef struct _QN_STORAGE * qn_storage_ptr;
@@ -41,7 +63,12 @@ QN_API extern qn_json_object_ptr qn_stor_get_object_body(const qn_storage_ptr re
 QN_API extern qn_json_array_ptr qn_stor_get_array_body(const qn_storage_ptr restrict stor);
 QN_API extern qn_http_hdr_iterator_ptr qn_stor_resp_get_header_iterator(const qn_storage_ptr restrict stor);
 
-// ---- Declaration of Management ----
+// ---- Declaration of Storage Management Functions ----
+
+/***************************************************************************//**
+* @defgroup Storage-Management Storage Managment Functions
+*
+*******************************************************************************/
 
 typedef struct _QN_STOR_AUTH
 {
