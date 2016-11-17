@@ -229,6 +229,10 @@ QN_API extern qn_json_object_ptr qn_stor_put_buffer(qn_storage_ptr restrict stor
 
 // ----
 
+/***************************************************************************//**
+* @defgroup Storage-Resumable-Put Resumable Put Functions
+*******************************************************************************/
+
 struct _QN_STOR_RESUMABLE_PUT_SESSION;
 typedef struct _QN_STOR_RESUMABLE_PUT_SESSION * qn_stor_rput_session_ptr;
 
