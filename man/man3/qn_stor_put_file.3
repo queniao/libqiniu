@@ -1,20 +1,38 @@
 .TH QN_STOR_PUT_FILE 3 "NOVEMBER 2016" "Qiniu Cloud" "User Manuals"
 .SH NAME
-qn_stor_put_file \- upload a local file in one HTTP round trip
+qn_stor_put_file, qn_stor_put_buffer \- upload a local file or a bulk of data in one HTTP round trip
+
 .SH SYNOPSIS
 .nf
 .B #include <qiniu/storage.h>
 .sp
 .BI "qn_json_object_ptr qn_stor_put_file(qn_storage_ptr restrict " stor ", const qn_stor_auth_ptr restrict " auth ", const char * restrict " fname ", qn_stor_put_extra_ptr restrict " ext ");"
+.BI "qn_json_object_ptr qn_stor_put_buffer(qn_storage_ptr restrict " stor ", const qn_stor_auth_ptr restrict " auth ", const char * restrict " buf ", int " buf_size ", qn_stor_put_extra_ptr restrict "ext ");"
 .fi
+
 .SH DESCRIPTION
 .BR qn_stor_put_file ()
 uploads a local file specified by 
 .I fname
 in one HTTP round trip and put it into the destination bucket. It's the simplest way to upload a file to Qiniu Cloud Storage.
+.BR qn_stor_put_buffer ()
+does the same thing except that reads data from a buffer specified by the
+.I buf
+and
+.I buf_size
+arguments. Since the cost of retransmitting files larger than 10MB is very expensive, it's strongly recommended to use
+.BR qn_stor_rp_put_file (3)
+instead, which uploads files in a resumable way.
+
+NOTE that both functions upload the file in one try. It is caller's responsibility to retry after the transmitting failed.
+
+.I stor
+presents a storage object and must be created via
+.BR qn_stor_create (3)
+before use.
 
 .I auth
-is a mandatory parameter which carries encryption information for creating appropriate token used in the `Authorization` HTTP header. Its definition is
+is a mandatory argument which carries encryption information for creating appropriate token used in the "Authorization" HTTP header. Its definition is
 
     typedef struct _QN_STOR_AUTH
     {
@@ -31,12 +49,63 @@ is a mandatory parameter which carries encryption information for creating appro
         } client_end;
     } qn_stor_auth, *qn_stor_auth_ptr;
 
-If the SDK is used in a secured environment, such as a server, the caller can just fill in the put policy with the access and secret keys directly. qn_stor_put_file() will generate the uptoken before sends the request. Otherwise, it's strongly recommended that NEVER put the secret key in an unsecured and trustless environment like mobile devices since there is a high possibility to be hacked.
+If the SDK is used in a secured environment, such as a server, the caller can just fill in the put-policy with the access and secret keys directly. Both functions will generate the uptoken before send the request. Otherwise, it's strongly recommended that NEVER put the secret key in an unsecured and trustless environment like mobile devices since there is a high possibility to be hacked. See
+.BR qiniu-put-policy (7)
+for more details.
+
+.I ext
+is an extra argument that provides option settings used to tune the upload behaviour. Passing a NULL value means to use the default settings. See
+.B EXTRA OPTIONS
+section for details.
+
+.SH EXTRA OPTIONS
+The
+.I ext
+argument has the following structure layout:
+    
+    typedef struct _QN_STOR_PUT_EXTRA
+    {
+        const char * 
+.IR final_key ;
+        const char * 
+.IR crc32 ;
+        const char *
+.IR accept_type ;
+
+        qn_stor_rgn
+.IR rgn ;
+
+        qn_stor_put_ctrl
+.IR put_ctrl ;
+    } qn_stor_put_extra, *qn_stor_put_extra_ptr;
+
+.I final_key
+designates the final key of the uploaded file in the bucket. It must be a UTF-8 encoded plain text string. If assigned with a NULL value, the upload server tries to use other methods to generate the key. See
+.BR qiniu-put-policy (7)
+for more details.
+
+.I crc32
+specifies the CRC32 checksum of the local file, which is calculated before upload. If set to a non-empty string, the upload server will check if the received data is correct. This is a fast but not safe way, since there are high possibilities of checksum collision in CRC series algorithms. Use
+.BR qiniu-etag (7)
+algorithm instead. See
+.BR qiniu-file-verification (7)
+for more details.
+
+.I accept_type
+designates an appropriate MIME type which will be returned to old version IE browsers (older than 7.0), since them can not recognize some MIME type correctly. For instance, the "application/json" type is treated as "application/octet-stream" in IE 6.0, so it will prompt the user to save the content into a file, not render it on the display.
+
+.I rgn
+specifies address information of the host to where upload files. The idea behind this extension is uploading files to and accessing them from the nearest data center, for saving a lot of potential troubles such as network delay. Those data centers are grouped as "Regions", where several centers reside in each. Users can choose to create buckets in different regions based on their bussiness. Lacking of region address information causes the SDK to upload files to the default region. See
+.BR qiniu-region (7)
+for more explanations.
+
+.I put_ctrl
+expects a customized file reader as the data source, no matter it's a regular file or not. Before and after reading data, it calls callback functions which provied by the caller to check or transform data, even abort the putting progress. If not specified, the SDK use a default data reader provided by the low level HTTP libraries. See
+.BR qiniu-put-file (7)
+for more explanations and usages.
 
 .SH RETURN VALUE
-If succeeds, 
-.BR qn_stor_put_file ()
-returns a JSON object contains meta information fields about the uploaded file, and some option fields such as transform job ID. So it has a basic structure looks like the following:
+If succeeds, both functions return a JSON object contains meta information fields about the uploaded file, and some option fields such as transform job ID. So the result has a basic structure looks like the following:
 
     {
         "fn-code":       <The HTTP code of the response>,
@@ -47,7 +116,7 @@ returns a JSON object contains meta information fields about the uploaded file, 
         "mimeType":     "<File's MIME type>",
         "putTime":       <File's last upload timestamp>,
 
-        "persistentId":  <Data transformation job ID>
+        "persistentId":  [Job ID, only returned when a data transformation is triggered]
     }
 
 The 
@@ -74,8 +143,12 @@ All possible HTTP codes and corresponding messages list as follow.
     | 631   | Bucket doesn't exist.                                 |
     +-------+-------------------------------------------------------+
 
-If fails, 
-.BR qn_stor_put_file ()
-returns a NULL value and an immediate call to
-.BR qn_err_get_message ()
+If fails, both functions return a NULL value and an immediate call to
+.BR qn_err_get_message (3)
 will return a message string to describe what happened.
+
+.SH AUTHORS
+LIANG Tao, a consultant works in Qiniu Cloud (QQ 510857, or emails to liangtao@qiniu.com or amethyst.black@gmail.com).
+
+.SH SEE ALSO
+.BR qn_stor_rp_put_file "(3), " qiniu-put-file "(7), " qiniu-put-policy "(7), " qiniu-region "(7), " qiniu-etag "(7), " qiniu-file-verification (7)
