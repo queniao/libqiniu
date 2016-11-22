@@ -17,12 +17,18 @@ typedef struct _QN_RDR_ENTRY
 
 typedef struct _QN_READER
 {
+    qn_io_reader vtbl;
+    qn_io_reader_ptr src_rdr;
     qn_rdr_pos pre_end;
     qn_rdr_pos post_end;
     qn_rdr_pos cap;
-    qn_io_reader_ptr src_rdr;
     qn_rdr_entry entries[1];
 } qn_reader;
+
+static qn_io_reader qn_rdr_vtable = {
+    (qn_io_read_fn) &qn_rdr_read,
+    (qn_io_advance_fn) &qn_rdr_advance
+};
 
 QN_API qn_reader_ptr qn_rdr_create(qn_io_reader_ptr src_rdr, qn_rdr_pos filter_num)
 {
@@ -40,6 +46,8 @@ QN_API qn_reader_ptr qn_rdr_create(qn_io_reader_ptr src_rdr, qn_rdr_pos filter_n
     new_rdr->pre_end = 0;
     new_rdr->post_end = filter_num - 1;
     new_rdr->cap = filter_num;
+
+    new_rdr->vtbl = qn_rdr_vtable;
     return new_rdr;
 }
 
@@ -54,6 +62,11 @@ QN_API void qn_rdr_reset(qn_reader_ptr restrict rdr)
 {
     rdr->pre_end = 0;
     rdr->post_end = rdr->cap - 1;
+}
+
+QN_API qn_io_reader_ptr qn_rdr_to_io_reader(qn_reader_ptr restrict rdr)
+{
+    return (qn_io_reader_ptr) rdr;
 }
 
 QN_API qn_bool qn_rdr_add_pre_filter(qn_reader_ptr restrict rdr, void * restrict filter_data, qn_rdr_filter_callback filter_cb)
@@ -120,6 +133,11 @@ QN_API ssize_t qn_rdr_read(qn_reader_ptr restrict rdr, char * restrict buf, size
     if (buf < real_buf) memmove(buf, real_buf, real_size);
 
     return real_size;
+}
+
+QN_API qn_bool qn_rdr_advance(qn_reader_ptr restrict rdr, size_t delta)
+{
+    return rdr->src_rdr->advance(rdr->src_rdr, delta);
 }
 
 #ifdef __cplusplus
