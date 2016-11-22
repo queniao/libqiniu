@@ -1613,7 +1613,7 @@ static size_t qn_stor_put_body_reader_callback(void * user_data, char * buf, siz
     qn_stor_put_reader_ptr prdr = (qn_stor_put_reader_ptr) user_data;
     ssize_t ret;
 
-    ret = qn_rdr_read(prdr->ext->put_ctrl.rdr, buf, size);
+    ret = prdr->ext->put_ctrl.rdr->read(prdr->ext->put_ctrl.rdr, buf, size);
     if (ret < 0) return CURL_READFUNC_ABORT;
     return ret;
 }

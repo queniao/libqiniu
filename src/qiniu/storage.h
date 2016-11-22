@@ -43,7 +43,7 @@ typedef struct _QN_STOR_RGN
 typedef struct _QN_STOR_PUT_CTRL
 {
     qn_fsize fsize;
-    qn_reader_ptr rdr;
+    qn_io_reader_ptr rdr;
 } qn_stor_put_ctrl, *qn_stor_put_ctrl_ptr;
 
 // ---- Declaration of Storage Basic Functions ----

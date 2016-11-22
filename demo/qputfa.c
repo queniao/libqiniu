@@ -91,7 +91,7 @@ int main(int argc, char * argv[])
             return 1;
         } // if
 
-        ext.put_ctrl.rdr = ctrl_rdr;
+        ext.put_ctrl.rdr = qn_rdr_to_io_reader(ctrl_rdr);
     } // if
 
     memset(&auth, 0, sizeof(auth));
