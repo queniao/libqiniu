@@ -23,6 +23,8 @@ QN_API extern qn_file_ptr qn_fl_open(const char * restrict fname, qn_fl_open_ext
 QN_API extern qn_file_ptr qn_fl_duplicate(qn_file_ptr restrict fl);
 QN_API extern void qn_fl_close(qn_file_ptr restrict fl);
 
+QN_API extern qn_io_reader_ptr qn_fl_to_io_reader(qn_file_ptr restrict fl);
+
 QN_API extern ssize_t qn_fl_read(qn_file_ptr restrict fl, char * restrict buf, size_t buf_size);
 QN_API extern qn_bool qn_fl_seek(qn_file_ptr restrict fl, qn_fsize offset);
 QN_API extern qn_bool qn_fl_advance(qn_file_ptr restrict fl, size_t delta);

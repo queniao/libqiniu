@@ -2020,7 +2020,7 @@ static qn_json_object_ptr qn_stor_rp_put_chunk_in_one_piece(qn_storage_ptr restr
     if (!srdr) return NULL;
 
     memset(&chk_rdr, 0, sizeof(qn_stor_rput_reader));
-    chk_rdr.rdr = (qn_io_reader_ptr) srdr;
+    chk_rdr.rdr = qn_io_srdr_to_io_reader(srdr);
     chk_rdr.ext = ext;
     qn_http_req_set_body_reader(stor->req, &chk_rdr, qn_stor_rp_chunk_body_reader_callback, chk_size);
 
@@ -2345,7 +2345,7 @@ static qn_json_object_ptr qn_stor_rp_put_file_in_serial_blocks(qn_storage_ptr re
 
         // TODO: Refresh the uptoken for every block, in the case that the deadline may expires between puts.
 
-        put_ret = qn_stor_rp_put_block(stor, auth, blk_info, (qn_io_reader_ptr) fl, ext);
+        put_ret = qn_stor_rp_put_block(stor, auth, blk_info, qn_fl_to_io_reader(fl), ext);
         if (!put_ret) {
             qn_fl_close(fl);
             return NULL;

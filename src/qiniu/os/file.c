@@ -97,6 +97,11 @@ QN_API void qn_fl_close(qn_file_ptr restrict fl)
     } // if
 }
 
+QN_API qn_io_reader_ptr qn_fl_to_io_reader(qn_file_ptr restrict fl)
+{
+    return &fl->vtbl;
+}
+
 QN_API ssize_t qn_fl_read(qn_file_ptr restrict fl, char * restrict buf, size_t buf_size)
 {
     ssize_t ret = read(fl->fd, buf, buf_size);

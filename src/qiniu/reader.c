@@ -66,7 +66,7 @@ QN_API void qn_rdr_reset(qn_reader_ptr restrict rdr)
 
 QN_API qn_io_reader_ptr qn_rdr_to_io_reader(qn_reader_ptr restrict rdr)
 {
-    return (qn_io_reader_ptr) rdr;
+    return &rdr->vtbl;
 }
 
 QN_API qn_bool qn_rdr_add_pre_filter(qn_reader_ptr restrict rdr, void * restrict filter_data, qn_rdr_filter_callback filter_cb)

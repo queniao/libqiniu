@@ -48,6 +48,11 @@ QN_API void qn_io_srdr_destroy(qn_io_section_reader_ptr restrict srdr)
     } // if
 }
 
+QN_API qn_io_reader_ptr qn_io_srdr_to_io_reader(qn_io_section_reader_ptr restrict srdr)
+{
+    return &srdr->vtbl;
+}
+
 QN_API ssize_t qn_io_srdr_read(qn_io_section_reader_ptr restrict srdr, char * restrict buf, size_t buf_size)
 {
     size_t reading_bytes;

@@ -62,7 +62,7 @@ int main(int argc, char * argv[])
             return 1;
         } // if
 
-        ctrl_rdr = qn_rdr_create((qn_io_reader_ptr) fl, 2);
+        ctrl_rdr = qn_rdr_create(qn_fl_to_io_reader(fl), 2);
         if (!ctrl_rdr) {
             qn_fl_close(fl);
             printf("Cannot create a controllabl reader.\n");
