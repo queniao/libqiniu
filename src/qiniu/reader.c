@@ -17,55 +17,60 @@ typedef struct _QN_RDR_ENTRY
 
 typedef struct _QN_READER
 {
-    qn_io_reader vtbl;
-    qn_io_reader_ptr src_rdr;
+    qn_io_reader_ptr rdr_vtbl;
+    qn_io_reader_itf src_rdr;
     qn_rdr_pos pre_end;
     qn_rdr_pos post_end;
     qn_rdr_pos cap;
     qn_rdr_pos auto_close_source:1;
     qn_rdr_entry entries[1];
-} qn_reader;
+} qn_reader_st;
 
-static void qn_rdr_close_fn(void * restrict user_data)
+static inline qn_reader_ptr qn_rdr_from_io_reader(qn_io_reader_itf restrict itf)
 {
-    qn_rdr_destroy((qn_reader_ptr) user_data);
+    return (qn_reader_ptr)( ( (char *) itf ) - (char *)( &((qn_reader_ptr)0)->rdr_vtbl ) );
 }
 
-static ssize_t qn_rdr_peek_fn(void * restrict user_data, char * restrict buf, size_t buf_size)
+static void qn_rdr_close_fn(qn_io_reader_itf restrict itf)
 {
-    return qn_rdr_peek((qn_reader_ptr) user_data, buf, buf_size);
+    qn_rdr_destroy(qn_rdr_from_io_reader(itf));
 }
 
-static ssize_t qn_rdr_read_fn(void * restrict user_data, char * restrict buf, size_t buf_size)
+static ssize_t qn_rdr_peek_fn(qn_io_reader_itf restrict itf, char * restrict buf, size_t buf_size)
 {
-    return qn_rdr_read((qn_reader_ptr) user_data, buf, buf_size);
+    return qn_rdr_peek(qn_rdr_from_io_reader(itf), buf, buf_size);
 }
 
-static qn_bool qn_rdr_seek_fn(void * restrict user_data, qn_fsize offset)
+static ssize_t qn_rdr_read_fn(qn_io_reader_itf restrict itf, char * restrict buf, size_t buf_size)
 {
-    return qn_rdr_seek((qn_reader_ptr) user_data, offset);
+    return qn_rdr_read(qn_rdr_from_io_reader(itf), buf, buf_size);
 }
 
-static qn_bool qn_rdr_advance_fn(void * restrict user_data, size_t delta)
+static qn_bool qn_rdr_seek_fn(qn_io_reader_itf restrict itf, qn_fsize offset)
 {
-    return qn_rdr_advance((qn_reader_ptr) user_data, delta);
+    return qn_rdr_seek(qn_rdr_from_io_reader(itf), offset);
 }
 
-static qn_io_reader_ptr qn_rdr_duplicate_fn(void * restrict user_data)
+static qn_bool qn_rdr_advance_fn(qn_io_reader_itf restrict itf, size_t delta)
 {
-    qn_reader_ptr new_rdr = qn_rdr_duplicate((qn_reader_ptr) user_data);
+    return qn_rdr_advance(qn_rdr_from_io_reader(itf), delta);
+}
+
+static qn_io_reader_itf qn_rdr_duplicate_fn(qn_io_reader_itf restrict itf)
+{
+    qn_reader_ptr new_rdr = qn_rdr_duplicate(qn_rdr_from_io_reader(itf));
     if (!new_rdr) return NULL;
     return qn_rdr_to_io_reader(new_rdr);
 }
 
-static qn_io_reader_ptr qn_rdr_section_fn(void * restrict user_data, qn_fsize offset, size_t sec_size)
+static qn_io_reader_itf qn_rdr_section_fn(qn_io_reader_itf restrict itf, qn_fsize offset, size_t sec_size)
 {
-    qn_reader_ptr new_rdr = qn_rdr_section((qn_reader_ptr) user_data, offset, sec_size);
+    qn_reader_ptr new_rdr = qn_rdr_section(qn_rdr_from_io_reader(itf), offset, sec_size);
     if (!new_rdr) return NULL;
     return qn_rdr_to_io_reader(new_rdr);
 }
 
-static qn_io_reader qn_rdr_vtable = {
+static qn_io_reader_st qn_rdr_vtable = {
     &qn_rdr_close_fn,
     &qn_rdr_peek_fn,
     &qn_rdr_read_fn,
@@ -75,19 +80,19 @@ static qn_io_reader qn_rdr_vtable = {
     &qn_rdr_section_fn
 };
 
-QN_API qn_reader_ptr qn_rdr_create(qn_io_reader_ptr src_rdr, qn_rdr_pos filter_num)
+QN_API qn_reader_ptr qn_rdr_create(qn_io_reader_itf src_rdr, qn_rdr_pos filter_num)
 {
     qn_reader_ptr new_rdr;
 
     if (filter_num < 1) filter_num = 1;
 
-    new_rdr = calloc(1, sizeof(qn_reader) + sizeof(qn_rdr_entry) * (filter_num - 1));
+    new_rdr = calloc(1, sizeof(qn_reader_st) + sizeof(qn_rdr_entry) * (filter_num - 1));
     if (!new_rdr) {
         qn_err_set_out_of_memory();
         return NULL;
     } // if
 
-    new_rdr->src_rdr = src_rdr->duplicate(src_rdr);
+    new_rdr->src_rdr = qn_io_duplicate(src_rdr);
     if (!new_rdr->src_rdr) {
         free(new_rdr);
         return NULL;
@@ -97,14 +102,14 @@ QN_API qn_reader_ptr qn_rdr_create(qn_io_reader_ptr src_rdr, qn_rdr_pos filter_n
     new_rdr->post_end = filter_num - 1;
     new_rdr->cap = filter_num;
 
-    new_rdr->vtbl = qn_rdr_vtable;
+    new_rdr->rdr_vtbl = &qn_rdr_vtable;
     return new_rdr;
 }
 
 QN_API void qn_rdr_destroy(qn_reader_ptr restrict rdr)
 {
     if (rdr) {
-        if (rdr->auto_close_source) rdr->src_rdr->close(rdr->src_rdr);
+        if (rdr->auto_close_source) qn_io_close(rdr->src_rdr);
         free(rdr);
     } // if
 }
@@ -115,9 +120,9 @@ QN_API void qn_rdr_reset(qn_reader_ptr restrict rdr)
     rdr->post_end = rdr->cap - 1;
 }
 
-QN_API qn_io_reader_ptr qn_rdr_to_io_reader(qn_reader_ptr restrict rdr)
+QN_API qn_io_reader_itf qn_rdr_to_io_reader(qn_reader_ptr restrict rdr)
 {
-    return &rdr->vtbl;
+    return &rdr->rdr_vtbl;
 }
 
 QN_API qn_bool qn_rdr_add_pre_filter(qn_reader_ptr restrict rdr, void * restrict filter_data, qn_rdr_filter_callback filter_cb)
@@ -165,9 +170,9 @@ static ssize_t qn_rdr_do_read(qn_reader_ptr restrict rdr, char * restrict buf, s
 
     reserved_size = buf - real_buf;
     if (only_peek) {
-        ret = rdr->src_rdr->peek(rdr->src_rdr, real_buf, real_size);
+        ret = qn_io_peek(rdr->src_rdr, real_buf, real_size);
     } else {
-        ret = rdr->src_rdr->read(rdr->src_rdr, real_buf, real_size);
+        ret = qn_io_read(rdr->src_rdr, real_buf, real_size);
     } // if
     if (ret < 0) return ret;
 
@@ -199,21 +204,21 @@ QN_API ssize_t qn_rdr_read(qn_reader_ptr restrict rdr, char * restrict buf, size
 
 QN_API qn_bool qn_rdr_seek(qn_reader_ptr restrict rdr, qn_fsize offset)
 {
-    return rdr->src_rdr->seek(rdr->src_rdr, offset);
+    return qn_io_seek(rdr->src_rdr, offset);
 }
 
 QN_API qn_bool qn_rdr_advance(qn_reader_ptr restrict rdr, size_t delta)
 {
-    return rdr->src_rdr->advance(rdr->src_rdr, delta);
+    return qn_io_advance(rdr->src_rdr, delta);
 }
 
-static qn_reader_ptr qn_rdr_do_duplicate(qn_reader_ptr restrict rdr, qn_io_reader_ptr src_rdr)
+static qn_reader_ptr qn_rdr_do_duplicate(qn_reader_ptr restrict rdr, qn_io_reader_itf restrict src_rdr)
 {
-    size_t size = sizeof(qn_reader) + sizeof(qn_rdr_entry) * (rdr->cap - 1);
+    size_t size = sizeof(qn_reader_st) + sizeof(qn_rdr_entry) * (rdr->cap - 1);
     qn_reader_ptr new_rdr = malloc(size);
     if (!new_rdr) {
         qn_err_set_out_of_memory();
-        src_rdr->close(src_rdr);
+        qn_io_close(src_rdr);
         return NULL;
     } // if
 
@@ -225,14 +230,14 @@ static qn_reader_ptr qn_rdr_do_duplicate(qn_reader_ptr restrict rdr, qn_io_reade
 
 QN_API qn_reader_ptr qn_rdr_duplicate(qn_reader_ptr restrict rdr)
 {
-    qn_io_reader_ptr new_src_rdr = rdr->src_rdr->duplicate(rdr->src_rdr);
+    qn_io_reader_itf new_src_rdr = qn_io_duplicate(rdr->src_rdr);
     if (!new_src_rdr) return NULL;
     return qn_rdr_do_duplicate(rdr, new_src_rdr);
 }
 
 QN_API qn_reader_ptr qn_rdr_section(qn_reader_ptr restrict rdr, qn_fsize offset, size_t sec_size)
 {
-    qn_io_reader_ptr new_src_rdr = rdr->src_rdr->section(rdr->src_rdr, offset, sec_size);
+    qn_io_reader_itf new_src_rdr = qn_io_section(rdr->src_rdr, offset, sec_size);
     if (!new_src_rdr) return NULL;
     return qn_rdr_do_duplicate(rdr, new_src_rdr);
 }

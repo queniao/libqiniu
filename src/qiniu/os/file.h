@@ -28,7 +28,7 @@ QN_API extern void qn_fl_close(qn_file_ptr restrict fl);
 QN_API extern qn_file_ptr qn_fl_duplicate(qn_file_ptr restrict fl);
 QN_API extern qn_fl_section_ptr qn_fl_section(qn_file_ptr restrict fl, qn_fsize offset, size_t sec_size);
 
-QN_API extern qn_io_reader_ptr qn_fl_to_io_reader(qn_file_ptr restrict fl);
+QN_API extern qn_io_reader_itf qn_fl_to_io_reader(qn_file_ptr restrict fl);
 
 QN_API extern ssize_t qn_fl_peek(qn_file_ptr restrict fl, char * restrict buf, size_t buf_size);
 QN_API extern ssize_t qn_fl_read(qn_file_ptr restrict fl, char * restrict buf, size_t buf_size);
@@ -57,7 +57,7 @@ QN_API extern qn_bool qn_fl_sec_reset(qn_fl_section_ptr restrict fs);
 QN_API extern qn_fl_section_ptr qn_fl_sec_duplicate(qn_fl_section_ptr restrict fs);
 QN_API extern qn_fl_section_ptr qn_fl_sec_section(qn_fl_section_ptr restrict fs, qn_fsize offset, size_t sec_size);
 
-QN_API extern qn_io_reader_ptr qn_fl_sec_to_io_reader(qn_fl_section_ptr restrict fs);
+QN_API extern qn_io_reader_itf qn_fl_sec_to_io_reader(qn_fl_section_ptr restrict fs);
 
 QN_API extern ssize_t qn_fl_sec_peek(qn_fl_section_ptr restrict fs, char * restrict buf, size_t buf_size);
 QN_API extern ssize_t qn_fl_sec_read(qn_fl_section_ptr restrict fs, char * restrict buf, size_t buf_size);

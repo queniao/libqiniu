@@ -43,7 +43,7 @@ typedef struct _QN_STOR_RGN
 typedef struct _QN_STOR_PUT_CTRL
 {
     qn_fsize fsize;
-    qn_io_reader_ptr rdr;
+    qn_io_reader_itf rdr;
 } qn_stor_put_ctrl, *qn_stor_put_ctrl_ptr;
 
 // ---- Declaration of Storage Basic Functions ----
@@ -257,8 +257,8 @@ typedef struct _QN_STOR_RESUMABLE_PUT_EXTRA
     qn_stor_rgn rgn;
 } qn_stor_rput_extra, *qn_stor_rput_extra_ptr;
 
-QN_API extern qn_json_object_ptr qn_stor_rp_put_chunk(qn_storage_ptr restrict stor, qn_stor_auth_ptr restrict auth, qn_json_object_ptr restrict blk_info, qn_io_reader_ptr restrict rdr, int chk_size, qn_stor_rput_extra_ptr restrict ext);
-QN_API extern qn_json_object_ptr qn_stor_rp_put_block(qn_storage_ptr restrict stor, qn_stor_auth_ptr restrict auth, qn_json_object_ptr restrict blk_info, qn_io_reader_ptr restrict rdr, qn_stor_rput_extra_ptr restrict ext);
+QN_API extern qn_json_object_ptr qn_stor_rp_put_chunk(qn_storage_ptr restrict stor, qn_stor_auth_ptr restrict auth, qn_json_object_ptr restrict blk_info, qn_io_reader_itf restrict rdr, int chk_size, qn_stor_rput_extra_ptr restrict ext);
+QN_API extern qn_json_object_ptr qn_stor_rp_put_block(qn_storage_ptr restrict stor, qn_stor_auth_ptr restrict auth, qn_json_object_ptr restrict blk_info, qn_io_reader_itf restrict rdr, qn_stor_rput_extra_ptr restrict ext);
 QN_API extern qn_json_object_ptr qn_stor_rp_make_file(qn_storage_ptr restrict stor, qn_stor_auth_ptr restrict auth, qn_stor_rput_session_ptr restrict ss, qn_stor_rput_extra_ptr restrict ext);
 
 QN_API extern qn_json_object_ptr qn_stor_rp_put_file(qn_storage_ptr restrict stor, qn_stor_auth_ptr restrict auth, qn_stor_rput_session_ptr * restrict ss, const char * restrict fname, qn_stor_rput_extra_ptr restrict ext);

@@ -1613,7 +1613,7 @@ static size_t qn_stor_put_body_reader_callback(void * user_data, char * buf, siz
     qn_stor_put_reader_ptr prdr = (qn_stor_put_reader_ptr) user_data;
     ssize_t ret;
 
-    ret = prdr->ext->put_ctrl.rdr->read(prdr->ext->put_ctrl.rdr, buf, size);
+    ret = qn_io_read(prdr->ext->put_ctrl.rdr, buf, size);
     if (ret < 0) return CURL_READFUNC_ABORT;
     return ret;
 }
@@ -1963,7 +1963,7 @@ QN_API qn_bool qn_stor_rs_is_putting_block_done(const qn_stor_rput_session_ptr r
 
 typedef struct _QN_STOR_RESUMABLE_PUT_READER
 {
-    qn_io_reader_ptr rdr;
+    qn_io_reader_itf rdr;
     qn_stor_rput_extra_ptr ext;
 } qn_stor_rput_reader, *qn_stor_rput_reader_ptr;
 
@@ -1971,11 +1971,11 @@ static size_t qn_stor_rp_chunk_body_reader_callback(void * user_data, char * buf
 {
     size_t ret;
     qn_stor_rput_reader_ptr chk_rdr = (qn_stor_rput_reader_ptr) user_data;
-    ret = chk_rdr->rdr->read(chk_rdr->rdr, buf, size);
+    ret = qn_io_read(chk_rdr->rdr, buf, size);
     return ret;
 }
 
-static qn_json_object_ptr qn_stor_rp_put_chunk_in_one_piece(qn_storage_ptr restrict stor, qn_stor_auth_ptr restrict auth, qn_json_object_ptr restrict blk_info, qn_io_reader_ptr restrict rdr, int chk_size, const qn_string restrict url, const qn_rgn_entry_ptr rgn_entry, qn_stor_rput_extra_ptr restrict ext)
+static qn_json_object_ptr qn_stor_rp_put_chunk_in_one_piece(qn_storage_ptr restrict stor, qn_stor_auth_ptr restrict auth, qn_json_object_ptr restrict blk_info, qn_io_reader_itf restrict rdr, int chk_size, const qn_string restrict url, const qn_rgn_entry_ptr rgn_entry, qn_stor_rput_extra_ptr restrict ext)
 {
     qn_bool ret;
     qn_string uptoken;
@@ -2035,7 +2035,7 @@ static qn_json_object_ptr qn_stor_rp_put_chunk_in_one_piece(qn_storage_ptr restr
     } // if
 
     memset(&chk_rdr, 0, sizeof(qn_stor_rput_reader));
-    chk_rdr.rdr = rdr->section(rdr, offset,  chk_size);
+    chk_rdr.rdr = qn_io_section(rdr, offset, chk_size);
     chk_rdr.ext = ext;
 
     if (!chk_rdr.rdr) return NULL;
@@ -2044,17 +2044,17 @@ static qn_json_object_ptr qn_stor_rp_put_chunk_in_one_piece(qn_storage_ptr restr
 
     // ---- Prepare the JSON body writer.
     if (! (stor->obj_body = qn_json_create_object())) {
-        chk_rdr.rdr->close(chk_rdr.rdr);
+        qn_io_close(chk_rdr.rdr);
         return NULL;
     } // if
 
     if (! (qn_json_set_integer(stor->obj_body, "fn-code", 0))) {
-        chk_rdr.rdr->close(chk_rdr.rdr);
+        qn_io_close(chk_rdr.rdr);
         return NULL;
     } // if
 
     if (! (qn_json_set_string(stor->obj_body, "fn-error", "OK"))) {
-        chk_rdr.rdr->close(chk_rdr.rdr);
+        qn_io_close(chk_rdr.rdr);
         return NULL;
     } // if
 
@@ -2063,7 +2063,7 @@ static qn_json_object_ptr qn_stor_rp_put_chunk_in_one_piece(qn_storage_ptr restr
 
     // ---- Do the put action.
     ret = qn_http_conn_post(stor->conn, url, stor->req, stor->resp);
-    chk_rdr.rdr->close(chk_rdr.rdr);
+    qn_io_close(chk_rdr.rdr);
 
     if (!ret) return NULL;
     qn_json_set_integer(stor->obj_body, "fn-code", qn_http_resp_get_code(stor->resp));
@@ -2094,7 +2094,7 @@ static qn_json_object_ptr qn_stor_rp_put_chunk_in_one_piece(qn_storage_ptr restr
     return stor->obj_body;
 }
 
-QN_API qn_json_object_ptr qn_stor_rp_put_chunk(qn_storage_ptr restrict stor, qn_stor_auth_ptr restrict auth, qn_json_object_ptr restrict blk_info, qn_io_reader_ptr restrict rdr, int chk_size, qn_stor_rput_extra_ptr restrict ext)
+QN_API qn_json_object_ptr qn_stor_rp_put_chunk(qn_storage_ptr restrict stor, qn_stor_auth_ptr restrict auth, qn_json_object_ptr restrict blk_info, qn_io_reader_itf restrict rdr, int chk_size, qn_stor_rput_extra_ptr restrict ext)
 {
     qn_json_object_ptr put_ret;
     qn_string host;
@@ -2133,7 +2133,7 @@ QN_API qn_json_object_ptr qn_stor_rp_put_chunk(qn_storage_ptr restrict stor, qn_
     return put_ret;
 }
 
-QN_API qn_json_object_ptr qn_stor_rp_put_block(qn_storage_ptr restrict stor, qn_stor_auth_ptr restrict auth, qn_json_object_ptr restrict blk_info, qn_io_reader_ptr restrict rdr, qn_stor_rput_extra_ptr restrict ext)
+QN_API qn_json_object_ptr qn_stor_rp_put_block(qn_storage_ptr restrict stor, qn_stor_auth_ptr restrict auth, qn_json_object_ptr restrict blk_info, qn_io_reader_itf restrict rdr, qn_stor_rput_extra_ptr restrict ext)
 {
     qn_rgn_entry_ptr old_entry;
     qn_json_object_ptr put_ret;
