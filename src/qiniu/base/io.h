@@ -9,27 +9,37 @@ extern "C"
 {
 #endif
 
+enum
+{
+    QN_IO_RDR_FILTERING_FAILED = -3,
+    QN_IO_RDR_READING_ABORTED = -2,
+    QN_IO_RDR_READING_FAILED = -1,
+    QN_IO_RDR_EOF = 0
+};
+
+struct _QN_IO_READER;
+typedef struct _QN_IO_READER * qn_io_reader_ptr;
+
+typedef void (*qn_io_close_fn)(void * restrict user_data);
+typedef ssize_t (*qn_io_peek_fn)(void * restrict user_data, char * restrict buf, size_t buf_size);
 typedef ssize_t (*qn_io_read_fn)(void * restrict user_data, char * restrict buf, size_t buf_size);
+typedef qn_bool (*qn_io_seek_fn)(void * restrict user_data, qn_fsize offset);
 typedef qn_bool (*qn_io_advance_fn)(void * restrict user_data, size_t delta);
+
+typedef qn_io_reader_ptr (*qn_io_duplicate_fn)(void * restrict user_data);
+typedef qn_io_reader_ptr (*qn_io_section_fn)(void * restrict user_data, qn_fsize offset, size_t sec_size);
 
 typedef struct _QN_IO_READER
 {
+    qn_io_close_fn close;
+    qn_io_peek_fn peek;
     qn_io_read_fn read;
+    qn_io_seek_fn seek;
     qn_io_advance_fn advance;
-} qn_io_reader, *qn_io_reader_ptr;
 
-// ----
-
-struct _QN_IO_SECTION_READER;
-typedef struct _QN_IO_SECTION_READER * qn_io_section_reader_ptr;
-
-QN_API extern qn_io_section_reader_ptr qn_io_srdr_create(qn_io_reader_ptr restrict src_rdr, size_t sec_size);
-QN_API extern void qn_io_srdr_destroy(qn_io_section_reader_ptr restrict srdr);
-
-QN_API extern qn_io_reader_ptr qn_io_srdr_to_io_reader(qn_io_section_reader_ptr restrict srdr);
-
-QN_API extern ssize_t qn_io_srdr_read(qn_io_section_reader_ptr restrict srdr, char * restrict buf, size_t buf_size);
-QN_API extern qn_bool qn_io_srdr_advance(qn_io_section_reader_ptr restrict srdr, size_t delta);
+    qn_io_duplicate_fn duplicate;
+    qn_io_section_fn section;
+} qn_io_reader;
 
 #ifdef __cplusplus
 }

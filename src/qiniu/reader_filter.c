@@ -40,8 +40,8 @@ QN_API qn_string qn_flt_etag_result(qn_flt_etag_ptr restrict etag)
 
 QN_API ssize_t qn_flt_etag_callback(void * restrict user_data, char ** restrict buf, size_t * restrict size)
 {
-    if (!qn_etag_ctx_update((qn_etag_context_ptr) user_data, *buf, *size)) return QN_RDR_FILTERING_FAILED;
-    return QN_RDR_SUCCEED;
+    if (!qn_etag_ctx_update((qn_etag_context_ptr) user_data, *buf, *size)) return QN_IO_RDR_FILTERING_FAILED;
+    return *size;
 }
 
 #ifdef __cplusplus

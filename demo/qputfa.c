@@ -17,8 +17,8 @@ static fsize_checker fc;
 static ssize_t fsize_checker_post_callback(void * user_data, char ** restrict buf, size_t * restrict buf_size)
 {
     fsize_checker_ptr fc = (fsize_checker_ptr) user_data;
-    if ((fc->offset += *buf_size) > fc->max_fsize) return QN_RDR_READING_ABORTED;
-    return QN_RDR_SUCCEED ;
+    if ((fc->offset += *buf_size) > fc->max_fsize) return QN_IO_RDR_READING_ABORTED;
+    return *buf_size;
 }
 
 int main(int argc, char * argv[])
