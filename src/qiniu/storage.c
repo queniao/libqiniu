@@ -1,3 +1,4 @@
+#include <assert.h>
 #include <curl/curl.h>
 
 #include "qiniu/base/errors.h"
@@ -110,28 +111,20 @@ static qn_bool qn_stor_prepare_common_request_headers(qn_storage_ptr restrict st
 
 // ---- Definition of Management ----
 
-static qn_bool qn_stor_prepare_managment(qn_storage_ptr restrict stor, const qn_string restrict url, const qn_string restrict hostname, const char * restrict acctoken, const qn_mac_ptr restrict mac)
+static qn_bool qn_stor_prepare_for_managing(qn_storage_ptr restrict stor, const qn_string restrict url, const qn_string restrict hostname, const qn_mac_ptr restrict mac)
 {
     qn_bool ret;
     qn_string auth_header;
     qn_string new_acctoken;
 
     if (!qn_stor_prepare_common_request_headers(stor)) return qn_false;
-
     if (hostname && !qn_http_req_set_header(stor->req, "Host", qn_str_cstr(hostname))) return qn_false;
 
-    if (acctoken) {
-        auth_header = qn_cs_sprintf("QBox %s", acctoken);
-    } else if (mac) {
-        new_acctoken = qn_mac_make_acctoken(mac, url, qn_http_req_body_data(stor->req), qn_http_req_body_size(stor->req));
-        if (!new_acctoken) return qn_false;
+    new_acctoken = qn_mac_make_acctoken(mac, url, qn_http_req_body_data(stor->req), qn_http_req_body_size(stor->req));
+    if (!new_acctoken) return qn_false;
 
-        auth_header = qn_cs_sprintf("QBox %s", new_acctoken);
-        qn_str_destroy(new_acctoken);
-    } else {
-        qn_err_stor_set_lack_of_authorization_information();
-        return qn_false;
-    } // if
+    auth_header = qn_cs_sprintf("QBox %s", new_acctoken);
+    qn_str_destroy(new_acctoken);
     if (!auth_header) return qn_false;
 
     ret = qn_http_req_set_header(stor->req, "Authorization", auth_header);
@@ -236,12 +229,17 @@ static const qn_string qn_stor_make_stat_op(const char * restrict bucket, const 
 *         If fails, the function returns a NULL value and the caller can call
 *         qn_err_get_message() to check out what happened.
 *******************************************************************************/
-QN_API qn_json_object_ptr qn_stor_stat(qn_storage_ptr restrict stor, const qn_stor_auth_ptr restrict auth, const char * restrict bucket, const char * restrict key, qn_stor_stat_extra_ptr restrict ext)
+QN_API qn_json_object_ptr qn_stor_stat(qn_storage_ptr restrict stor, const qn_mac_ptr restrict mac, const char * restrict bucket, const char * restrict key, qn_stor_stat_extra_ptr restrict ext)
 {
     qn_bool ret;
     qn_string op;
     qn_string url;
     qn_rgn_entry_ptr rgn_entry;
+
+    assert(stor);
+    assert(mac);
+    assert(bucket);
+    assert(key);
 
     // ---- Process all extra options.
     if (ext) {
@@ -262,7 +260,7 @@ QN_API qn_json_object_ptr qn_stor_stat(qn_storage_ptr restrict stor, const qn_st
     // ---- Prepare the request and response.
     qn_stor_reset(stor);
 
-    if (!qn_stor_prepare_managment(stor, url, rgn_entry->hostname, auth->client_end.acctoken, auth->server_end.mac)) {
+    if (!qn_stor_prepare_for_managing(stor, url, rgn_entry->hostname, mac)) {
         qn_str_destroy(url);
         return NULL;
     } // if
@@ -381,13 +379,20 @@ static const qn_string qn_stor_make_copy_op(const char * restrict src_bucket, co
 *         If fails, the function returns a NULL value and the caller can call
 *         qn_err_get_message() to check out what happened.
 *******************************************************************************/
-QN_API qn_json_object_ptr qn_stor_copy(qn_storage_ptr restrict stor, const qn_stor_auth_ptr restrict auth, const char * restrict src_bucket, const char * restrict src_key, const char * restrict dest_bucket, const char * restrict dest_key, qn_stor_copy_extra_ptr restrict ext)
+QN_API qn_json_object_ptr qn_stor_copy(qn_storage_ptr restrict stor, const qn_mac_ptr restrict mac, const char * restrict src_bucket, const char * restrict src_key, const char * restrict dest_bucket, const char * restrict dest_key, qn_stor_copy_extra_ptr restrict ext)
 {
     qn_bool ret;
     qn_string op;
     qn_string url;
     qn_string url_tmp;
     qn_rgn_entry_ptr rgn_entry;
+
+    assert(stor);
+    assert(mac);
+    assert(src_bucket);
+    assert(src_key);
+    assert(dest_bucket);
+    assert(dest_key);
 
     // ---- Process all extra options.
     if (ext) {
@@ -421,7 +426,7 @@ QN_API qn_json_object_ptr qn_stor_copy(qn_storage_ptr restrict stor, const qn_st
     // -- Nothing to post.
     qn_http_req_set_body_data(stor->req, "", 0);
 
-    if (!qn_stor_prepare_managment(stor, url, rgn_entry->hostname, auth->client_end.acctoken, auth->server_end.mac)) {
+    if (!qn_stor_prepare_for_managing(stor, url, rgn_entry->hostname, mac)) {
         qn_str_destroy(url);
         return NULL;
     } // if
@@ -540,12 +545,19 @@ static const qn_string qn_stor_make_move_op(const char * restrict src_bucket, co
 *         If fails, the function returns a NULL value and the caller can call
 *         qn_err_get_message() to check out what happened.
 *******************************************************************************/
-QN_API qn_json_object_ptr qn_stor_move(qn_storage_ptr restrict stor, const qn_stor_auth_ptr restrict auth, const char * restrict src_bucket, const char * restrict src_key, const char * restrict dest_bucket, const char * restrict dest_key, qn_stor_move_extra_ptr restrict ext)
+QN_API qn_json_object_ptr qn_stor_move(qn_storage_ptr restrict stor, const qn_mac_ptr restrict mac, const char * restrict src_bucket, const char * restrict src_key, const char * restrict dest_bucket, const char * restrict dest_key, qn_stor_move_extra_ptr restrict ext)
 {
     qn_bool ret;
     qn_string op;
     qn_string url;
     qn_rgn_entry_ptr rgn_entry;
+
+    assert(stor);
+    assert(mac);
+    assert(src_bucket);
+    assert(src_key);
+    assert(dest_bucket);
+    assert(dest_key);
 
     // ---- Process all extra options.
     if (ext) {
@@ -569,7 +581,7 @@ QN_API qn_json_object_ptr qn_stor_move(qn_storage_ptr restrict stor, const qn_st
     // -- Nothing to post.
     qn_http_req_set_body_data(stor->req, "", 0);
 
-    if (!qn_stor_prepare_managment(stor, url, rgn_entry->hostname, auth->client_end.acctoken, auth->server_end.mac)) {
+    if (!qn_stor_prepare_for_managing(stor, url, rgn_entry->hostname, mac)) {
         qn_str_destroy(url);
         return NULL;
     } // if
@@ -674,12 +686,17 @@ static qn_string qn_stor_make_delete_op(const char * restrict bucket, const char
 *         If fails, the function returns a NULL value and the caller can call
 *         qn_err_get_message() to check out what happened.
 *******************************************************************************/
-QN_API qn_json_object_ptr qn_stor_delete(qn_storage_ptr restrict stor, const qn_stor_auth_ptr restrict auth, const char * restrict bucket, const char * restrict key, qn_stor_delete_extra_ptr restrict ext)
+QN_API qn_json_object_ptr qn_stor_delete(qn_storage_ptr restrict stor, const qn_mac_ptr restrict mac, const char * restrict bucket, const char * restrict key, qn_stor_delete_extra_ptr restrict ext)
 {
     qn_bool ret;
     qn_string op;
     qn_string url;
     qn_rgn_entry_ptr rgn_entry;
+
+    assert(stor);
+    assert(mac);
+    assert(bucket);
+    assert(key);
 
     // ---- Process all extra options.
     if (ext) {
@@ -703,7 +720,7 @@ QN_API qn_json_object_ptr qn_stor_delete(qn_storage_ptr restrict stor, const qn_
     // -- Nothing to post.
     qn_http_req_set_body_data(stor->req, "", 0);
 
-    if (!qn_stor_prepare_managment(stor, url, rgn_entry->hostname, auth->client_end.acctoken, auth->server_end.mac)) {
+    if (!qn_stor_prepare_for_managing(stor, url, rgn_entry->hostname, mac)) {
         qn_str_destroy(url);
         return NULL;
     } // if
@@ -796,13 +813,19 @@ QN_API qn_json_object_ptr qn_stor_delete(qn_storage_ptr restrict stor, const qn_
 *         If fails, the function returns a NULL value and the caller can call
 *         qn_err_get_message() to check out what happened.
 *******************************************************************************/
-QN_API qn_json_object_ptr qn_stor_change_mime(qn_storage_ptr restrict stor, const qn_stor_auth_ptr restrict auth, const char * restrict bucket, const char * restrict key, const char * restrict mime, qn_stor_change_mime_extra_ptr restrict ext)
+QN_API qn_json_object_ptr qn_stor_change_mime(qn_storage_ptr restrict stor, const qn_mac_ptr restrict mac, const char * restrict bucket, const char * restrict key, const char * restrict mime, qn_stor_change_mime_extra_ptr restrict ext)
 {
     qn_bool ret;
     qn_string encoded_uri;
     qn_string encoded_mime;
     qn_string url;
     qn_rgn_entry_ptr rgn_entry;
+
+    assert(stor);
+    assert(mac);
+    assert(bucket);
+    assert(key);
+    assert(mime);
 
     // ---- Process all extra options.
     if (ext) {
@@ -832,7 +855,7 @@ QN_API qn_json_object_ptr qn_stor_change_mime(qn_storage_ptr restrict stor, cons
 
     qn_http_req_set_body_data(stor->req, "", 0);
 
-    if (!qn_stor_prepare_managment(stor, url, rgn_entry->hostname, auth->client_end.acctoken, auth->server_end.mac)) {
+    if (!qn_stor_prepare_for_managing(stor, url, rgn_entry->hostname, mac)) {
         qn_str_destroy(url);
         return NULL;
     } // if
@@ -946,13 +969,19 @@ QN_API qn_json_object_ptr qn_stor_change_mime(qn_storage_ptr restrict stor, cons
 *         If fails, the function returns a NULL value and the caller can call
 *         qn_err_get_message() to check out what happened.
 *******************************************************************************/
-QN_API qn_json_object_ptr qn_stor_fetch(qn_storage_ptr restrict stor, const qn_stor_auth_ptr restrict auth, const char * restrict src_url, const char * restrict dest_bucket, const char * restrict dest_key, qn_stor_fetch_extra_ptr restrict ext)
+QN_API qn_json_object_ptr qn_stor_fetch(qn_storage_ptr restrict stor, const qn_mac_ptr restrict mac, const char * restrict src_url, const char * restrict dest_bucket, const char * restrict dest_key, qn_stor_fetch_extra_ptr restrict ext)
 {
     qn_bool ret;
     qn_string encoded_src_url;
     qn_string encoded_dest_uri;
     qn_string url;
     qn_rgn_entry_ptr rgn_entry;
+
+    assert(stor);
+    assert(mac);
+    assert(src_url);
+    assert(dest_bucket);
+    assert(dest_key);
 
     // ---- Process all extra options.
     if (ext) {
@@ -983,7 +1012,7 @@ QN_API qn_json_object_ptr qn_stor_fetch(qn_storage_ptr restrict stor, const qn_s
     // -- Nothing to post.
     qn_http_req_set_body_data(stor->req, "", 0);
 
-    if (!qn_stor_prepare_managment(stor, url, rgn_entry->hostname, auth->client_end.acctoken, auth->server_end.mac)) {
+    if (!qn_stor_prepare_for_managing(stor, url, rgn_entry->hostname, mac)) {
         qn_str_destroy(url);
         return NULL;
     } // if
@@ -1089,12 +1118,17 @@ QN_API qn_json_object_ptr qn_stor_fetch(qn_storage_ptr restrict stor, const qn_s
 *         If fails, the function returns a NULL value and the caller can call
 *         qn_err_get_message() to check out what happened.
 *******************************************************************************/
-QN_API qn_json_object_ptr qn_stor_prefetch(qn_storage_ptr restrict stor, const qn_stor_auth_ptr restrict auth, const char * restrict dest_bucket, const char * restrict dest_key, qn_stor_fetch_extra_ptr restrict ext)
+QN_API qn_json_object_ptr qn_stor_prefetch(qn_storage_ptr restrict stor, const qn_mac_ptr restrict mac, const char * restrict dest_bucket, const char * restrict dest_key, qn_stor_fetch_extra_ptr restrict ext)
 {
     qn_bool ret;
     qn_string encoded_dest_uri;
     qn_string url;
     qn_rgn_entry_ptr rgn_entry;
+
+    assert(stor);
+    assert(mac);
+    assert(dest_bucket);
+    assert(dest_key);
 
     // ---- Process all extra options.
     if (ext) {
@@ -1118,7 +1152,7 @@ QN_API qn_json_object_ptr qn_stor_prefetch(qn_storage_ptr restrict stor, const q
     // -- Nothing to post.
     qn_http_req_set_body_data(stor->req, "", 0);
 
-    if (!qn_stor_prepare_managment(stor, url, rgn_entry->hostname, auth->client_end.acctoken, auth->server_end.mac)) {
+    if (!qn_stor_prepare_for_managing(stor, url, rgn_entry->hostname, mac)) {
         qn_str_destroy(url);
         return NULL;
     } // if
@@ -1245,7 +1279,7 @@ QN_API qn_json_object_ptr qn_stor_prefetch(qn_storage_ptr restrict stor, const q
 *         If fails, the function returns a NULL value and the caller can call
 *         qn_err_get_message() to check out what happened.
 *******************************************************************************/
-QN_API qn_json_object_ptr qn_stor_list(qn_storage_ptr restrict stor, const qn_stor_auth_ptr restrict auth, const char * restrict bucket, qn_stor_list_extra_ptr restrict ext)
+QN_API qn_json_object_ptr qn_stor_list(qn_storage_ptr restrict stor, const qn_mac_ptr restrict mac, const char * restrict bucket, qn_stor_list_extra_ptr restrict ext)
 {
     qn_bool ret;
     qn_string url;
@@ -1257,6 +1291,10 @@ QN_API qn_json_object_ptr qn_stor_list(qn_storage_ptr restrict stor, const qn_st
     qn_rgn_entry_ptr rgn_entry;
     int i;
     int limit = 1000;
+
+    assert(stor);
+    assert(mac);
+    assert(bucket);
 
     // ---- Process all extra options.
     if (ext) {
@@ -1320,7 +1358,7 @@ QN_API qn_json_object_ptr qn_stor_list(qn_storage_ptr restrict stor, const qn_st
 
         qn_http_req_set_body_data(stor->req, "", 0);
 
-        if (!qn_stor_prepare_managment(stor, url, rgn_entry->hostname, auth->client_end.acctoken, auth->server_end.mac)) {
+        if (!qn_stor_prepare_for_managing(stor, url, rgn_entry->hostname, mac)) {
             qn_str_destroy(url);
             qn_http_qry_destroy(qry);
             return NULL;
@@ -1516,13 +1554,17 @@ QN_API qn_bool qn_stor_bt_add_delete_op(qn_stor_batch_ptr restrict bt, const cha
     return ret;
 }
 
-QN_API qn_json_object_ptr qn_stor_execute_batch_opertions(qn_storage_ptr restrict stor, const qn_stor_auth_ptr restrict auth, const qn_stor_batch_ptr restrict bt, qn_stor_batch_extra_ptr restrict ext)
+QN_API qn_json_object_ptr qn_stor_execute_batch_opertions(qn_storage_ptr restrict stor, const qn_mac_ptr restrict mac, const qn_stor_batch_ptr restrict bt, qn_stor_batch_extra_ptr restrict ext)
 {
     qn_bool ret;
     qn_string body;
     qn_string url;
     qn_json_object_ptr fake_obj_body;
     qn_rgn_entry_ptr rgn_entry;
+
+    assert(stor);
+    assert(mac);
+    assert(bt);
 
     // ---- Process all extra options.
     if (ext) {
@@ -1547,7 +1589,7 @@ QN_API qn_json_object_ptr qn_stor_execute_batch_opertions(qn_storage_ptr restric
 
     qn_http_req_set_body_data(stor->req, qn_str_cstr(body), qn_str_size(body));
 
-    if (!qn_stor_prepare_managment(stor, url, rgn_entry->hostname, auth->client_end.acctoken, auth->server_end.mac)) {
+    if (!qn_stor_prepare_for_managing(stor, url, rgn_entry->hostname, mac)) {
         qn_str_destroy(url);
         qn_str_destroy(body);
         return NULL;
@@ -1618,10 +1660,8 @@ static size_t qn_stor_put_body_reader_callback(void * user_data, char * buf, siz
     return ret;
 }
 
-static qn_bool qn_stor_prepare_for_putting_file(qn_storage_ptr restrict stor, const qn_stor_auth_ptr restrict auth, qn_stor_put_extra_ptr restrict ext)
+static qn_bool qn_stor_prepare_for_putting_file(qn_storage_ptr restrict stor, const char * restrict uptoken, qn_stor_put_extra_ptr restrict ext)
 {
-    qn_bool ret;
-    qn_string uptoken;
     qn_http_form_ptr form;
 
     // ---- Prepare request and response
@@ -1634,20 +1674,7 @@ static qn_bool qn_stor_prepare_for_putting_file(qn_storage_ptr restrict stor, co
     if (! (form = qn_http_req_prepare_form(stor->req))) return qn_false;
 
     // **NOTE** : The uptoken MUST be the first form item.
-    if (auth->client_end.uptoken) {
-        if (!qn_http_form_add_string(form, "token", auth->client_end.uptoken, strlen(auth->client_end.uptoken))) return qn_false;
-    } else if (auth->server_end.mac && auth->server_end.put_policy) {
-        uptoken = qn_pp_to_uptoken(auth->server_end.put_policy, auth->server_end.mac);
-        if (!uptoken) return qn_false;
-
-        ret = qn_http_form_add_string(form, "token", qn_str_cstr(uptoken), qn_str_size(uptoken));
-        qn_str_destroy(uptoken);
-        if (!ret) return qn_false;
-    } else {
-        qn_err_stor_set_lack_of_authorization_information();
-        return qn_false;
-    } // if
-
+    if (!qn_http_form_add_string(form, "token", uptoken, strlen(uptoken))) return qn_false;
     if (ext->final_key && !qn_http_form_add_string(form, "key", ext->final_key, strlen(ext->final_key))) return qn_false;
     if (ext->crc32 && !qn_http_form_add_string(form, "crc32", ext->crc32, strlen(ext->crc32))) return qn_false;
     if (ext->accept_type && !qn_http_form_add_string(form, "accept", ext->accept_type, strlen(ext->accept_type))) return qn_false;
@@ -1740,7 +1767,7 @@ static qn_bool qn_stor_prepare_for_putting_file(qn_storage_ptr restrict stor, co
 *         If fails, the function returns a NULL value and the caller can call
 *         qn_err_get_message() to check out what happened.
 *******************************************************************************/
-QN_API qn_json_object_ptr qn_stor_put_file(qn_storage_ptr restrict stor, const qn_stor_auth_ptr restrict auth, const char * restrict fname, qn_stor_put_extra_ptr restrict ext)
+QN_API qn_json_object_ptr qn_stor_put_file(qn_storage_ptr restrict stor, const char * restrict uptoken, const char * restrict fname, qn_stor_put_extra_ptr restrict ext)
 {
     qn_bool ret;
     qn_fl_info_ptr fi;
@@ -1748,6 +1775,9 @@ QN_API qn_json_object_ptr qn_stor_put_file(qn_storage_ptr restrict stor, const q
     qn_rgn_entry_ptr rgn_entry;
     qn_stor_put_reader prdr;
     qn_bool use_controllable_reader = qn_false;
+
+    assert(stor);
+    assert(uptoken);
 
     if (ext) {
         if (! (rgn_entry = ext->rgn.entry)) qn_rgn_tbl_choose_first_entry(ext->rgn.rtbl, QN_RGN_SVC_UP, NULL, &rgn_entry);
@@ -1761,7 +1791,7 @@ QN_API qn_json_object_ptr qn_stor_put_file(qn_storage_ptr restrict stor, const q
         qn_rgn_tbl_choose_first_entry(NULL, QN_RGN_SVC_UP, NULL, &rgn_entry);
     } // if
 
-    if (!qn_stor_prepare_for_putting_file(stor, auth, ext)) return NULL;
+    if (!qn_stor_prepare_for_putting_file(stor, uptoken, ext)) return NULL;
 
     // ----
     form = qn_http_req_get_form(stor->req);
@@ -1792,11 +1822,15 @@ QN_API qn_json_object_ptr qn_stor_put_file(qn_storage_ptr restrict stor, const q
     return stor->obj_body;
 }
 
-QN_API qn_json_object_ptr qn_stor_put_buffer(qn_storage_ptr restrict stor, const qn_stor_auth_ptr restrict auth, const char * restrict buf, int buf_size, qn_stor_put_extra_ptr restrict ext)
+QN_API qn_json_object_ptr qn_stor_put_buffer(qn_storage_ptr restrict stor, const char * restrict uptoken, const char * restrict buf, int buf_size, qn_stor_put_extra_ptr restrict ext)
 {
     qn_bool ret;
     qn_http_form_ptr form;
     qn_rgn_entry_ptr rgn_entry;
+
+    assert(stor);
+    assert(uptoken);
+    assert(buf);
 
     if (ext) {
         if (! (rgn_entry = ext->rgn.entry)) qn_rgn_tbl_choose_first_entry(ext->rgn.rtbl, QN_RGN_SVC_UP, NULL, &rgn_entry);
@@ -1805,7 +1839,7 @@ QN_API qn_json_object_ptr qn_stor_put_buffer(qn_storage_ptr restrict stor, const
         qn_rgn_tbl_choose_first_entry(NULL, QN_RGN_SVC_UP, NULL, &rgn_entry);
     } // if
 
-    if (!qn_stor_prepare_for_putting_file(stor, auth, ext)) return NULL;
+    if (!qn_stor_prepare_for_putting_file(stor, uptoken, ext)) return NULL;
 
     form = qn_http_req_get_form(stor->req);
 
@@ -1975,10 +2009,9 @@ static size_t qn_stor_rp_chunk_body_reader_callback(void * user_data, char * buf
     return ret;
 }
 
-static qn_json_object_ptr qn_stor_rp_put_chunk_in_one_piece(qn_storage_ptr restrict stor, qn_stor_auth_ptr restrict auth, qn_json_object_ptr restrict blk_info, qn_io_reader_itf restrict rdr, int chk_size, const qn_string restrict url, const qn_rgn_entry_ptr rgn_entry, qn_stor_rput_extra_ptr restrict ext)
+static qn_json_object_ptr qn_stor_rp_put_chunk_in_one_piece(qn_storage_ptr restrict stor, const char * restrict uptoken, qn_json_object_ptr restrict blk_info, qn_io_reader_itf restrict rdr, int chk_size, const qn_string restrict url, const qn_rgn_entry_ptr rgn_entry, qn_stor_rput_extra_ptr restrict ext)
 {
     qn_bool ret;
-    qn_string uptoken;
     qn_string auth_header;
     qn_string content_length;
     qn_string ctx;
@@ -1993,18 +2026,7 @@ static qn_json_object_ptr qn_stor_rp_put_chunk_in_one_piece(qn_storage_ptr restr
 
     // ---- Set all the HTTP request headers.
     // -- Set the `Authorization` header.
-    if (auth->client_end.uptoken) {
-        auth_header = qn_cs_sprintf("UpToken %s", auth->client_end.uptoken);
-    } else if (auth->server_end.mac && auth->server_end.put_policy) {
-        uptoken = qn_pp_to_uptoken(auth->server_end.put_policy, auth->server_end.mac);
-        if (!uptoken) return NULL;
-
-        auth_header = qn_cs_sprintf("UpToken %s", uptoken);
-        qn_str_destroy(uptoken);
-    } else {
-        qn_err_stor_set_lack_of_authorization_information();
-        return NULL;
-    } // if
+    auth_header = qn_cs_sprintf("UpToken %s", uptoken);
     if (!auth_header) return NULL;
 
     ret = qn_http_req_set_header(stor->req, "Authorization", auth_header);
@@ -2094,7 +2116,7 @@ static qn_json_object_ptr qn_stor_rp_put_chunk_in_one_piece(qn_storage_ptr restr
     return stor->obj_body;
 }
 
-QN_API qn_json_object_ptr qn_stor_rp_put_chunk(qn_storage_ptr restrict stor, qn_stor_auth_ptr restrict auth, qn_json_object_ptr restrict blk_info, qn_io_reader_itf restrict rdr, int chk_size, qn_stor_rput_extra_ptr restrict ext)
+QN_API qn_json_object_ptr qn_stor_rp_put_chunk(qn_storage_ptr restrict stor, const char * restrict uptoken, qn_json_object_ptr restrict blk_info, qn_io_reader_itf restrict rdr, int chk_size, qn_stor_rput_extra_ptr restrict ext)
 {
     qn_json_object_ptr put_ret;
     qn_string host;
@@ -2128,12 +2150,12 @@ QN_API qn_json_object_ptr qn_stor_rp_put_chunk(qn_storage_ptr restrict stor, qn_
     } // if
 
     // ---- Do the put action.
-    put_ret = qn_stor_rp_put_chunk_in_one_piece(stor, auth, blk_info, rdr, chk_size, url, rgn_entry, ext);
+    put_ret = qn_stor_rp_put_chunk_in_one_piece(stor, uptoken, blk_info, rdr, chk_size, url, rgn_entry, ext);
     qn_str_destroy(url);
     return put_ret;
 }
 
-QN_API qn_json_object_ptr qn_stor_rp_put_block(qn_storage_ptr restrict stor, qn_stor_auth_ptr restrict auth, qn_json_object_ptr restrict blk_info, qn_io_reader_itf restrict rdr, qn_stor_rput_extra_ptr restrict ext)
+QN_API qn_json_object_ptr qn_stor_rp_put_block(qn_storage_ptr restrict stor, const char * restrict uptoken, qn_json_object_ptr restrict blk_info, qn_io_reader_itf restrict rdr, qn_stor_rput_extra_ptr restrict ext)
 {
     qn_rgn_entry_ptr old_entry;
     qn_json_object_ptr put_ret;
@@ -2167,7 +2189,7 @@ QN_API qn_json_object_ptr qn_stor_rp_put_block(qn_storage_ptr restrict stor, qn_
         sending_bytes = blk_size - chk_offset;
         if (sending_bytes > chk_size) sending_bytes = chk_size;
 
-        if (! (put_ret = qn_stor_rp_put_chunk(stor, auth, blk_info, rdr, sending_bytes, ext))) {
+        if (! (put_ret = qn_stor_rp_put_chunk(stor, uptoken, blk_info, rdr, sending_bytes, ext))) {
             ext->rgn.entry = old_entry;
             return NULL;
         } // if
@@ -2179,10 +2201,9 @@ QN_API qn_json_object_ptr qn_stor_rp_put_block(qn_storage_ptr restrict stor, qn_
     return put_ret;
 }
 
-static qn_json_object_ptr qn_stor_rp_make_file_to_one_piece(qn_storage_ptr restrict stor, qn_stor_auth_ptr restrict auth, qn_stor_rput_session_ptr restrict ss, const qn_string restrict url, const qn_string restrict ctx_info, qn_stor_rput_extra_ptr restrict ext)
+static qn_json_object_ptr qn_stor_rp_make_file_to_one_piece(qn_storage_ptr restrict stor, const char * restrict uptoken, qn_stor_rput_session_ptr restrict ss, const qn_string restrict url, const qn_string restrict ctx_info, qn_stor_rput_extra_ptr restrict ext)
 {
     qn_bool ret;
-    qn_string uptoken;
     qn_string auth_header;
     qn_string content_length;
 
@@ -2191,18 +2212,7 @@ static qn_json_object_ptr qn_stor_rp_make_file_to_one_piece(qn_storage_ptr restr
 
     // ---- Set all the HTTP request headers.
     // -- Set the `Authorization` header.
-    if (auth->client_end.uptoken) {
-        auth_header = qn_cs_sprintf("UpToken %s", auth->client_end.uptoken);
-    } else if (auth->server_end.mac && auth->server_end.put_policy) {
-        uptoken = qn_pp_to_uptoken(auth->server_end.put_policy, auth->server_end.mac);
-        if (!uptoken) return NULL;
-
-        auth_header = qn_cs_sprintf("UpToken %s", uptoken);
-        qn_str_destroy(uptoken);
-    } else {
-        qn_err_stor_set_lack_of_authorization_information();
-        return NULL;
-    } // if
+    auth_header = qn_cs_sprintf("UpToken %s", uptoken);
     if (!auth_header) return NULL;
 
     ret = qn_http_req_set_header(stor->req, "Authorization", auth_header);
@@ -2241,7 +2251,7 @@ static qn_json_object_ptr qn_stor_rp_make_file_to_one_piece(qn_storage_ptr restr
     return stor->obj_body;
 }
 
-QN_API qn_json_object_ptr qn_stor_rp_make_file(qn_storage_ptr restrict stor, qn_stor_auth_ptr restrict auth, qn_stor_rput_session_ptr restrict ss, qn_stor_rput_extra_ptr restrict ext)
+QN_API qn_json_object_ptr qn_stor_rp_make_file(qn_storage_ptr restrict stor, const char * restrict uptoken, qn_stor_rput_session_ptr restrict ss, qn_stor_rput_extra_ptr restrict ext)
 {
     qn_json_object_ptr blk_info;
     qn_json_object_ptr make_ret;
@@ -2328,13 +2338,13 @@ QN_API qn_json_object_ptr qn_stor_rp_make_file(qn_storage_ptr restrict stor, qn_
         url = url_tmp;
     } // if
 
-    make_ret = qn_stor_rp_make_file_to_one_piece(stor, auth, ss, url, ctx_info, ext);
+    make_ret = qn_stor_rp_make_file_to_one_piece(stor, uptoken, ss, url, ctx_info, ext);
     qn_str_destroy(url);
     qn_str_destroy(ctx_info);
     return make_ret;
 }
 
-static qn_json_object_ptr qn_stor_rp_put_file_in_serial_blocks(qn_storage_ptr restrict stor, qn_stor_auth_ptr restrict auth, qn_stor_rput_session_ptr restrict ss, const char * restrict fname, qn_stor_rput_extra_ptr restrict ext)
+static qn_json_object_ptr qn_stor_rp_put_file_in_serial_blocks(qn_storage_ptr restrict stor, const char * restrict uptoken, qn_stor_rput_session_ptr restrict ss, const char * restrict fname, qn_stor_rput_extra_ptr restrict ext)
 {
     qn_file_ptr fl;
     qn_json_object_ptr blk_info;
@@ -2374,7 +2384,7 @@ static qn_json_object_ptr qn_stor_rp_put_file_in_serial_blocks(qn_storage_ptr re
 
         // TODO: Refresh the uptoken for every block, in the case that the deadline may expires between puts.
 
-        put_ret = qn_stor_rp_put_block(stor, auth, blk_info, qn_fl_to_io_reader(fl), ext);
+        put_ret = qn_stor_rp_put_block(stor, uptoken, blk_info, qn_fl_to_io_reader(fl), ext);
         if (!put_ret) {
             qn_fl_close(fl);
             return NULL;
@@ -2458,7 +2468,7 @@ static qn_json_object_ptr qn_stor_rp_put_file_in_serial_blocks(qn_storage_ptr re
 * If fails, the function returns a NULL value and the caller can call
 * **qn_err_get_message()** to check out what happened.
 *******************************************************************************/
-QN_API qn_json_object_ptr qn_stor_rp_put_file(qn_storage_ptr restrict stor, qn_stor_auth_ptr restrict auth, qn_stor_rput_session_ptr * restrict ss, const char * restrict fname, qn_stor_rput_extra_ptr restrict ext)
+QN_API qn_json_object_ptr qn_stor_rp_put_file(qn_storage_ptr restrict stor, const char * restrict uptoken, qn_stor_rput_session_ptr * restrict ss, const char * restrict fname, qn_stor_rput_extra_ptr restrict ext)
 {
     qn_rgn_entry_ptr old_entry;
     qn_json_object_ptr put_ret;
@@ -2485,11 +2495,11 @@ QN_API qn_json_object_ptr qn_stor_rp_put_file(qn_storage_ptr restrict stor, qn_s
         ext = &real_ext;
     } // if
 
-    put_ret = qn_stor_rp_put_file_in_serial_blocks(stor, auth, *ss, fname, ext);
+    put_ret = qn_stor_rp_put_file_in_serial_blocks(stor, uptoken, *ss, fname, ext);
     if (!put_ret) return NULL;
     if (qn_json_get_string(put_ret, "error", NULL)) return put_ret;
 
-    make_ret = qn_stor_rp_make_file(stor, auth, *ss, ext);
+    make_ret = qn_stor_rp_make_file(stor, uptoken, *ss, ext);
     if (!make_ret) return NULL;
     if (qn_json_get_string(make_ret, "error", NULL)) return make_ret;
 

@@ -23,14 +23,15 @@ static ssize_t fsize_checker_post_callback(void * user_data, char ** restrict bu
 
 int main(int argc, char * argv[])
 {
-    qn_mac_ptr mac;
-    qn_string scope;
-    qn_string put_ret;
     const char * bucket;
     const char * key;
     const char * fname;
+    qn_mac_ptr mac;
+    qn_string uptoken;
+    qn_string put_ret_str;
+    qn_json_object_ptr put_policy;
+    qn_json_object_ptr put_ret;
     qn_storage_ptr stor;
-    qn_stor_auth auth;
     qn_file_ptr fl;
     qn_reader_ptr ctrl_rdr = NULL;
     qn_flt_etag_ptr etag;
@@ -45,9 +46,29 @@ int main(int argc, char * argv[])
     } // if
 
     mac = qn_mac_create(argv[1], argv[2]);
+    if (! mac) {
+        printf("Cannot create a new mac due to application error `%s`.\n", qn_err_get_message());
+        return 1;
+    } // if
+
     bucket = argv[3];
     key = argv[4];
     fname = argv[5];
+
+    put_policy = qn_pp_create(bucket, key, time(NULL) + 3600);
+    if (! put_policy) {
+        qn_mac_destroy(mac);
+        printf("Cannot create a put policy due to application error `%s`.\n", qn_err_get_message());
+        return 1;
+    } // if
+
+    uptoken = qn_pp_to_uptoken(put_policy, mac);
+    qn_json_destroy_object(put_policy);
+    qn_mac_destroy(mac);
+    if (! uptoken) {
+        printf("Cannot make an uptoken due to application error `%s`.\n", qn_err_get_message());
+        return 1;
+    } // if
 
     memset(&ext, 0, sizeof(ext));
     ext.final_key = key;
@@ -58,20 +79,23 @@ int main(int argc, char * argv[])
 
         fl = qn_fl_open(fname, NULL);
         if (!fl) {
-            printf("Cannot open the '%s' file.\n", fname);
+            qn_str_destroy(uptoken);
+            printf("Cannot open the '%s' file due to application error `%s`.\n", fname, qn_err_get_message());
             return 1;
         } // if
 
         ctrl_rdr = qn_rdr_create(qn_fl_to_io_reader(fl), 2);
         if (!ctrl_rdr) {
             qn_fl_close(fl);
-            printf("Cannot create a controllabl reader.\n");
+            qn_str_destroy(uptoken);
+            printf("Cannot create a controllabl reader due to application error `%s`.\n", qn_err_get_message());
             return 1;
         } // if
         if (!qn_rdr_add_post_filter(ctrl_rdr, &fc, fsize_checker_post_callback)) {
             qn_rdr_destroy(ctrl_rdr);
             qn_fl_close(fl);
-            printf("Cannot add the fsize checker.\n");
+            qn_str_destroy(uptoken);
+            printf("Cannot add the fsize checker due to application error `%s`.\n", qn_err_get_message());
             return 1;
         } // if
 
@@ -79,7 +103,8 @@ int main(int argc, char * argv[])
         if (!etag) {
             qn_rdr_destroy(ctrl_rdr);
             qn_fl_close(fl);
-            printf("Cannot create a new etag calculator.\n");
+            qn_str_destroy(uptoken);
+            printf("Cannot create a new etag calculator due to application error `%s`.\n", qn_err_get_message());
             return 1;
         } // if
 
@@ -87,122 +112,67 @@ int main(int argc, char * argv[])
             qn_flt_etag_destroy(etag);
             qn_rdr_destroy(ctrl_rdr);
             qn_fl_close(fl);
-            printf("Cannot add the etag filter.\n");
+            qn_str_destroy(uptoken);
+            printf("Cannot add the etag filter due to application error `%s`.\n", qn_err_get_message());
             return 1;
         } // if
 
         ext.put_ctrl.rdr = qn_rdr_to_io_reader(ctrl_rdr);
     } // if
 
-    memset(&auth, 0, sizeof(auth));
-    auth.server_end.mac = mac;
-    auth.server_end.put_policy = qn_json_create_object();
-    if (!auth.server_end.put_policy) {
-        if (ctrl_rdr) {
-            qn_flt_etag_destroy(etag);
-            qn_rdr_destroy(ctrl_rdr);
-            qn_fl_close(fl);
-        } // if
-        qn_mac_destroy(mac);
-        printf("Cannot create a put policy.\n");
-        return 1;
-    } // if
-
-    scope = qn_cs_sprintf("%s:%s", bucket, key);
-    if (!scope) {
-        if (ctrl_rdr) {
-            qn_flt_etag_destroy(etag);
-            qn_rdr_destroy(ctrl_rdr);
-            qn_fl_close(fl);
-        } // if
-        qn_json_destroy_object(auth.server_end.put_policy);
-        qn_mac_destroy(mac);
-        printf("Cannot format a valid scope for inserting the file.\n");
-        return 1;
-    } // if
-
-    if (!qn_json_set_string(auth.server_end.put_policy, "scope", qn_str_cstr(scope))) {
-        if (ctrl_rdr) {
-            qn_flt_etag_destroy(etag);
-            qn_rdr_destroy(ctrl_rdr);
-            qn_fl_close(fl);
-        } // if
-        qn_str_destroy(scope);
-        qn_json_destroy_object(auth.server_end.put_policy);
-        qn_mac_destroy(mac);
-        printf("Cannot set the scope field.\n");
-        return 1;
-    } // if
-    qn_str_destroy(scope);
-
-    if (!qn_json_set_integer(auth.server_end.put_policy, "deadline", time(NULL) + 3600)) {
-        if (ctrl_rdr) {
-            qn_flt_etag_destroy(etag);
-            qn_rdr_destroy(ctrl_rdr);
-            qn_fl_close(fl);
-        } // if
-        qn_json_destroy_object(auth.server_end.put_policy);
-        qn_mac_destroy(mac);
-        printf("Cannot set the deadline field.\n");
-        return 1;
-    } // if
-
     stor = qn_stor_create();
-    if (!stor) {
+    if (! stor) {
         if (ctrl_rdr) {
             qn_flt_etag_destroy(etag);
             qn_rdr_destroy(ctrl_rdr);
             qn_fl_close(fl);
         } // if
-        qn_json_destroy_object(auth.server_end.put_policy);
-        qn_mac_destroy(mac);
-        printf("Cannot initialize a new storage object.\n");
+        qn_str_destroy(uptoken);
+        printf("Cannot initialize a new storage object due to application error `%s`.\n", qn_err_get_message());
         return 1;
     } // if
 
-    if (!qn_stor_put_file(stor, &auth, fname, &ext)) {
-        if (qn_err_stor_is_putting_aborted_by_filter_post_callback()) {
-            printf("The '%s' file's size is larger than the given size limit %lu.\n", fname, fc.max_fsize);
-        } // if
+    put_ret = qn_stor_put_file(stor, uptoken, fname, &ext);
+    qn_str_destroy(uptoken);
+    if (! put_ret) {
         if (ctrl_rdr) {
             qn_flt_etag_destroy(etag);
             qn_rdr_destroy(ctrl_rdr);
             qn_fl_close(fl);
         } // if
         qn_stor_destroy(stor);
-        qn_json_destroy_object(auth.server_end.put_policy);
-        qn_mac_destroy(mac);
-        printf("Cannot put the file `%s` to `%s:%s`.\n", fname, bucket, key);
+
+        if (qn_err_stor_is_putting_aborted_by_filter_post_callback()) {
+            printf("The '%s' file's size is larger than the given size limit %lu.\n", fname, fc.max_fsize);
+        } else {
+            printf("Cannot put the file `%s` to `%s:%s` due to application error `%s`.\n", fname, bucket, key, qn_err_get_message());
+        } // if
         return 2;
     } // if
-    qn_json_destroy_object(auth.server_end.put_policy);
-    qn_mac_destroy(mac);
 
     hdr_itr = qn_stor_resp_get_header_iterator(stor);
-    while ((hdr_ent = qn_http_hdr_itr_next_entry(hdr_itr))) {
-        printf("%s\n", qn_str_cstr(hdr_ent));
-    } // while
+    while ((hdr_ent = qn_http_hdr_itr_next_entry(hdr_itr))) printf("%s\n", qn_str_cstr(hdr_ent));
     qn_http_hdr_itr_destroy(hdr_itr);
 
-    put_ret = qn_json_object_to_string(qn_stor_get_object_body(stor));
+    put_ret_str = qn_json_object_to_string(put_ret);
     qn_stor_destroy(stor);
-    if (!put_ret) {
+    if (! put_ret_str) {
         if (ctrl_rdr) {
             qn_flt_etag_destroy(etag);
             qn_rdr_destroy(ctrl_rdr);
             qn_fl_close(fl);
         } // if
-        printf("Cannot format the object body from upload interface.\n");
+        printf("Cannot format the result object due to application error `%s`.\n", qn_err_get_message());
         return 3;
     } // if
 
-    printf("%s\n", put_ret);
-    qn_str_destroy(put_ret);
+    printf("%s\n", put_ret_str);
+    qn_str_destroy(put_ret_str);
 
     if (ctrl_rdr) {
-        put_ret = qn_flt_etag_result(etag);
-        printf("The etag of the given local file is `%s`.\n", put_ret);
-        qn_str_destroy(put_ret);
+        put_ret_str = qn_flt_etag_result(etag);
+        printf("The etag of the given local file is `%s`.\n", put_ret_str);
+        qn_str_destroy(put_ret_str);
 
         qn_flt_etag_destroy(etag);
         qn_rdr_destroy(ctrl_rdr);

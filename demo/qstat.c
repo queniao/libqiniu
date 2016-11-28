@@ -1,4 +1,5 @@
 #include <stdio.h>
+#include "qiniu/base/errors.h"
 #include "qiniu/base/json_formatter.h"
 #include "qiniu/storage.h"
 
@@ -8,10 +9,8 @@ int main(int argc, char * argv[])
     qn_string bucket;
     qn_string key;
     qn_string stat_ret_str;
-    qn_string api_error;
     qn_json_object_ptr stat_ret;
     qn_storage_ptr stor;
-    qn_stor_auth auth;
     qn_http_hdr_iterator_ptr hdr_itr;
     qn_string hdr_ent;
 
@@ -21,41 +20,37 @@ int main(int argc, char * argv[])
     } // if
 
     mac = qn_mac_create(argv[1], argv[2]);
+    if (! mac) {
+        printf("Cannot create a new mac due to application error `%s`.\n", qn_err_get_message());
+        return 1;
+    } // if
+
     bucket = argv[3];
     key = argv[4];
 
     stor = qn_stor_create();
     if (!stor) {
-        printf("Cannot initialize a new storage object.\n");
+        qn_mac_destroy(mac);
+        printf("Cannot initialize a new storage object due to application error `%s`.\n", qn_err_get_message());
         return 1;
     } // if
 
-    memset(&auth, 0, sizeof(auth));
-    auth.server_end.mac = mac;
-
-    stat_ret = qn_stor_stat(stor, &auth, bucket, key, NULL);
+    stat_ret = qn_stor_stat(stor, mac, bucket, key, NULL);
     qn_mac_destroy(mac);
     if (!stat_ret) {
         qn_stor_destroy(stor);
-        printf("Cannot stat the `%s:%s` file.\n", bucket, key);
+        printf("Cannot stat the `%s:%s` file due to application error `%s`.\n", bucket, key, qn_err_get_message());
         return 2;
-    } // if
-    api_error = qn_json_get_string(stat_ret, "error", NULL);
-    if (api_error) {
-        qn_stor_destroy(stor);
-        printf("Cannot stat the `%s:%s` file due to application error `%s`.\n", bucket, key, api_error);
     } // if
 
     hdr_itr = qn_stor_resp_get_header_iterator(stor);
-    while ((hdr_ent = qn_http_hdr_itr_next_entry(hdr_itr))) {
-        printf("%s\n", qn_str_cstr(hdr_ent));
-    } // while
+    while ((hdr_ent = qn_http_hdr_itr_next_entry(hdr_itr))) printf("%s\n", qn_str_cstr(hdr_ent));
     qn_http_hdr_itr_destroy(hdr_itr);
 
     stat_ret_str = qn_json_object_to_string(stat_ret);
     qn_stor_destroy(stor);
     if (!stat_ret_str) {
-        printf("Cannot format the object body form /stat interface.\n");
+        printf("Cannot format the result object due to application error `%s`.\n", qn_err_get_message());
         return 3;
     } // if
 

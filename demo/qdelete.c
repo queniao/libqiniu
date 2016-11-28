@@ -6,7 +6,6 @@
 int main(int argc, char * argv[])
 {
     qn_mac_ptr mac;
-    qn_stor_auth auth;
     qn_string bucket;
     qn_string key;
     qn_string del_ret_str;
@@ -22,11 +21,16 @@ int main(int argc, char * argv[])
     } // if
 
     mac = qn_mac_create(argv[1], argv[2]);
+    if (! mac) {
+        printf("Cannot create a new mac due to application error `%s`.\n", qn_err_get_message());
+        return 1;
+    } // if
+
     bucket = argv[3];
     key = argv[4];
 
     stor = qn_stor_create();
-    if (!stor) {
+    if (! stor) {
         qn_mac_destroy(mac);
         printf("Cannot initialize a new storage object.\n");
         return 1;
@@ -34,27 +38,22 @@ int main(int argc, char * argv[])
 
     memset(&ext, 0, sizeof(ext));
 
-    memset(&auth, 0, sizeof(auth));
-    auth.server_end.mac = mac;
-
-    del_ret = qn_stor_delete(stor, &auth, bucket, key, &ext);
+    del_ret = qn_stor_delete(stor, mac, bucket, key, &ext);
     qn_mac_destroy(mac);
-    if (!del_ret) {
+    if (! del_ret) {
         qn_stor_destroy(stor);
         printf("Cannot stat the `%s:%s` file due the application error `%s`.\n", bucket, key, qn_err_get_message());
         return 2;
     } // if
 
     hdr_itr = qn_stor_resp_get_header_iterator(stor);
-    while ((hdr_ent = qn_http_hdr_itr_next_entry(hdr_itr))) {
-        printf("%s\n", qn_str_cstr(hdr_ent));
-    } // while
+    while ((hdr_ent = qn_http_hdr_itr_next_entry(hdr_itr))) printf("%s\n", qn_str_cstr(hdr_ent));
     qn_http_hdr_itr_destroy(hdr_itr);
 
     del_ret_str = qn_json_object_to_string(del_ret);
     qn_stor_destroy(stor);
 
-    if (!del_ret_str) {
+    if (! del_ret_str) {
         printf("Cannot format the delete result object due to the application error `%s`.\n", qn_err_get_message());
         return 1;
     } // if
