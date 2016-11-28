@@ -1,3 +1,7 @@
+## v0.3.0
+
+- 简化 storage 各函数的原型，去掉不必要的 qn_stor_auth 结构体，换用更直接明了的 uptoken / acctoken / mac 等参数。
+
 ## v0.2.0
 
 - 启用 qn_io_reader_itf 接口和相关函数，进一步减少对内存的占用。
