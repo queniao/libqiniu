@@ -13,7 +13,6 @@ int main(int argc, char * argv[])
     qn_string move_ret_str;
     qn_json_object_ptr move_ret;
     qn_storage_ptr stor;
-    qn_stor_move_extra ext;
     qn_http_hdr_iterator_ptr hdr_itr;
     qn_string hdr_ent;
 
@@ -40,9 +39,7 @@ int main(int argc, char * argv[])
         return 1;
     } // if
 
-    memset(&ext, 0, sizeof(ext));
-
-    move_ret = qn_stor_move(stor, mac, src_bucket, src_key, dest_bucket, dest_key, &ext);
+    move_ret = qn_stor_move(stor, mac, src_bucket, src_key, dest_bucket, dest_key, NULL);
     qn_mac_destroy(mac);
     if (! move_ret) {
         qn_stor_destroy(stor);

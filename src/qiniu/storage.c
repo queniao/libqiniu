@@ -532,6 +532,38 @@ QN_API qn_json_object_ptr qn_stor_copy(qn_storage_ptr restrict stor, const qn_ma
     return stor->obj_body;
 }
 
+typedef struct _QN_STOR_MOVE_EXTRA
+{
+    qn_rgn_entry_ptr rgn_entry;
+} qn_stor_move_extra_st;
+
+QN_API qn_stor_move_extra_ptr qn_stor_me_create(void)
+{
+    qn_stor_move_extra_ptr new_me = calloc(1, sizeof(qn_stor_move_extra_st));
+    if (! new_me) {
+        qn_err_set_out_of_memory();
+        return NULL;
+    } // if
+    return new_me;
+}
+
+QN_API void qn_stor_me_destroy(qn_stor_move_extra_ptr restrict me)
+{
+    if (me) {
+        free(me);
+    } // if
+}
+
+QN_API void qn_stor_me_reset(qn_stor_move_extra_ptr restrict me)
+{
+    memset(me, 0, sizeof(qn_stor_move_extra_st));
+}
+
+QN_API void qn_stor_me_set_region_entry(qn_stor_move_extra_ptr restrict me, qn_rgn_entry_ptr restrict entry)
+{
+    me->rgn_entry = entry;
+}
+
 static const qn_string qn_stor_make_move_op(const char * restrict src_bucket, const char * restrict src_key, const char * restrict dest_bucket, const char * restrict dest_key)
 {
     qn_string op;
@@ -634,7 +666,7 @@ QN_API qn_json_object_ptr qn_stor_move(qn_storage_ptr restrict stor, const qn_ma
 
     // ---- Process all extra options.
     if (ext) {
-        if (! (rgn_entry = ext->rgn.entry)) qn_rgn_tbl_choose_first_entry(ext->rgn.rtbl, QN_RGN_SVC_RS, NULL, &rgn_entry);
+        if (! (rgn_entry = ext->rgn_entry)) qn_rgn_tbl_choose_first_entry(NULL, QN_RGN_SVC_RS, NULL, &rgn_entry);
     } else {
         rgn_entry = NULL;
         qn_rgn_tbl_choose_first_entry(NULL, QN_RGN_SVC_RS, NULL, &rgn_entry);
