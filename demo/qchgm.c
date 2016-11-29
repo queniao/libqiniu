@@ -12,7 +12,6 @@ int main(int argc, char * argv[])
     qn_string chgm_ret_str;
     qn_json_object_ptr chgm_ret;
     qn_storage_ptr stor;
-    qn_stor_change_mime_extra ext;
     qn_http_hdr_iterator_ptr hdr_itr;
     qn_string hdr_ent;
 
@@ -39,9 +38,7 @@ int main(int argc, char * argv[])
         return 1;
     } // if
 
-    memset(&ext, 0, sizeof(ext));
-
-    chgm_ret = qn_stor_change_mime(stor, mac, bucket, key, mime, &ext);
+    chgm_ret = qn_stor_change_mime(stor, mac, bucket, key, mime, NULL);
     qn_mac_destroy(mac);
     if (! chgm_ret) {
         qn_stor_destroy(stor);

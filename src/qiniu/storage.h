@@ -93,7 +93,7 @@ QN_API extern void qn_stor_ce_destroy(qn_stor_copy_extra_ptr restrict ce);
 QN_API extern void qn_stor_ce_reset(qn_stor_copy_extra_ptr restrict ce);
 
 QN_API extern void qn_stor_ce_set_force_overwrite(qn_stor_copy_extra_ptr restrict ce, qn_bool force);
-QN_API extern void qn_stor_ce_set_region_entry(qn_stor_copy_extra_ptr restrict ce, qn_rgn_entry_ptr entry);
+QN_API extern void qn_stor_ce_set_region_entry(qn_stor_copy_extra_ptr restrict ce, qn_rgn_entry_ptr restrict entry);
 
 QN_API extern qn_json_object_ptr qn_stor_copy(qn_storage_ptr restrict stor, const qn_mac_ptr restrict mac, const char * restrict src_bucket, const char * restrict src_key, const char * restrict dest_bucket, const char * restrict dest_key, qn_stor_copy_extra_ptr restrict ext);
 
@@ -119,18 +119,20 @@ QN_API extern qn_stor_delete_extra_ptr qn_stor_de_create(void);
 QN_API extern void qn_stor_de_destroy(qn_stor_delete_extra_ptr restrict de);
 QN_API extern void qn_stor_de_reset(qn_stor_delete_extra_ptr restrict de);
 
-QN_API extern void qn_stor_de_set_region_entry(qn_stor_delete_extra_ptr restrict de, qn_rgn_entry_ptr entry);
+QN_API extern void qn_stor_de_set_region_entry(qn_stor_delete_extra_ptr restrict de, qn_rgn_entry_ptr restrict entry);
 
 QN_API extern qn_json_object_ptr qn_stor_delete(qn_storage_ptr restrict stor, const qn_mac_ptr restrict mac, const char * restrict bucket, const char * restrict key, qn_stor_delete_extra_ptr restrict ext);
 
 // ----
 
-typedef struct _QN_STOR_CHANGE_MIME_EXTRA
-{
-    // ---- Extensions ----
-    // Multi-Region : Pass the host entry information of a storage region.
-    qn_stor_rgn rgn;
-} qn_stor_change_mime_extra, *qn_stor_change_mime_extra_ptr;
+struct _QN_STOR_CHANGE_MIME_EXTRA;
+typedef struct _QN_STOR_CHANGE_MIME_EXTRA * qn_stor_change_mime_extra_ptr;
+
+QN_API extern qn_stor_change_mime_extra_ptr qn_stor_cme_create(void);
+QN_API extern void qn_stor_cme_destroy(qn_stor_change_mime_extra_ptr restrict cme);
+QN_API extern void qn_stor_cme_reset(qn_stor_change_mime_extra_ptr restrict cme);
+
+QN_API extern void qn_stor_cme_set_region_entry(qn_stor_change_mime_extra_ptr restrict cme, qn_rgn_entry_ptr restrict entry);
 
 QN_API extern qn_json_object_ptr qn_stor_change_mime(qn_storage_ptr restrict stor, const qn_mac_ptr restrict mac, const char * restrict bucket, const char * restrict key, const char * restrict mime, qn_stor_change_mime_extra_ptr restrict ext);
 

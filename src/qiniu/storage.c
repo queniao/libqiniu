@@ -361,7 +361,7 @@ QN_API void qn_stor_ce_set_force_overwrite(qn_stor_copy_extra_ptr restrict ce, q
     ce->force = (force) ? 1 : 0;
 }
 
-QN_API void qn_stor_ce_set_region_entry(qn_stor_copy_extra_ptr restrict ce, qn_rgn_entry_ptr entry)
+QN_API void qn_stor_ce_set_region_entry(qn_stor_copy_extra_ptr restrict ce, qn_rgn_entry_ptr restrict entry)
 {
     ce->rgn_entry = entry;
 }
@@ -746,7 +746,7 @@ QN_API void qn_stor_de_reset(qn_stor_delete_extra_ptr restrict de)
     memset(de, 0, sizeof(qn_stor_delete_extra_st));
 }
 
-QN_API void qn_stor_de_set_region_entry(qn_stor_delete_extra_ptr restrict de, qn_rgn_entry_ptr entry)
+QN_API void qn_stor_de_set_region_entry(qn_stor_delete_extra_ptr restrict de, qn_rgn_entry_ptr restrict entry)
 {
     de->rgn_entry = entry;
 }
@@ -890,6 +890,38 @@ QN_API qn_json_object_ptr qn_stor_delete(qn_storage_ptr restrict stor, const qn_
     return stor->obj_body;
 }
 
+typedef struct _QN_STOR_CHANGE_MIME_EXTRA
+{
+    qn_rgn_entry_ptr rgn_entry;
+} qn_stor_change_mime_extra_st;
+
+QN_API qn_stor_change_mime_extra_ptr qn_stor_cme_create(void)
+{
+    qn_stor_change_mime_extra_ptr new_cme = calloc(1, sizeof(qn_stor_change_mime_extra_st));
+    if (! new_cme) {
+        qn_err_set_out_of_memory();
+        return NULL;
+    } // if
+    return new_cme;
+}
+
+QN_API void qn_stor_cme_destroy(qn_stor_change_mime_extra_ptr restrict cme)
+{
+    if (cme) {
+        free(cme);
+    } // if
+}
+
+QN_API void qn_stor_cme_reset(qn_stor_change_mime_extra_ptr restrict cme)
+{
+    memset(cme, 0, sizeof(qn_stor_change_mime_extra_st));
+}
+
+QN_API void qn_stor_cme_set_region_entry(qn_stor_change_mime_extra_ptr restrict cme, qn_rgn_entry_ptr restrict entry)
+{
+    cme->rgn_entry = entry;
+}
+
 /***************************************************************************//**
 * @ingroup Storage-Management
 *
@@ -966,7 +998,7 @@ QN_API qn_json_object_ptr qn_stor_change_mime(qn_storage_ptr restrict stor, cons
 
     // ---- Process all extra options.
     if (ext) {
-        if (! (rgn_entry = ext->rgn.entry)) qn_rgn_tbl_choose_first_entry(ext->rgn.rtbl, QN_RGN_SVC_RS, NULL, &rgn_entry);
+        if (! (rgn_entry = ext->rgn_entry)) qn_rgn_tbl_choose_first_entry(NULL, QN_RGN_SVC_RS, NULL, &rgn_entry);
     } else {
         rgn_entry = NULL;
         qn_rgn_tbl_choose_first_entry(NULL, QN_RGN_SVC_RS, NULL, &rgn_entry);
