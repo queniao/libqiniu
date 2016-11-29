@@ -1755,6 +1755,38 @@ QN_API qn_bool qn_stor_bt_add_delete_op(qn_stor_batch_ptr restrict bt, const cha
     return ret;
 }
 
+typedef struct _QN_STOR_BATCH_EXTRA
+{
+    qn_rgn_entry_ptr rgn_entry;
+} qn_stor_batch_extra_st;
+
+QN_API qn_stor_batch_extra_ptr qn_stor_be_create(void)
+{
+    qn_stor_batch_extra_ptr new_be = calloc(1, sizeof(qn_stor_batch_extra_st));
+    if (! new_be) {
+        qn_err_set_out_of_memory();
+        return NULL;
+    } // if
+    return new_be;
+}
+
+QN_API void qn_stor_be_destroy(qn_stor_batch_extra_ptr restrict be)
+{
+    if (be) {
+        free(be);
+    } // if
+}
+
+QN_API void qn_stor_be_reset(qn_stor_batch_extra_ptr restrict be)
+{
+    memset(be, 0, sizeof(qn_stor_batch_extra_st));
+}
+
+QN_API void qn_stor_be_set_region_entry(qn_stor_batch_extra_ptr restrict be, qn_rgn_entry_ptr restrict entry)
+{
+    be->rgn_entry = entry;
+}
+
 QN_API qn_json_object_ptr qn_stor_execute_batch_opertions(qn_storage_ptr restrict stor, const qn_mac_ptr restrict mac, const qn_stor_batch_ptr restrict bt, qn_stor_batch_extra_ptr restrict ext)
 {
     qn_bool ret;
@@ -1769,7 +1801,7 @@ QN_API qn_json_object_ptr qn_stor_execute_batch_opertions(qn_storage_ptr restric
 
     // ---- Process all extra options.
     if (ext) {
-        if (! (rgn_entry = ext->rgn.entry)) qn_rgn_tbl_choose_first_entry(ext->rgn.rtbl, QN_RGN_SVC_RS, NULL, &rgn_entry);
+        if (! (rgn_entry = ext->rgn_entry)) qn_rgn_tbl_choose_first_entry(NULL, QN_RGN_SVC_RS, NULL, &rgn_entry);
     } else {
         rgn_entry = NULL;
         qn_rgn_tbl_choose_first_entry(NULL, QN_RGN_SVC_RS, NULL, &rgn_entry);

@@ -175,13 +175,6 @@ QN_API extern qn_json_object_ptr qn_stor_list(qn_storage_ptr restrict stor, cons
 struct _QN_STOR_BATCH;
 typedef struct _QN_STOR_BATCH * qn_stor_batch_ptr;
 
-typedef struct _QN_STOR_BATCH_EXTRA
-{
-    // ---- Extensions ----
-    // Multi-Region : Pass the host entry information of a storage region.
-    qn_stor_rgn rgn;
-} qn_stor_batch_extra, *qn_stor_batch_extra_ptr;
-
 QN_API extern qn_stor_batch_ptr qn_stor_bt_create(void);
 QN_API extern void qn_stor_bt_destroy(qn_stor_batch_ptr restrict bt);
 QN_API extern void qn_stor_bt_reset(qn_stor_batch_ptr restrict bt);
@@ -190,6 +183,15 @@ QN_API extern qn_bool qn_stor_bt_add_stat_op(qn_stor_batch_ptr restrict bt, cons
 QN_API extern qn_bool qn_stor_bt_add_copy_op(qn_stor_batch_ptr restrict bt, const char * restrict src_bucket, const char * restrict src_key, const char * restrict dest_bucket, const char * restrict dest_key);
 QN_API extern qn_bool qn_stor_bt_add_move_op(qn_stor_batch_ptr restrict bt, const char * restrict src_bucket, const char * restrict src_key, const char * restrict dest_bucket, const char * restrict dest_key);
 QN_API extern qn_bool qn_stor_bt_add_delete_op(qn_stor_batch_ptr restrict bt, const char * restrict bucket, const char * restrict key);
+
+struct _QN_STOR_BATCH_EXTRA;
+typedef struct _QN_STOR_BATCH_EXTRA * qn_stor_batch_extra_ptr;
+
+QN_API extern qn_stor_batch_extra_ptr qn_stor_be_create(void);
+QN_API extern void qn_stor_be_destroy(qn_stor_batch_extra_ptr restrict be);
+QN_API extern void qn_stor_be_reset(qn_stor_batch_extra_ptr restrict be);
+
+QN_API extern void qn_stor_be_set_region_entry(qn_stor_batch_extra_ptr restrict be, qn_rgn_entry_ptr restrict entry);
 
 QN_API extern qn_json_object_ptr qn_stor_execute_batch_opertions(qn_storage_ptr restrict stor, const qn_mac_ptr restrict mac, const qn_stor_batch_ptr restrict bt, qn_stor_batch_extra_ptr restrict ext);
 
