@@ -138,12 +138,14 @@ QN_API extern qn_json_object_ptr qn_stor_change_mime(qn_storage_ptr restrict sto
 
 // ----
 
-typedef struct _QN_STOR_FETCH_EXTRA
-{
-    // ---- Extensions ----
-    // Multi-Region : Pass the host entry information of a storage region.
-    qn_stor_rgn rgn;
-} qn_stor_fetch_extra, *qn_stor_fetch_extra_ptr;
+struct _QN_STOR_FETCH_EXTRA;
+typedef struct _QN_STOR_FETCH_EXTRA * qn_stor_fetch_extra_ptr;
+
+QN_API extern qn_stor_fetch_extra_ptr qn_stor_fe_create(void);
+QN_API extern void qn_stor_fe_destroy(qn_stor_fetch_extra_ptr restrict fe);
+QN_API extern void qn_stor_fe_reset(qn_stor_fetch_extra_ptr restrict fe);
+
+QN_API extern void qn_stor_fe_set_region_entry(qn_stor_fetch_extra_ptr restrict fe, qn_rgn_entry_ptr restrict entry);
 
 QN_API extern qn_json_object_ptr qn_stor_fetch(qn_storage_ptr restrict stor, const qn_mac_ptr restrict mac, const char * restrict src_url, const char * restrict dest_bucket, const char * restrict dest_key, qn_stor_fetch_extra_ptr restrict ext);
 QN_API extern qn_json_object_ptr qn_stor_prefetch(qn_storage_ptr restrict stor, const qn_mac_ptr restrict mac, const char * restrict dest_bucket, const char * restrict dest_key, qn_stor_fetch_extra_ptr restrict ext);

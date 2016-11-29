@@ -1059,6 +1059,38 @@ QN_API qn_json_object_ptr qn_stor_change_mime(qn_storage_ptr restrict stor, cons
 
 // ----
 
+typedef struct _QN_STOR_FETCH_EXTRA
+{
+    qn_rgn_entry_ptr rgn_entry;
+} qn_stor_fetch_extra_st;
+
+QN_API qn_stor_fetch_extra_ptr qn_stor_fe_create(void)
+{
+    qn_stor_fetch_extra_ptr new_fe = calloc(1, sizeof(qn_stor_fetch_extra_st));
+    if (! new_fe) {
+        qn_err_set_out_of_memory();
+        return NULL;
+    } // if
+    return new_fe;
+}
+
+QN_API void qn_stor_fe_destroy(qn_stor_fetch_extra_ptr restrict fe)
+{
+    if (fe) {
+        free(fe);
+    } // if
+}
+
+QN_API void qn_stor_fe_reset(qn_stor_fetch_extra_ptr restrict fe)
+{
+    memset(fe, 0, sizeof(qn_stor_fetch_extra_st));
+}
+
+QN_API void qn_stor_fe_set_region_entry(qn_stor_fetch_extra_ptr restrict fe, qn_rgn_entry_ptr restrict entry)
+{
+    fe->rgn_entry = entry;
+}
+
 /***************************************************************************//**
 * @ingroup Storage-Management
 *
@@ -1154,7 +1186,7 @@ QN_API qn_json_object_ptr qn_stor_fetch(qn_storage_ptr restrict stor, const qn_m
 
     // ---- Process all extra options.
     if (ext) {
-        if (! (rgn_entry = ext->rgn.entry)) qn_rgn_tbl_choose_first_entry(ext->rgn.rtbl, QN_RGN_SVC_IO, NULL, &rgn_entry);
+        if (! (rgn_entry = ext->rgn_entry)) qn_rgn_tbl_choose_first_entry(NULL, QN_RGN_SVC_IO, NULL, &rgn_entry);
     } else {
         rgn_entry = NULL;
         qn_rgn_tbl_choose_first_entry(NULL, QN_RGN_SVC_IO, NULL, &rgn_entry);
@@ -1301,7 +1333,7 @@ QN_API qn_json_object_ptr qn_stor_prefetch(qn_storage_ptr restrict stor, const q
 
     // ---- Process all extra options.
     if (ext) {
-        if (! (rgn_entry = ext->rgn.entry)) qn_rgn_tbl_choose_first_entry(ext->rgn.rtbl, QN_RGN_SVC_IO, NULL, &rgn_entry);
+        if (! (rgn_entry = ext->rgn_entry)) qn_rgn_tbl_choose_first_entry(NULL, QN_RGN_SVC_IO, NULL, &rgn_entry);
     } else {
         rgn_entry = NULL;
         qn_rgn_tbl_choose_first_entry(NULL, QN_RGN_SVC_IO, NULL, &rgn_entry);
