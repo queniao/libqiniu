@@ -220,15 +220,18 @@ QN_API extern int qn_stor_rs_block_size(const qn_stor_rput_session_ptr restrict 
 QN_API extern qn_json_object_ptr qn_stor_rs_block_info(const qn_stor_rput_session_ptr restrict ss, int n);
 QN_API extern qn_bool qn_stor_rs_is_putting_block_done(const qn_stor_rput_session_ptr restrict ss, int n);
 
-typedef struct _QN_STOR_RESUMABLE_PUT_EXTRA
-{
-    int chk_size;
-    const char * final_key;
+struct _QN_STOR_RESUMABLE_PUT_EXTRA;
+typedef struct _QN_STOR_RESUMABLE_PUT_EXTRA * qn_stor_rput_extra_ptr;
 
-    // ---- Extensions ----
-    // Multi-Region : Pass the host entry information of a storage region.
-    qn_stor_rgn rgn;
-} qn_stor_rput_extra, *qn_stor_rput_extra_ptr;
+QN_API extern qn_stor_rput_extra_ptr qn_stor_rpe_create(void);
+QN_API extern void qn_stor_rpe_destroy(qn_stor_rput_extra_ptr restrict rpe);
+QN_API extern void qn_stor_rpe_reset(qn_stor_rput_extra_ptr restrict rpe);
+
+QN_API extern void qn_stor_rpe_set_chunk_size(qn_stor_rput_extra_ptr restrict rpe, int chk_size);
+QN_API extern void qn_stor_rpe_set_final_key(qn_stor_rput_extra_ptr restrict rpe, const char * restrict key);
+QN_API extern void qn_stor_rpe_set_region_entry(qn_stor_rput_extra_ptr restrict rpe, qn_rgn_entry_ptr restrict entry);
+
+// ----
 
 QN_API extern qn_json_object_ptr qn_stor_rp_put_chunk(qn_storage_ptr restrict stor, const char * restrict uptoken, qn_json_object_ptr restrict blk_info, qn_io_reader_itf restrict rdr, int chk_size, qn_stor_rput_extra_ptr restrict ext);
 QN_API extern qn_json_object_ptr qn_stor_rp_put_block(qn_storage_ptr restrict stor, const char * restrict uptoken, qn_json_object_ptr restrict blk_info, qn_io_reader_itf restrict rdr, qn_stor_rput_extra_ptr restrict ext);

@@ -16,7 +16,7 @@ int main(int argc, char * argv[])
     qn_json_object_ptr put_policy;
     qn_json_object_ptr put_ret;
     qn_storage_ptr stor;
-    qn_stor_rput_extra ext;
+    qn_stor_rput_extra_ptr rpe;
 
     if (argc < 5) {
         printf("Demo qputf - Put single file in many HTTP sessions.\n");
@@ -34,9 +34,6 @@ int main(int argc, char * argv[])
     key = argv[4];
     fname = argv[5];
 
-    memset(&ext, 0, sizeof(ext));
-    ext.final_key = key;
-
     put_policy = qn_pp_create(bucket, key, time(NULL) + 3600);
     if (! put_policy) {
         qn_mac_destroy(mac);
@@ -52,14 +49,25 @@ int main(int argc, char * argv[])
         return 1;
     } // if
 
+    rpe = qn_stor_rpe_create();
+    if (! rpe) {
+        qn_str_destroy(uptoken);
+        printf("Cannot create a resumable put extra due to application error `%s`.\n", qn_err_get_message());
+        return 1;
+    } // if
+
+    qn_stor_rpe_set_final_key(rpe, key);
+
     stor = qn_stor_create();
     if (! stor) {
         qn_str_destroy(uptoken);
+        qn_stor_rs_destroy(ss);
         printf("Cannot initialize a new storage object due to application error `%s`.\n", qn_err_get_message());
         return 1;
     } // if
 
-    put_ret = qn_stor_rp_put_file(stor, uptoken, &ss, fname, &ext);
+    put_ret = qn_stor_rp_put_file(stor, uptoken, &ss, fname, rpe);
+    qn_stor_rpe_destroy(rpe);
     qn_str_destroy(uptoken);
     qn_stor_rs_destroy(ss);
     if (! put_ret) {

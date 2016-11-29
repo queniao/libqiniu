@@ -2061,6 +2061,54 @@ QN_API qn_bool qn_stor_rs_is_putting_block_done(const qn_stor_rput_session_ptr r
 
 // ----
 
+typedef struct _QN_STOR_RESUMABLE_PUT_EXTRA
+{
+    int chk_size;
+    const char * final_key;
+
+    qn_rgn_entry_ptr rgn_entry;
+} qn_stor_rput_extra_st;
+
+QN_API qn_stor_rput_extra_ptr qn_stor_rpe_create(void)
+{
+    qn_stor_rput_extra_ptr new_rpe = malloc(sizeof(qn_stor_rput_extra_st));
+    if (! new_rpe) {
+        qn_err_set_out_of_memory();
+        return NULL;
+    } // if
+
+    qn_stor_rpe_reset(new_rpe);
+    return new_rpe;
+}
+
+QN_API void qn_stor_rpe_destroy(qn_stor_rput_extra_ptr restrict rpe)
+{
+    if (rpe) {
+        free(rpe);
+    } // if
+}
+
+QN_API void qn_stor_rpe_reset(qn_stor_rput_extra_ptr restrict rpe)
+{
+    memset(rpe, 0, sizeof(qn_stor_rput_extra_st));
+    rpe->chk_size = QN_STOR_RPUT_CHUNK_DEFAULT_SIZE;
+}
+
+QN_API void qn_stor_rpe_set_chunk_size(qn_stor_rput_extra_ptr restrict rpe, int chk_size)
+{
+    if (0 < chk_size && chk_size <= QN_STOR_RPUT_BLOCK_MAX_SIZE) rpe->chk_size = chk_size;
+}
+
+QN_API void qn_stor_rpe_set_final_key(qn_stor_rput_extra_ptr restrict rpe, const char * restrict key)
+{
+    rpe->final_key = key;
+}
+
+QN_API void qn_stor_rpe_set_region_entry(qn_stor_rput_extra_ptr restrict rpe, qn_rgn_entry_ptr restrict entry)
+{
+    rpe->rgn_entry = entry;
+}
+
 typedef struct _QN_STOR_RESUMABLE_PUT_READER
 {
     qn_io_reader_itf rdr;
@@ -2200,7 +2248,7 @@ QN_API qn_json_object_ptr qn_stor_rp_put_chunk(qn_storage_ptr restrict stor, con
 
     // ---- Process all extra options.
     if (ext) {
-        if (! (rgn_entry = ext->rgn.entry)) qn_rgn_tbl_choose_first_entry(ext->rgn.rtbl, QN_RGN_SVC_UP, NULL, &rgn_entry);
+        if (! (rgn_entry = ext->rgn_entry)) qn_rgn_tbl_choose_first_entry(NULL, QN_RGN_SVC_UP, NULL, &rgn_entry);
     } else {
         rgn_entry = NULL;
         qn_rgn_tbl_choose_first_entry(NULL, QN_RGN_SVC_UP, NULL, &rgn_entry);
@@ -2229,7 +2277,7 @@ QN_API qn_json_object_ptr qn_stor_rp_put_block(qn_storage_ptr restrict stor, con
     int chk_offset;
     int blk_size;
     int sending_bytes;
-    qn_stor_rput_extra real_ext;
+    qn_stor_rput_extra_st real_ext;
 
     // ---- Check whether need to put the block.
     chk_offset = qn_json_get_integer(blk_info, "offset", 0);
@@ -2239,13 +2287,13 @@ QN_API qn_json_object_ptr qn_stor_rp_put_block(qn_storage_ptr restrict stor, con
 
     // ---- Process all extra options.
     if (ext) {
-        old_entry = ext->rgn.entry;
-        if (!ext->rgn.entry) qn_rgn_tbl_choose_first_entry(ext->rgn.rtbl, QN_RGN_SVC_UP, NULL, &ext->rgn.entry);
+        old_entry = ext->rgn_entry;
+        if (!ext->rgn_entry) qn_rgn_tbl_choose_first_entry(NULL, QN_RGN_SVC_UP, NULL, &ext->rgn_entry);
 
         if (ext->chk_size > 0) chk_size = ext->chk_size;
     } else {
-        memset(&real_ext, 0, sizeof(qn_stor_rput_extra));
-        qn_rgn_tbl_choose_first_entry(NULL, QN_RGN_SVC_UP, NULL, &real_ext.rgn.entry);
+        memset(&real_ext, 0, sizeof(qn_stor_rput_extra_st));
+        qn_rgn_tbl_choose_first_entry(NULL, QN_RGN_SVC_UP, NULL, &real_ext.rgn_entry);
         ext = &real_ext;
 
         chk_size = QN_STOR_RPUT_CHUNK_DEFAULT_SIZE;
@@ -2256,14 +2304,14 @@ QN_API qn_json_object_ptr qn_stor_rp_put_block(qn_storage_ptr restrict stor, con
         if (sending_bytes > chk_size) sending_bytes = chk_size;
 
         if (! (put_ret = qn_stor_rp_put_chunk(stor, uptoken, blk_info, rdr, sending_bytes, ext))) {
-            ext->rgn.entry = old_entry;
+            ext->rgn_entry = old_entry;
             return NULL;
         } // if
 
         chk_offset += sending_bytes;
     } while (chk_offset < blk_size);
 
-    ext->rgn.entry = old_entry;
+    ext->rgn_entry = old_entry;
     return put_ret;
 }
 
@@ -2540,7 +2588,7 @@ QN_API qn_json_object_ptr qn_stor_rp_put_file(qn_storage_ptr restrict stor, cons
     qn_json_object_ptr put_ret;
     qn_json_object_ptr make_ret;
     qn_fl_info_ptr fi;
-    qn_stor_rput_extra real_ext;
+    qn_stor_rput_extra_st real_ext;
 
     if (!*ss) {
         // A new session to put file.
@@ -2553,11 +2601,11 @@ QN_API qn_json_object_ptr qn_stor_rp_put_file(qn_storage_ptr restrict stor, cons
     } // if
 
     if (ext) {
-        old_entry = ext->rgn.entry;
-        if (!ext->rgn.entry) qn_rgn_tbl_choose_first_entry(ext->rgn.rtbl, QN_RGN_SVC_UP, NULL, &ext->rgn.entry);
+        old_entry = ext->rgn_entry;
+        if (!ext->rgn_entry) qn_rgn_tbl_choose_first_entry(NULL, QN_RGN_SVC_UP, NULL, &ext->rgn_entry);
     } else {
-        memset(&real_ext, 0, sizeof(qn_stor_rput_extra));
-        qn_rgn_tbl_choose_first_entry(NULL, QN_RGN_SVC_UP, NULL, &real_ext.rgn.entry);
+        memset(&real_ext, 0, sizeof(qn_stor_rput_extra_st));
+        qn_rgn_tbl_choose_first_entry(NULL, QN_RGN_SVC_UP, NULL, &real_ext.rgn_entry);
         ext = &real_ext;
     } // if
 
@@ -2572,7 +2620,7 @@ QN_API qn_json_object_ptr qn_stor_rp_put_file(qn_storage_ptr restrict stor, cons
     qn_stor_rs_destroy(*ss);
     *ss = NULL;
 
-    ext->rgn.entry = old_entry;
+    ext->rgn_entry = old_entry;
     return make_ret;
 }
 
