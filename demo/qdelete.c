@@ -11,7 +11,6 @@ int main(int argc, char * argv[])
     qn_string del_ret_str;
     qn_json_object_ptr del_ret;
     qn_storage_ptr stor;
-    qn_stor_delete_extra ext;
     qn_http_hdr_iterator_ptr hdr_itr;
     qn_string hdr_ent;
 
@@ -36,9 +35,7 @@ int main(int argc, char * argv[])
         return 1;
     } // if
 
-    memset(&ext, 0, sizeof(ext));
-
-    del_ret = qn_stor_delete(stor, mac, bucket, key, &ext);
+    del_ret = qn_stor_delete(stor, mac, bucket, key, NULL);
     qn_mac_destroy(mac);
     if (! del_ret) {
         qn_stor_destroy(stor);
