@@ -18,10 +18,11 @@ int main(int argc, char * argv[])
     qn_json_object_ptr put_policy;
     qn_json_object_ptr put_ret;
     qn_storage_ptr stor;
-    qn_stor_put_extra ext;
+    qn_stor_put_extra_ptr pe;
     qn_rgn_table_ptr rgn_tbl;
     qn_rgn_auth rgn_auth;
     qn_rgn_service_ptr rgn_svc;
+    qn_rgn_entry_ptr rgn_entry;
     qn_http_hdr_iterator_ptr hdr_itr;
 
     if (argc < 5) {
@@ -91,20 +92,31 @@ int main(int argc, char * argv[])
         return 1;
     } // if
 
-    memset(&ext, 0, sizeof(ext));
-    ext.final_key = key;
+    pe = qn_stor_pe_create();
+    if (! pe) {
+        qn_rgn_tbl_destroy(rgn_tbl);
+        qn_str_destroy(uptoken);
+        printf("Cannot create a put extra due to application error `%s`.\n", qn_err_get_message());
+        return 1;
+    } // if
 
-    qn_rgn_tbl_choose_first_entry(rgn_tbl, QN_RGN_SVC_UP, bucket, &ext.rgn.entry);
+    rgn_entry = NULL;
+    qn_rgn_tbl_choose_first_entry(rgn_tbl, QN_RGN_SVC_UP, bucket, &rgn_entry);
+
+    qn_stor_pe_set_final_key(pe, key);
+    qn_stor_pe_set_region_entry(pe, rgn_entry);
 
     stor = qn_stor_create();
     if (! stor) {
+        qn_stor_pe_destroy(pe);
         qn_rgn_tbl_destroy(rgn_tbl);
         qn_str_destroy(uptoken);
         printf("Cannot initialize a new storage object due to application error `%s`.\n", qn_err_get_message());
         return 1;
     } // if
 
-    put_ret = qn_stor_put_file(stor, uptoken, fname, &ext);
+    put_ret = qn_stor_put_file(stor, uptoken, fname, pe);
+    qn_stor_pe_destroy(pe);
     qn_rgn_tbl_destroy(rgn_tbl);
     qn_str_destroy(uptoken);
 

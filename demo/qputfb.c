@@ -17,7 +17,7 @@ int main(int argc, char * argv[])
     qn_file_ptr fl;
     qn_fl_info_ptr fi;
     qn_storage_ptr stor;
-    qn_stor_put_extra ext;
+    qn_stor_put_extra_ptr pe;
     qn_http_hdr_iterator_ptr hdr_itr;
     qn_string hdr_ent;
     char * buf;
@@ -88,18 +88,27 @@ int main(int argc, char * argv[])
     } // if
     qn_fl_close(fl);
 
-    memset(&ext, 0, sizeof(ext));
-    ext.final_key = key;
+    pe = qn_stor_pe_create();
+    if (! pe) {
+        free(buf);
+        qn_str_destroy(uptoken);
+        printf("Cannot create a put extra due to application error `%s`.\n", qn_err_get_message());
+        return 1;
+    } // if
+
+    qn_stor_pe_set_final_key(pe, key);
 
     stor = qn_stor_create();
     if (!stor) {
+        qn_stor_pe_destroy(pe);
         free(buf);
         qn_str_destroy(uptoken);
         printf("Cannot initialize a new storage object due to application error `%s`.\n", qn_err_get_message());
         return 1;
     } // if
 
-    put_ret = qn_stor_put_buffer(stor, uptoken, buf, buf_size, &ext);
+    put_ret = qn_stor_put_buffer(stor, uptoken, buf, buf_size, pe);
+    qn_stor_pe_destroy(pe);
     free(buf);
     qn_str_destroy(uptoken);
     if (! put_ret) {

@@ -1648,14 +1648,78 @@ QN_API qn_json_object_ptr qn_stor_execute_batch_opertions(qn_storage_ptr restric
 typedef struct _QN_STOR_PUT_READER
 {
     qn_stor_put_extra_ptr ext;
-} qn_stor_put_reader, *qn_stor_put_reader_ptr;
+} qn_stor_put_reader_st, *qn_stor_put_reader_ptr;
+
+typedef struct _QN_STOR_PUT_EXTRA
+{
+    unsigned int detect_fsize:1;
+
+    const char * final_key;
+    const char * crc32;
+    const char * accept_type;
+
+    qn_rgn_entry_ptr rgn_entry;
+
+    qn_fsize fsize;
+    qn_io_reader_itf rdr;
+} qn_stor_put_extra_st;
+
+QN_API qn_stor_put_extra_ptr qn_stor_pe_create(void)
+{
+    qn_stor_put_extra_ptr new_pe = calloc(1, sizeof(qn_stor_put_extra_st));
+    if (! new_pe) {
+        qn_err_set_out_of_memory();
+        return NULL;
+    } // if
+    return new_pe;
+}
+
+QN_API void qn_stor_pe_destroy(qn_stor_put_extra_ptr restrict pe)
+{
+    if (pe) {
+        free(pe);
+    } // if
+}
+
+QN_API void qn_stor_pe_reset(qn_stor_put_extra_ptr restrict pe)
+{
+    memset(pe, 0, sizeof(qn_stor_put_extra_st));
+}
+
+QN_API void qn_stor_pe_set_final_key(qn_stor_put_extra_ptr restrict pe, const char * restrict final_key)
+{
+    pe->final_key = final_key;
+}
+
+QN_API extern void qn_stor_pe_set_local_crc32(qn_stor_put_extra_ptr restrict pe, const char * restrict crc32)
+{
+    pe->crc32 = crc32;
+}
+
+QN_API extern void qn_stor_pe_set_accept_type(qn_stor_put_extra_ptr restrict pe, const char * restrict accept_type)
+{
+    pe->accept_type = accept_type;
+}
+
+QN_API extern void qn_stor_pe_set_region_entry(qn_stor_put_extra_ptr restrict pe, qn_rgn_entry_ptr restrict entry)
+{
+    pe->rgn_entry = entry;
+}
+
+QN_API extern void qn_stor_pe_set_source_reader(qn_stor_put_extra_ptr restrict pe, qn_io_reader_itf restrict rdr, qn_fsize fsize, qn_bool detect_fsize)
+{
+    pe->rdr = rdr;
+    pe->fsize = fsize;
+    pe->detect_fsize = (detect_fsize) ? 1 : 0;
+}
+
 
 static size_t qn_stor_put_body_reader_callback(void * user_data, char * buf, size_t size)
 {
     qn_stor_put_reader_ptr prdr = (qn_stor_put_reader_ptr) user_data;
     ssize_t ret;
 
-    ret = qn_io_read(prdr->ext->put_ctrl.rdr, buf, size);
+    ret = qn_io_read(prdr->ext->rdr, buf, size);
     if (ret < 0) return CURL_READFUNC_ABORT;
     return ret;
 }
@@ -1773,16 +1837,16 @@ QN_API qn_json_object_ptr qn_stor_put_file(qn_storage_ptr restrict stor, const c
     qn_fl_info_ptr fi;
     qn_http_form_ptr form;
     qn_rgn_entry_ptr rgn_entry;
-    qn_stor_put_reader prdr;
+    qn_stor_put_reader_st prdr;
     qn_bool use_controllable_reader = qn_false;
 
     assert(stor);
     assert(uptoken);
 
     if (ext) {
-        if (! (rgn_entry = ext->rgn.entry)) qn_rgn_tbl_choose_first_entry(ext->rgn.rtbl, QN_RGN_SVC_UP, NULL, &rgn_entry);
+        if (! (rgn_entry = ext->rgn_entry)) qn_rgn_tbl_choose_first_entry(NULL, QN_RGN_SVC_UP, NULL, &rgn_entry);
 
-        if (ext->put_ctrl.rdr) {
+        if (ext->rdr) {
             prdr.ext = ext;
             use_controllable_reader = qn_true;
         } // if
@@ -1817,6 +1881,7 @@ QN_API qn_json_object_ptr qn_stor_put_file(qn_storage_ptr restrict stor, const c
     // ----
     ret = qn_http_conn_post(stor->conn, qn_str_cstr(rgn_entry->base_url), stor->req, stor->resp);
     if (!ret) return NULL;
+
     qn_json_set_integer(stor->obj_body, "fn-code", qn_http_resp_get_code(stor->resp));
     if (!qn_json_rename(stor->obj_body, "error", "fn-error")) return (qn_err_is_no_such_entry()) ? stor->obj_body : NULL;
     return stor->obj_body;
@@ -1833,7 +1898,7 @@ QN_API qn_json_object_ptr qn_stor_put_buffer(qn_storage_ptr restrict stor, const
     assert(buf);
 
     if (ext) {
-        if (! (rgn_entry = ext->rgn.entry)) qn_rgn_tbl_choose_first_entry(ext->rgn.rtbl, QN_RGN_SVC_UP, NULL, &rgn_entry);
+        if (! (rgn_entry = ext->rgn_entry)) qn_rgn_tbl_choose_first_entry(NULL, QN_RGN_SVC_UP, NULL, &rgn_entry);
     } else {
         rgn_entry = NULL;
         qn_rgn_tbl_choose_first_entry(NULL, QN_RGN_SVC_UP, NULL, &rgn_entry);
@@ -1849,6 +1914,7 @@ QN_API qn_json_object_ptr qn_stor_put_buffer(qn_storage_ptr restrict stor, const
     if (rgn_entry->hostname && !qn_http_req_set_header(stor->req, "Host", qn_str_cstr(rgn_entry->hostname))) return NULL;
     ret = qn_http_conn_post(stor->conn, qn_str_cstr(rgn_entry->base_url), stor->req, stor->resp);
     if (!ret) return NULL;
+
     qn_json_set_integer(stor->obj_body, "fn-code", qn_http_resp_get_code(stor->resp));
     if (!qn_json_rename(stor->obj_body, "error", "fn-error")) return (qn_err_is_no_such_entry()) ? stor->obj_body : NULL;
     return stor->obj_body;

@@ -184,33 +184,21 @@ QN_API extern qn_json_object_ptr qn_stor_execute_batch_opertions(qn_storage_ptr 
 
 // ---- Declaration of Upload ----
 
-typedef enum _QN_STOR_PUT_METHOD
-{
-    QN_STOR_PUT_RESUMABLE = 0x1,
-    QN_STOR_PUT_BASE64 = 0x2,
-    QN_STOR_PUT_CHUNKED = 0x4
-} qn_stor_put_method;
+struct _QN_STOR_PUT_EXTRA;
+typedef struct _QN_STOR_PUT_EXTRA * qn_stor_put_extra_ptr;
 
-// ----
+QN_API extern qn_stor_put_extra_ptr qn_stor_pe_create(void);
+QN_API extern void qn_stor_pe_destroy(qn_stor_put_extra_ptr restrict pe);
+QN_API extern void qn_stor_pe_reset(qn_stor_put_extra_ptr restrict pe);
 
-typedef struct _QN_STOR_PUT_EXTRA
-{
-    qn_stor_put_method method;
+QN_API extern void qn_stor_pe_set_final_key(qn_stor_put_extra_ptr restrict pe, const char * restrict final_key);
+QN_API extern void qn_stor_pe_set_local_crc32(qn_stor_put_extra_ptr restrict pe, const char * restrict crc32);
+QN_API extern void qn_stor_pe_set_accept_type(qn_stor_put_extra_ptr restrict pe, const char * restrict accept_type);
+QN_API extern void qn_stor_pe_set_region_entry(qn_stor_put_extra_ptr restrict pe, qn_rgn_entry_ptr restrict entry);
+QN_API extern void qn_stor_pe_set_source_reader(qn_stor_put_extra_ptr restrict pe, qn_io_reader_itf restrict rdr, qn_fsize fsize, qn_bool detect_fsize);
 
-    const char * final_key;
-    const char * crc32;
-    const char * accept_type;
-
-    // ---- Extensions ----
-    // Multi-Region : Pass the host entry information of a storage region.
-    qn_stor_rgn rgn;
-
-    // Put-Control : Control the progress of putting a file.
-    qn_stor_put_ctrl put_ctrl;
-} qn_stor_put_extra, *qn_stor_put_extra_ptr;
-
-QN_API extern qn_json_object_ptr qn_stor_put_file(qn_storage_ptr restrict stor, const char * restrict uptoken, const char * restrict fname, qn_stor_put_extra_ptr restrict ext);
-QN_API extern qn_json_object_ptr qn_stor_put_buffer(qn_storage_ptr restrict stor, const char * restrict uptoken, const char * restrict buf, int buf_size, qn_stor_put_extra_ptr restrict ext);
+QN_API extern qn_json_object_ptr qn_stor_put_file(qn_storage_ptr restrict stor, const char * restrict uptoken, const char * restrict fname, qn_stor_put_extra_ptr restrict pe);
+QN_API extern qn_json_object_ptr qn_stor_put_buffer(qn_storage_ptr restrict stor, const char * restrict uptoken, const char * restrict buf, int buf_size, qn_stor_put_extra_ptr restrict pe);
 
 // ----
 
