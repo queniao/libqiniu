@@ -147,6 +147,40 @@ static inline void qn_stor_reset(qn_storage_ptr restrict stor)
     } // if
 }
 
+// ----
+
+typedef struct _QN_STOR_STAT_EXTRA
+{
+    qn_rgn_entry_ptr rgn_entry;
+} qn_stor_stat_extra_st;
+
+QN_API qn_stor_stat_extra_ptr qn_stor_se_create(void)
+{
+    qn_stor_stat_extra_ptr new_se = calloc(1, sizeof(qn_stor_stat_extra_st));
+    if (! new_se) {
+        qn_err_set_out_of_memory();
+        return NULL;
+    } // if
+    return new_se;
+}
+
+QN_API void qn_stor_se_destroy(qn_stor_stat_extra_ptr restrict se)
+{
+    if (se) {
+        free(se);
+    } // if
+}
+
+QN_API void qn_stor_se_reset(qn_stor_stat_extra_ptr restrict se)
+{
+    memset(se, 0, sizeof(qn_stor_stat_extra_st));
+}
+
+QN_API void qn_stor_se_set_region_entry(qn_stor_stat_extra_ptr restrict se, qn_rgn_entry_ptr restrict entry)
+{
+    se->rgn_entry = entry;
+}
+
 static const qn_string qn_stor_make_stat_op(const char * restrict bucket, const char * restrict key)
 {
     qn_string op;
@@ -243,7 +277,7 @@ QN_API qn_json_object_ptr qn_stor_stat(qn_storage_ptr restrict stor, const qn_ma
 
     // ---- Process all extra options.
     if (ext) {
-        if (! (rgn_entry = ext->rgn.entry)) qn_rgn_tbl_choose_first_entry(ext->rgn.rtbl, QN_RGN_SVC_RS, NULL, &rgn_entry);
+        if (! (rgn_entry = ext->rgn_entry)) qn_rgn_tbl_choose_first_entry(NULL, QN_RGN_SVC_RS, NULL, &rgn_entry);
     } else {
         rgn_entry = NULL;
         qn_rgn_tbl_choose_first_entry(NULL, QN_RGN_SVC_RS, NULL, &rgn_entry);
@@ -291,6 +325,45 @@ QN_API qn_json_object_ptr qn_stor_stat(qn_storage_ptr restrict stor, const qn_ma
     qn_json_set_integer(stor->obj_body, "fn-code", qn_http_resp_get_code(stor->resp));
     if (!qn_json_rename(stor->obj_body, "error", "fn-error")) return (qn_err_is_no_such_entry()) ? stor->obj_body : NULL;
     return stor->obj_body;
+}
+
+typedef struct _QN_STOR_COPY_EXTRA
+{
+    unsigned int force:1;
+
+    qn_rgn_entry_ptr rgn_entry;
+} qn_stor_copy_extra_st;
+
+QN_API qn_stor_copy_extra_ptr qn_stor_ce_create(void)
+{
+    qn_stor_copy_extra_ptr new_ce = calloc(1, sizeof(qn_stor_copy_extra_st));
+    if (! new_ce) {
+        qn_err_set_out_of_memory();
+        return NULL;
+    } // if
+    return new_ce;
+}
+
+QN_API void qn_stor_ce_destroy(qn_stor_copy_extra_ptr restrict ce)
+{
+    if (ce) {
+        free(ce);
+    } // if
+}
+
+QN_API void qn_stor_ce_reset(qn_stor_copy_extra_ptr restrict ce)
+{
+    memset(ce, 0, sizeof(qn_stor_copy_extra_st));
+}
+
+QN_API void qn_stor_ce_set_force_overwrite(qn_stor_copy_extra_ptr restrict ce, qn_bool force)
+{
+    ce->force = (force) ? 1 : 0;
+}
+
+QN_API void qn_stor_ce_set_region_entry(qn_stor_copy_extra_ptr restrict ce, qn_rgn_entry_ptr entry)
+{
+    ce->rgn_entry = entry;
 }
 
 static const qn_string qn_stor_make_copy_op(const char * restrict src_bucket, const char * restrict src_key, const char * restrict dest_bucket, const char * restrict dest_key)
@@ -396,7 +469,7 @@ QN_API qn_json_object_ptr qn_stor_copy(qn_storage_ptr restrict stor, const qn_ma
 
     // ---- Process all extra options.
     if (ext) {
-        if (! (rgn_entry = ext->rgn.entry)) qn_rgn_tbl_choose_first_entry(ext->rgn.rtbl, QN_RGN_SVC_RS, NULL, &rgn_entry);
+        if (! (rgn_entry = ext->rgn_entry)) qn_rgn_tbl_choose_first_entry(NULL, QN_RGN_SVC_RS, NULL, &rgn_entry);
     } else {
         rgn_entry = NULL;
         qn_rgn_tbl_choose_first_entry(NULL, QN_RGN_SVC_RS, NULL, &rgn_entry);

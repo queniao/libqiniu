@@ -14,7 +14,7 @@ int main(int argc, char * argv[])
     qn_string copy_ret_str;
     qn_json_object_ptr copy_ret;
     qn_storage_ptr stor;
-    qn_stor_copy_extra ext;
+    qn_stor_copy_extra_ptr ce;
     qn_http_hdr_iterator_ptr hdr_itr;
     qn_string hdr_ent;
 
@@ -33,23 +33,30 @@ int main(int argc, char * argv[])
     src_key = argv[4];
     dest_bucket = argv[5];
     dest_key = argv[6];
-    if (argc == 7) {
+    if (argc == 8) {
         force = argv[7];
     } // if
 
+    ce = qn_stor_ce_create();
+    if (! ce) {
+        qn_mac_destroy(mac);
+        printf("Cannot create a copy extra due to application error `%s`.\n", qn_err_get_message());
+        return 1;
+    } // if
+
+    if (force) {
+        qn_stor_ce_set_force_overwrite(ce, qn_true);
+    } // if
+
     stor = qn_stor_create();
-    if (!stor) {
+    if (! stor) {
         qn_mac_destroy(mac);
         printf("Cannot initialize a new storage object due to application error `%s`.\n", qn_err_get_message());
         return 1;
     } // if
 
-    memset(&ext, 0, sizeof(ext));
-    if (force) {
-        ext.force = qn_true;
-    } // if
-
-    copy_ret = qn_stor_copy(stor, mac, src_bucket, src_key, dest_bucket, dest_key, &ext);
+    copy_ret = qn_stor_copy(stor, mac, src_bucket, src_key, dest_bucket, dest_key, ce);
+    qn_stor_ce_destroy(ce);
     qn_mac_destroy(mac);
     if (! copy_ret) {
         qn_stor_destroy(stor);

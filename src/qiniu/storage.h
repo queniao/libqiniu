@@ -72,25 +72,28 @@ QN_API extern qn_http_hdr_iterator_ptr qn_stor_resp_get_header_iterator(const qn
 
 // ----
 
-typedef struct _QN_STOR_STAT_EXTRA
-{
-    // ---- Extensions ----
-    // Multi-Region : Pass the host entry information of a storage region.
-    qn_stor_rgn rgn;
-} qn_stor_stat_extra, *qn_stor_stat_extra_ptr;
+struct _QN_STOR_STAT_EXTRA;
+typedef struct _QN_STOR_STAT_EXTRA * qn_stor_stat_extra_ptr;
+
+QN_API extern qn_stor_stat_extra_ptr qn_stor_se_create(void);
+QN_API extern void qn_stor_se_destroy(qn_stor_stat_extra_ptr restrict se);
+QN_API extern void qn_stor_se_reset(qn_stor_stat_extra_ptr restrict se);
+
+QN_API extern void qn_stor_se_set_region_entry(qn_stor_stat_extra_ptr restrict se, qn_rgn_entry_ptr restrict entry);
 
 QN_API extern qn_json_object_ptr qn_stor_stat(qn_storage_ptr restrict stor, const qn_mac_ptr restrict mac, const char * restrict bucket, const char * restrict key, qn_stor_stat_extra_ptr restrict ext);
 
 // ----
 
-typedef struct _QN_STOR_COPY_EXTRA
-{
-    qn_bool force;
+struct _QN_STOR_COPY_EXTRA;
+typedef struct _QN_STOR_COPY_EXTRA * qn_stor_copy_extra_ptr;
 
-    // ---- Extensions ----
-    // Multi-Region : Pass the host entry information of a storage region.
-    qn_stor_rgn rgn;
-} qn_stor_copy_extra, *qn_stor_copy_extra_ptr;
+QN_API extern qn_stor_copy_extra_ptr qn_stor_ce_create(void);
+QN_API extern void qn_stor_ce_destroy(qn_stor_copy_extra_ptr restrict ce);
+QN_API extern void qn_stor_ce_reset(qn_stor_copy_extra_ptr restrict ce);
+
+QN_API extern void qn_stor_ce_set_force_overwrite(qn_stor_copy_extra_ptr restrict ce, qn_bool force);
+QN_API extern void qn_stor_ce_set_region_entry(qn_stor_copy_extra_ptr restrict ce, qn_rgn_entry_ptr entry);
 
 QN_API extern qn_json_object_ptr qn_stor_copy(qn_storage_ptr restrict stor, const qn_mac_ptr restrict mac, const char * restrict src_bucket, const char * restrict src_key, const char * restrict dest_bucket, const char * restrict dest_key, qn_stor_copy_extra_ptr restrict ext);
 
