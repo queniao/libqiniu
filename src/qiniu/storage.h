@@ -193,6 +193,46 @@ QN_API extern qn_json_object_ptr qn_stor_execute_batch_opertions(qn_storage_ptr 
 
 // ---- Declaration of Upload ----
 
+// ---- Declaration of Put Policy ----
+
+QN_API extern qn_json_object_ptr qn_stor_pp_create(const char * restrict bucket, const char * restrict key, qn_uint32 deadline);
+QN_API extern void qn_stor_pp_destroy(qn_json_object_ptr restrict pp);
+
+QN_API extern qn_bool qn_stor_pp_set_scope(qn_json_object_ptr restrict pp, const char * restrict bucket, const char * restrict key);
+QN_API extern qn_bool qn_stor_pp_set_deadline(qn_json_object_ptr restrict pp, qn_uint32 deadline);
+
+QN_API extern qn_bool qn_stor_pp_dont_overwrite(qn_json_object_ptr restrict pp);
+
+QN_API extern qn_bool qn_stor_pp_return_to_server(qn_json_object_ptr restrict pp, const char * restrict url, const char * restrict body);
+QN_API extern qn_bool qn_stor_pp_return_to_client(qn_json_object_ptr restrict pp, const char * restrict body);
+
+QN_API extern qn_bool qn_stor_pp_callback_to_server(qn_json_object_ptr restrict pp, const char * restrict url, const char * restrict host_name);
+QN_API extern qn_bool qn_stor_pp_callback_with_body(qn_json_object_ptr restrict pp, const char * restrict body, const char * restrict mime_type);
+
+QN_API extern qn_bool qn_stor_pp_pfop_set_commands(qn_json_object_ptr restrict pp, const char * restrict pipeline, const char * restrict cmd1, const char * restrict cmd2, ...);
+QN_API extern qn_bool qn_stor_pp_pfop_set_command_list(qn_json_object_ptr restrict pp, const char * restrict pipeline, const char ** restrict cmds, int cmd_count);
+QN_API extern qn_bool qn_stor_pp_pfop_notify_to_server(qn_json_object_ptr restrict pp, const char * restrict url);
+
+QN_API extern qn_bool qn_stor_pp_mime_enable_auto_detecting(qn_json_object_ptr restrict pp);
+QN_API extern qn_bool qn_stor_pp_mime_allow(qn_json_object_ptr restrict pp, const char * restrict mime1, const char * restrict mime2, ...);
+QN_API extern qn_bool qn_stor_pp_mime_allow_list(qn_json_object_ptr restrict pp, const char ** restrict mime_list, int mime_count);
+QN_API extern qn_bool qn_stor_pp_mime_deny(qn_json_object_ptr restrict pp, const char * restrict mime1, const char * restrict mime2, ...);
+QN_API extern qn_bool qn_stor_pp_mime_deny_list(qn_json_object_ptr restrict pp, const char ** restrict mime_list, int mime_count);
+
+QN_API extern qn_bool qn_stor_pp_fsize_set_minimum(qn_json_object_ptr restrict pp, qn_uint32 min_size);
+QN_API extern qn_bool qn_stor_pp_fsize_set_maximum(qn_json_object_ptr restrict pp, qn_uint32 max_size);
+
+QN_API extern qn_bool qn_stor_pp_key_enable_fetching_from_callback_response(qn_json_object_ptr restrict pp);
+QN_API extern qn_bool qn_stor_pp_key_make_from_template(qn_json_object_ptr restrict pp, const char * restrict key_template);
+
+QN_API extern qn_bool qn_stor_pp_auto_delete_after_days(qn_json_object_ptr restrict pp, qn_uint32 days);
+
+QN_API extern qn_bool qn_stor_pp_upload_message(qn_json_object_ptr restrict pp, const char * restrict msg_queue, const char * restrict msg_body, const char * restrict msg_mime_type);
+
+QN_API extern qn_string qn_stor_pp_to_uptoken(qn_json_object_ptr restrict pp, qn_mac_ptr restrict mac);
+
+// ---- 
+
 struct _QN_STOR_PUT_EXTRA;
 typedef struct _QN_STOR_PUT_EXTRA * qn_stor_put_extra_ptr;
 

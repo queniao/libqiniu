@@ -34,14 +34,14 @@ int main(int argc, char * argv[])
     key = argv[4];
     fname = argv[5];
 
-    put_policy = qn_pp_create(bucket, key, time(NULL) + 3600);
+    put_policy = qn_stor_pp_create(bucket, key, time(NULL) + 3600);
     if (! put_policy) {
         qn_mac_destroy(mac);
         printf("Cannot create a put policy due to application error `%s`.\n", qn_err_get_message());
         return 1;
     } // if
 
-    uptoken = qn_pp_to_uptoken(put_policy, mac);
+    uptoken = qn_stor_pp_to_uptoken(put_policy, mac);
     qn_json_destroy_object(put_policy);
     qn_mac_destroy(mac);
     if (! uptoken) {
