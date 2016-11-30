@@ -8,7 +8,7 @@ extern "C"
 {
 #endif
 
-static const char * qn_ver_full_string = "libqiniu-0.4.0";
+static const char * qn_ver_full_string = "libqiniu-0.4.1";
 
 QN_API const char * qn_ver_get_full_string(void)
 {
