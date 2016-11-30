@@ -3,43 +3,23 @@
 #include "qiniu/base/errors.h"
 #include "qiniu/storage.h"
 
-qn_bool item_processor_callback(void * user_data, qn_json_object_ptr item)
-{
-    int * i = (int *) user_data;
-    qn_string str;
-
-    if (!item) {
-        fprintf(stderr, "No invalid item.\n");
-        return qn_false;
-    } // if
-    
-    str = qn_json_object_to_string(item);
-    if (!str) {
-        fprintf(stderr, "Cannot format object item.\n");
-        return qn_false;
-    } // if
-    printf("%d %s\n", ++*i, str);
-    qn_str_destroy(str);
-    return qn_true;
-}
-
 int main(int argc, char * argv[])
 {
-    int n = 0;
     qn_mac_ptr mac;
     const char * bucket;
-    const char * in_list = NULL;
     const char * prefix = NULL;
     const char * delimiter = NULL;
+    const char * limit = NULL;
+    qn_string marker;
     qn_string list_ret_str;
     qn_json_object_ptr list_ret;
-    qn_stor_list_extra ext;
+    qn_stor_list_extra_ptr le;
     qn_storage_ptr stor;
     qn_http_hdr_iterator_ptr hdr_itr;
     qn_string hdr_ent;
 
     if (argc < 4) {
-        printf("Usage: qlist <ACCESS_KEY> <SECRET_KEY> <BUCKET> [IN_LIST [PREFIX [DELIMITER]]]\n");
+        printf("Usage: qlist <ACCESS_KEY> <SECRET_KEY> <BUCKET> [PREFIX [DELIMITER [LIMIT]]]\n");
         return 0;
     } // if
 
@@ -50,56 +30,62 @@ int main(int argc, char * argv[])
     } // if
 
     bucket = argv[3];
-    if (argc > 4) in_list = argv[4];
-    if (argc > 5) prefix = argv[5];
-    if (argc > 6) delimiter = argv[6];
+    if (argc > 4) prefix = argv[4];
+    if (argc > 5) delimiter = argv[5];
+    if (argc > 6) limit = argv[6];
+
+    le = qn_stor_le_create();
+    if (! le) {
+        qn_mac_destroy(mac);
+        printf("Cannot create a copy extra due to application error `%s`.\n", qn_err_get_message());
+        return 1;
+    } // if
+
+    if (prefix) qn_stor_le_set_prefix(le, prefix);
+    if (delimiter) qn_stor_le_set_delimiter(le, delimiter);
+    if (limit) qn_stor_le_set_limit(le, atoi(limit));
 
     stor = qn_stor_create();
     if (! stor) {
+        qn_stor_le_destroy(le);
+        qn_mac_destroy(mac);
         printf("Cannot initialize a new storage object due to application error `%s`.\n", qn_err_get_message());
         return 1;
     } // if
 
-    memset(&ext, 0, sizeof(ext));
-    if (in_list && strlen(in_list) > 0) {
-        ext.item_processor = &n;
-        ext.item_processor_callback = &item_processor_callback;
-    } else {
-        in_list = NULL;
-    } // if
+    do {
+        list_ret = qn_stor_list(stor, mac, bucket, le);
+        if (! list_ret) {
+            qn_stor_destroy(stor);
+            qn_stor_le_destroy(le);
+            qn_mac_destroy(mac);
+            printf("Cannot list all files in the `%s` bucket due to application error `%s`.\n", bucket, qn_err_get_message());
+            return 2;
+        } // if
 
-    ext.limit = 1000;
+        hdr_itr = qn_stor_resp_get_header_iterator(stor);
+        while ((hdr_ent = qn_http_hdr_itr_next_entry(hdr_itr))) printf("%s\n", qn_str_cstr(hdr_ent));
+        qn_http_hdr_itr_destroy(hdr_itr);
 
-    if (prefix && strlen(prefix) > 0) {
-        ext.prefix = prefix;
-    } // if
-
-    ext.delimiter = delimiter;
-
-    list_ret = qn_stor_list(stor, mac, bucket, &ext);
-    qn_mac_destroy(mac);
-    if (! list_ret) {
-        qn_stor_destroy(stor);
-        printf("Cannot list all files in the `%s` bucket due to application error `%s`.\n", bucket, qn_err_get_message());
-        return 2;
-    } // if
-
-    hdr_itr = qn_stor_resp_get_header_iterator(stor);
-    while ((hdr_ent = qn_http_hdr_itr_next_entry(hdr_itr))) printf("%s\n", qn_str_cstr(hdr_ent));
-    qn_http_hdr_itr_destroy(hdr_itr);
-
-    if (! in_list) {
         list_ret_str = qn_json_object_to_string(list_ret);
         if (! list_ret_str) {
             qn_stor_destroy(stor);
+            qn_stor_le_destroy(le);
+            qn_mac_destroy(mac);
             printf("Cannot format the list result due to application error `%s`.\n", qn_err_get_message());
             return 3;
         } // if
 
         printf("%s\n", list_ret_str);
         qn_str_destroy(list_ret_str);
-    } // if
+
+        marker = qn_json_get_string(list_ret, "marker", NULL);
+        qn_stor_le_set_marker(le, marker);
+    } while (marker && strlen(marker));
+
     qn_stor_destroy(stor);
+    qn_stor_le_destroy(le);
+    qn_mac_destroy(mac);
 
     return 0;
 }

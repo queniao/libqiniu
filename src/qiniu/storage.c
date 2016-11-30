@@ -1388,6 +1388,72 @@ QN_API qn_json_object_ptr qn_stor_prefetch(qn_storage_ptr restrict stor, const q
 
 // ----
 
+typedef struct _QN_STOR_LIST_EXTRA
+{
+    const char * prefix;
+    const char * delimiter;
+    const char * marker;
+    int limit;
+
+    qn_http_query_ptr qry;
+    qn_rgn_entry_ptr rgn_entry;
+} qn_stor_list_extra_st;
+
+QN_API qn_stor_list_extra_ptr qn_stor_le_create(void)
+{
+    qn_stor_list_extra_ptr new_le = malloc(sizeof(qn_stor_list_extra_st));
+    if (! new_le) {
+        qn_err_set_out_of_memory();
+        return NULL;
+    } // if
+
+    new_le->qry = qn_http_qry_create();
+    if (! new_le->qry) {
+        free(new_le);
+        return NULL;
+    } // if
+
+    qn_stor_le_reset(new_le);
+    return new_le;
+}
+
+QN_API void qn_stor_le_destroy(qn_stor_list_extra_ptr restrict le)
+{
+    if (le) {
+        qn_http_qry_destroy(le->qry);
+        free(le);
+    } // if
+}
+
+QN_API void qn_stor_le_reset(qn_stor_list_extra_ptr restrict le)
+{
+    le->prefix = NULL;
+    le->delimiter = NULL;
+    le->marker = NULL;
+    le->limit = 1000;
+    le->rgn_entry = NULL;
+}
+
+QN_API void qn_stor_le_set_prefix(qn_stor_list_extra_ptr restrict le, const char * restrict prefix)
+{
+    le->prefix = prefix;
+}
+
+QN_API void qn_stor_le_set_delimiter(qn_stor_list_extra_ptr restrict le, const char * restrict delimiter)
+{
+    le->delimiter = delimiter;
+}
+
+QN_API void qn_stor_le_set_marker(qn_stor_list_extra_ptr restrict le, const char * restrict marker)
+{
+    le->marker = marker;
+}
+
+QN_API void qn_stor_le_set_limit(qn_stor_list_extra_ptr restrict le, int limit)
+{
+    le->limit = limit;
+}
+
 /***************************************************************************//**
 * @ingroup Storage-Management
 *
@@ -1485,12 +1551,8 @@ QN_API qn_json_object_ptr qn_stor_list(qn_storage_ptr restrict stor, const qn_ma
     qn_bool ret;
     qn_string url;
     qn_string qry_str;
-    qn_string marker;
     qn_http_query_ptr qry;
-    qn_json_array_ptr items;
-    qn_json_object_ptr item;
     qn_rgn_entry_ptr rgn_entry;
-    int i;
     int limit = 1000;
 
     assert(stor);
@@ -1499,132 +1561,77 @@ QN_API qn_json_object_ptr qn_stor_list(qn_storage_ptr restrict stor, const qn_ma
 
     // ---- Process all extra options.
     if (ext) {
-        if (! (rgn_entry = ext->rgn.entry)) qn_rgn_tbl_choose_first_entry(ext->rgn.rtbl, QN_RGN_SVC_RSF, NULL, &rgn_entry);
+        if (! (rgn_entry = ext->rgn_entry)) qn_rgn_tbl_choose_first_entry(NULL, QN_RGN_SVC_RSF, NULL, &rgn_entry);
+
+        qry = ext->qry;
+
+        limit = (0 < ext->limit && ext->limit <= 1000) ? ext->limit : 1000;
+
+        if (ext->delimiter && strlen(ext->delimiter) && ! qn_http_qry_set_string(qry, "delimiter", ext->delimiter)) return NULL;
+        if (ext->prefix && strlen(ext->prefix) && ! qn_http_qry_set_string(qry, "prefix", ext->prefix)) return NULL;
+        if (ext->marker && strlen(ext->marker) && ! qn_http_qry_set_string(qry, "marker", ext->marker)) return NULL;
     } else {
         rgn_entry = NULL;
         qn_rgn_tbl_choose_first_entry(NULL, QN_RGN_SVC_RSF, NULL, &rgn_entry);
+
+        qry = qn_http_qry_create();
+        if (! qry) return NULL;
     } // if
 
-    qry = qn_http_qry_create();
-    if (!qry) return NULL;
-
-    if (!qn_http_qry_set_string(qry, "bucket", bucket)) {
-        qn_http_qry_destroy(qry);
+    if (! qn_http_qry_set_string(qry, "bucket", bucket)) {
+        if (! ext) qn_http_qry_destroy(qry);
         return NULL;
     } // if
 
-    if (ext) {
-        limit = (0 < ext->limit && ext->limit <= 1000) ? ext->limit : 1000;
-
-        if (ext->delimiter && !qn_http_qry_set_string(qry, "delimiter", ext->delimiter)) {
-            qn_http_qry_destroy(qry);
-            return NULL;
-        } // if
-
-        if (ext->prefix && !qn_http_qry_set_string(qry, "prefix", ext->prefix)) {
-            qn_http_qry_destroy(qry);
-            return NULL;
-        } // if
-    } // if
-
-    if (!qn_http_qry_set_integer(qry, "limit", limit)) {
-        qn_http_qry_destroy(qry);
+    if (! qn_http_qry_set_integer(qry, "limit", limit)) {
+        if (! ext) qn_http_qry_destroy(qry);
         return NULL;
     } // if
 
-    do {
-        if (stor->obj_body) {
-            marker = qn_json_get_string(stor->obj_body, marker, qn_str_empty_string);
-            if (!qn_http_qry_set_string(qry, "marker", qn_str_cstr(marker))) {
-                qn_http_qry_destroy(qry);
-                return NULL;
-            } // if
-        } // if
+    qry_str = qn_http_qry_to_string(qry);
+    if (! ext) qn_http_qry_destroy(qry);
+    if (! qry_str) return NULL;
 
-        if (! (qry_str = qn_http_qry_to_string(qry))) {
-            qn_http_qry_destroy(qry);
-            return NULL;
-        } // if
+    // ---- Prepare the copy URL.
+    url = qn_cs_sprintf("%.*s/list?%.*s", qn_str_size(rgn_entry->base_url), qn_str_cstr(rgn_entry->base_url), qn_str_size(qry_str), qn_str_cstr(qry_str));
+    qn_str_destroy(qry_str);
+    if (! url) return NULL;
 
-        // ---- Prepare the copy URL.
-        url = qn_cs_sprintf("%.*s/list?%.*s", qn_str_size(rgn_entry->base_url), qn_str_cstr(rgn_entry->base_url), qn_str_size(qry_str), qn_str_cstr(qry_str));
-        qn_str_destroy(qry_str);
-        if (!url) {
-            qn_http_qry_destroy(qry);
-            return NULL;
-        } // if
+    // ---- Prepare the request and response.
+    qn_stor_reset(stor);
 
-        // ---- Prepare the request and response.
-        qn_stor_reset(stor);
+    qn_http_req_set_body_data(stor->req, "", 0);
 
-        qn_http_req_set_body_data(stor->req, "", 0);
-
-        if (!qn_stor_prepare_for_managing(stor, url, rgn_entry->hostname, mac)) {
-            qn_str_destroy(url);
-            qn_http_qry_destroy(qry);
-            return NULL;
-        } // if
-
-        if (! (stor->obj_body = qn_json_create_object())) {
-            qn_str_destroy(url);
-            qn_http_qry_destroy(qry);
-            return NULL;
-        } // if
-
-        if (! (qn_json_set_integer(stor->obj_body, "fn-code", 0))) {
-            qn_str_destroy(url);
-            qn_http_qry_destroy(qry);
-            return NULL;
-        } // if
-
-        if (! (qn_json_set_string(stor->obj_body, "fn-error", "OK"))) {
-            qn_str_destroy(url);
-            qn_http_qry_destroy(qry);
-            return NULL;
-        } // if
-
-        qn_http_json_wrt_prepare(stor->resp_json_wrt, &stor->obj_body, NULL);
-        qn_http_resp_set_data_writer(stor->resp, stor->resp_json_wrt, &qn_http_json_wrt_callback);
-
-        // ---- Do the list action.
-        ret = qn_http_conn_post(stor->conn, url, stor->req, stor->resp);
+    if (! qn_stor_prepare_for_managing(stor, url, rgn_entry->hostname, mac)) {
         qn_str_destroy(url);
+        return NULL;
+    } // if
 
-        if (!ret) {
-            qn_http_qry_destroy(qry);
-            return NULL;
-        } // if
+    if (! (stor->obj_body = qn_json_create_object())) {
+        qn_str_destroy(url);
+        return NULL;
+    } // if
 
-        qn_json_set_integer(stor->obj_body, "fn-code", qn_http_resp_get_code(stor->resp));
-        if (!qn_json_rename(stor->obj_body, "error", "fn-error") && !qn_err_is_no_such_entry()) {
-            qn_http_qry_destroy(qry);
-            return NULL;
-        } // if
+    if (! (qn_json_set_integer(stor->obj_body, "fn-code", 0))) {
+        qn_str_destroy(url);
+        return NULL;
+    } // if
 
-        if (qn_http_resp_get_code(stor->resp) != 200 || !ext->item_processor_callback) break;
+    if (! (qn_json_set_string(stor->obj_body, "fn-error", "OK"))) {
+        qn_str_destroy(url);
+        return NULL;
+    } // if
 
-        items = qn_json_get_array(stor->obj_body, "items", NULL);
-        if (!items) {
-            qn_err_stor_set_invalid_list_result();
-            qn_http_qry_destroy(qry);
-            return NULL;
-        } // if
+    qn_http_json_wrt_prepare(stor->resp_json_wrt, &stor->obj_body, NULL);
+    qn_http_resp_set_data_writer(stor->resp, stor->resp_json_wrt, &qn_http_json_wrt_callback);
 
-        if (qn_json_is_empty_array(items)) {
-            qn_http_qry_destroy(qry);
-            return stor->obj_body;
-        } // if
+    // ---- Do the list action.
+    ret = qn_http_conn_post(stor->conn, url, stor->req, stor->resp);
+    qn_str_destroy(url);
+    if (! ret) return NULL;
 
-        for (i = 0; i < qn_json_size_array(items); i += 1) {
-            item = qn_json_pick_object(items, i, NULL);
-            if (!ext->item_processor_callback(ext->item_processor, item)) {
-                qn_http_qry_destroy(qry);
-                return NULL;
-            } // if
-        } // for
-    } while (qn_json_size_array(items) == limit);
-
-    qn_http_qry_destroy(qry);
+    qn_json_set_integer(stor->obj_body, "fn-code", qn_http_resp_get_code(stor->resp));
+    if (! qn_json_rename(stor->obj_body, "error", "fn-error") && ! qn_err_is_no_such_entry()) return NULL;
     return stor->obj_body;
 }
 

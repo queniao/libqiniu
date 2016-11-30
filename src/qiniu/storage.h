@@ -152,21 +152,17 @@ QN_API extern qn_json_object_ptr qn_stor_prefetch(qn_storage_ptr restrict stor, 
 
 // ----
 
-typedef qn_bool (*qn_stor_item_processor_callback)(void * user_data, qn_json_object_ptr item);
+struct _QN_STOR_LIST_EXTRA;
+typedef struct _QN_STOR_LIST_EXTRA * qn_stor_list_extra_ptr;
 
-typedef struct _QN_STOR_LIST_EXTRA
-{
-    const char * prefix;
-    const char * delimiter;
-    int limit;
+QN_API extern qn_stor_list_extra_ptr qn_stor_le_create(void);
+QN_API extern void qn_stor_le_destroy(qn_stor_list_extra_ptr restrict le);
+QN_API extern void qn_stor_le_reset(qn_stor_list_extra_ptr restrict le);
 
-    void * item_processor;
-    qn_stor_item_processor_callback item_processor_callback;
-
-    // ---- Extensions ----
-    // Multi-Region : Pass the host entry information of a storage region.
-    qn_stor_rgn rgn;
-} qn_stor_list_extra, *qn_stor_list_extra_ptr;
+QN_API extern void qn_stor_le_set_prefix(qn_stor_list_extra_ptr restrict le, const char * restrict prefix);
+QN_API extern void qn_stor_le_set_delimiter(qn_stor_list_extra_ptr restrict le, const char * restrict delimiter);
+QN_API extern void qn_stor_le_set_marker(qn_stor_list_extra_ptr restrict le, const char * restrict marker);
+QN_API extern void qn_stor_le_set_limit(qn_stor_list_extra_ptr restrict le, int limit);
 
 QN_API extern qn_json_object_ptr qn_stor_list(qn_storage_ptr restrict stor, const qn_mac_ptr restrict mac, const char * restrict bucket, qn_stor_list_extra_ptr restrict ext);
 
