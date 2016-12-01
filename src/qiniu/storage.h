@@ -280,6 +280,8 @@ QN_API extern void qn_stor_rpe_set_chunk_size(qn_stor_rput_extra_ptr restrict rp
 QN_API extern void qn_stor_rpe_set_final_key(qn_stor_rput_extra_ptr restrict rpe, const char * restrict key);
 QN_API extern void qn_stor_rpe_set_region_entry(qn_stor_rput_extra_ptr restrict rpe, qn_rgn_entry_ptr restrict entry);
 
+QN_API extern void qn_stor_rpe_set_source_reader(qn_stor_put_extra_ptr restrict pe, qn_io_reader_itf restrict rdr, qn_fsize fsize, qn_bool detect_fsize);
+
 // ----
 
 QN_API extern qn_json_object_ptr qn_stor_rp_put_chunk(qn_storage_ptr restrict stor, const char * restrict uptoken, qn_json_object_ptr restrict blk_info, qn_io_reader_itf restrict rdr, int chk_size, qn_stor_rput_extra_ptr restrict ext);

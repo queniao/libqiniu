@@ -2545,8 +2545,13 @@ QN_API qn_bool qn_stor_rs_is_putting_block_done(const qn_stor_rput_session_ptr r
 
 typedef struct _QN_STOR_RESUMABLE_PUT_EXTRA
 {
-    int chk_size;
+    unsigned int detect_fsize:1;
+    unsigned int chk_size:23;
+
     const char * final_key;
+
+    qn_fsize fsize;
+    qn_io_reader_itf rdr;
 
     qn_rgn_entry_ptr rgn_entry;
 } qn_stor_rput_extra_st;
@@ -2589,6 +2594,13 @@ QN_API void qn_stor_rpe_set_final_key(qn_stor_rput_extra_ptr restrict rpe, const
 QN_API void qn_stor_rpe_set_region_entry(qn_stor_rput_extra_ptr restrict rpe, qn_rgn_entry_ptr restrict entry)
 {
     rpe->rgn_entry = entry;
+}
+
+QN_API void qn_stor_rpe_set_source_reader(qn_stor_put_extra_ptr restrict rpe, qn_io_reader_itf restrict rdr, qn_fsize fsize, qn_bool detect_fsize)
+{
+    rpe->rdr = rdr;
+    rpe->fsize = fsize;
+    rpe->detect_fsize = (detect_fsize) ? 1 : 0;
 }
 
 typedef struct _QN_STOR_RESUMABLE_PUT_READER
@@ -2942,7 +2954,8 @@ QN_API qn_json_object_ptr qn_stor_rp_make_file(qn_storage_ptr restrict stor, con
 
 static qn_json_object_ptr qn_stor_rp_put_file_in_serial_blocks(qn_storage_ptr restrict stor, const char * restrict uptoken, qn_stor_rput_session_ptr restrict ss, const char * restrict fname, qn_stor_rput_extra_ptr restrict ext)
 {
-    qn_file_ptr fl;
+    qn_file_ptr fl = NULL;
+    qn_io_reader_itf rdr;
     qn_json_object_ptr blk_info;
     qn_json_object_ptr put_ret = qn_json_immutable_empty_object();
     qn_integer blk_count;
@@ -2952,8 +2965,15 @@ static qn_json_object_ptr qn_stor_rp_put_file_in_serial_blocks(qn_storage_ptr re
     qn_bool skip = qn_false;
     int i;
 
-    fl = qn_fl_open(fname, NULL);
-    if (!fl) return NULL;
+    if (ext) {
+        rdr = ext->rdr;
+    } // if
+
+    if (! rdr) {
+        fl = qn_fl_open(fname, NULL);
+        if (!fl) return NULL;
+        rdr = qn_fl_to_io_reader(fl);
+    } // if
 
     start_offset = 0;
     blk_count = qn_stor_rs_block_count(ss);
@@ -2971,7 +2991,7 @@ static qn_json_object_ptr qn_stor_rp_put_file_in_serial_blocks(qn_storage_ptr re
         } // if
 
         if (skip) {
-            if (!qn_fl_seek(fl, start_offset)) {
+            if (! qn_io_seek(rdr, start_offset)) {
                 qn_fl_close(fl);
                 return NULL;
             } // if
@@ -2980,8 +3000,8 @@ static qn_json_object_ptr qn_stor_rp_put_file_in_serial_blocks(qn_storage_ptr re
 
         // TODO: Refresh the uptoken for every block, in the case that the deadline may expires between puts.
 
-        put_ret = qn_stor_rp_put_block(stor, uptoken, blk_info, qn_fl_to_io_reader(fl), ext);
-        if (!put_ret) {
+        put_ret = qn_stor_rp_put_block(stor, uptoken, blk_info, rdr, ext);
+        if (! put_ret) {
             qn_fl_close(fl);
             return NULL;
         } // if
