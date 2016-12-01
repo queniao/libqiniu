@@ -2596,7 +2596,7 @@ QN_API void qn_stor_rpe_set_region_entry(qn_stor_rput_extra_ptr restrict rpe, qn
     rpe->rgn_entry = entry;
 }
 
-QN_API void qn_stor_rpe_set_source_reader(qn_stor_put_extra_ptr restrict rpe, qn_io_reader_itf restrict rdr, qn_fsize fsize, qn_bool detect_fsize)
+QN_API void qn_stor_rpe_set_source_reader(qn_stor_rput_extra_ptr restrict rpe, qn_io_reader_itf restrict rdr, qn_fsize fsize, qn_bool detect_fsize)
 {
     rpe->rdr = rdr;
     rpe->fsize = fsize;
