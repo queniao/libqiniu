@@ -63,7 +63,6 @@ QN_API void qn_easy_pe_reset(qn_easy_put_extra_ptr restrict pe)
     memset(pe, 0, sizeof(qn_easy_put_extra_st));
 }
 
-
 QN_API void qn_easy_pe_set_final_key(qn_easy_put_extra_ptr restrict pe, const char * restrict key)
 {
     pe->attr.final_key = key;
@@ -110,10 +109,15 @@ QN_API void qn_easy_pe_set_source_reader(qn_easy_put_extra_ptr restrict pe, qn_i
     pe->put_ctrl.fsize = fsize;
 }
 
-QN_API void qn_easy_pe_set_resumable_put_session(qn_easy_put_extra_ptr restrict pe, qn_stor_rput_session_ptr restrict rput_ss)
+QN_API void qn_easy_pe_set_rput_session(qn_easy_put_extra_ptr restrict pe, qn_stor_rput_session_ptr restrict rput_ss)
 {
     pe->put_ctrl.extern_ss = (rput_ss) ? 1 : 0;
     pe->put_ctrl.rput_ss = rput_ss;
+}
+
+QN_API qn_stor_rput_session_ptr qn_easy_pe_get_rput_session(qn_easy_put_extra_ptr restrict pe)
+{
+    return pe->put_ctrl.rput_ss;
 }
 
 typedef struct _QN_EASY
