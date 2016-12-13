@@ -42,3 +42,6 @@ target_link_libraries (qrputf qiniu curl crypto)
 
 add_executable (qregion qregion.c)
 target_link_libraries (qregion qiniu curl crypto)
+
+add_executable (qeputf qeputf.c)
+target_link_libraries (qeputf qiniu curl crypto)

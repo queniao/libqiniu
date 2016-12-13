@@ -42,9 +42,9 @@ QN_API extern void qn_easy_pe_set_abort_variable(qn_easy_put_extra_ptr restrict 
 QN_API extern void qn_easy_pe_set_min_resumable_fsize(qn_easy_put_extra_ptr restrict pe, size_t fsize);
 
 QN_API extern void qn_easy_pe_set_local_crc32(qn_easy_put_extra_ptr restrict pe, qn_uint32 crc32);
-QN_API extern void qn_easy_pe_set_source_reader(qn_easy_put_extra_ptr restrict pe, qn_io_reader_itf restrict rdr, qn_fsize fsize, qn_bool detect_fsize);
+QN_API extern void qn_easy_pe_set_source_reader(qn_easy_put_extra_ptr restrict pe, qn_io_reader_itf restrict rdr, qn_fsize fsize);
 
-QN_API extern void qn_easy_pe_set_resumable_put_session(qn_easy_put_extra_ptr restrict pe, qn_stor_rput_session_ptr * restrict rput_ss);
+QN_API extern void qn_easy_pe_set_resumable_put_session(qn_easy_put_extra_ptr restrict pe, qn_stor_rput_session_ptr restrict rput_ss);
 
 // ----
 

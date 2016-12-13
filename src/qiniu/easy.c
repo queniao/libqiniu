@@ -20,7 +20,8 @@ typedef struct _QN_EASY_PUT_EXTRA
         unsigned int check_crc32:1;  // Calculate the CRC-32 checksum locally to verify the uploaded content.
         unsigned int check_md5:1;    // Calculate the MD5 checksum locally to verify the uploaded content.
         unsigned int check_qetag:1;  // Calculate the Qiniu-ETAG checksum locally to verify the uploaded content.
-        unsigned int detect_fsize:1; // Detect the size of the local file automatically.
+
+        unsigned int extern_ss:1;    // Use an external storage session object.
 
         // Specifies a const-volatile boolean variable to check if need to abort or not.
         const volatile qn_bool * abort;
@@ -34,7 +35,7 @@ typedef struct _QN_EASY_PUT_EXTRA
         qn_fsize fsize;             // The size of the local file provided by the caller.
         qn_io_reader_itf rdr;       // A customized data reader provided by the caller.
 
-        qn_stor_rput_session_ptr * rput_ss;
+        qn_stor_rput_session_ptr rput_ss;
     } put_ctrl;
 } qn_easy_put_extra_st;
 
@@ -51,12 +52,14 @@ QN_API qn_easy_put_extra_ptr qn_easy_pe_create(void)
 QN_API void qn_easy_pe_destroy(qn_easy_put_extra_ptr restrict pe)
 {
     if (pe) {
+        if (! pe->put_ctrl.extern_ss && pe->put_ctrl.rput_ss) qn_stor_rs_destroy(pe->put_ctrl.rput_ss);
         free(pe);
     } // if
 }
 
 QN_API void qn_easy_pe_reset(qn_easy_put_extra_ptr restrict pe)
 {
+    if (! pe->put_ctrl.extern_ss && pe->put_ctrl.rput_ss) qn_stor_rs_destroy(pe->put_ctrl.rput_ss);
     memset(pe, 0, sizeof(qn_easy_put_extra_st));
 }
 
@@ -101,15 +104,15 @@ QN_API void qn_easy_pe_set_local_crc32(qn_easy_put_extra_ptr restrict pe, qn_uin
     pe->put_ctrl.fcrc32 = crc32;
 }
 
-QN_API void qn_easy_pe_set_source_reader(qn_easy_put_extra_ptr restrict pe, qn_io_reader_itf restrict rdr, qn_fsize fsize, qn_bool detect_fsize)
+QN_API void qn_easy_pe_set_source_reader(qn_easy_put_extra_ptr restrict pe, qn_io_reader_itf restrict rdr, qn_fsize fsize)
 {
     pe->put_ctrl.rdr = rdr;
     pe->put_ctrl.fsize = fsize;
-    pe->put_ctrl.detect_fsize = (detect_fsize) ? 1 : 0;
 }
 
-QN_API void qn_easy_pe_set_resumable_put_session(qn_easy_put_extra_ptr restrict pe, qn_stor_rput_session_ptr * restrict rput_ss)
+QN_API void qn_easy_pe_set_resumable_put_session(qn_easy_put_extra_ptr restrict pe, qn_stor_rput_session_ptr restrict rput_ss)
 {
+    pe->put_ctrl.extern_ss = (rput_ss) ? 1 : 0;
     pe->put_ctrl.rput_ss = rput_ss;
 }
 
@@ -142,23 +145,24 @@ QN_API void qn_easy_destroy(qn_easy_ptr restrict easy)
     } // if
 }
 
-#define QN_EASY_MB_UINT (2 << 20)
+#define QN_EASY_MB_UNIT (1 << 20)
 
 static void qn_easy_init_put_extra(qn_easy_put_extra_ptr ext, qn_easy_put_extra_ptr real_ext)
 {
     memset(real_ext, 0, sizeof(qn_easy_put_extra_st));
     *real_ext = *ext;
 
-    if (real_ext->put_ctrl.min_resumable_fsize < (4L * QN_EASY_MB_UINT)) {
-        real_ext->put_ctrl.min_resumable_fsize = (10L * QN_EASY_MB_UINT);
-    } else if (real_ext->put_ctrl.min_resumable_fsize > (500L * QN_EASY_MB_UINT)) {
-        real_ext->put_ctrl.min_resumable_fsize = (500L * QN_EASY_MB_UINT);
+    if (real_ext->put_ctrl.min_resumable_fsize < (4L * QN_EASY_MB_UNIT)) {
+        real_ext->put_ctrl.min_resumable_fsize = (10L * QN_EASY_MB_UNIT);
+    } else if (real_ext->put_ctrl.min_resumable_fsize > (500L * QN_EASY_MB_UNIT)) {
+        real_ext->put_ctrl.min_resumable_fsize = (500L * QN_EASY_MB_UNIT);
     } // if
 }
 
 static qn_io_reader_itf qn_easy_create_reader(const char * restrict fname, qn_easy_put_extra_ptr real_ext)
 {
     qn_file_ptr fl = NULL;
+    qn_fl_info_ptr fi;
     qn_io_reader_itf io_rdr;
     qn_reader_ptr rdr;
     qn_rdr_pos filter_num = 0;
@@ -166,10 +170,15 @@ static qn_io_reader_itf qn_easy_create_reader(const char * restrict fname, qn_ea
     if (real_ext->put_ctrl.rdr) {
         io_rdr = real_ext->put_ctrl.rdr;
     } else {
-        if (!real_ext->put_ctrl.rdr) {
-            fl = qn_fl_open(fname, NULL);
-            if (! fl) return NULL;
-        } // if
+        fi = qn_fl_info_stat(fname);
+        if (! fi) return NULL;
+
+        real_ext->put_ctrl.fsize = qn_fl_info_fsize(fi);
+        qn_fl_info_destroy(fi);
+
+        fl = qn_fl_open(fname, NULL);
+        if (! fl) return NULL;
+
         io_rdr = qn_fl_to_io_reader(fl);
     } // if
 
@@ -199,7 +208,9 @@ static qn_json_object_ptr qn_easy_put_file_in_one_piece(qn_easy_ptr restrict eas
     qn_stor_put_extra_ptr put_ext;
 
     if (! (put_ext = qn_stor_pe_create())) return NULL;
-    qn_stor_pe_set_source_reader(put_ext, io_rdr, ext->put_ctrl.fsize, (ext->put_ctrl.detect_fsize) ? qn_true : qn_false);
+
+    qn_stor_pe_set_final_key(put_ext, ext->attr.final_key);
+    qn_stor_pe_set_source_reader(put_ext, io_rdr, ext->put_ctrl.fsize);
 
     ret = qn_stor_put_file(easy->stor, uptoken, fname, put_ext);
     qn_stor_pe_destroy(put_ext);
@@ -212,30 +223,23 @@ static qn_json_object_ptr qn_easy_put_file_in_many_pieces(qn_easy_ptr restrict e
     qn_stor_rput_extra_ptr rput_ext;
 
     if (! (rput_ext = qn_stor_rpe_create())) return NULL;
-    qn_stor_rpe_set_source_reader(rput_ext, io_rdr, ext->put_ctrl.fsize, (ext->put_ctrl.detect_fsize) ? qn_true : qn_false);
 
-    ret = qn_stor_rp_put_file(easy->stor, uptoken, ext->put_ctrl.rput_ss, fname, rput_ext);
+    qn_stor_rpe_set_final_key(rput_ext, ext->attr.final_key);
+    qn_stor_rpe_set_source_reader(rput_ext, io_rdr, ext->put_ctrl.fsize);
+
+    ret = qn_stor_rp_put_file(easy->stor, uptoken, &ext->put_ctrl.rput_ss, fname, rput_ext);
     qn_stor_rpe_destroy(rput_ext);
     return ret;
 }
 
 QN_API qn_json_object_ptr qn_easy_put_file(qn_easy_ptr restrict easy, const char * restrict uptoken, const char * restrict fname, qn_easy_put_extra_ptr restrict ext)
 {
-    qn_fl_info_ptr fi;
     qn_io_reader_itf io_rdr;
     qn_json_object_ptr put_ret;
     qn_easy_put_extra_st real_ext;
 
     qn_easy_init_put_extra(ext, &real_ext);
     
-    if (real_ext.put_ctrl.fsize == 0 && real_ext.put_ctrl.detect_fsize) {
-        fi = qn_fl_info_stat(fname);
-        if (!fi) return NULL;
-
-        real_ext.put_ctrl.fsize = qn_fl_info_fsize(fi);
-        qn_fl_info_destroy(fi);
-    } // if
-
     // TODO: Implement region selection.
 
     io_rdr = qn_easy_create_reader(fname, &real_ext);
