@@ -3,6 +3,7 @@
 
 #include "qiniu/base/json.h"
 #include "qiniu/auth.h"
+#include "qiniu/region.h"
 #include "qiniu/macros.h"
 
 #ifdef __cplusplus
@@ -46,6 +47,9 @@ QN_API extern void qn_easy_pe_set_source_reader(qn_easy_put_extra_ptr restrict p
 
 QN_API extern void qn_easy_pe_set_rput_session(qn_easy_put_extra_ptr restrict pe, qn_stor_rput_session_ptr restrict rput_ss);
 QN_API extern qn_stor_rput_session_ptr qn_easy_pe_get_rput_session(qn_easy_put_extra_ptr restrict pe);
+
+QN_API extern void qn_easy_pe_set_region_host(qn_easy_put_extra_ptr restrict pe, qn_rgn_host_ptr restrict rgn_host);
+QN_API extern void qn_easy_pe_set_region_entry(qn_easy_put_extra_ptr restrict pe, qn_rgn_entry_ptr restrict rgn_entry);
 
 // ----
 
