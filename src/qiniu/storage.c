@@ -2134,8 +2134,6 @@ typedef struct _QN_STOR_PUT_READER
 
 typedef struct _QN_STOR_PUT_EXTRA
 {
-    unsigned int detect_fsize:1;
-
     const char * final_key;
     const char * crc32;
     const char * accept_type;
@@ -2188,11 +2186,10 @@ QN_API extern void qn_stor_pe_set_region_entry(qn_stor_put_extra_ptr restrict pe
     pe->rgn_entry = entry;
 }
 
-QN_API extern void qn_stor_pe_set_source_reader(qn_stor_put_extra_ptr restrict pe, qn_io_reader_itf restrict rdr, qn_fsize fsize, qn_bool detect_fsize)
+QN_API extern void qn_stor_pe_set_source_reader(qn_stor_put_extra_ptr restrict pe, qn_io_reader_itf restrict rdr, qn_fsize fsize)
 {
     pe->rdr = rdr;
     pe->fsize = fsize;
-    pe->detect_fsize = (detect_fsize) ? 1 : 0;
 }
 
 
@@ -2545,7 +2542,6 @@ QN_API qn_bool qn_stor_rs_is_putting_block_done(const qn_stor_rput_session_ptr r
 
 typedef struct _QN_STOR_RESUMABLE_PUT_EXTRA
 {
-    unsigned int detect_fsize:1;
     unsigned int chk_size:23;
 
     const char * final_key;
@@ -2596,11 +2592,10 @@ QN_API void qn_stor_rpe_set_region_entry(qn_stor_rput_extra_ptr restrict rpe, qn
     rpe->rgn_entry = entry;
 }
 
-QN_API void qn_stor_rpe_set_source_reader(qn_stor_rput_extra_ptr restrict rpe, qn_io_reader_itf restrict rdr, qn_fsize fsize, qn_bool detect_fsize)
+QN_API void qn_stor_rpe_set_source_reader(qn_stor_rput_extra_ptr restrict rpe, qn_io_reader_itf restrict rdr, qn_fsize fsize)
 {
     rpe->rdr = rdr;
     rpe->fsize = fsize;
-    rpe->detect_fsize = (detect_fsize) ? 1 : 0;
 }
 
 typedef struct _QN_STOR_RESUMABLE_PUT_READER

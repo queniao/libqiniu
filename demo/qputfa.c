@@ -123,7 +123,7 @@ int main(int argc, char * argv[])
             return 1;
         } // if
 
-        qn_stor_pe_set_source_reader(pe, qn_rdr_to_io_reader(ctrl_rdr), 0, qn_false);
+        qn_stor_pe_set_source_reader(pe, qn_rdr_to_io_reader(ctrl_rdr), 0);
     } // if
 
     stor = qn_stor_create();
