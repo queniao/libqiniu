@@ -259,15 +259,33 @@ static qn_json_object_ptr qn_easy_put_file_in_many_pieces(qn_easy_ptr restrict e
     return ret;
 }
 
+static qn_bool qn_easy_parse_putting_policy(qn_easy_ptr restrict easy, const char * restrict str, size_t str_size, qn_json_object_ptr * restrict pp)
+{
+    size_t pp_size;
+    qn_bool ret;
+    qn_string pp_str;
+
+    if (! easy->json_prs) {
+        easy->json_prs = qn_json_prs_create();
+        if (! easy->json_prs) return qn_false;
+    } // if
+
+    pp_str = qn_cs_decode_base64_urlsafe(str, str_size);
+    if (! pp_str) return qn_false;
+
+    pp_size = qn_str_size(pp_str);
+    ret = qn_json_prs_parse_object(easy->json_prs, pp_str, &pp_size, pp);
+    qn_str_destroy(pp_str);
+    return ret;
+}
+
 static qn_rgn_host_ptr qn_easy_select_putting_region_host(qn_easy_ptr restrict easy, const char * restrict uptoken, qn_json_object_ptr * restrict pp, qn_easy_put_extra_ptr restrict ext)
 {
     const char * pos;
-    size_t pp_size;
     qn_bool ret;
     qn_string access_key;
     qn_string bucket;
     qn_string scope;
-    qn_string pp_str;
     qn_rgn_auth rgn_auth;
     qn_region_ptr rgn;
 
@@ -289,33 +307,15 @@ static qn_rgn_host_ptr qn_easy_select_putting_region_host(qn_easy_ptr restrict e
 
     access_key = qn_cs_clone(uptoken, pos - uptoken);
 
-    pos = qn_str_find_char(pos + 1, ':');
-    if (! pos) {
-        qn_str_destroy(access_key);
-        // TODO: Set an appropriate error
-        return NULL;
-    } // if
-
     if (!*pp) {
-        if (! easy->json_prs) {
-            easy->json_prs = qn_json_prs_create();
-            if (! easy->json_prs) {
-                qn_str_destroy(access_key);
-                return NULL;
-            } // if
-        } // if
-
-        pp_str = qn_cs_decode_base64_urlsafe(pos + 1, posix_strlen(uptoken) - (pos + 1 - uptoken));
-        if (! pp_str) {
+        pos = qn_str_find_char(pos + 1, ':');
+        if (! pos) {
             qn_str_destroy(access_key);
             // TODO: Set an appropriate error
             return NULL;
         } // if
 
-        pp_size = qn_str_size(pp_str);
-        ret = qn_json_prs_parse_object(easy->json_prs, qn_str_cstr(pp_str), &pp_size, pp);
-        qn_str_destroy(pp_str);
-        if (! ret) {
+        if (! qn_easy_parse_putting_policy(easy, pos + 1, posix_strlen(uptoken) - (pos + 1 - uptoken), pp)) {
             qn_str_destroy(access_key);
             // TODO: Set an appropriate error
             return NULL;
@@ -350,6 +350,41 @@ static qn_rgn_host_ptr qn_easy_select_putting_region_host(qn_easy_ptr restrict e
     return qn_rgn_get_up_host(rgn);
 }
 
+static qn_bool qn_easy_check_putting_key(qn_easy_ptr restrict easy, const char * restrict uptoken, qn_json_object_ptr * restrict pp, qn_easy_put_extra_ptr restrict ext)
+{
+    const char * pos;
+    qn_string scope;
+
+    if (!*pp) {
+        pos = qn_str_find_char(uptoken, ':');
+        if (! pos) {
+            // TODO: Set an appropriate error
+            return qn_false;
+        } // if
+
+        pos = qn_str_find_char(pos + 1, ':');
+        if (! pos) {
+            // TODO: Set an appropriate error
+            return qn_false;
+        } // if
+
+        if (! qn_easy_parse_putting_policy(easy, pos + 1, posix_strlen(uptoken) - (pos + 1 - uptoken), pp)) {
+            // TODO: Set an appropriate error
+            return qn_false;
+        } // if
+    } // if
+
+    scope = qn_json_get_string(*pp, "scope", NULL);
+    if (! scope) {
+        // TODO: Set an appropriate error
+        return qn_false;
+    } // if
+
+    pos = qn_str_find_char(qn_str_cstr(scope), ':');
+    if (pos) ext->attr.final_key = pos + 1;
+    return qn_true;
+}
+
 QN_API qn_json_object_ptr qn_easy_put_file(qn_easy_ptr restrict easy, const char * restrict uptoken, const char * restrict fname, qn_easy_put_extra_ptr restrict ext)
 {
     int i;
@@ -368,14 +403,25 @@ QN_API qn_json_object_ptr qn_easy_put_file(qn_easy_ptr restrict easy, const char
             rgn_host = real_ext.put_ctrl.rgn_host;
         } else {
             rgn_host = qn_easy_select_putting_region_host(easy, uptoken, &pp, &real_ext);
-            if (! rgn_host) return NULL;
+            if (! rgn_host) {
+                if (pp) qn_json_destroy_object(pp);
+                return NULL;
+            } // if
         } // if
     } // if
 
-    if (pp) qn_json_destroy_object(pp);
+    if (! real_ext.attr.final_key) {
+        if (! qn_easy_check_putting_key(easy, uptoken, &pp, &real_ext)) {
+            if (pp) qn_json_destroy_object(pp);
+            return NULL;
+        } // if
+    } // if
 
     io_rdr = qn_easy_create_put_reader(fname, &real_ext);
-    if (! io_rdr) return NULL;
+    if (! io_rdr) {
+        if (pp) qn_json_destroy_object(pp);
+        return NULL;
+    } // if
 
     if (real_ext.put_ctrl.rgn_entry) {
         if (real_ext.put_ctrl.fsize <= real_ext.put_ctrl.min_resumable_fsize) {
@@ -394,7 +440,9 @@ QN_API qn_json_object_ptr qn_easy_put_file(qn_easy_ptr restrict easy, const char
             } // if
         } // for
     } // if
+
     if (io_rdr != real_ext.put_ctrl.rdr) qn_io_close(io_rdr);
+    if (pp) qn_json_destroy_object(pp);
 
     return put_ret;
 }
