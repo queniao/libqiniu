@@ -54,6 +54,9 @@ QN_API extern void qn_err_etag_set_initializing_block_failed(void);
 QN_API extern void qn_err_etag_set_updating_block_failed(void);
 QN_API extern void qn_err_etag_set_making_digest_failed(void);
 
+QN_API extern void qn_err_easy_set_invalid_uptoken(void);
+QN_API extern void qn_err_easy_set_invalid_put_policy(void);
+
 // ----
 
 QN_API extern qn_bool qn_err_is_succeed(void);
@@ -98,6 +101,9 @@ QN_API extern qn_bool qn_err_etag_is_updating_context_failed(void);
 QN_API extern qn_bool qn_err_etag_is_initializing_block_failed(void);
 QN_API extern qn_bool qn_err_etag_is_updating_block_failed(void);
 QN_API extern qn_bool qn_err_etag_is_making_digest_failed(void);
+
+QN_API extern qn_bool qn_err_easy_is_invalid_uptoken(void);
+QN_API extern qn_bool qn_err_easy_is_invalid_put_policy(void);
 
 #ifdef __cplusplus
 }

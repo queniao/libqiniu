@@ -276,6 +276,7 @@ static qn_bool qn_easy_parse_putting_policy(qn_easy_ptr restrict easy, const cha
     pp_size = qn_str_size(pp_str);
     ret = qn_json_prs_parse_object(easy->json_prs, pp_str, &pp_size, pp);
     qn_str_destroy(pp_str);
+    if (! ret) qn_err_easy_set_invalid_put_policy();
     return ret;
 }
 
@@ -301,7 +302,7 @@ static qn_rgn_host_ptr qn_easy_select_putting_region_host(qn_easy_ptr restrict e
 
     pos = qn_str_find_char(uptoken, ':');
     if (! pos) {
-        // TODO: Set an appropriate error
+        qn_err_easy_set_invalid_uptoken();
         return NULL;
     } // if
 
@@ -311,13 +312,12 @@ static qn_rgn_host_ptr qn_easy_select_putting_region_host(qn_easy_ptr restrict e
         pos = qn_str_find_char(pos + 1, ':');
         if (! pos) {
             qn_str_destroy(access_key);
-            // TODO: Set an appropriate error
+            qn_err_easy_set_invalid_uptoken();
             return NULL;
         } // if
 
         if (! qn_easy_parse_putting_policy(easy, pos + 1, posix_strlen(uptoken) - (pos + 1 - uptoken), pp)) {
             qn_str_destroy(access_key);
-            // TODO: Set an appropriate error
             return NULL;
         } // if
     } // if
@@ -325,7 +325,7 @@ static qn_rgn_host_ptr qn_easy_select_putting_region_host(qn_easy_ptr restrict e
     scope = qn_json_get_string(*pp, "scope", NULL);
     if (! scope) {
         qn_str_destroy(access_key);
-        // TODO: Set an appropriate error
+        qn_err_easy_set_invalid_put_policy();
         return NULL;
     } // if
 
@@ -358,25 +358,22 @@ static qn_bool qn_easy_check_putting_key(qn_easy_ptr restrict easy, const char *
     if (!*pp) {
         pos = qn_str_find_char(uptoken, ':');
         if (! pos) {
-            // TODO: Set an appropriate error
+            qn_err_easy_set_invalid_uptoken();
             return qn_false;
         } // if
 
         pos = qn_str_find_char(pos + 1, ':');
         if (! pos) {
-            // TODO: Set an appropriate error
+            qn_err_easy_set_invalid_uptoken();
             return qn_false;
         } // if
 
-        if (! qn_easy_parse_putting_policy(easy, pos + 1, posix_strlen(uptoken) - (pos + 1 - uptoken), pp)) {
-            // TODO: Set an appropriate error
-            return qn_false;
-        } // if
+        if (! qn_easy_parse_putting_policy(easy, pos + 1, posix_strlen(uptoken) - (pos + 1 - uptoken), pp)) return qn_false;
     } // if
 
     scope = qn_json_get_string(*pp, "scope", NULL);
     if (! scope) {
-        // TODO: Set an appropriate error
+        qn_err_easy_set_invalid_put_policy();
         return qn_false;
     } // if
 

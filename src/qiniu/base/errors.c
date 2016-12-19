@@ -49,7 +49,10 @@ enum
     QN_ERR_ETAG_UPDATING_CONTEXT_FAILED = 22002,
     QN_ERR_ETAG_INITIALIZING_BLOCK_FAILED = 22003,
     QN_ERR_ETAG_UPDATING_BLOCK_FAILED = 22004,
-    QN_ERR_ETAG_MAKING_DIGEST_FAILED = 22005
+    QN_ERR_ETAG_MAKING_DIGEST_FAILED = 22005,
+
+    QN_ERR_EASY_INVALID_UPTOKEN = 23001,
+    QN_ERR_EASY_INVALID_PUT_POLICY = 23002
 };
 
 typedef qn_uint32 qn_err_enum;
@@ -103,7 +106,10 @@ static qn_error qn_errors[] = {
     {QN_ERR_ETAG_UPDATING_CONTEXT_FAILED, "Failed in updating the qetag context"},
     {QN_ERR_ETAG_INITIALIZING_BLOCK_FAILED, "Failed in initializing a new qetag block"},
     {QN_ERR_ETAG_UPDATING_BLOCK_FAILED, "Failed in updating the qetag block"},
-    {QN_ERR_ETAG_MAKING_DIGEST_FAILED, "Failed in making the qetag digest"}
+    {QN_ERR_ETAG_MAKING_DIGEST_FAILED, "Failed in making the qetag digest"},
+
+    {QN_ERR_EASY_INVALID_UPTOKEN, "Got an invalid uptoken"},
+    {QN_ERR_EASY_INVALID_PUT_POLICY, "Got an invalid put policy"}
 };
 
 static int qn_err_compare(const void * restrict key, const void * restrict item)
@@ -303,6 +309,16 @@ QN_API void qn_err_etag_set_making_digest_failed(void)
     qn_err_code = QN_ERR_ETAG_MAKING_DIGEST_FAILED;
 }
 
+QN_API void qn_err_easy_set_invalid_uptoken(void)
+{
+    qn_err_code = QN_ERR_EASY_INVALID_UPTOKEN;
+}
+
+QN_API void qn_err_easy_set_invalid_put_policy(void)
+{
+    qn_err_code = QN_ERR_EASY_INVALID_PUT_POLICY;
+}
+
 // ----
 
 QN_API qn_bool qn_err_is_succeed(void)
@@ -483,6 +499,16 @@ QN_API qn_bool qn_err_etag_is_updating_block_failed(void)
 QN_API qn_bool qn_err_etag_is_making_digest_failed(void)
 {
     return (qn_err_code == QN_ERR_ETAG_MAKING_DIGEST_FAILED);
+}
+
+QN_API qn_bool qn_err_easy_is_invalid_uptoken(void)
+{
+    return (qn_err_code == QN_ERR_EASY_INVALID_UPTOKEN);
+}
+
+QN_API qn_bool qn_err_easy_is_invalid_put_policy(void)
+{
+    return (qn_err_code == QN_ERR_EASY_INVALID_PUT_POLICY);
 }
 
 #ifdef __cplusplus
