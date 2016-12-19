@@ -38,6 +38,8 @@ QN_API extern void qn_easy_pe_set_crc32_checking(qn_easy_put_extra_ptr restrict 
 QN_API extern void qn_easy_pe_set_md5_checking(qn_easy_put_extra_ptr restrict pe, qn_bool check);
 QN_API extern void qn_easy_pe_set_qetag_checking(qn_easy_put_extra_ptr restrict pe, qn_bool check);
 
+QN_API extern const qn_string qn_easy_pe_get_qetag(qn_easy_put_extra_ptr restrict pe);
+
 QN_API extern void qn_easy_pe_set_abort_variable(qn_easy_put_extra_ptr restrict pe, const volatile qn_bool * abort);
 
 QN_API extern void qn_easy_pe_set_min_resumable_fsize(qn_easy_put_extra_ptr restrict pe, size_t fsize);

@@ -1,6 +1,7 @@
 #include "qiniu/base/errors.h"
 #include "qiniu/base/json_parser.h"
 #include "qiniu/os/file.h"
+#include "qiniu/etag.h"
 #include "qiniu/region.h"
 #include "qiniu/storage.h"
 
@@ -16,6 +17,7 @@ typedef struct _QN_EASY_PUT_EXTRA
     struct {
         const char * final_key;     // Final key of the file in the bucket.
         const char * owner_desc;    // The owner description of the file, used for business identificaiton.
+        qn_string local_qetag;      // The local QETAG hash calculated by filters.
     } attr;
 
     struct {
@@ -42,6 +44,10 @@ typedef struct _QN_EASY_PUT_EXTRA
         qn_rgn_entry_ptr rgn_entry;
         qn_rgn_host_ptr rgn_host;
     } put_ctrl;
+
+    struct {
+        qn_etag_context_ptr qetag;
+    } temp;
 } qn_easy_put_extra_st;
 
 QN_API qn_easy_put_extra_ptr qn_easy_pe_create(void)
@@ -58,6 +64,9 @@ QN_API void qn_easy_pe_destroy(qn_easy_put_extra_ptr restrict pe)
 {
     if (pe) {
         if (! pe->put_ctrl.extern_ss && pe->put_ctrl.rput_ss) qn_stor_rs_destroy(pe->put_ctrl.rput_ss);
+        if (pe->attr.local_qetag) qn_str_destroy(pe->attr.local_qetag);
+
+        if (pe->temp.qetag) qn_etag_ctx_destroy(pe->temp.qetag);
         free(pe);
     } // if
 }
@@ -65,7 +74,10 @@ QN_API void qn_easy_pe_destroy(qn_easy_put_extra_ptr restrict pe)
 QN_API void qn_easy_pe_reset(qn_easy_put_extra_ptr restrict pe)
 {
     if (! pe->put_ctrl.extern_ss && pe->put_ctrl.rput_ss) qn_stor_rs_destroy(pe->put_ctrl.rput_ss);
-    memset(pe, 0, sizeof(qn_easy_put_extra_st));
+    if (pe->attr.local_qetag) qn_str_destroy(pe->attr.local_qetag);
+
+    memset(&pe->put_ctrl, 0, sizeof(pe->put_ctrl));
+    memset(&pe->attr, 0, sizeof(pe->attr));
 }
 
 QN_API void qn_easy_pe_set_final_key(qn_easy_put_extra_ptr restrict pe, const char * restrict key)
@@ -90,7 +102,17 @@ QN_API void qn_easy_pe_set_md5_checking(qn_easy_put_extra_ptr restrict pe, qn_bo
 
 QN_API void qn_easy_pe_set_qetag_checking(qn_easy_put_extra_ptr restrict pe, qn_bool check)
 {
-    pe->put_ctrl.check_qetag = (check) ? 1 : 0;
+    if (check) {
+        pe->put_ctrl.check_qetag = 1;
+        if (! pe->temp.qetag) pe->temp.qetag = qn_etag_ctx_create();
+    } else {
+        pe->put_ctrl.check_qetag = 0;
+    } // if
+}
+
+QN_API const qn_string qn_easy_pe_get_qetag(qn_easy_put_extra_ptr restrict pe)
+{
+    return pe->attr.local_qetag;
 }
 
 QN_API void qn_easy_pe_set_abort_variable(qn_easy_put_extra_ptr restrict pe, const volatile qn_bool * abort)
@@ -176,14 +198,22 @@ QN_API void qn_easy_destroy(qn_easy_ptr restrict easy)
 
 static void qn_easy_init_put_extra(qn_easy_put_extra_ptr ext, qn_easy_put_extra_ptr real_ext)
 {
-    memset(real_ext, 0, sizeof(qn_easy_put_extra_st));
-    *real_ext = *ext;
+    memcpy(real_ext, ext, sizeof(qn_easy_put_extra_st));
 
     if (real_ext->put_ctrl.min_resumable_fsize < (4L * QN_EASY_MB_UNIT)) {
         real_ext->put_ctrl.min_resumable_fsize = (10L * QN_EASY_MB_UNIT);
     } else if (real_ext->put_ctrl.min_resumable_fsize > (500L * QN_EASY_MB_UNIT)) {
         real_ext->put_ctrl.min_resumable_fsize = (500L * QN_EASY_MB_UNIT);
     } // if
+
+    if (real_ext->temp.qetag) qn_etag_ctx_init(real_ext->temp.qetag);
+}
+
+static ssize_t qn_easy_filter_qetag(void * restrict user_data, char ** restrict buf, size_t * restrict size)
+{
+    // TODO: Match the size type.
+    if (*size > 0 && ! qn_etag_ctx_update((qn_etag_context_ptr) user_data, *buf, *size)) return QN_IO_RDR_FILTERING_FAILED;
+    return *size;
 }
 
 static qn_io_reader_itf qn_easy_create_put_reader(const char * restrict fname, qn_easy_put_extra_ptr real_ext)
@@ -212,9 +242,10 @@ static qn_io_reader_itf qn_easy_create_put_reader(const char * restrict fname, q
 /*
     if (real_ext->put_ctrl.check_crc32) filter_num += 1;
     if (real_ext->put_ctrl.check_md5) filter_num += 1;
-    if (real_ext->put_ctrl.check_qetag) filter_num += 1;
     if (real_ext->put_ctrl.abort) filter_num += 1;
 */
+
+    if (real_ext->put_ctrl.check_qetag) filter_num += 1;
 
     if (filter_num == 0) return io_rdr;
 
@@ -223,6 +254,8 @@ static qn_io_reader_itf qn_easy_create_put_reader(const char * restrict fname, q
         if (fl) qn_fl_close(fl);
         return NULL;
     } // if
+
+    if (real_ext->put_ctrl.check_qetag) qn_rdr_add_post_filter(rdr, real_ext->temp.qetag, &qn_easy_filter_qetag);
 
     // TODO: Implement filters.
 
@@ -385,6 +418,7 @@ static qn_bool qn_easy_check_putting_key(qn_easy_ptr restrict easy, const char *
 QN_API qn_json_object_ptr qn_easy_put_file(qn_easy_ptr restrict easy, const char * restrict uptoken, const char * restrict fname, qn_easy_put_extra_ptr restrict ext)
 {
     int i;
+    qn_string tmp_str;
     qn_io_reader_itf io_rdr;
     qn_json_object_ptr put_ret;
     qn_easy_put_extra_st real_ext;
@@ -440,6 +474,19 @@ QN_API qn_json_object_ptr qn_easy_put_file(qn_easy_ptr restrict easy, const char
 
     if (io_rdr != real_ext.put_ctrl.rdr) qn_io_close(io_rdr);
     if (pp) qn_json_destroy_object(pp);
+
+    if (put_ret && (qn_json_get_integer(put_ret, "fn-code", 0) == 200)) {
+        if (real_ext.put_ctrl.check_qetag) {
+            if (ext->attr.local_qetag) qn_str_destroy(ext->attr.local_qetag);
+            ext->attr.local_qetag = qn_etag_ctx_final(real_ext.temp.qetag);
+            tmp_str = qn_json_get_string(put_ret, "hash", NULL);
+
+            if (ext->attr.local_qetag && tmp_str && qn_str_compare(ext->attr.local_qetag, tmp_str) != 0) {
+                qn_json_set_integer(put_ret, "fn-code", 9999);
+                qn_json_set_string(put_ret, "fn-error", "[EASY] Failed in QETAG hash checking");
+            } // if
+        } // if
+    } // if
 
     return put_ret;
 }

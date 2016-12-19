@@ -11,6 +11,7 @@ int main(int argc, char * argv[])
     const char * key;
     const char * fname;
     qn_mac_ptr mac;
+    qn_string local_qetag;
     qn_string uptoken;
     qn_string put_ret_str;
     qn_json_object_ptr put_policy;
@@ -57,6 +58,7 @@ int main(int argc, char * argv[])
     } // if
 
     qn_easy_pe_set_final_key(pe, key);
+    qn_easy_pe_set_qetag_checking(pe, qn_true);
 
     easy = qn_easy_create();
     if (! easy) {
@@ -67,6 +69,8 @@ int main(int argc, char * argv[])
     } // if
 
     put_ret = qn_easy_put_file(easy, uptoken, fname, pe);
+    if ((local_qetag = qn_easy_pe_get_qetag(pe))) printf("local qetag: %s\n", qn_str_cstr(local_qetag));
+
     qn_easy_pe_destroy(pe);
     qn_str_destroy(uptoken);
 
