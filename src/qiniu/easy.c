@@ -1,3 +1,5 @@
+#include <assert.h>
+
 #include "qiniu/base/errors.h"
 #include "qiniu/base/json_parser.h"
 #include "qiniu/os/file.h"
@@ -489,6 +491,118 @@ QN_API qn_json_object_ptr qn_easy_put_file(qn_easy_ptr restrict easy, const char
     } // if
 
     return put_ret;
+}
+
+// ----
+
+typedef struct _QN_EASY_LIST_EXTRA
+{
+    const char * prefix;
+    const char * delimiter;
+    unsigned int limit;
+} qn_easy_list_extra_st;
+
+QN_API qn_easy_list_extra_ptr qn_easy_le_create(void)
+{
+    qn_easy_list_extra_ptr new_le = calloc(1, sizeof(qn_easy_list_extra_st));
+    if (! new_le) {
+        qn_err_set_out_of_memory();
+        return NULL;
+    } // if
+    return new_le;
+}
+
+QN_API void qn_easy_le_destroy(qn_easy_list_extra_ptr restrict le)
+{
+    if (le) {
+        free(le);
+    } // if
+}
+
+QN_API void qn_easy_le_set_prefix(qn_easy_list_extra_ptr restrict le, const char * restrict prefix, const char * delimiter)
+{
+    le->prefix = prefix;
+    le->delimiter = delimiter;
+}
+
+QN_API void qn_easy_le_set_limit(qn_easy_list_extra_ptr restrict le, unsigned int limit)
+{
+    le->limit = limit;
+}
+
+// ----
+
+QN_API extern qn_json_object_ptr qn_easy_list(qn_easy_ptr restrict easy, const qn_mac_ptr restrict mac, const char * restrict bucket, void * restrict itr_data, qn_easy_le_iterator_fn itr, qn_easy_list_extra_ptr restrict ext)
+{
+    qn_string marker = NULL;
+    qn_json_object_ptr list_ret;
+    qn_json_object_ptr item;
+    qn_json_array_ptr items;
+    qn_stor_list_extra_ptr le;
+    qn_easy_list_extra_st real_ext;
+    int i;
+
+    assert(easy);
+    assert(bucket);
+    assert(itr);
+
+    if (ext) {
+        memcpy(&real_ext, ext, sizeof(qn_easy_list_extra_st));
+    } else {
+        memset(&real_ext, 0, sizeof(qn_easy_list_extra_st));
+    } // if
+
+    if (real_ext.limit == 0 || real_ext.limit > 1000) real_ext.limit = 1000;
+
+    le = qn_stor_le_create();
+    if (! le) return NULL;
+
+    if (real_ext.prefix) qn_stor_le_set_prefix(le, real_ext.prefix);
+    if (real_ext.delimiter) qn_stor_le_set_delimiter(le, real_ext.delimiter);
+    if (real_ext.limit) qn_stor_le_set_limit(le, real_ext.limit);
+
+    do {
+        if (marker) qn_stor_le_set_marker(le, qn_str_cstr(marker));
+
+        list_ret = qn_stor_list(easy->stor, mac, bucket, le);
+        qn_str_destroy(marker);
+        if (! list_ret) {
+            qn_stor_le_destroy(le);
+            return NULL;
+        } // if
+        if (qn_json_get_integer(list_ret, "fn-code", 0) != 200) {
+            qn_stor_le_destroy(le);
+            return list_ret;
+        } // if
+
+        items = qn_json_get_array(list_ret, "items", NULL);
+        if (! items) {
+            // TODO: Set an appropriate error.
+            qn_stor_le_destroy(le);
+            return list_ret;
+        } // if
+
+        for (i = 0; i < qn_json_size_array(items); i += 1) {
+            item = qn_json_pick_object(items, i, NULL);
+            if (! itr(itr_data, item)) {
+                qn_stor_le_destroy(le);
+                return NULL;
+            } // if
+        } // for
+
+        if (qn_json_get_string(list_ret, "marker", NULL)) {
+            marker = qn_cs_duplicate(qn_json_get_string(list_ret, "marker", NULL));
+            if (! marker) {
+                qn_err_set_out_of_memory();
+                qn_stor_le_destroy(le);
+                return NULL;
+            } // if
+        } else {
+            marker = NULL;
+        } // if
+    } while (qn_json_size_array(items) == real_ext.limit && marker);
+
+    return list_ret;
 }
 
 #ifdef __cplusplus
