@@ -265,7 +265,7 @@ QN_API qn_string qn_cs_decode_base64_urlsafe(const char * restrict str, size_t s
 
 static const char qn_str_hex_map[] = {'0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'A', 'B', 'C', 'D', 'E', 'F'};
 
-static inline qn_bool qn_cs_need_to_percent_encode(int c)
+QN_API qn_bool qn_cs_percent_encode_check(int c)
 {
     if ('a' <= c) {
         if (c <= 'z' || c == '~') {
@@ -290,15 +290,17 @@ static inline qn_bool qn_cs_need_to_percent_encode(int c)
     return qn_true;
 }
 
-QN_API size_t qn_cs_percent_encode_in_buffer(char * restrict buf, size_t buf_size, const char * restrict bin, size_t bin_size)
+QN_API size_t qn_cs_percent_encode_in_buffer_with_checker(char * restrict buf, size_t buf_size, const char * restrict bin, size_t bin_size, qn_cs_percent_encode_check_fn need_to_encode)
 {
     int i = 0;
     int m = 0;
     int ret = 0;
 
+    if (! need_to_encode) need_to_encode = &qn_cs_percent_encode_check;
+
     if (!buf || buf_size <= 0) {
         for (i = 0; i < bin_size; i += 1) {
-            if (qn_cs_need_to_percent_encode(bin[i])) {
+            if (need_to_encode(bin[i])) {
                 if (bin[i] == '%' && (i + 2 < bin_size) && isxdigit(bin[i+1]) && isxdigit(bin[i+2])) {
                     ret += 1;
                 } else {
@@ -315,7 +317,7 @@ QN_API size_t qn_cs_percent_encode_in_buffer(char * restrict buf, size_t buf_siz
     } // if
 
     for (i = 0; i < bin_size; i += 1) {
-        if (qn_cs_need_to_percent_encode(bin[i])) {
+        if (need_to_encode(bin[i])) {
             if (bin[i] == '%' && (i + 2 < bin_size) && isxdigit(bin[i+1]) && isxdigit(bin[i+2])) {
                     if (m + 1 > buf_size) {
                         qn_err_set_out_of_buffer();
@@ -345,10 +347,10 @@ QN_API size_t qn_cs_percent_encode_in_buffer(char * restrict buf, size_t buf_siz
     return m;
 }
 
-QN_API qn_string qn_cs_percent_encode(const char * restrict bin, size_t bin_size)
+QN_API qn_string qn_cs_percent_encode_with_checker(const char * restrict bin, size_t bin_size, qn_cs_percent_encode_check_fn need_to_encode)
 {
     qn_string new_str = NULL;
-    size_t buf_size = qn_cs_percent_encode_in_buffer(NULL, 0, bin, bin_size);
+    size_t buf_size = qn_cs_percent_encode_in_buffer_with_checker(NULL, 0, bin, bin_size, need_to_encode);
 
     if (buf_size == bin_size) return qn_cs_clone(bin, bin_size);
 
@@ -357,7 +359,7 @@ QN_API qn_string qn_cs_percent_encode(const char * restrict bin, size_t bin_size
         qn_err_set_out_of_memory();
         return NULL;
     }
-    qn_cs_percent_encode_in_buffer(new_str, buf_size, bin, bin_size);
+    qn_cs_percent_encode_in_buffer_with_checker(new_str, buf_size, bin, bin_size, need_to_encode);
     new_str[buf_size] = '\0';
     return new_str;
 }
