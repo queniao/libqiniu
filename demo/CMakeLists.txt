@@ -1,3 +1,6 @@
+add_executable (qcdnurl qcdnurl.c)
+target_link_libraries (qcdnurl qiniu crypto)
+
 add_executable (qdnurl qdnurl.c)
 target_link_libraries (qdnurl qiniu crypto)
 

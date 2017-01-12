@@ -27,3 +27,10 @@ add_executable (test_etag test_etag.c
     ../src/qiniu/base/base64.c
     ../src/qiniu/base/string.c)
 target_link_libraries (test_etag cunit crypto)
+
+add_executable (test_cdn test_cdn.c
+    ../src/qiniu/base/errors.c
+    ../src/qiniu/base/base64.c
+    ../src/qiniu/base/string.c
+    ../src/qiniu/cdn.c)
+target_link_libraries (test_cdn cunit crypto)
