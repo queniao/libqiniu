@@ -1,0 +1,13 @@
+## easy module
+
+### qn_easy_put_patches()
+
+The qn_easy_put_patches() function detects the different segments of local file and remote file, generates one patch for each segment and then uploads them as a patch file. As long as the upload succeeds, the qn_easy_ut_patches() calls a UFOP on the remote file for applying the patch file to it and results in a new file which overrides the old one.
+
+To some extremely huge files which need to be updated frequently, this approch can save a lot of bandwidth.
+
+### qn_easy_put_stream()
+
+The qn_easy_put_stream() function takes files which do not have known size as streams, and upload them in a block-by-block manner. When the stream ends, the qn_easy_put_stream() merges all blocks into a complete copy.
+
+Through this approach, file types like logs can be uploaded while they are being generated, and reduce latency dramatically.
