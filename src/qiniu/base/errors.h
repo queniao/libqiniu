@@ -9,6 +9,7 @@ extern "C"
 {
 #endif
 
+QN_API extern ssize_t qn_err_format_message(char * buf, size_t buf_size);
 QN_API extern const char * qn_err_get_message(void);
 
 QN_API extern void qn_err_set_succeed(void);
