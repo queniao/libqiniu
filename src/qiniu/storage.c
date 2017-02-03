@@ -2399,6 +2399,49 @@ QN_API qn_json_object_ptr qn_stor_put_buffer(qn_storage_ptr restrict stor, const
     return stor->obj_body;
 }
 
+static size_t qn_stor_upload_callback_fn(void * user_data, char * buf, size_t size)
+{
+    qn_io_reader_itf rdr = (qn_io_reader_itf) user_data;
+    ssize_t ret;
+
+    ret = qn_io_read(rdr, buf, size);
+    if (ret < 0) return CURL_READFUNC_ABORT;
+    return ret;
+}
+
+QN_API qn_json_object_ptr qn_stor_upload(qn_storage_ptr restrict stor, const char * restrict uptoken, qn_io_reader_itf restrict rdr, qn_stor_put_extra_ptr restrict ext)
+{
+    qn_bool ret;
+    qn_rgn_entry_ptr rgn_entry;
+
+    assert(stor);
+    assert(uptoken);
+    assert(rdr);
+
+    if (ext) {
+        if (! (rgn_entry = ext->rgn_entry)) qn_rgn_tbl_choose_first_entry(NULL, QN_RGN_SVC_UP, NULL, &rgn_entry);
+    } else {
+        rgn_entry = NULL;
+        qn_rgn_tbl_choose_first_entry(NULL, QN_RGN_SVC_UP, NULL, &rgn_entry);
+    } // if
+
+    if (! qn_stor_prepare_for_putting_file(stor, uptoken, ext)) return NULL;
+
+    ret = qn_http_form_add_file_reader(qn_http_req_get_form(stor->req), "file", qn_str_cstr(qn_io_name(rdr)), NULL, qn_io_size(rdr), stor->req);
+    if (! ret) return NULL;
+
+    qn_http_req_set_body_reader(stor->req, rdr, qn_stor_upload_callback_fn, qn_io_size(rdr));
+
+    // ----
+    if (rgn_entry->hostname && !qn_http_req_set_header(stor->req, "Host", qn_str_cstr(rgn_entry->hostname))) return NULL;
+    ret = qn_http_conn_post(stor->conn, qn_str_cstr(rgn_entry->base_url), stor->req, stor->resp);
+    if (! ret) return NULL;
+
+    qn_json_set_integer(stor->obj_body, "fn-code", qn_http_resp_get_code(stor->resp));
+    if (! qn_json_rename(stor->obj_body, "error", "fn-error")) return (qn_err_is_no_such_entry()) ? stor->obj_body : NULL;
+    return stor->obj_body;
+}
+
 // ----
 
 typedef struct _QN_STOR_RESUMABLE_PUT_SESSION
