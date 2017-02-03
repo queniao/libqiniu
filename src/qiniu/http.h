@@ -40,7 +40,7 @@ QN_API extern void qn_http_form_reset(qn_http_form_ptr restrict form);
 
 QN_API extern qn_bool qn_http_form_add_string(qn_http_form_ptr restrict form, const char * restrict field, const char * restrict value, size_t size);
 QN_API extern qn_bool qn_http_form_add_file(qn_http_form_ptr restrict form, const char * restrict field, const char * restrict fname, const char * restrict fname_utf8, size_t fsize);
-QN_API extern qn_bool qn_http_form_add_file_reader(qn_http_form_ptr restrict form, const char * restrict field, const char * restrict fname, const char * restrict fname_utf8, size_t fsize, void * restrict rdr);
+QN_API extern qn_bool qn_http_form_add_file_reader(qn_http_form_ptr restrict form, const char * restrict field, const char * restrict fname, const char * restrict fname_utf8, size_t fsize, void * restrict req);
 QN_API extern qn_bool qn_http_form_add_buffer(qn_http_form_ptr restrict form, const char * restrict field, const char * restrict fname, const char * restrict buf, int buf_size);
 
 // ---- Declaration of HTTP request ----

@@ -208,14 +208,14 @@ QN_API qn_bool qn_http_form_add_file(qn_http_form_ptr restrict form, const char 
     return qn_true;
 }
 
-QN_API qn_bool qn_http_form_add_file_reader(qn_http_form_ptr restrict form, const char * restrict field, const char * restrict fname, const char * restrict fname_utf8, size_t fsize, void * restrict rdr)
+QN_API qn_bool qn_http_form_add_file_reader(qn_http_form_ptr restrict form, const char * restrict field, const char * restrict fname, const char * restrict fname_utf8, size_t fsize, void * restrict req)
 {
     CURLFORMcode ret;
 
     /// See BUG NOTE 1.
     if (!fname_utf8) fname_utf8 = qn_http_get_fname_utf8(fname);
 
-    ret = curl_formadd(&form->first, &form->last, CURLFORM_COPYNAME, field, CURLFORM_STREAM, rdr, CURLFORM_CONTENTSLENGTH, (long)fsize, CURLFORM_FILENAME, fname_utf8, CURLFORM_END);
+    ret = curl_formadd(&form->first, &form->last, CURLFORM_COPYNAME, field, CURLFORM_STREAM, req, CURLFORM_CONTENTSLENGTH, (long)fsize, CURLFORM_FILENAME, fname_utf8, CURLFORM_END);
     if (ret != 0) {
         qn_err_http_set_adding_file_field_failed();
         return qn_false;
@@ -249,8 +249,8 @@ typedef struct _QN_HTTP_REQUEST
     char * body_data;
     size_t body_size;
 
-    void * body_rd;
-    qn_http_body_reader_callback body_rd_cb;
+    void * body_rdr;
+    qn_http_body_reader_callback body_rdr_cb;
 } qn_http_request;
 
 QN_API qn_http_request_ptr qn_http_req_create(void)
@@ -291,8 +291,8 @@ QN_API void qn_http_req_reset(qn_http_request_ptr restrict req)
     req->flags = 0;
     req->body_data = NULL;
     req->body_size = 0;
-    req->body_rd = NULL;
-    req->body_rd_cb = NULL;
+    req->body_rdr = NULL;
+    req->body_rdr_cb = NULL;
     req->form = NULL;
 }
 
@@ -357,10 +357,10 @@ QN_API void qn_http_req_set_body_data(qn_http_request_ptr restrict req, char * r
     req->body_size = body_size;
 }
 
-QN_API void qn_http_req_set_body_reader(qn_http_request_ptr restrict req, void * restrict body_rd, qn_http_body_reader_callback body_rd_cb, size_t body_size)
+QN_API void qn_http_req_set_body_reader(qn_http_request_ptr restrict req, void * restrict body_rdr, qn_http_body_reader_callback body_rdr_cb, size_t body_size)
 {
-    req->body_rd = body_rd;
-    req->body_rd_cb = body_rd_cb;
+    req->body_rdr = body_rdr;
+    req->body_rdr_cb = body_rdr_cb;
     req->body_size = body_size;
 }
 
@@ -608,7 +608,7 @@ QN_API void qn_http_conn_destroy(qn_http_connection_ptr restrict conn)
 static size_t qn_http_conn_body_reader(char * ptr, size_t size, size_t nmemb, void * user_data)
 {
     qn_http_request_ptr req = (qn_http_request_ptr) user_data;
-    return req->body_rd_cb(req->body_rd, ptr, size * nmemb);
+    return req->body_rdr_cb(req->body_rdr, ptr, size * nmemb);
 }
 
 static qn_bool qn_http_conn_do_request(qn_http_connection_ptr restrict conn, qn_http_request_ptr restrict req, qn_http_response_ptr restrict resp)
@@ -677,7 +677,7 @@ QN_API qn_bool qn_http_conn_post(qn_http_connection_ptr restrict conn, const qn_
     if (req->form) {
         curl_easy_setopt(conn->curl, CURLOPT_HTTPPOST, req->form->first);
         
-        if (req->body_rd && req->body_rd_cb) curl_easy_setopt(conn->curl, CURLOPT_READFUNCTION, qn_http_conn_body_reader);
+        if (req->body_rdr && req->body_rdr_cb) curl_easy_setopt(conn->curl, CURLOPT_READFUNCTION, qn_http_conn_body_reader);
     } else if (req->body_data) {
         curl_easy_setopt(conn->curl, CURLOPT_POSTFIELDS, req->body_data);
         curl_easy_setopt(conn->curl, CURLOPT_POSTFIELDSIZE, req->body_size);
