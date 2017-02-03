@@ -30,6 +30,9 @@ QN_API extern qn_fl_section_ptr qn_fl_section(qn_file_ptr restrict fl, qn_fsize 
 
 QN_API extern qn_io_reader_itf qn_fl_to_io_reader(qn_file_ptr restrict fl);
 
+QN_API extern qn_string qn_fl_fname(qn_file_ptr restrict fl);
+QN_API extern qn_fsize qn_fl_fsize(qn_file_ptr restrict fl);
+
 QN_API extern ssize_t qn_fl_peek(qn_file_ptr restrict fl, char * restrict buf, size_t buf_size);
 QN_API extern ssize_t qn_fl_read(qn_file_ptr restrict fl, char * restrict buf, size_t buf_size);
 QN_API extern qn_bool qn_fl_seek(qn_file_ptr restrict fl, qn_fsize offset);

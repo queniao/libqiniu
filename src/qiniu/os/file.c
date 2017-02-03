@@ -12,7 +12,7 @@ typedef struct _QN_FL_INFO
 {
     qn_string fname;
     qn_fsize fsize;
-} qn_file_info;
+} qn_file_info_st;
 
 QN_API void qn_fl_info_destroy(qn_fl_info_ptr restrict fi)
 {
@@ -32,6 +32,24 @@ QN_API qn_string qn_fl_info_fname(qn_fl_info_ptr restrict fi)
     return fi->fname;
 }
 
+static qn_fl_info_ptr qn_fl_info_duplicate(qn_fl_info_ptr restrict fi)
+{
+    qn_fl_info_ptr new_fi = calloc(1, sizeof(qn_file_info_st));
+    if (! new_fi) {
+        qn_err_set_out_of_memory();
+        return NULL;
+    } // if
+
+    new_fi->fname = qn_cs_duplicate(fi->fname);
+    if (! new_fi->fname) {
+        free(new_fi);
+        return NULL;
+    } // if
+
+    new_fi->fsize = fi->fsize;
+    return new_fi;
+}
+
 #if defined(_MSC_VER)
 
 #else
@@ -45,6 +63,7 @@ QN_API qn_string qn_fl_info_fname(qn_fl_info_ptr restrict fi)
 struct _QN_FILE
 {
     qn_io_reader_ptr rdr_vtbl;
+    qn_fl_info_ptr fi;
     int fd;
 } qn_file_st;
 
@@ -78,6 +97,16 @@ static qn_bool qn_fl_advance_fn(qn_io_reader_itf restrict itf, size_t delta)
     return qn_fl_advance(qn_fl_from_io_reader(itf), delta);
 }
 
+static qn_string qn_fl_name_fn(qn_io_reader_itf restrict itf)
+{
+    return qn_fl_fname(qn_fl_from_io_reader(itf));
+}
+
+static qn_fsize qn_fl_size_fn(qn_io_reader_itf restrict itf)
+{
+    return qn_fl_fsize(qn_fl_from_io_reader(itf));
+}
+
 static qn_io_reader_itf qn_fl_duplicate_fn(qn_io_reader_itf restrict itf)
 {
     qn_file_ptr new_file = qn_fl_duplicate(qn_fl_from_io_reader(itf));
@@ -99,7 +128,9 @@ static qn_io_reader_st qn_fl_rdr_vtable = {
     &qn_fl_seek_fn,
     &qn_fl_advance_fn,
     &qn_fl_duplicate_fn,
-    &qn_fl_section_fn
+    &qn_fl_section_fn,
+    &qn_fl_name_fn,
+    &qn_fl_size_fn
 };
 
 QN_API qn_file_ptr qn_fl_open(const char * restrict fname, qn_fl_open_extra_ptr restrict extra)
@@ -112,7 +143,13 @@ QN_API qn_file_ptr qn_fl_open(const char * restrict fname, qn_fl_open_extra_ptr 
 
     new_file->fd = open(fname, 0);
     if (new_file->fd < 0) {
+        free(new_file);
         qn_err_fl_set_opening_file_failed();
+        return NULL;
+    } // if
+
+    new_file->fi = qn_fl_info_stat(fname);
+    if (! new_file->fi) {
         free(new_file);
         return NULL;
     } // if
@@ -131,7 +168,13 @@ QN_API qn_file_ptr qn_fl_duplicate(qn_file_ptr restrict fl)
     
     new_file->fd = dup(fl->fd);
     if (new_file->fd < 0) {
+        free(new_file);
         qn_err_fl_set_duplicating_file_failed();
+        return NULL;
+    } // if
+
+    new_file->fi = qn_fl_info_duplicate(fl->fi);
+    if (! new_file->fi) {
         free(new_file);
         return NULL;
     } // if
@@ -143,6 +186,7 @@ QN_API qn_file_ptr qn_fl_duplicate(qn_file_ptr restrict fl)
 QN_API void qn_fl_close(qn_file_ptr restrict fl)
 {
     if (fl) {
+        qn_fl_info_destroy(fl->fi);
         close(fl->fd);
         free(fl);
     } // if
@@ -151,6 +195,16 @@ QN_API void qn_fl_close(qn_file_ptr restrict fl)
 QN_API qn_io_reader_itf qn_fl_to_io_reader(qn_file_ptr restrict fl)
 {
     return &fl->rdr_vtbl;
+}
+
+QN_API qn_string qn_fl_fname(qn_file_ptr restrict fl)
+{
+    return fl->fi->fname;
+}
+
+QN_API qn_fsize qn_fl_fsize(qn_file_ptr restrict fl)
+{
+    return fl->fi->fsize;
 }
 
 QN_API ssize_t qn_fl_peek(qn_file_ptr restrict fl, char * restrict buf, size_t buf_size)
@@ -207,7 +261,7 @@ QN_API qn_fl_info_ptr qn_fl_info_stat(const char * restrict fname)
 {
     struct stat st;
 
-    qn_fl_info_ptr new_fi = calloc(1, sizeof(qn_file_info));
+    qn_fl_info_ptr new_fi = calloc(1, sizeof(qn_file_info_st));
     if (!new_fi) {
         qn_err_set_out_of_memory();
         return NULL;

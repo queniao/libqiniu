@@ -2,6 +2,7 @@
 #define __QN_IO_H__
 
 #include "qiniu/os/types.h"
+#include "qiniu/base/string.h"
 #include "qiniu/macros.h"
 
 #ifdef __cplusplus
@@ -30,6 +31,9 @@ typedef qn_bool (*qn_io_advance_fn)(qn_io_reader_itf restrict itf, size_t delta)
 typedef qn_io_reader_itf (*qn_io_duplicate_fn)(qn_io_reader_itf restrict itf);
 typedef qn_io_reader_itf (*qn_io_section_fn)(qn_io_reader_itf restrict itf, qn_fsize offset, size_t sec_size);
 
+typedef qn_string (*qn_io_name_fn)(qn_io_reader_itf restrict itf);
+typedef qn_fsize (*qn_io_size_fn)(qn_io_reader_itf restrict itf);
+
 typedef struct _QN_IO_READER
 {
     qn_io_close_fn close;
@@ -40,6 +44,9 @@ typedef struct _QN_IO_READER
 
     qn_io_duplicate_fn duplicate;
     qn_io_section_fn section;
+
+    qn_io_name_fn name;
+    qn_io_size_fn size;
 } qn_io_reader_st;
 
 static inline void qn_io_close(qn_io_reader_itf restrict itf)
@@ -65,6 +72,16 @@ static inline qn_bool qn_io_seek(qn_io_reader_itf restrict itf, qn_fsize offset)
 static inline qn_bool qn_io_advance(qn_io_reader_itf restrict itf, size_t delta)
 {
     return (*itf)->advance(itf, delta);
+}
+
+static inline qn_string qn_io_name(qn_io_reader_itf restrict itf)
+{
+    return (*itf)->name(itf);
+}
+
+static inline qn_fsize qn_io_size(qn_io_reader_itf restrict itf)
+{
+    return (*itf)->size(itf);
 }
 
 static inline qn_io_reader_itf qn_io_duplicate(qn_io_reader_itf restrict itf)
