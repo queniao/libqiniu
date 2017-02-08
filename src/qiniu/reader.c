@@ -174,7 +174,7 @@ static ssize_t qn_rdr_do_read(qn_reader_ptr restrict rdr, char * restrict buf, s
     for (i = 0; i < rdr->pre_end; i += 1) {
         ret = rdr->entries[i].filter_cb(rdr->entries[i].filter_data, &real_buf, &real_size);
         switch (ret) {
-            case QN_IO_RDR_READING_ABORTED: qn_err_stor_set_putting_aborted_by_filter_pre_callback(); return ret;
+            case QN_IO_RDR_READING_ABORTED: qn_err_stor_set_upload_aborted_by_filter_pre_callback(); return ret;
             case QN_IO_RDR_READING_FAILED: qn_err_fl_set_reading_file_failed(); return ret;
             default: if (ret <= 0) return ret;
         } // switch
@@ -194,7 +194,7 @@ static ssize_t qn_rdr_do_read(qn_reader_ptr restrict rdr, char * restrict buf, s
     for (i = rdr->cap - 1; i > rdr->post_end; i -= 1) {
         ret = rdr->entries[i].filter_cb(rdr->entries[i].filter_data, &real_buf, &real_size);
         switch (ret) {
-            case QN_IO_RDR_READING_ABORTED: qn_err_stor_set_putting_aborted_by_filter_post_callback(); return ret;
+            case QN_IO_RDR_READING_ABORTED: qn_err_stor_set_upload_aborted_by_filter_post_callback(); return ret;
             case QN_IO_RDR_READING_FAILED: qn_err_fl_set_reading_file_failed(); return ret;
             default: if (ret <= 0) return ret;
         } // switch

@@ -1,21 +1,21 @@
-.TH QN_STOR_PUT_FILE 3 "NOVEMBER 2016" "Qiniu Cloud" "User Manuals"
+.TH QN_STOR_UPLOAD_FILE 3 "FEBRUARY 2017" "Qiniu Cloud" "User Manuals"
 .SH NAME
-qn_stor_put_file, qn_stor_put_buffer \- upload a local file or a bulk of data in one HTTP round trip
+qn_stor_upload_file, qn_stor_upload_buffer \- upload a local file or a bulk of data in one HTTP round trip
 
 .SH SYNOPSIS
 .nf
 .B #include <qiniu/storage.h>
 .sp
-.BI "qn_json_object_ptr qn_stor_put_file(qn_storage_ptr restrict " stor ", const qn_stor_auth_ptr restrict " auth ", const char * restrict " fname ", qn_stor_put_extra_ptr restrict " ext ");"
-.BI "qn_json_object_ptr qn_stor_put_buffer(qn_storage_ptr restrict " stor ", const qn_stor_auth_ptr restrict " auth ", const char * restrict " buf ", int " buf_size ", qn_stor_put_extra_ptr restrict "ext ");"
+.BI "qn_json_object_ptr qn_stor_upload_file(qn_storage_ptr restrict " stor ", const qn_stor_auth_ptr restrict " auth ", const char * restrict " fname ", qn_stor_upload_extra_ptr restrict " ext ");"
+.BI "qn_json_object_ptr qn_stor_upload_buffer(qn_storage_ptr restrict " stor ", const qn_stor_auth_ptr restrict " auth ", const char * restrict " buf ", int " buf_size ", qn_stor_upload_extra_ptr restrict "ext ");"
 .fi
 
 .SH DESCRIPTION
-.BR qn_stor_put_file ()
+.BR qn_stor_upload_file ()
 uploads a local file specified by 
 .I fname
 in one HTTP round trip and put it into the destination bucket. It's the simplest way to upload a file to Qiniu Cloud Storage.
-.BR qn_stor_put_buffer ()
+.BR qn_stor_upload_buffer ()
 does the same thing except that reads data from a buffer specified by the
 .I buf
 and
@@ -63,7 +63,7 @@ The
 .I ext
 argument has the following structure layout:
     
-    typedef struct _QN_STOR_PUT_EXTRA
+    typedef struct _QN_STOR_UPLOAD_EXTRA
     {
         const char * 
 .IR final_key ;
@@ -75,9 +75,9 @@ argument has the following structure layout:
         qn_stor_rgn
 .IR rgn ;
 
-        qn_stor_put_ctrl
+        qn_stor_upload_ctrl
 .IR put_ctrl ;
-    } qn_stor_put_extra, *qn_stor_put_extra_ptr;
+    } qn_stor_upload_extra_st, *qn_stor_upload_extra_ptr;
 
 .I final_key
 designates the final key of the uploaded file in the bucket. It must be a UTF-8 encoded plain text string. If assigned with a NULL value, the upload server tries to use other methods to generate the key. See

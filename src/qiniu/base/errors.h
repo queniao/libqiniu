@@ -77,16 +77,16 @@ QN_API extern void qn_err_fl_info_set_stating_file_info_failed_imp(const char * 
 #define qn_err_stor_set_lack_of_authorization_information() qn_err_stor_set_lack_of_authorization_information_imp(__FILE__, __LINE__)
 #define qn_err_stor_set_invalid_resumable_session_information() qn_err_stor_set_invalid_resumable_session_information_imp(__FILE__, __LINE__)
 #define qn_err_stor_set_invalid_list_result() qn_err_stor_set_invalid_list_result_imp(__FILE__, __LINE__)
-#define qn_err_stor_set_putting_aborted_by_filter_pre_callback() qn_err_stor_set_putting_aborted_by_filter_pre_callback_imp(__FILE__, __LINE__)
-#define qn_err_stor_set_putting_aborted_by_filter_post_callback() qn_err_stor_set_putting_aborted_by_filter_post_callback_imp(__FILE__, __LINE__)
+#define qn_err_stor_set_upload_aborted_by_filter_pre_callback() qn_err_stor_set_upload_aborted_by_filter_pre_callback_imp(__FILE__, __LINE__)
+#define qn_err_stor_set_upload_aborted_by_filter_post_callback() qn_err_stor_set_upload_aborted_by_filter_post_callback_imp(__FILE__, __LINE__)
 #define qn_err_stor_set_invalid_chunk_put_result() qn_err_stor_set_invalid_chunk_put_result_imp(__FILE__, __LINE__)
 #define qn_err_stor_set_api_return_no_value() qn_err_stor_set_api_return_no_value_imp(__FILE__, __LINE__)
 
 QN_API extern void qn_err_stor_set_lack_of_authorization_information_imp(const char * restrict file, int line);
 QN_API extern void qn_err_stor_set_invalid_resumable_session_information_imp(const char * restrict file, int line);
 QN_API extern void qn_err_stor_set_invalid_list_result_imp(const char * restrict file, int line);
-QN_API extern void qn_err_stor_set_putting_aborted_by_filter_pre_callback_imp(const char * restrict file, int line);
-QN_API extern void qn_err_stor_set_putting_aborted_by_filter_post_callback_imp(const char * restrict file, int line);
+QN_API extern void qn_err_stor_set_upload_aborted_by_filter_pre_callback_imp(const char * restrict file, int line);
+QN_API extern void qn_err_stor_set_upload_aborted_by_filter_post_callback_imp(const char * restrict file, int line);
 QN_API extern void qn_err_stor_set_invalid_chunk_put_result_imp(const char * restrict file, int line);
 QN_API extern void qn_err_stor_set_api_return_no_value_imp(const char * restrict file, int line);
 
@@ -143,8 +143,8 @@ QN_API extern qn_bool qn_err_fl_info_is_stating_file_info_failed(void);
 QN_API extern qn_bool qn_err_stor_is_lack_of_authorization_information(void);
 QN_API extern qn_bool qn_err_stor_is_invalid_resumable_session_information(void);
 QN_API extern qn_bool qn_err_stor_is_invalid_list_result(void);
-QN_API extern qn_bool qn_err_stor_is_putting_aborted_by_filter_pre_callback(void);
-QN_API extern qn_bool qn_err_stor_is_putting_aborted_by_filter_post_callback(void);
+QN_API extern qn_bool qn_err_stor_is_upload_aborted_by_filter_pre_callback(void);
+QN_API extern qn_bool qn_err_stor_is_upload_aborted_by_filter_post_callback(void);
 QN_API extern qn_bool qn_err_stor_is_invalid_chunk_put_result(void);
 QN_API extern qn_bool qn_err_stor_is_api_return_no_value(void);
 

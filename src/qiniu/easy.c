@@ -267,18 +267,18 @@ static qn_io_reader_itf qn_easy_create_put_reader(const char * restrict fname, q
 static qn_json_object_ptr qn_easy_put_file_in_one_piece(qn_easy_ptr restrict easy, const char * restrict uptoken, const char * restrict fname, qn_io_reader_itf restrict io_rdr, qn_easy_put_extra_ptr restrict ext)
 {
     qn_json_object_ptr ret;
-    qn_stor_put_extra_ptr put_ext;
+    qn_stor_upload_extra_ptr put_ext;
 
-    if (! (put_ext = qn_stor_pe_create())) return NULL;
+    if (! (put_ext = qn_stor_ue_create())) return NULL;
 
-    qn_stor_pe_set_final_key(put_ext, ext->attr.final_key);
+    qn_stor_ue_set_final_key(put_ext, ext->attr.final_key);
 
     if (io_rdr) {
         ret = qn_stor_upload(easy->stor, uptoken, io_rdr, put_ext);
     } else {
-        ret = qn_stor_put_file(easy->stor, uptoken, fname, put_ext);
+        ret = qn_stor_upload_file(easy->stor, uptoken, fname, put_ext);
     } // if
-    qn_stor_pe_destroy(put_ext);
+    qn_stor_ue_destroy(put_ext);
     return ret;
 }
 

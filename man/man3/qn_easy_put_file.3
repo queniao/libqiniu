@@ -16,7 +16,7 @@ uploads a local file specified by
 with least programming efforts. Based on the size of the local file,
 .BR qn_easy_put_file ()
 choose a proper function to do the upload task: 
-.BR qn_stor_put_file ()
+.BR qn_stor_upload_file ()
 will be chose if the size is less than 10MB; otherwise
 .BR qn_stor_rp_put_file ()
 which can save a lot of retry cost in case of transmitting through unstable networks. The size throttle value can be set by using
@@ -68,4 +68,4 @@ to get an error message.
 LIANG Tao, a consultant from Qiniu Cloud (QQ 510857, or emails to liangtao@qiniu.com or amethyst.black@gmail.com).
 
 .SH SEE ALSO
-.BR qn_easy_create "(3), " qn_stor_put_file "(3), " qn_stor_rp_put_file "(3), " qiniu-put-file "(7)"
+.BR qn_easy_create "(3), " qn_stor_upload_file "(3), " qn_stor_rp_put_file "(3), " qiniu-put-file "(7)"

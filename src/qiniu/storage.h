@@ -233,22 +233,22 @@ QN_API extern qn_string qn_stor_pp_to_uptoken(qn_json_object_ptr restrict pp, qn
 
 // ---- 
 
-struct _QN_STOR_PUT_EXTRA;
-typedef struct _QN_STOR_PUT_EXTRA * qn_stor_put_extra_ptr;
+struct _QN_STOR_UPLOAD_EXTRA;
+typedef struct _QN_STOR_UPLOAD_EXTRA * qn_stor_upload_extra_ptr;
 
-QN_API extern qn_stor_put_extra_ptr qn_stor_pe_create(void);
-QN_API extern void qn_stor_pe_destroy(qn_stor_put_extra_ptr restrict pe);
-QN_API extern void qn_stor_pe_reset(qn_stor_put_extra_ptr restrict pe);
+QN_API extern qn_stor_upload_extra_ptr qn_stor_ue_create(void);
+QN_API extern void qn_stor_ue_destroy(qn_stor_upload_extra_ptr restrict ue);
+QN_API extern void qn_stor_ue_reset(qn_stor_upload_extra_ptr restrict ue);
 
-QN_API extern void qn_stor_pe_set_final_key(qn_stor_put_extra_ptr restrict pe, const char * restrict final_key);
-QN_API extern void qn_stor_pe_set_local_crc32(qn_stor_put_extra_ptr restrict pe, const char * restrict crc32);
-QN_API extern void qn_stor_pe_set_accept_type(qn_stor_put_extra_ptr restrict pe, const char * restrict accept_type);
-QN_API extern void qn_stor_pe_set_region_entry(qn_stor_put_extra_ptr restrict pe, qn_rgn_entry_ptr restrict entry);
+QN_API extern void qn_stor_ue_set_final_key(qn_stor_upload_extra_ptr restrict ue, const char * restrict final_key);
+QN_API extern void qn_stor_ue_set_local_crc32(qn_stor_upload_extra_ptr restrict ue, const char * restrict crc32);
+QN_API extern void qn_stor_ue_set_accept_type(qn_stor_upload_extra_ptr restrict ue, const char * restrict accept_type);
+QN_API extern void qn_stor_ue_set_region_entry(qn_stor_upload_extra_ptr restrict ue, qn_rgn_entry_ptr restrict entry);
 
-QN_API extern qn_json_object_ptr qn_stor_put_file(qn_storage_ptr restrict stor, const char * restrict uptoken, const char * restrict fname, qn_stor_put_extra_ptr restrict ext);
-QN_API extern qn_json_object_ptr qn_stor_put_buffer(qn_storage_ptr restrict stor, const char * restrict uptoken, const char * restrict buf, int buf_size, qn_stor_put_extra_ptr restrict ext);
+QN_API extern qn_json_object_ptr qn_stor_upload_file(qn_storage_ptr restrict stor, const char * restrict uptoken, const char * restrict fname, qn_stor_upload_extra_ptr restrict ext);
+QN_API extern qn_json_object_ptr qn_stor_upload_buffer(qn_storage_ptr restrict stor, const char * restrict uptoken, const char * restrict buf, int buf_size, qn_stor_upload_extra_ptr restrict ext);
 
-QN_API extern qn_json_object_ptr qn_stor_upload(qn_storage_ptr restrict stor, const char * restrict uptoken, qn_io_reader_itf restrict rdr, qn_stor_put_extra_ptr restrict ext);
+QN_API extern qn_json_object_ptr qn_stor_upload(qn_storage_ptr restrict stor, const char * restrict uptoken, qn_io_reader_itf restrict rdr, qn_stor_upload_extra_ptr restrict ext);
 
 // ----
 

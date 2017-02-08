@@ -2127,12 +2127,12 @@ QN_API qn_string qn_stor_pp_to_uptoken(qn_json_object_ptr restrict pp, qn_mac_pt
 
 // ---- Definition of Upload ----
 
-typedef struct _QN_STOR_PUT_READER
+typedef struct _QN_STOR_UPLOAD_READER
 {
-    qn_stor_put_extra_ptr ext;
+    qn_stor_upload_extra_ptr ext;
 } qn_stor_put_reader_st, *qn_stor_put_reader_ptr;
 
-typedef struct _QN_STOR_PUT_EXTRA
+typedef struct _QN_STOR_UPLOAD_EXTRA
 {
     const char * final_key;
     const char * crc32;
@@ -2142,11 +2142,11 @@ typedef struct _QN_STOR_PUT_EXTRA
 
     qn_fsize fsize;
     qn_io_reader_itf rdr;
-} qn_stor_put_extra_st;
+} qn_stor_upload_extra_st;
 
-QN_API qn_stor_put_extra_ptr qn_stor_pe_create(void)
+QN_API qn_stor_upload_extra_ptr qn_stor_ue_create(void)
 {
-    qn_stor_put_extra_ptr new_pe = calloc(1, sizeof(qn_stor_put_extra_st));
+    qn_stor_upload_extra_ptr new_pe = calloc(1, sizeof(qn_stor_upload_extra_st));
     if (! new_pe) {
         qn_err_set_out_of_memory();
         return NULL;
@@ -2154,39 +2154,39 @@ QN_API qn_stor_put_extra_ptr qn_stor_pe_create(void)
     return new_pe;
 }
 
-QN_API void qn_stor_pe_destroy(qn_stor_put_extra_ptr restrict pe)
+QN_API void qn_stor_ue_destroy(qn_stor_upload_extra_ptr restrict ue)
 {
-    if (pe) {
-        free(pe);
+    if (ue) {
+        free(ue);
     } // if
 }
 
-QN_API void qn_stor_pe_reset(qn_stor_put_extra_ptr restrict pe)
+QN_API void qn_stor_ue_reset(qn_stor_upload_extra_ptr restrict ue)
 {
-    memset(pe, 0, sizeof(qn_stor_put_extra_st));
+    memset(ue, 0, sizeof(qn_stor_upload_extra_st));
 }
 
-QN_API void qn_stor_pe_set_final_key(qn_stor_put_extra_ptr restrict pe, const char * restrict final_key)
+QN_API void qn_stor_ue_set_final_key(qn_stor_upload_extra_ptr restrict ue, const char * restrict final_key)
 {
-    pe->final_key = final_key;
+    ue->final_key = final_key;
 }
 
-QN_API extern void qn_stor_pe_set_local_crc32(qn_stor_put_extra_ptr restrict pe, const char * restrict crc32)
+QN_API extern void qn_stor_ue_set_local_crc32(qn_stor_upload_extra_ptr restrict ue, const char * restrict crc32)
 {
-    pe->crc32 = crc32;
+    ue->crc32 = crc32;
 }
 
-QN_API extern void qn_stor_pe_set_accept_type(qn_stor_put_extra_ptr restrict pe, const char * restrict accept_type)
+QN_API extern void qn_stor_ue_set_accept_type(qn_stor_upload_extra_ptr restrict ue, const char * restrict accept_type)
 {
-    pe->accept_type = accept_type;
+    ue->accept_type = accept_type;
 }
 
-QN_API extern void qn_stor_pe_set_region_entry(qn_stor_put_extra_ptr restrict pe, qn_rgn_entry_ptr restrict entry)
+QN_API extern void qn_stor_ue_set_region_entry(qn_stor_upload_extra_ptr restrict ue, qn_rgn_entry_ptr restrict entry)
 {
-    pe->rgn_entry = entry;
+    ue->rgn_entry = entry;
 }
 
-static qn_bool qn_stor_prepare_for_putting_file(qn_storage_ptr restrict stor, const char * restrict uptoken, qn_stor_put_extra_ptr restrict ext)
+static qn_bool qn_stor_prepare_for_upload(qn_storage_ptr restrict stor, const char * restrict uptoken, qn_stor_upload_extra_ptr restrict ext)
 {
     qn_http_form_ptr form;
 
@@ -2236,7 +2236,7 @@ static qn_bool qn_stor_prepare_for_putting_file(qn_storage_ptr restrict stor, co
 *                  or an error message object (see the REMARK section).
 * @retval NULL An application error occurs in uploading the file.
 *
-* @remark The qn_stor_put_file() uploads a local file in one HTTP round-trip
+* @remark The qn_stor_upload_file() uploads a local file in one HTTP round-trip
 *         to put it into the destination bucket. It's the simplest way to
 *         upload a file.
 *
@@ -2293,7 +2293,7 @@ static qn_bool qn_stor_prepare_for_putting_file(qn_storage_ptr restrict stor, co
 *         If fails, the function returns a NULL value and the caller can call
 *         qn_err_get_message() to check out what happened.
 *******************************************************************************/
-QN_API qn_json_object_ptr qn_stor_put_file(qn_storage_ptr restrict stor, const char * restrict uptoken, const char * restrict fname, qn_stor_put_extra_ptr restrict ext)
+QN_API qn_json_object_ptr qn_stor_upload_file(qn_storage_ptr restrict stor, const char * restrict uptoken, const char * restrict fname, qn_stor_upload_extra_ptr restrict ext)
 {
     qn_bool ret;
     qn_fl_info_ptr fi;
@@ -2310,7 +2310,7 @@ QN_API qn_json_object_ptr qn_stor_put_file(qn_storage_ptr restrict stor, const c
         qn_rgn_tbl_choose_first_entry(NULL, QN_RGN_SVC_UP, NULL, &rgn_entry);
     } // if
 
-    if (!qn_stor_prepare_for_putting_file(stor, uptoken, ext)) return NULL;
+    if (!qn_stor_prepare_for_upload(stor, uptoken, ext)) return NULL;
 
     // ----
     form = qn_http_req_get_form(stor->req);
@@ -2334,7 +2334,7 @@ QN_API qn_json_object_ptr qn_stor_put_file(qn_storage_ptr restrict stor, const c
     return stor->obj_body;
 }
 
-QN_API qn_json_object_ptr qn_stor_put_buffer(qn_storage_ptr restrict stor, const char * restrict uptoken, const char * restrict buf, int buf_size, qn_stor_put_extra_ptr restrict ext)
+QN_API qn_json_object_ptr qn_stor_upload_buffer(qn_storage_ptr restrict stor, const char * restrict uptoken, const char * restrict buf, int buf_size, qn_stor_upload_extra_ptr restrict ext)
 {
     qn_bool ret;
     qn_http_form_ptr form;
@@ -2351,7 +2351,7 @@ QN_API qn_json_object_ptr qn_stor_put_buffer(qn_storage_ptr restrict stor, const
         qn_rgn_tbl_choose_first_entry(NULL, QN_RGN_SVC_UP, NULL, &rgn_entry);
     } // if
 
-    if (!qn_stor_prepare_for_putting_file(stor, uptoken, ext)) return NULL;
+    if (!qn_stor_prepare_for_upload(stor, uptoken, ext)) return NULL;
 
     form = qn_http_req_get_form(stor->req);
 
@@ -2377,7 +2377,7 @@ static size_t qn_stor_upload_callback_fn(void * user_data, char * buf, size_t si
     return ret;
 }
 
-QN_API qn_json_object_ptr qn_stor_upload(qn_storage_ptr restrict stor, const char * restrict uptoken, qn_io_reader_itf restrict rdr, qn_stor_put_extra_ptr restrict ext)
+QN_API qn_json_object_ptr qn_stor_upload(qn_storage_ptr restrict stor, const char * restrict uptoken, qn_io_reader_itf restrict rdr, qn_stor_upload_extra_ptr restrict ext)
 {
     qn_bool ret;
     qn_rgn_entry_ptr rgn_entry;
@@ -2393,7 +2393,7 @@ QN_API qn_json_object_ptr qn_stor_upload(qn_storage_ptr restrict stor, const cha
         qn_rgn_tbl_choose_first_entry(NULL, QN_RGN_SVC_UP, NULL, &rgn_entry);
     } // if
 
-    if (! qn_stor_prepare_for_putting_file(stor, uptoken, ext)) return NULL;
+    if (! qn_stor_prepare_for_upload(stor, uptoken, ext)) return NULL;
 
     ret = qn_http_form_add_file_reader(qn_http_req_get_form(stor->req), "file", qn_str_cstr(qn_io_name(rdr)), NULL, qn_io_size(rdr), stor->req);
     if (! ret) return NULL;

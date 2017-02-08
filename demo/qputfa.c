@@ -35,7 +35,7 @@ int main(int argc, char * argv[])
     qn_file_ptr fl;
     qn_reader_ptr ctrl_rdr = NULL;
     qn_flt_etag_ptr etag;
-    qn_stor_put_extra_ptr pe;
+    qn_stor_upload_extra_ptr ue;
     qn_http_hdr_iterator_ptr hdr_itr;
     qn_string hdr_ent;
 
@@ -70,14 +70,14 @@ int main(int argc, char * argv[])
         return 1;
     } // if
 
-    pe = qn_stor_pe_create();
-    if (! pe) {
+    ue = qn_stor_ue_create();
+    if (! ue) {
         qn_str_destroy(uptoken);
         printf("Cannot create a put extra due to application error `%s`.\n", qn_err_get_message());
         return 1;
     } // if
 
-    qn_stor_pe_set_final_key(pe, key);
+    qn_stor_ue_set_final_key(ue, key);
 
     if (argc == 7) {
         fc.max_fsize = atoi(argv[6]);
@@ -131,18 +131,18 @@ int main(int argc, char * argv[])
             qn_rdr_destroy(ctrl_rdr);
             qn_fl_close(fl);
         } // if
-        qn_stor_pe_destroy(pe);
+        qn_stor_ue_destroy(ue);
         qn_str_destroy(uptoken);
         printf("Cannot initialize a new storage object due to application error `%s`.\n", qn_err_get_message());
         return 1;
     } // if
 
     if (! ctrl_rdr) {
-        put_ret = qn_stor_put_file(stor, uptoken, fname, pe);
+        put_ret = qn_stor_upload_file(stor, uptoken, fname, ue);
     } else {
-        put_ret = qn_stor_upload(stor, uptoken, qn_rdr_to_io_reader(ctrl_rdr), pe);
+        put_ret = qn_stor_upload(stor, uptoken, qn_rdr_to_io_reader(ctrl_rdr), ue);
     } // if
-    qn_stor_pe_destroy(pe);
+    qn_stor_ue_destroy(ue);
     qn_str_destroy(uptoken);
     if (! put_ret) {
         if (ctrl_rdr) {
@@ -152,7 +152,7 @@ int main(int argc, char * argv[])
         } // if
         qn_stor_destroy(stor);
 
-        if (qn_err_stor_is_putting_aborted_by_filter_post_callback()) {
+        if (qn_err_stor_is_upload_aborted_by_filter_post_callback()) {
             printf("The '%s' file's size is larger than the given size limit %lu.\n", fname, fc.max_fsize);
         } else {
             printf("Cannot put the file `%s` to `%s:%s` due to application error `%s`.\n", fname, bucket, key, qn_err_get_message());

@@ -42,8 +42,8 @@ typedef enum _QN_ERR_CODE
     QN_ERR_STOR_LACK_OF_AUTHORIZATION_INFORMATION = 21001,
     QN_ERR_STOR_INVALID_RESUMABLE_SESSION_INFORMATION = 21002,
     QN_ERR_STOR_INVALID_LIST_RESULT = 21003,
-    QN_ERR_STOR_PUTTING_ABORTED_BY_FILTER_PRE_CALLBACK = 21004,
-    QN_ERR_STOR_PUTTING_ABORTED_BY_FILTER_POST_CALLBACK = 21005,
+    QN_ERR_STOR_UPLOAD_ABORTED_BY_FILTER_PRE_CALLBACK = 21004,
+    QN_ERR_STOR_UPLOAD_ABORTED_BY_FILTER_POST_CALLBACK = 21005,
     QN_ERR_STOR_INVALID_CHUNK_PUT_RESULT = 21006,
     QN_ERR_STOR_API_RETURN_NO_VALUE = 21007,
 
@@ -96,8 +96,8 @@ static qn_err_message_map_st qn_err_message_maps[] = {
     {QN_ERR_STOR_LACK_OF_AUTHORIZATION_INFORMATION, "Lack of auhorization information like token or put policy"},
     {QN_ERR_STOR_INVALID_RESUMABLE_SESSION_INFORMATION, "Invalid resumable session information"},
     {QN_ERR_STOR_INVALID_LIST_RESULT, "Invalid list result"},
-    {QN_ERR_STOR_PUTTING_ABORTED_BY_FILTER_PRE_CALLBACK, "Putting file is aborted by filter PRE callback"},
-    {QN_ERR_STOR_PUTTING_ABORTED_BY_FILTER_POST_CALLBACK, "Putting file is aborted by filter POST callback"},
+    {QN_ERR_STOR_UPLOAD_ABORTED_BY_FILTER_PRE_CALLBACK, "Upload is aborted by filter pre-callback"},
+    {QN_ERR_STOR_UPLOAD_ABORTED_BY_FILTER_POST_CALLBACK, "Upload is aborted by filter post-callback"},
     {QN_ERR_STOR_INVALID_CHUNK_PUT_RESULT, "Invalid chunk put result"},
     {QN_ERR_STOR_API_RETURN_NO_VALUE, "API return no value"},
 
@@ -339,18 +339,18 @@ QN_API void qn_err_stor_set_invalid_list_result_imp(const char * restrict file, 
     qn_err_msg.code = QN_ERR_STOR_INVALID_LIST_RESULT;
 }
 
-QN_API void qn_err_stor_set_putting_aborted_by_filter_pre_callback_imp(const char * restrict file, int line)
+QN_API void qn_err_stor_set_upload_aborted_by_filter_pre_callback_imp(const char * restrict file, int line)
 {
     qn_err_msg.file = file;
     qn_err_msg.line = line;
-    qn_err_msg.code = QN_ERR_STOR_PUTTING_ABORTED_BY_FILTER_PRE_CALLBACK;
+    qn_err_msg.code = QN_ERR_STOR_UPLOAD_ABORTED_BY_FILTER_PRE_CALLBACK;
 }
 
-QN_API void qn_err_stor_set_putting_aborted_by_filter_post_callback_imp(const char * restrict file, int line)
+QN_API void qn_err_stor_set_upload_aborted_by_filter_post_callback_imp(const char * restrict file, int line)
 {
     qn_err_msg.file = file;
     qn_err_msg.line = line;
-    qn_err_msg.code = QN_ERR_STOR_PUTTING_ABORTED_BY_FILTER_POST_CALLBACK;
+    qn_err_msg.code = QN_ERR_STOR_UPLOAD_ABORTED_BY_FILTER_POST_CALLBACK;
 }
 
 QN_API void qn_err_stor_set_invalid_chunk_put_result_imp(const char * restrict file, int line)
@@ -558,14 +558,14 @@ QN_API qn_bool qn_err_stor_is_invalid_list_result(void)
     return (qn_err_msg.code == QN_ERR_STOR_INVALID_LIST_RESULT);
 }
 
-QN_API qn_bool qn_err_stor_is_putting_aborted_by_filter_pre_callback(void)
+QN_API qn_bool qn_err_stor_is_upload_aborted_by_filter_pre_callback(void)
 {
-    return (qn_err_msg.code == QN_ERR_STOR_PUTTING_ABORTED_BY_FILTER_PRE_CALLBACK);
+    return (qn_err_msg.code == QN_ERR_STOR_UPLOAD_ABORTED_BY_FILTER_PRE_CALLBACK);
 }
 
-QN_API qn_bool qn_err_stor_is_putting_aborted_by_filter_post_callback(void)
+QN_API qn_bool qn_err_stor_is_upload_aborted_by_filter_post_callback(void)
 {
-    return (qn_err_msg.code == QN_ERR_STOR_PUTTING_ABORTED_BY_FILTER_POST_CALLBACK);
+    return (qn_err_msg.code == QN_ERR_STOR_UPLOAD_ABORTED_BY_FILTER_POST_CALLBACK);
 }
 
 QN_API qn_bool qn_err_stor_is_invalid_chunk_put_result(void)
