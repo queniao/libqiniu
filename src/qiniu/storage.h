@@ -244,7 +244,6 @@ QN_API extern void qn_stor_pe_set_final_key(qn_stor_put_extra_ptr restrict pe, c
 QN_API extern void qn_stor_pe_set_local_crc32(qn_stor_put_extra_ptr restrict pe, const char * restrict crc32);
 QN_API extern void qn_stor_pe_set_accept_type(qn_stor_put_extra_ptr restrict pe, const char * restrict accept_type);
 QN_API extern void qn_stor_pe_set_region_entry(qn_stor_put_extra_ptr restrict pe, qn_rgn_entry_ptr restrict entry);
-QN_API extern void qn_stor_pe_set_source_reader(qn_stor_put_extra_ptr restrict pe, qn_io_reader_itf restrict rdr, qn_fsize fsize);
 
 QN_API extern qn_json_object_ptr qn_stor_put_file(qn_storage_ptr restrict stor, const char * restrict uptoken, const char * restrict fname, qn_stor_put_extra_ptr restrict ext);
 QN_API extern qn_json_object_ptr qn_stor_put_buffer(qn_storage_ptr restrict stor, const char * restrict uptoken, const char * restrict buf, int buf_size, qn_stor_put_extra_ptr restrict ext);

@@ -2186,23 +2186,6 @@ QN_API extern void qn_stor_pe_set_region_entry(qn_stor_put_extra_ptr restrict pe
     pe->rgn_entry = entry;
 }
 
-QN_API extern void qn_stor_pe_set_source_reader(qn_stor_put_extra_ptr restrict pe, qn_io_reader_itf restrict rdr, qn_fsize fsize)
-{
-    pe->rdr = rdr;
-    pe->fsize = fsize;
-}
-
-
-static size_t qn_stor_put_body_reader_callback(void * user_data, char * buf, size_t size)
-{
-    qn_stor_put_reader_ptr prdr = (qn_stor_put_reader_ptr) user_data;
-    ssize_t ret;
-
-    ret = qn_io_read(prdr->ext->rdr, buf, size);
-    if (ret < 0) return CURL_READFUNC_ABORT;
-    return ret;
-}
-
 static qn_bool qn_stor_prepare_for_putting_file(qn_storage_ptr restrict stor, const char * restrict uptoken, qn_stor_put_extra_ptr restrict ext)
 {
     qn_http_form_ptr form;
@@ -2316,19 +2299,12 @@ QN_API qn_json_object_ptr qn_stor_put_file(qn_storage_ptr restrict stor, const c
     qn_fl_info_ptr fi;
     qn_http_form_ptr form;
     qn_rgn_entry_ptr rgn_entry;
-    qn_stor_put_reader_st prdr;
-    qn_bool use_controllable_reader = qn_false;
 
     assert(stor);
     assert(uptoken);
 
     if (ext) {
         if (! (rgn_entry = ext->rgn_entry)) qn_rgn_tbl_choose_first_entry(NULL, QN_RGN_SVC_UP, NULL, &rgn_entry);
-
-        if (ext->rdr) {
-            prdr.ext = ext;
-            use_controllable_reader = qn_true;
-        } // if
     } else {
         rgn_entry = NULL;
         qn_rgn_tbl_choose_first_entry(NULL, QN_RGN_SVC_UP, NULL, &rgn_entry);
@@ -2342,17 +2318,9 @@ QN_API qn_json_object_ptr qn_stor_put_file(qn_storage_ptr restrict stor, const c
     fi = qn_fl_info_stat(fname);
     if (!fi) return NULL;
 
-    if (use_controllable_reader) {
-        ret = qn_http_form_add_file_reader(form, "file", qn_str_cstr(qn_fl_info_fname(fi)), NULL, qn_fl_info_fsize(fi), stor->req);
-        qn_fl_info_destroy(fi);
-        if (!ret) return NULL;
-
-        qn_http_req_set_body_reader(stor->req, &prdr, qn_stor_put_body_reader_callback, qn_fl_info_fsize(fi));
-    } else {
-        ret = qn_http_form_add_file(form, "file", qn_str_cstr(qn_fl_info_fname(fi)), NULL, qn_fl_info_fsize(fi));
-        qn_fl_info_destroy(fi);
-        if (!ret) return NULL;
-    } // if
+    ret = qn_http_form_add_file(form, "file", qn_str_cstr(qn_fl_info_fname(fi)), NULL, qn_fl_info_fsize(fi));
+    qn_fl_info_destroy(fi);
+    if (!ret) return NULL;
 
     // ----
     if (rgn_entry->hostname && !qn_http_req_set_header(stor->req, "Host", qn_str_cstr(rgn_entry->hostname))) return NULL;

@@ -122,8 +122,6 @@ int main(int argc, char * argv[])
             printf("Cannot add the etag filter due to application error `%s`.\n", qn_err_get_message());
             return 1;
         } // if
-
-        qn_stor_pe_set_source_reader(pe, qn_rdr_to_io_reader(ctrl_rdr), 0);
     } // if
 
     stor = qn_stor_create();
@@ -139,7 +137,11 @@ int main(int argc, char * argv[])
         return 1;
     } // if
 
-    put_ret = qn_stor_put_file(stor, uptoken, fname, pe);
+    if (! ctrl_rdr) {
+        put_ret = qn_stor_put_file(stor, uptoken, fname, pe);
+    } else {
+        put_ret = qn_stor_upload(stor, uptoken, qn_rdr_to_io_reader(ctrl_rdr), pe);
+    } // if
     qn_stor_pe_destroy(pe);
     qn_str_destroy(uptoken);
     if (! put_ret) {

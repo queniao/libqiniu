@@ -272,9 +272,12 @@ static qn_json_object_ptr qn_easy_put_file_in_one_piece(qn_easy_ptr restrict eas
     if (! (put_ext = qn_stor_pe_create())) return NULL;
 
     qn_stor_pe_set_final_key(put_ext, ext->attr.final_key);
-    qn_stor_pe_set_source_reader(put_ext, io_rdr, ext->put_ctrl.fsize);
 
-    ret = qn_stor_put_file(easy->stor, uptoken, fname, put_ext);
+    if (io_rdr) {
+        ret = qn_stor_upload(easy->stor, uptoken, io_rdr, put_ext);
+    } else {
+        ret = qn_stor_put_file(easy->stor, uptoken, fname, put_ext);
+    } // if
     qn_stor_pe_destroy(put_ext);
     return ret;
 }
