@@ -23,6 +23,9 @@ QN_API extern void qn_rdr_reset(qn_reader_ptr restrict rdr);
 QN_API extern qn_reader_ptr qn_rdr_duplicate(qn_reader_ptr restrict rdr);
 QN_API extern qn_reader_ptr qn_rdr_section(qn_reader_ptr restrict rdr, qn_fsize offset, size_t sec_size);
 
+QN_API extern qn_string qn_rdr_name(qn_reader_ptr restrict rdr);
+QN_API extern qn_fsize qn_rdr_size(qn_reader_ptr restrict rdr);
+
 QN_API extern qn_io_reader_itf qn_rdr_to_io_reader(qn_reader_ptr restrict rdr);
 
 QN_API extern qn_bool qn_rdr_add_pre_filter(qn_reader_ptr restrict rdr, void * restrict filter_data, qn_rdr_filter_callback filter_cb);
