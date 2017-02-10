@@ -1018,6 +1018,30 @@ int qn_json_prs_get_max_levels(void)
     return qn_json_prs_max_levels;
 }
 
+QN_API qn_json_object_ptr qn_json_object_from_string(const char * restrict buf, size_t buf_size)
+{
+    size_t real_size = buf_size;
+    qn_json_object_ptr obj = NULL;
+    qn_json_parser_ptr prs = qn_json_prs_create();
+    if (! prs) return NULL;
+
+    qn_json_prs_parse_object(prs, buf, &real_size, &obj);
+    qn_json_prs_destroy(prs);
+    return obj;
+}
+
+QN_API qn_json_array_ptr qn_json_array_from_string(const char * restrict buf, size_t buf_size)
+{
+    size_t real_size = buf_size;
+    qn_json_array_ptr arr = NULL;
+    qn_json_parser_ptr prs = qn_json_prs_create();
+    if (! prs) return NULL;
+
+    qn_json_prs_parse_array(prs, buf, &real_size, &arr);
+    qn_json_prs_destroy(prs);
+    return arr;
+}
+
 QN_API void qn_json_prs_set_max_levels(int count)
 {
     if (4 <= qn_json_prs_max_levels && qn_json_prs_max_levels < 64) {
