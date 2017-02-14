@@ -103,6 +103,8 @@ QN_API extern qn_json_integer qn_json_get_integer(qn_json_object_ptr restrict ob
 QN_API extern qn_json_number qn_json_get_number(qn_json_object_ptr restrict obj, const char * restrict key, qn_json_number default_val);
 QN_API extern qn_bool qn_json_get_boolean(qn_json_object_ptr restrict obj, const char * restrict key, qn_bool default_val);
 
+QN_API extern qn_bool qn_json_set_object(qn_json_object_ptr restrict obj, const char * restrict key, qn_json_object_ptr restrict val);
+QN_API extern qn_bool qn_json_set_array(qn_json_object_ptr restrict obj, const char * restrict key, qn_json_array_ptr restrict val);
 QN_API extern qn_bool qn_json_set_string(qn_json_object_ptr restrict obj, const char * restrict key, const char * restrict val);
 QN_API extern qn_bool qn_json_set_text(qn_json_object_ptr restrict obj, const char * restrict key, const char * restrict val, size_t size);
 QN_API extern qn_bool qn_json_set_integer(qn_json_object_ptr restrict obj, const char * restrict key, qn_json_integer val);
@@ -154,6 +156,14 @@ QN_API extern qn_bool qn_json_unshift_number(qn_json_array_ptr restrict arr, qn_
 QN_API extern qn_bool qn_json_unshift_boolean(qn_json_array_ptr restrict arr, qn_bool val);
 QN_API extern qn_bool qn_json_unshift_null(qn_json_array_ptr restrict arr);
 QN_API extern void qn_json_shift(qn_json_array_ptr restrict arr);
+
+QN_API extern qn_bool qn_json_replace_object(qn_json_array_ptr restrict arr, int n, qn_json_object_ptr restrict val);
+QN_API extern qn_bool qn_json_replace_array(qn_json_array_ptr restrict arr, int n, qn_json_array_ptr restrict val);
+QN_API extern qn_bool qn_json_replace_string(qn_json_array_ptr restrict arr, int n, const char * restrict val);
+QN_API extern qn_bool qn_json_replace_text(qn_json_array_ptr restrict arr, int n, const char * restrict val, size_t size);
+QN_API extern qn_bool qn_json_replace_integer(qn_json_array_ptr restrict arr, int n, qn_json_integer val);
+QN_API extern qn_bool qn_json_replace_number(qn_json_array_ptr restrict arr, int n, qn_json_number val);
+QN_API extern qn_bool qn_json_replace_boolean(qn_json_array_ptr restrict arr, int n, qn_bool val);
 
 /***************************************************************************//**
 * @defgroup JSON-Iterator Implementation of JSON Object and Array Iterator

@@ -43,16 +43,16 @@ typedef struct _QN_JSON_OBJECT
     qn_json_obj_item init_itm[2];
 } qn_json_object;
 
-static qn_json_hash qn_json_obj_calculate_hash(const char * restrict cstr)
-{
-    qn_json_hash hash = 5381;
-    int c;
-
-    while ((c = *cstr++) != '\0') {
-        hash = ((hash << 5) + hash) + c; /* hash * 33 + c */
-    } // while
-    return hash;
-}
+// static qn_json_hash qn_json_obj_calculate_hash(const char * restrict cstr)
+// {
+//     qn_json_hash hash = 5381;
+//     int c;
+// 
+//     while ((c = *cstr++) != '\0') {
+//         hash = ((hash << 5) + hash) + c; /* hash * 33 + c */
+//     } // while
+//     return hash;
+// }
 
 /***************************************************************************//**
 * @ingroup JSON-Object
@@ -700,6 +700,40 @@ QN_API qn_bool qn_json_pick_boolean(qn_json_array_ptr restrict arr, int n, qn_bo
     return (pos == arr->cnt || arr->itm[pos].class != QN_JSON_BOOLEAN) ? default_val : arr->itm[pos].elem.boolean;
 }
 
+QN_API qn_bool qn_json_set_object(qn_json_object_ptr restrict obj, const char * restrict key, qn_json_object_ptr restrict val)
+{
+    qn_json_variant elem;
+
+    assert(obj);
+    assert(key);
+    assert(val);
+
+    if (obj->cap == 0) {
+        qn_err_json_set_modifying_immutable_object();
+        return qn_false;
+    } // if
+
+    elem.object = val;
+    return qn_json_obj_set(obj, key, QN_JSON_OBJECT, elem);
+}
+
+QN_API qn_bool qn_json_set_array(qn_json_object_ptr restrict obj, const char * restrict key, qn_json_array_ptr restrict val)
+{
+    qn_json_variant elem;
+
+    assert(obj);
+    assert(key);
+    assert(val);
+
+    if (obj->cap == 0) {
+        qn_err_json_set_modifying_immutable_object();
+        return qn_false;
+    } // if
+
+    elem.array = val;
+    return qn_json_obj_set(obj, key, QN_JSON_ARRAY, elem);
+}
+
 /***************************************************************************//**
 * @ingroup JSON-Object
 *
@@ -1242,6 +1276,157 @@ QN_API void qn_json_shift(qn_json_array_ptr restrict arr)
         arr->begin += 1;
         arr->cnt -= 1;
     } // if
+}
+
+static inline void qn_json_destroy_element(qn_json_class cls, qn_json_variant * restrict elem)
+{
+    switch (cls) {
+        case QN_JSON_OBJECT: qn_json_destroy_object(elem->object); break;
+        case QN_JSON_ARRAY: qn_json_destroy_array(elem->array); break;
+        case QN_JSON_STRING: qn_str_destroy(elem->string); break;
+        default: break;
+    } // switch
+}
+
+static inline qn_bool qn_json_arr_replace(qn_json_array_ptr restrict arr, int n, qn_json_class cls, qn_json_variant new_elem)
+{
+    if (n < 0 || (arr->end - arr->begin) <= n) {
+        // TODO: Set an appropriate error.
+        return qn_false;
+    } // if
+    qn_json_destroy_element(arr->itm[arr->begin + n].class, &arr->itm[arr->begin + n].elem);
+    arr->itm[arr->begin + n].elem = new_elem;
+    arr->itm[arr->begin + n].class = cls;
+    return qn_true;
+}
+
+QN_API qn_bool qn_json_replace_object(qn_json_array_ptr restrict arr, int n, qn_json_object_ptr restrict val)
+{
+    qn_json_variant elem;
+
+    assert(arr);
+    assert(0 <= n);
+    assert(val);
+
+    if (arr->cap == 0) {
+        qn_err_json_set_modifying_immutable_array();
+        return qn_false;
+    } // if
+
+    elem.object = val;
+    return qn_json_arr_replace(arr, n, QN_JSON_OBJECT, elem);
+}
+
+QN_API qn_bool qn_json_replace_array(qn_json_array_ptr restrict arr, int n, qn_json_array_ptr restrict val)
+{
+    qn_json_variant elem;
+
+    assert(arr);
+    assert(0 <= n);
+    assert(val);
+
+    if (arr->cap == 0) {
+        qn_err_json_set_modifying_immutable_array();
+        return qn_false;
+    } // if
+
+    elem.array = val;
+    return qn_json_arr_replace(arr, n, QN_JSON_ARRAY, elem);
+}
+
+QN_API qn_bool qn_json_replace_string(qn_json_array_ptr restrict arr, int n, const char * restrict val)
+{
+    qn_json_variant elem;
+
+    assert(arr);
+    assert(0 <= n);
+    assert(val);
+
+    if (arr->cap == 0) {
+        qn_err_json_set_modifying_immutable_array();
+        return qn_false;
+    } // if
+
+    elem.string = qn_cs_duplicate(val);
+    if (! elem.string) return qn_false;
+    if (! qn_json_arr_replace(arr, n, QN_JSON_STRING, elem)) {
+        qn_str_destroy(elem.string);
+        return qn_false;
+    } // if
+    return qn_true;
+}
+
+QN_API qn_bool qn_json_replace_text(qn_json_array_ptr restrict arr, int n, const char * restrict val, size_t size)
+{
+    qn_json_variant elem;
+
+    assert(arr);
+    assert(0 <= n);
+    assert(val);
+
+    if (arr->cap == 0) {
+        qn_err_json_set_modifying_immutable_array();
+        return qn_false;
+    } // if
+
+    elem.string = qn_cs_clone(val, size);
+    if (! elem.string) return qn_false;
+    if (! qn_json_arr_replace(arr, n, QN_JSON_STRING, elem)) {
+        qn_str_destroy(elem.string);
+        return qn_false;
+    } // if
+    return qn_true;
+}
+
+QN_API qn_bool qn_json_replace_integer(qn_json_array_ptr restrict arr, int n, qn_json_integer val)
+{
+    qn_json_variant elem;
+
+    assert(arr);
+    assert(0 <= n);
+    assert(val);
+
+    if (arr->cap == 0) {
+        qn_err_json_set_modifying_immutable_array();
+        return qn_false;
+    } // if
+
+    elem.integer = val;
+    return qn_json_arr_replace(arr, n, QN_JSON_INTEGER, elem);
+}
+
+QN_API qn_bool qn_json_replace_number(qn_json_array_ptr restrict arr, int n, qn_json_number val)
+{
+    qn_json_variant elem;
+
+    assert(arr);
+    assert(0 <= n);
+    assert(val);
+
+    if (arr->cap == 0) {
+        qn_err_json_set_modifying_immutable_array();
+        return qn_false;
+    } // if
+
+    elem.number = val;
+    return qn_json_arr_replace(arr, n, QN_JSON_NUMBER, elem);
+}
+
+QN_API qn_bool qn_json_replace_boolean(qn_json_array_ptr restrict arr, int n, qn_bool val)
+{
+    qn_json_variant elem;
+
+    assert(arr);
+    assert(0 <= n);
+    assert(val);
+
+    if (arr->cap == 0) {
+        qn_err_json_set_modifying_immutable_array();
+        return qn_false;
+    } // if
+
+    elem.boolean = val;
+    return qn_json_arr_replace(arr, n, QN_JSON_BOOLEAN, elem);
 }
 
 // ---- Inplementation of iterator of JSON ----
