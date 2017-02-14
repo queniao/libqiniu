@@ -3385,16 +3385,28 @@ QN_API qn_json_object_ptr qn_stor_up_get_block_info(qn_stor_upload_progress_ptr 
     return qn_json_pick_object(blk_arr, blk_idx, NULL);
 }
 
-static qn_bool qn_stor_up_update_block_info(qn_json_object_ptr restrict blk_info, qn_json_object_ptr restrict up_ret)
+QN_API qn_bool qn_stor_up_update_block_info(qn_stor_upload_progress_ptr restrict up, int blk_idx, qn_json_object_ptr restrict up_ret)
 {
     qn_string ctx;
     qn_string checksum;
     qn_string host;
     qn_integer crc32;
     qn_integer offset;
+    qn_integer blk_size;
+    qn_json_array_ptr blk_arr;
+    qn_json_object_ptr blk_info;
+    qn_json_object_ptr new_blk_info;
 
-    assert(blk_info);
+    assert(up);
     assert(up_ret);
+
+    if (! (blk_info = qn_stor_up_get_block_info(up, blk_idx))) return qn_false;
+
+    blk_size = qn_json_get_integer(blk_info, "bsize", -1);
+    if (blk_size < 0) {
+        // TODO: Set an appropriate error.
+        return qn_false;
+    } // if
     
     // ---- Get and set the returned block information back into the blk_info object.
     ctx = qn_json_get_string(up_ret, "ctx", NULL);
@@ -3408,12 +3420,23 @@ static qn_bool qn_stor_up_update_block_info(qn_json_object_ptr restrict blk_info
         return qn_false;
     } // if
 
-    if (! qn_json_set_string(blk_info, "ctx", ctx)) return qn_false;
-    if (! qn_json_set_string(blk_info, "checksum", checksum)) return qn_false;
-    if (! qn_json_set_string(blk_info, "host", host)) return qn_false;
-    if (! qn_json_set_integer(blk_info, "crc32", crc32)) return qn_false;
-    if (! qn_json_set_integer(blk_info, "offset", offset)) return qn_false;
+    new_blk_info = qn_json_create_object();
+    if (! new_blk_info) return qn_false;
+
+    if (! qn_json_set_string(new_blk_info, "ctx", ctx)) goto QN_STOR_UP_UPDATE_BLOCK_INFO_ERROR;
+    if (! qn_json_set_string(new_blk_info, "checksum", checksum)) goto QN_STOR_UP_UPDATE_BLOCK_INFO_ERROR;
+    if (! qn_json_set_string(new_blk_info, "host", host)) goto QN_STOR_UP_UPDATE_BLOCK_INFO_ERROR;
+    if (! qn_json_set_integer(new_blk_info, "crc32", crc32)) goto QN_STOR_UP_UPDATE_BLOCK_INFO_ERROR;
+    if (! qn_json_set_integer(new_blk_info, "offset", offset)) goto QN_STOR_UP_UPDATE_BLOCK_INFO_ERROR;
+    if (! qn_json_set_integer(new_blk_info, "bsize", blk_size)) goto QN_STOR_UP_UPDATE_BLOCK_INFO_ERROR;
+
+    blk_arr = qn_json_get_array(up->progress, "blocks", NULL);
+    if (! qn_json_substitute_object(blk_arr, blk_idx, new_blk_info)) goto QN_STOR_UP_UPDATE_BLOCK_INFO_ERROR;
     return qn_true;
+
+QN_STOR_UP_UPDATE_BLOCK_INFO_ERROR:
+    qn_json_destroy_object(new_blk_info);
+    return qn_false;
 }
 
 QN_API qn_io_reader_itf qn_stor_up_create_block_reader(qn_stor_upload_progress_ptr restrict up, int blk_idx, qn_json_object_ptr * restrict blk_info)
@@ -3424,7 +3447,7 @@ QN_API qn_io_reader_itf qn_stor_up_create_block_reader(qn_stor_upload_progress_p
     qn_json_array_ptr blk_arr;
 
     assert(up);
-    assert(blk_idx >= 0);
+    assert(0 <= blk_idx);
 
     blk_arr = qn_json_get_array(up->progress, "blocks", NULL);
 
@@ -3538,7 +3561,6 @@ static qn_bool qn_stor_prepare_request_for_upload(qn_storage_ptr restrict stor, 
 
 QN_API extern qn_json_object_ptr qn_stor_api_mkblk(qn_storage_ptr restrict stor, const char * restrict uptoken, qn_io_reader_itf restrict data_rdr, qn_json_object_ptr restrict blk_info, int chk_size, qn_stor_upload_extra_ptr restrict ext)
 {
-    qn_json_object_ptr up_ret;
     int blk_size;
     qn_string url;
     qn_rgn_entry_ptr rgn_entry;
@@ -3573,17 +3595,11 @@ QN_API extern qn_json_object_ptr qn_stor_api_mkblk(qn_storage_ptr restrict stor,
 
     // ---- Do the mkblk action.
     if (! qn_http_conn_post(stor->conn, url, stor->req, stor->resp)) return NULL;
-    up_ret = qn_stor_rename_error_info(stor);
-
-    if (qn_json_get_integer(up_ret, "fn-code", -1) == 200) {
-        if (! qn_stor_up_update_block_info(blk_info, up_ret)) return NULL;
-    } // if
-    return up_ret;
+    return qn_stor_rename_error_info(stor);
 }
 
 QN_API extern qn_json_object_ptr qn_stor_api_bput(qn_storage_ptr restrict stor, const char * restrict uptoken, qn_io_reader_itf restrict data_rdr, qn_json_object_ptr restrict blk_info, int chk_size, qn_stor_upload_extra_ptr restrict ext)
 {
-    qn_json_object_ptr up_ret;
     qn_string url;
     qn_string host;
     qn_string ctx;
@@ -3639,12 +3655,7 @@ QN_API extern qn_json_object_ptr qn_stor_api_bput(qn_storage_ptr restrict stor, 
 
     // ---- Do the bput action.
     if (! qn_http_conn_post(stor->conn, url, stor->req, stor->resp)) return NULL;
-    up_ret = qn_stor_rename_error_info(stor);
-
-    if (qn_json_get_integer(up_ret, "fn-code", -1) == 200) {
-        if (! qn_stor_up_update_block_info(blk_info, up_ret)) return NULL;
-    } // if
-    return up_ret;
+    return qn_stor_rename_error_info(stor);
 }
 
 QN_API qn_json_object_ptr qn_stor_api_mkfile(qn_storage_ptr restrict stor, const char * restrict uptoken, qn_stor_upload_progress_ptr restrict up, qn_stor_upload_extra_ptr restrict ext)

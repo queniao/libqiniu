@@ -311,7 +311,10 @@ QN_API extern qn_string qn_stor_up_to_string(qn_stor_upload_progress_ptr restric
 QN_API extern qn_stor_upload_progress_ptr qn_stor_up_from_string(const char * restrict str, size_t str_len);
 
 QN_API extern int qn_stor_up_get_block_count(qn_stor_upload_progress_ptr restrict up);
+
 QN_API extern qn_json_object_ptr qn_stor_up_get_block_info(qn_stor_upload_progress_ptr restrict up, int blk_idx);
+QN_API extern qn_bool qn_stor_up_update_block_info(qn_stor_upload_progress_ptr restrict up, int blk_idx, qn_json_object_ptr restrict up_ret);
+
 QN_API extern qn_io_reader_itf qn_stor_up_create_block_reader(qn_stor_upload_progress_ptr restrict up, int blk_idx, qn_json_object_ptr * restrict blk_info);
 
 // --------
