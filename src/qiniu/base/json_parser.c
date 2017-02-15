@@ -563,17 +563,23 @@ QN_API qn_json_parser_ptr qn_json_prs_create(void)
     return new_prs;
 }
 
+static void qn_json_prs_reset(qn_json_parser_ptr restrict prs)
+{
+    while (prs->cnt > 0) {
+        prs->cnt -= 1;
+        if (prs->lvl[prs->cnt].class == QN_JSON_OBJECT) {
+            qn_json_destroy_object(prs->lvl[prs->cnt].elem.object);
+            qn_str_destroy(prs->lvl[prs->cnt].key);
+        } else {
+            qn_json_destroy_array(prs->lvl[prs->cnt].elem.array);
+        } // if
+    } // while
+}
+
 QN_API void qn_json_prs_destroy(qn_json_parser_ptr restrict prs)
 {
     if (prs) {
-        while (prs->cnt > 0) {
-            prs->cnt -= 1;
-            if (prs->lvl[prs->cnt].class == QN_JSON_OBJECT) {
-                qn_json_destroy_object(prs->lvl[prs->cnt].elem.object);
-            } else {
-                qn_json_destroy_array(prs->lvl[prs->cnt].elem.array);
-            }
-        } // while
+        qn_json_prs_reset(prs);
         if (prs->lvl != &prs->init_lvl[0]) {
             free(prs->lvl);
         } // if
@@ -923,11 +929,6 @@ static qn_bool qn_json_prs_parse(qn_json_parser_ptr prs)
         qn_json_prs_pop(prs);
     } while (!qn_json_prs_is_empty(prs));
     return qn_true;
-}
-
-static inline void qn_json_prs_reset(qn_json_parser_ptr restrict prs)
-{
-    prs->cnt = 0;
 }
 
 QN_API qn_bool qn_json_prs_parse_object(qn_json_parser_ptr restrict prs, const char * restrict buf, size_t * restrict buf_size, qn_json_object_ptr * restrict root)

@@ -809,6 +809,7 @@ void test_parse_object_holding_utf8_string(void)
     CU_ASSERT_STRING_EQUAL(qn_str_cstr(str), "工人");
 
     qn_json_destroy_object(obj_root);
+    qn_json_prs_destroy(prs);
 }
 
 void test_parse_object_integer_value_in_next_chunk_followed_by_others(void)
@@ -836,6 +837,7 @@ void test_parse_object_integer_value_in_next_chunk_followed_by_others(void)
     CU_ASSERT_EQUAL(val, 12345);
 
     qn_json_destroy_object(obj_root);
+    qn_json_prs_destroy(prs);
 }
 
 void test_parse_object_key_input_in_two_chunks_1(void)
@@ -863,6 +865,7 @@ void test_parse_object_key_input_in_two_chunks_1(void)
     CU_ASSERT_EQUAL(val, 345);
 
     qn_json_destroy_object(obj_root);
+    qn_json_prs_destroy(prs);
 }
 
 void test_parse_object_key_input_in_two_chunks_2(void)
@@ -890,6 +893,7 @@ void test_parse_object_key_input_in_two_chunks_2(void)
     CU_ASSERT_EQUAL(val, 678);
 
     qn_json_destroy_object(obj_root);
+    qn_json_prs_destroy(prs);
 }
 
 void test_parse_object_key_input_in_two_chunks_3(void)
@@ -917,6 +921,7 @@ void test_parse_object_key_input_in_two_chunks_3(void)
     CU_ASSERT_EQUAL(val, 90);
 
     qn_json_destroy_object(obj_root);
+    qn_json_prs_destroy(prs);
 }
 
 void test_parse_object_key_input_in_two_chunks_4(void)
@@ -944,6 +949,7 @@ void test_parse_object_key_input_in_two_chunks_4(void)
     CU_ASSERT_EQUAL(val, 555);
 
     qn_json_destroy_object(obj_root);
+    qn_json_prs_destroy(prs);
 }
 
 void test_parse_object_string_input_in_two_chunks_1(void)
@@ -972,6 +978,7 @@ void test_parse_object_string_input_in_two_chunks_1(void)
     CU_ASSERT_STRING_EQUAL(qn_str_cstr(str), "农民");
 
     qn_json_destroy_object(obj_root);
+    qn_json_prs_destroy(prs);
 }
 
 void test_parse_object_string_input_in_two_chunks_2(void)
@@ -1000,6 +1007,7 @@ void test_parse_object_string_input_in_two_chunks_2(void)
     CU_ASSERT_STRING_EQUAL(qn_str_cstr(str), "学生");
 
     qn_json_destroy_object(obj_root);
+    qn_json_prs_destroy(prs);
 }
 
 void test_parse_object_string_input_in_two_chunks_3(void)
@@ -1028,6 +1036,7 @@ void test_parse_object_string_input_in_two_chunks_3(void)
     CU_ASSERT_STRING_EQUAL(qn_str_cstr(str), "医生");
 
     qn_json_destroy_object(obj_root);
+    qn_json_prs_destroy(prs);
 }
 
 void test_parse_object_string_input_in_two_chunks_4(void)
@@ -1056,6 +1065,7 @@ void test_parse_object_string_input_in_two_chunks_4(void)
     CU_ASSERT_STRING_EQUAL(qn_str_cstr(str), "工程师\"");
 
     qn_json_destroy_object(obj_root);
+    qn_json_prs_destroy(prs);
 }
 
 void test_parse_object_integer_value_input_in_two_chunks(void)
@@ -1083,6 +1093,7 @@ void test_parse_object_integer_value_input_in_two_chunks(void)
     CU_ASSERT_EQUAL(val, 12345);
 
     qn_json_destroy_object(obj_root);
+    qn_json_prs_destroy(prs);
 }
 
 void test_parse_object_true_value_input_in_two_chunks_1(void)
@@ -1110,6 +1121,7 @@ void test_parse_object_true_value_input_in_two_chunks_1(void)
     CU_ASSERT_TRUE(val);
 
     qn_json_destroy_object(obj_root);
+    qn_json_prs_destroy(prs);
 }
 
 void test_parse_object_true_value_input_in_two_chunks_2(void)
@@ -1137,6 +1149,7 @@ void test_parse_object_true_value_input_in_two_chunks_2(void)
     CU_ASSERT_TRUE(val);
 
     qn_json_destroy_object(obj_root);
+    qn_json_prs_destroy(prs);
 }
 
 void test_parse_object_true_value_input_in_two_chunks_3(void)
@@ -1164,6 +1177,7 @@ void test_parse_object_true_value_input_in_two_chunks_3(void)
     CU_ASSERT_TRUE(val);
 
     qn_json_destroy_object(obj_root);
+    qn_json_prs_destroy(prs);
 }
 
 void test_parse_object_false_value_input_in_two_chunks_1(void)
@@ -1191,6 +1205,7 @@ void test_parse_object_false_value_input_in_two_chunks_1(void)
     CU_ASSERT_FALSE(val);
 
     qn_json_destroy_object(obj_root);
+    qn_json_prs_destroy(prs);
 }
 
 void test_parse_object_false_value_input_in_two_chunks_2(void)
@@ -1218,6 +1233,7 @@ void test_parse_object_false_value_input_in_two_chunks_2(void)
     CU_ASSERT_FALSE(val);
 
     qn_json_destroy_object(obj_root);
+    qn_json_prs_destroy(prs);
 }
 
 void test_parse_object_false_value_input_in_two_chunks_3(void)
@@ -1245,6 +1261,7 @@ void test_parse_object_false_value_input_in_two_chunks_3(void)
     CU_ASSERT_FALSE(val);
 
     qn_json_destroy_object(obj_root);
+    qn_json_prs_destroy(prs);
 }
 
 // ----
@@ -1270,6 +1287,7 @@ void test_parse_empty_array(void)
     CU_ASSERT_TRUE(qn_json_is_empty_array(arr_root));
 
     qn_json_destroy_array(arr_root);
+    qn_json_prs_destroy(prs);
 }
 
 void test_parse_array_holding_one_element(void)
@@ -1298,6 +1316,7 @@ void test_parse_array_holding_one_element(void)
     CU_ASSERT_TRUE(strcmp(qn_str_cstr(str), "This is a trivial element.") == 0);
 
     qn_json_destroy_array(arr_root);
+    qn_json_prs_destroy(prs);
 }
 
 void test_parse_array_holding_two_elements(void)
@@ -1322,6 +1341,7 @@ void test_parse_array_holding_two_elements(void)
     CU_ASSERT_TRUE(qn_json_pick_integer(arr_root, 1, 0) == -123);
 
     qn_json_destroy_array(arr_root);
+    qn_json_prs_destroy(prs);
 }
 
 void test_parse_array_holding_ordinary_elements(void)
@@ -1349,6 +1369,7 @@ void test_parse_array_holding_ordinary_elements(void)
     CU_ASSERT_LONG_DOUBLE_EQUAL(qn_json_pick_number(arr_root, 0, 0.0L), 123.456L, 0.001L);
 
     qn_json_destroy_array(arr_root);
+    qn_json_prs_destroy(prs);
 }
 
 void test_parse_array_holding_empty_complex_elements(void)
@@ -1384,6 +1405,7 @@ void test_parse_array_holding_empty_complex_elements(void)
     CU_ASSERT_TRUE(qn_json_is_empty_array(arr_elem));
 
     qn_json_destroy_array(arr_root);
+    qn_json_prs_destroy(prs);
 }
 
 void test_parse_array_holding_embedded_arrays(void)
@@ -1422,6 +1444,7 @@ void test_parse_array_holding_embedded_arrays(void)
     CU_ASSERT_TRUE(qn_json_is_empty_array(arr_elem));
 
     qn_json_destroy_array(arr_root);
+    qn_json_prs_destroy(prs);
 }
 
 CU_TestInfo test_normal_cases_of_json_parsing[] = {
