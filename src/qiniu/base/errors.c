@@ -26,6 +26,7 @@ typedef enum _QN_ERR_CODE
     QN_ERR_JSON_NEED_MORE_TEXT_INPUT = 2003,
     QN_ERR_JSON_MODIFYING_IMMUTABLE_OBJECT = 2004,
     QN_ERR_JSON_MODIFYING_IMMUTABLE_ARRAY = 2005,
+    QN_ERR_JSON_OUT_OF_INDEX = 2006,
 
     QN_ERR_HTTP_INVALID_HEADER_SYNTAX = 3001,
     QN_ERR_HTTP_ADDING_STRING_FIELD_FAILED = 3002,
@@ -79,6 +80,7 @@ static qn_err_message_map_st qn_err_message_maps[] = {
     {QN_ERR_JSON_NEED_MORE_TEXT_INPUT, "Need more text input to parse a JSON object or array"},
     {QN_ERR_JSON_MODIFYING_IMMUTABLE_OBJECT, "Modifying an immutable JSON object"},
     {QN_ERR_JSON_MODIFYING_IMMUTABLE_ARRAY, "Modifying an immutable JSON array"},
+    {QN_ERR_JSON_OUT_OF_INDEX, "Out fo index to the array"},
 
     {QN_ERR_HTTP_INVALID_HEADER_SYNTAX, "Invalid HTTP header syntax"},
     {QN_ERR_HTTP_ADDING_STRING_FIELD_FAILED, "Adding string field to HTTP form failed"},
@@ -244,6 +246,13 @@ QN_API void qn_err_json_set_modifying_immutable_array_imp(const char * restrict 
     qn_err_msg.file = file;
     qn_err_msg.line = line;
     qn_err_msg.code = QN_ERR_JSON_MODIFYING_IMMUTABLE_ARRAY;
+}
+
+QN_API void qn_err_json_set_out_of_index_imp(const char * restrict file, int line)
+{
+    qn_err_msg.file = file;
+    qn_err_msg.line = line;
+    qn_err_msg.code = QN_ERR_JSON_OUT_OF_INDEX;
 }
 
 QN_API void qn_err_http_set_invalid_header_syntax_imp(const char * restrict file, int line)
@@ -482,6 +491,11 @@ QN_API qn_bool qn_err_json_is_modifying_immutable_object(void)
 QN_API qn_bool qn_err_json_is_modifying_immutable_array(void)
 {
     return (qn_err_msg.code == QN_ERR_JSON_MODIFYING_IMMUTABLE_ARRAY);
+}
+
+QN_API qn_bool qn_err_json_is_out_of_index(void)
+{
+    return (qn_err_msg.code == QN_ERR_JSON_OUT_OF_INDEX);
 }
 
 QN_API qn_bool qn_err_http_is_invalid_header_syntax(void)

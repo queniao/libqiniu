@@ -164,6 +164,7 @@ QN_API extern qn_bool qn_json_replace_text(qn_json_array_ptr restrict arr, int n
 QN_API extern qn_bool qn_json_replace_integer(qn_json_array_ptr restrict arr, int n, qn_json_integer val);
 QN_API extern qn_bool qn_json_replace_number(qn_json_array_ptr restrict arr, int n, qn_json_number val);
 QN_API extern qn_bool qn_json_replace_boolean(qn_json_array_ptr restrict arr, int n, qn_bool val);
+QN_API extern qn_bool qn_json_replace_null(qn_json_array_ptr restrict arr, int n);
 
 /***************************************************************************//**
 * @defgroup JSON-Iterator Implementation of JSON Object and Array Iterator

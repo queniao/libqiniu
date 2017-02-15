@@ -414,6 +414,116 @@ void test_manipulate_array(void)
     qn_json_destroy_array(arr_root);
 }
 
+void test_arr_replace()
+{
+    qn_bool ret = qn_false;
+    qn_json_array_ptr arr_root = NULL;
+    qn_json_object_ptr obj = NULL;
+    qn_json_array_ptr arr = NULL;
+    qn_json_object_ptr obj_ret = NULL;
+    qn_json_array_ptr arr_ret = NULL;
+    qn_string str_ret = NULL;
+    qn_integer int_ret = 0;
+    qn_number num_ret = 0.0;
+    qn_bool bool_ret = qn_false;
+    char buf[] = {"A line for creating string element."};
+    size_t buf_len = strlen(buf);
+
+    arr_root = qn_json_create_array();
+    CU_ASSERT_PTR_NOT_NULL(arr_root);
+
+    // push a string element
+    ret = qn_json_push_text(arr_root, buf, buf_len);
+    CU_ASSERT_TRUE(ret);
+    CU_ASSERT_EQUAL(qn_json_size_array(arr_root), 1);
+
+    // push a integer element
+    ret = qn_json_push_integer(arr_root, 123);
+    CU_ASSERT_TRUE(ret);
+    CU_ASSERT_EQUAL(qn_json_size_array(arr_root), 2);
+
+    // ----
+
+    obj = qn_json_create_object();
+    CU_ASSERT_PTR_NOT_NULL(obj);
+
+    ret = qn_json_set_integer(obj, "_int", 2);
+    CU_ASSERT_TRUE(ret);
+
+    arr = qn_json_create_array();
+    ret = qn_json_push_integer(arr, 789);
+    CU_ASSERT_TRUE(ret);
+
+    // ----
+
+    ret = qn_json_replace_object(arr_root, 0, obj);
+    CU_ASSERT_TRUE(ret);
+
+    obj_ret = qn_json_pick_object(arr_root, 0, NULL);
+    CU_ASSERT_PTR_NOT_NULL(obj_ret);
+    CU_ASSERT_EQUAL(qn_json_size_object(obj_ret), 1);
+
+    str_ret = qn_json_pick_string(arr_root, 0, NULL);
+    CU_ASSERT_PTR_NULL(str_ret);
+
+    // ----
+
+    ret = qn_json_replace_array(arr_root, 1, arr);
+    CU_ASSERT_TRUE(ret);
+
+    arr_ret = qn_json_pick_array(arr_root, 1, NULL);
+    CU_ASSERT_PTR_NOT_NULL(arr_ret);
+    CU_ASSERT_EQUAL(qn_json_size_array(arr_ret), 1);
+
+    int_ret = qn_json_pick_integer(arr_root, 1, -1);
+    CU_ASSERT_EQUAL(int_ret, -1);
+
+    // ----
+
+    ret = qn_json_replace_integer(arr_root, 0, 456);
+    CU_ASSERT_TRUE(ret);
+
+    int_ret = qn_json_pick_integer(arr_root, 0, -1);
+    CU_ASSERT_EQUAL(int_ret, 456);
+
+    obj_ret = qn_json_pick_object(arr_root, 0, NULL);
+    CU_ASSERT_PTR_NULL(obj_ret);
+
+    // ----
+
+    ret = qn_json_replace_number(arr_root, 1, -666.666L);
+    CU_ASSERT_TRUE(ret);
+
+    num_ret = qn_json_pick_number(arr_root, 1, -1.0L);
+    CU_ASSERT_LONG_DOUBLE_EQUAL(num_ret, -666.666L, 0.001L);
+
+    arr_ret = qn_json_pick_array(arr_root, 1, NULL);
+    CU_ASSERT_PTR_NULL(arr_ret);
+
+    // ----
+
+    ret = qn_json_replace_boolean(arr_root, 0, qn_true);
+    CU_ASSERT_TRUE(ret);
+
+    bool_ret = qn_json_pick_boolean(arr_root, 0, qn_false);
+    CU_ASSERT_TRUE(bool_ret);
+
+    int_ret = qn_json_pick_integer(arr_root, 0, -1);
+    CU_ASSERT_EQUAL(int_ret, -1);
+
+    // ----
+
+    ret = qn_json_replace_null(arr_root, 1);
+    CU_ASSERT_TRUE(ret);
+
+    num_ret = qn_json_pick_number(arr_root, 1, -1.0L);
+    CU_ASSERT_LONG_DOUBLE_EQUAL(num_ret, -1L, 0.01L);
+
+    // ----
+
+    qn_json_destroy_array(arr_root);
+}
+
 CU_TestInfo test_normal_cases_of_json_manipulating[] = {
     {"test_manipulate_object()", test_manipulate_object},
     {"test_obj_rename_alone_field_1_new_key_greater_than_old_key()", test_obj_rename_alone_field_1_new_key_greater_than_old_key},
@@ -428,6 +538,7 @@ CU_TestInfo test_normal_cases_of_json_manipulating[] = {
     {"test_obj_rename_accompanied_field_3_new_key_equals_to_old_key()", test_obj_rename_accompanied_field_3_new_key_equals_to_old_key},
     {"test_obj_rename_accompanied_field_4_new_key_replace_old_key_in_place()", test_obj_rename_accompanied_field_4_new_key_replace_old_key_in_place},
     {"test_manipulate_array()", test_manipulate_array},
+    {"test_arr_replace()", test_arr_replace},
     CU_TEST_INFO_NULL
 };
 

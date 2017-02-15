@@ -1292,6 +1292,7 @@ static inline qn_bool qn_json_arr_replace(qn_json_array_ptr restrict arr, int n,
 {
     if (n < 0 || (arr->end - arr->begin) <= n) {
         // TODO: Set an appropriate error.
+        qn_err_json_set_out_of_index();
         return qn_false;
     } // if
     qn_json_destroy_element(arr->itm[arr->begin + n].class, &arr->itm[arr->begin + n].elem);
@@ -1427,6 +1428,22 @@ QN_API qn_bool qn_json_replace_boolean(qn_json_array_ptr restrict arr, int n, qn
 
     elem.boolean = val;
     return qn_json_arr_replace(arr, n, QN_JSON_BOOLEAN, elem);
+}
+
+QN_API qn_bool qn_json_replace_null(qn_json_array_ptr restrict arr, int n)
+{
+    qn_json_variant elem;
+
+    assert(arr);
+    assert(0 <= n);
+
+    if (arr->cap == 0) {
+        qn_err_json_set_modifying_immutable_array();
+        return qn_false;
+    } // if
+
+    elem.integer = 0;
+    return qn_json_arr_replace(arr, n, QN_JSON_NULL, elem);
 }
 
 // ---- Inplementation of iterator of JSON ----

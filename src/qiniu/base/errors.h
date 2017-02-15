@@ -41,12 +41,14 @@ QN_API extern void qn_err_set_no_such_entry_imp(const char * restrict file, int 
 #define qn_err_json_set_need_more_text_input() qn_err_json_set_need_more_text_input_imp(__FILE__, __LINE__)
 #define qn_err_json_set_modifying_immutable_object() qn_err_json_set_modifying_immutable_object_imp(__FILE__, __LINE__)
 #define qn_err_json_set_modifying_immutable_array() qn_err_json_set_modifying_immutable_array_imp(__FILE__, __LINE__)
+#define qn_err_json_set_out_of_index() qn_err_json_set_out_of_index_imp(__FILE__, __LINE__)
 
 QN_API extern void qn_err_json_set_bad_text_input_imp(const char * restrict file, int line);
 QN_API extern void qn_err_json_set_too_many_parsing_levels_imp(const char * restrict file, int line);
 QN_API extern void qn_err_json_set_need_more_text_input_imp(const char * restrict file, int line);
 QN_API extern void qn_err_json_set_modifying_immutable_object_imp(const char * restrict file, int line);
 QN_API extern void qn_err_json_set_modifying_immutable_array_imp(const char * restrict file, int line);
+QN_API extern void qn_err_json_set_out_of_index_imp(const char * restrict file, int line);
 
 #define qn_err_http_set_invalid_header_syntax() qn_err_http_set_invalid_header_syntax_imp(__FILE__, __LINE__)
 #define qn_err_http_set_adding_string_field_failed() qn_err_http_set_adding_string_field_failed_imp(__FILE__, __LINE__)
@@ -124,6 +126,7 @@ QN_API extern qn_bool qn_err_json_is_too_many_parsing_levels(void);
 QN_API extern qn_bool qn_err_json_is_need_more_text_input(void);
 QN_API extern qn_bool qn_err_json_is_modifying_immutable_object(void);
 QN_API extern qn_bool qn_err_json_is_modifying_immutable_array(void);
+QN_API extern qn_bool qn_err_json_is_out_of_index(void);
 
 QN_API extern qn_bool qn_err_http_is_invalid_header_syntax(void);
 QN_API extern qn_bool qn_err_http_is_adding_string_field_failed(void);
