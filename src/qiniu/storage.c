@@ -3379,7 +3379,7 @@ QN_API qn_json_object_ptr qn_stor_up_get_block_info(qn_stor_upload_progress_ptr 
     assert(0 <= blk_idx);
 
     blk_arr = qn_json_get_array(up->progress, "blocks", NULL);
-    if (blk_idx == QN_STOR_UP_LAST_BLOCK_INDEX) {
+    if (blk_idx == QN_STOR_UP_BLOCK_LAST_INDEX) {
         blk_idx = qn_json_size_array(blk_arr) - 1;
     } // if
     return qn_json_pick_object(blk_arr, blk_idx, NULL);
@@ -3673,7 +3673,7 @@ QN_API qn_json_object_ptr qn_stor_api_mkfile(qn_storage_ptr restrict stor, const
     assert(uptoken);
     assert(up);
 
-    blk_info = qn_stor_up_get_block_info(up, QN_STOR_UP_LAST_BLOCK_INDEX);
+    blk_info = qn_stor_up_get_block_info(up, QN_STOR_UP_BLOCK_LAST_INDEX);
     if (! blk_info) {
         // TODO: Set an appropriate error.
         return NULL;

@@ -298,7 +298,7 @@ QN_API extern qn_json_object_ptr qn_stor_rp_put_file(qn_storage_ptr restrict sto
 
 #define QN_STOR_UP_BLOCK_MAX_SIZE (1L << 22)
 #define QN_STOR_UP_CHUNK_DEFAULT_SIZE (1024 * 256)
-#define QN_STOR_UP_LAST_BLOCK_INDEX (-1)
+#define QN_STOR_UP_BLOCK_LAST_INDEX (-1)
 
 struct _QN_STOR_UPLOAD_PROGRESS;
 typedef struct _QN_STOR_UPLOAD_PROGRESS * qn_stor_upload_progress_ptr;
