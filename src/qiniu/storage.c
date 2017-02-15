@@ -3431,7 +3431,7 @@ QN_API qn_bool qn_stor_up_update_block_info(qn_stor_upload_progress_ptr restrict
     if (! qn_json_set_integer(new_blk_info, "bsize", blk_size)) goto QN_STOR_UP_UPDATE_BLOCK_INFO_ERROR;
 
     blk_arr = qn_json_get_array(up->progress, "blocks", NULL);
-    if (! qn_json_substitute_object(blk_arr, blk_idx, new_blk_info)) goto QN_STOR_UP_UPDATE_BLOCK_INFO_ERROR;
+    if (! qn_json_replace_object(blk_arr, blk_idx, new_blk_info)) goto QN_STOR_UP_UPDATE_BLOCK_INFO_ERROR;
     return qn_true;
 
 QN_STOR_UP_UPDATE_BLOCK_INFO_ERROR:
