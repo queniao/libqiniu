@@ -3,7 +3,7 @@
 * @brief The header file declares all JSON-related basic types and functions.
 *
 * AUTHOR      : liangtao@qiniu.com (QQ: 510857)
-* COPYRIGHT   : 2016(c) Shanghai Qiniu Information Technologies Co., Ltd.
+* COPYRIGHT   : 2017(c) Shanghai Qiniu Information Technologies Co., Ltd.
 * DESCRIPTION :
 *
 * This source file define all JSON-related basic functions, like that create
@@ -24,6 +24,16 @@ extern "C"
 
 typedef qn_uint32 qn_json_hash;
 typedef unsigned short int qn_json_pos;
+
+static inline void qn_json_destroy_element(qn_json_class cls, qn_json_variant_ptr restrict elem)
+{
+    switch (cls) {
+        case QN_JSON_OBJECT: qn_json_destroy_object(elem->object); break;
+        case QN_JSON_ARRAY: qn_json_destroy_array(elem->array); break;
+        case QN_JSON_STRING: qn_str_destroy(elem->string); break;
+        default: break;
+    } // switch
+}
 
 // ---- Inplementation of object of JSON ----
 
@@ -101,12 +111,7 @@ QN_API void qn_json_destroy_object(qn_json_object_ptr restrict obj)
     qn_json_pos i;
 
     for (i = 0; i < obj->cnt; i += 1) {
-        switch (obj->itm[i].class) {
-            case QN_JSON_OBJECT: qn_json_destroy_object(obj->itm[i].elem.object); break;
-            case QN_JSON_ARRAY:  qn_json_destroy_array(obj->itm[i].elem.array); break;
-            case QN_JSON_STRING: qn_str_destroy(obj->itm[i].elem.string); break;
-            default: break;
-        } // switch
+        qn_json_destroy_element(obj->itm[i].class, &obj->itm[i].elem);
         qn_str_destroy(obj->itm[i].key);
     } // for
     if (obj->itm != &obj->init_itm[0]) {
@@ -160,13 +165,7 @@ static qn_bool qn_json_obj_set(qn_json_object_ptr restrict obj, const char * res
     pos = qn_json_obj_bsearch(obj->itm, obj->cnt, key, &existence);
     if (existence == 0) {
         // There is an element according to the given key.
-        if (obj->itm[pos].class == QN_JSON_OBJECT) {
-            qn_json_destroy_object(obj->itm[pos].elem.object);
-        } else if (obj->itm[pos].class == QN_JSON_ARRAY) {
-            qn_json_destroy_array(obj->itm[pos].elem.array);
-        } else if (obj->itm[pos].class == QN_JSON_STRING) {
-            qn_str_destroy(obj->itm[pos].elem.string);
-        } // if
+        qn_json_destroy_element(obj->itm[pos].class, &obj->itm[pos].elem);
         obj->itm[pos].class = cls;
         obj->itm[pos].elem = new_elem;
         return qn_true;
@@ -251,12 +250,7 @@ QN_API void qn_json_destroy_array(qn_json_array_ptr restrict arr)
     qn_json_pos i;
 
     for (i = arr->begin; i < arr->end; i += 1) {
-        switch (arr->itm[i].class) {
-            case QN_JSON_OBJECT: qn_json_destroy_object(arr->itm[i].elem.object); break;
-            case QN_JSON_ARRAY:  qn_json_destroy_array(arr->itm[i].elem.array); break;
-            case QN_JSON_STRING: qn_str_destroy(arr->itm[i].elem.string); break;
-            default: break;
-        } // switch
+        qn_json_destroy_element(arr->itm[i].class, &arr->itm[i].elem);
     } // for
     if (arr->itm != &arr->init_itm[0]) free(arr->itm);
     free(arr);
@@ -889,12 +883,7 @@ QN_API void qn_json_unset(qn_json_object_ptr restrict obj, const char * restrict
     pos = qn_json_obj_bsearch(obj->itm, obj->cnt, key, &existence);
     if (existence != 0) return; // There is no element corresponds to the key.
 
-    switch (obj->itm[pos].class) {
-        case QN_JSON_OBJECT: qn_json_destroy_object(obj->itm[pos].elem.object); break;
-        case QN_JSON_ARRAY: qn_json_destroy_array(obj->itm[pos].elem.array); break;
-        case QN_JSON_STRING: qn_str_destroy(obj->itm[pos].elem.string); break;
-        default: break;
-    } // switch
+    qn_json_destroy_element(obj->itm[pos].class, &obj->itm[pos].elem);
     qn_str_destroy(obj->itm[pos].key);
     if (pos < obj->cnt - 1) memmove(&obj->itm[pos], &obj->itm[pos+1], sizeof(qn_json_obj_item) * (obj->cnt - pos - 1));
     obj->cnt -= 1;
@@ -926,13 +915,7 @@ QN_API qn_bool qn_json_rename(qn_json_object_ptr restrict obj, const char * rest
     if (existence == 0) {
         // ---- There is an element corresponds to the new key.
         // -- Destroy the element to be replaced.
-        if (obj->itm[new_pos].class == QN_JSON_OBJECT) {
-            qn_json_destroy_object(obj->itm[new_pos].elem.object);
-        } else if (obj->itm[new_pos].class == QN_JSON_ARRAY) {
-            qn_json_destroy_array(obj->itm[new_pos].elem.array);
-        } else if (obj->itm[new_pos].class == QN_JSON_STRING) {
-            qn_str_destroy(obj->itm[new_pos].elem.string);
-        } // if
+        qn_json_destroy_element(obj->itm[new_pos].class, &obj->itm[new_pos].elem);
 
         // -- Replace the element.
         obj->itm[new_pos].class = obj->itm[old_pos].class;
@@ -1113,13 +1096,7 @@ QN_API void qn_json_pop(qn_json_array_ptr restrict arr)
 {
     if (arr->cnt > 0) {
         arr->end -= 1;
-        if (arr->itm[arr->end].class == QN_JSON_OBJECT) {
-            qn_json_destroy_object(arr->itm[arr->end].elem.object);
-        } else if (arr->itm[arr->end].class == QN_JSON_ARRAY) {
-            qn_json_destroy_array(arr->itm[arr->end].elem.array);
-        } else if (arr->itm[arr->end].class == QN_JSON_STRING) {
-            qn_str_destroy(arr->itm[arr->end].elem.string);
-        } // if
+        qn_json_destroy_element(arr->itm[arr->end].class, &arr->itm[arr->end].elem);
         arr->cnt -= 1;
     } // if
 }
@@ -1266,26 +1243,10 @@ QN_API qn_bool qn_json_unshift_null(qn_json_array_ptr restrict arr)
 QN_API void qn_json_shift(qn_json_array_ptr restrict arr)
 {
     if (arr->cnt > 0) {
-        if (arr->itm[arr->begin].class == QN_JSON_OBJECT) {
-            qn_json_destroy_object(arr->itm[arr->begin].elem.object);
-        } else if (arr->itm[arr->begin].class == QN_JSON_ARRAY) {
-            qn_json_destroy_array(arr->itm[arr->begin].elem.array);
-        } else if (arr->itm[arr->begin].class == QN_JSON_STRING) {
-            qn_str_destroy(arr->itm[arr->begin].elem.string);
-        } // if
+        qn_json_destroy_element(arr->itm[arr->begin].class, &arr->itm[arr->begin].elem);
         arr->begin += 1;
         arr->cnt -= 1;
     } // if
-}
-
-static inline void qn_json_destroy_element(qn_json_class cls, qn_json_variant * restrict elem)
-{
-    switch (cls) {
-        case QN_JSON_OBJECT: qn_json_destroy_object(elem->object); break;
-        case QN_JSON_ARRAY: qn_json_destroy_array(elem->array); break;
-        case QN_JSON_STRING: qn_str_destroy(elem->string); break;
-        default: break;
-    } // switch
 }
 
 static inline qn_bool qn_json_arr_replace(qn_json_array_ptr restrict arr, int n, qn_json_class cls, qn_json_variant new_elem)
