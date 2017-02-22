@@ -20,6 +20,7 @@ typedef enum _QN_ERR_CODE
     QN_ERR_OUT_OF_BUFFER = 1007,
     QN_ERR_OUT_OF_CAPACITY = 1008,
     QN_ERR_NO_SUCH_ENTRY = 1009,
+    QN_ERR_OUT_OF_RANGE = 1010,
 
     QN_ERR_JSON_BAD_TEXT_INPUT  = 2001,
     QN_ERR_JSON_TOO_MANY_PARSING_LEVELS = 2002,
@@ -46,6 +47,10 @@ typedef enum _QN_ERR_CODE
     QN_ERR_STOR_UPLOAD_ABORTED_BY_FILTER_POST_CALLBACK = 21005,
     QN_ERR_STOR_INVALID_CHUNK_PUT_RESULT = 21006,
     QN_ERR_STOR_API_RETURN_NO_VALUE = 21007,
+    QN_ERR_STOR_LACK_OF_BLOCK_CONTEXT = 21008,
+    QN_ERR_STOR_LACK_OF_BLOCK_INFO = 21009,
+    QN_ERR_STOR_LACK_OF_FILE_SIZE = 21010,
+    QN_ERR_STOR_INVALID_UPLOAD_RESULT = 21011,
 
     QN_ERR_ETAG_INITIALIZING_CONTEXT_FAILED = 22001,
     QN_ERR_ETAG_UPDATING_CONTEXT_FAILED = 22002,
@@ -74,6 +79,7 @@ static qn_err_message_map_st qn_err_message_maps[] = {
     {QN_ERR_OUT_OF_BUFFER, "Out of buffer"},
     {QN_ERR_OUT_OF_CAPACITY, "Out of capacity"},
     {QN_ERR_NO_SUCH_ENTRY, "No such entry to the specified key or name"},
+    {QN_ERR_OUT_OF_RANGE, "Out of range"},
 
     {QN_ERR_JSON_BAD_TEXT_INPUT, "Bad text input of a JSON string is read"},
     {QN_ERR_JSON_TOO_MANY_PARSING_LEVELS, "Parsing too many levels in a piece of JSON text"},
@@ -100,6 +106,10 @@ static qn_err_message_map_st qn_err_message_maps[] = {
     {QN_ERR_STOR_UPLOAD_ABORTED_BY_FILTER_POST_CALLBACK, "Upload is aborted by filter post-callback"},
     {QN_ERR_STOR_INVALID_CHUNK_PUT_RESULT, "Invalid chunk put result"},
     {QN_ERR_STOR_API_RETURN_NO_VALUE, "API return no value"},
+    {QN_ERR_STOR_LACK_OF_BLOCK_CONTEXT, "Lack of block context"},
+    {QN_ERR_STOR_LACK_OF_BLOCK_INFO, "Lack of block information"},
+    {QN_ERR_STOR_LACK_OF_FILE_SIZE, "Lack of file size"},
+    {QN_ERR_STOR_INVALID_UPLOAD_RESULT, "Invalid upload result"},
 
     {QN_ERR_ETAG_INITIALIZING_CONTEXT_FAILED, "Failed in initializing a new qetag context"},
     {QN_ERR_ETAG_UPDATING_CONTEXT_FAILED, "Failed in updating the qetag context"},
@@ -211,6 +221,13 @@ QN_API void qn_err_set_no_such_entry_imp(const char * restrict file, int line)
     qn_err_msg.file = file;
     qn_err_msg.line = line;
     qn_err_msg.code = QN_ERR_NO_SUCH_ENTRY;
+}
+
+QN_API void qn_err_set_out_of_range_imp(const char * restrict file, int line)
+{
+    qn_err_msg.file = file;
+    qn_err_msg.line = line;
+    qn_err_msg.code = QN_ERR_OUT_OF_RANGE;
 }
 
 QN_API void qn_err_json_set_bad_text_input_imp(const char * restrict file, int line)
@@ -367,6 +384,34 @@ QN_API void qn_err_stor_set_api_return_no_value_imp(const char * restrict file, 
     qn_err_msg.code = QN_ERR_STOR_API_RETURN_NO_VALUE;
 }
 
+QN_API void qn_err_stor_set_lack_of_block_context_imp(const char * restrict file, int line)
+{
+    qn_err_msg.file = file;
+    qn_err_msg.line = line;
+    qn_err_msg.code = QN_ERR_STOR_LACK_OF_BLOCK_CONTEXT;
+}
+
+QN_API void qn_err_stor_set_lack_of_block_info_imp(const char * restrict file, int line)
+{
+    qn_err_msg.file = file;
+    qn_err_msg.line = line;
+    qn_err_msg.code = QN_ERR_STOR_LACK_OF_BLOCK_INFO;
+}
+
+QN_API void qn_err_stor_set_lack_of_file_size_imp(const char * restrict file, int line)
+{
+    qn_err_msg.file = file;
+    qn_err_msg.line = line;
+    qn_err_msg.code = QN_ERR_STOR_LACK_OF_FILE_SIZE;
+}
+
+QN_API void qn_err_stor_set_invalid_upload_result_imp(const char * restrict file, int line)
+{
+    qn_err_msg.file = file;
+    qn_err_msg.line = line;
+    qn_err_msg.code = QN_ERR_STOR_INVALID_UPLOAD_RESULT;
+}
+
 QN_API void qn_err_etag_set_initializing_context_failed_imp(const char * restrict file, int line)
 {
     qn_err_msg.file = file;
@@ -466,6 +511,11 @@ QN_API qn_bool qn_err_is_out_of_capacity(void)
 QN_API qn_bool qn_err_is_no_such_entry(void)
 {
     return (qn_err_msg.code == QN_ERR_NO_SUCH_ENTRY);
+}
+
+QN_API qn_bool qn_err_is_out_of_range(void)
+{
+    return (qn_err_msg.code == QN_ERR_OUT_OF_RANGE);
 }
 
 QN_API qn_bool qn_err_json_is_bad_text_input(void)
@@ -576,6 +626,26 @@ QN_API qn_bool qn_err_stor_is_invalid_chunk_put_result(void)
 QN_API qn_bool qn_err_stor_is_api_return_no_value(void)
 {
     return (qn_err_msg.code == QN_ERR_STOR_API_RETURN_NO_VALUE);
+}
+
+QN_API qn_bool qn_err_stor_is_lack_of_block_context(void)
+{
+    return (qn_err_msg.code == QN_ERR_STOR_LACK_OF_BLOCK_CONTEXT);
+}
+
+QN_API qn_bool qn_err_stor_is_lack_of_block_info(void)
+{
+    return (qn_err_msg.code == QN_ERR_STOR_LACK_OF_BLOCK_INFO);
+}
+
+QN_API qn_bool qn_err_stor_is_lack_of_file_size(void)
+{
+    return (qn_err_msg.code == QN_ERR_STOR_LACK_OF_FILE_SIZE);
+}
+
+QN_API qn_bool qn_err_stor_is_invalid_upload_result(void)
+{
+    return (qn_err_msg.code == QN_ERR_STOR_INVALID_UPLOAD_RESULT);
 }
 
 QN_API qn_bool qn_err_etag_is_initializing_context_failed(void)
