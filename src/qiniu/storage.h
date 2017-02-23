@@ -314,20 +314,24 @@ QN_API extern qn_bool qn_stor_up_attach(qn_stor_upload_progress_ptr restrict up,
 QN_API extern int qn_stor_up_get_block_count(qn_stor_upload_progress_ptr restrict up);
 
 QN_API extern qn_json_object_ptr qn_stor_up_get_block_info(qn_stor_upload_progress_ptr restrict up, int blk_idx);
-QN_API extern qn_bool qn_stor_up_update_block_info(qn_stor_upload_progress_ptr restrict up, int blk_idx, qn_json_object_ptr restrict up_ret);
+QN_API extern qn_json_object_ptr qn_stor_up_update_block_info(qn_stor_upload_progress_ptr restrict up, int blk_idx, qn_json_object_ptr restrict up_ret);
 
 QN_API extern qn_io_reader_itf qn_stor_up_create_block_reader(qn_stor_upload_progress_ptr restrict up, int blk_idx, qn_json_object_ptr * restrict blk_info);
 QN_API extern qn_io_reader_itf qn_stor_up_to_context_reader(qn_stor_upload_progress_ptr restrict up);
 
-QN_API extern qn_fsize qn_stor_up_fsize(qn_stor_upload_progress_ptr restrict up);
-QN_API extern qn_fsize qn_stor_up_done_fsize(qn_stor_upload_progress_ptr restrict up);
-QN_API extern qn_bool qn_stor_up_is_done(qn_stor_upload_progress_ptr restrict up);
+QN_API extern qn_fsize qn_stor_up_total_fsize(qn_stor_upload_progress_ptr restrict up);
+QN_API extern qn_fsize qn_stor_up_uploaded_fsize(qn_stor_upload_progress_ptr restrict up);
+
+QN_API extern qn_bool qn_stor_up_is_block_uploaded(qn_json_object_ptr restrict blk_info);
+QN_API extern qn_bool qn_stor_up_is_file_uploaded(qn_stor_upload_progress_ptr restrict up);
 
 // --------
 
 QN_API extern qn_json_object_ptr qn_stor_api_mkblk(qn_storage_ptr restrict stor, const char * restrict uptoken, qn_io_reader_itf restrict data_rdr, qn_json_object_ptr restrict blk_info, int chk_size, qn_stor_upload_extra_ptr restrict ext);
 QN_API extern qn_json_object_ptr qn_stor_api_bput(qn_storage_ptr restrict stor, const char * restrict uptoken, qn_io_reader_itf restrict data_rdr, qn_json_object_ptr restrict blk_info, int chk_size, qn_stor_upload_extra_ptr restrict ext);
-QN_API extern qn_json_object_ptr qn_stor_api_mkfile(qn_storage_ptr restrict stor, const char * restrict uptoken, qn_io_reader_itf restrict ctx_rdr, qn_json_object_ptr restrict last_blk_info, qn_fsize done_fsize, qn_stor_upload_extra_ptr restrict ext);
+QN_API extern qn_json_object_ptr qn_stor_api_mkfile(qn_storage_ptr restrict stor, const char * restrict uptoken, qn_io_reader_itf restrict ctx_rdr, qn_json_object_ptr restrict last_blk_info, qn_fsize upload_fsize, qn_stor_upload_extra_ptr restrict ext);
+
+QN_API extern qn_json_object_ptr qn_stor_upload_huge(qn_storage_ptr restrict stor, const char * restrict uptoken, qn_stor_upload_progress_ptr up, int * start_idx, int chk_size, qn_stor_upload_extra_ptr restrict ext);
 
 // --------
 
