@@ -94,6 +94,17 @@ static inline qn_io_reader_itf qn_io_section(qn_io_reader_itf restrict itf, qn_f
     return (*itf)->section(itf, offset, sec_size);
 }
 
+// ----
+
+struct _QN_IO_SECTION_READER;
+typedef struct _QN_IO_SECTION_READER * qn_io_section_reader_ptr;
+
+QN_API extern qn_io_section_reader_ptr qn_io_srdr_create(qn_io_reader_itf restrict src_rdr, size_t section_size);
+QN_API extern void qn_io_srdr_destroy(qn_io_section_reader_ptr restrict srdr);
+
+QN_API extern void qn_io_srdr_reset(qn_io_section_reader_ptr restrict srdr, qn_io_reader_itf restrict src_rdr, size_t section_size);
+QN_API extern qn_io_reader_itf qn_io_srdr_to_io_reader(qn_io_section_reader_ptr restrict srdr);
+
 #ifdef __cplusplus
 }
 #endif
