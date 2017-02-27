@@ -42,6 +42,7 @@ typedef struct _QN_EASY_PUT_EXTRA
         qn_io_reader_itf rdr;       // A customized data reader provided by the caller.
 
         qn_stor_rput_session_ptr rput_ss;
+        qn_string resumable_info;
 
         qn_rgn_entry_ptr rgn_entry;
         qn_rgn_host_ptr rgn_host;
@@ -65,6 +66,8 @@ QN_API qn_easy_put_extra_ptr qn_easy_pe_create(void)
 QN_API void qn_easy_pe_destroy(qn_easy_put_extra_ptr restrict pe)
 {
     if (pe) {
+        qn_str_destroy(pe->put_ctrl.resumable_info);
+
         if (! pe->put_ctrl.extern_ss && pe->put_ctrl.rput_ss) qn_stor_rs_destroy(pe->put_ctrl.rput_ss);
         if (pe->attr.local_qetag) qn_str_destroy(pe->attr.local_qetag);
 
@@ -147,6 +150,21 @@ QN_API void qn_easy_pe_set_rput_session(qn_easy_put_extra_ptr restrict pe, qn_st
 QN_API qn_stor_rput_session_ptr qn_easy_pe_get_rput_session(qn_easy_put_extra_ptr restrict pe)
 {
     return pe->put_ctrl.rput_ss;
+}
+
+QN_API qn_bool qn_easy_pe_clone_and_set_resumable_info(qn_easy_put_extra_ptr restrict pe, const char * restrict str, size_t str_size)
+{
+    qn_string tmp = qn_cs_clone(str, str_size);
+    if (! tmp) return qn_false;
+
+    qn_str_destroy(pe->put_ctrl.resumable_info);
+    pe->put_ctrl.resumable_info = tmp;
+    return qn_true;
+}
+
+QN_API qn_string qn_easy_pe_get_resumable_info(qn_easy_put_extra_ptr restrict pe)
+{
+    return pe->put_ctrl.resumable_info;
 }
 
 QN_API void qn_easy_pe_set_region_host(qn_easy_put_extra_ptr restrict pe, qn_rgn_host_ptr restrict rgn_host)
@@ -420,6 +438,48 @@ static qn_bool qn_easy_check_putting_key(qn_easy_ptr restrict easy, const char *
     return qn_true;
 }
 
+static qn_json_object_ptr qn_easy_put_huge(qn_easy_ptr restrict easy, const char * restrict uptoken, qn_io_reader_itf restrict data_rdr, qn_easy_put_extra_ptr restrict ext)
+{
+    int start_idx = 0;
+    qn_string resumable_info = NULL;
+    qn_stor_upload_extra_ptr ue = NULL;
+    qn_json_object_ptr put_ret;
+    qn_stor_resumable_upload_ptr ru;
+
+    if (ext) {
+        ue = qn_stor_ue_create();
+        if (ext->attr.final_key) {
+            qn_stor_ue_set_final_key(ue, ext->attr.final_key);
+        } // if
+
+        resumable_info = ext->put_ctrl.resumable_info;
+    } // if
+
+    if (resumable_info) {
+        ru = qn_stor_ru_from_string(qn_str_cstr(resumable_info), qn_str_size(resumable_info));
+        if (! ru || ! qn_stor_ru_attach(ru, data_rdr)) goto QN_EASY_PUT_HUGE_ERROR_HANDLING;
+    } else {
+        ru = qn_stor_ru_create(data_rdr);
+        if (! ru) goto QN_EASY_PUT_HUGE_ERROR_HANDLING;
+    } // if
+
+    put_ret = qn_stor_ru_upload_huge(easy->stor, uptoken, ru, &start_idx, QN_STOR_UP_CHUNK_DEFAULT_SIZE, ue);
+    qn_str_destroy(ext->put_ctrl.resumable_info);
+
+    if (ext) {
+        if (put_ret && qn_json_get_integer(put_ret, "fn-code", -1) == 200) {
+            ext->put_ctrl.resumable_info = NULL;
+        } else {
+            ext->put_ctrl.resumable_info = qn_stor_ru_to_string(ru);
+        } // if
+    } // if
+
+QN_EASY_PUT_HUGE_ERROR_HANDLING:
+    qn_stor_ru_destroy(ru);
+    qn_stor_ue_destroy(ue);
+    return put_ret;
+}
+
 QN_API qn_json_object_ptr qn_easy_put_file(qn_easy_ptr restrict easy, const char * restrict uptoken, const char * restrict fname, qn_easy_put_extra_ptr restrict ext)
 {
     int i;
@@ -493,6 +553,38 @@ QN_API qn_json_object_ptr qn_easy_put_file(qn_easy_ptr restrict easy, const char
         } // if
     } // if
 
+    return put_ret;
+}
+
+QN_API qn_json_object_ptr qn_easy_put_huge_file(qn_easy_ptr restrict easy, const char * restrict uptoken, const char * restrict fname, qn_easy_put_extra_ptr restrict ext)
+{
+    qn_json_object_ptr pp = NULL;
+    qn_json_object_ptr put_ret;
+    qn_file_ptr fl;
+    qn_easy_put_extra_st real_ext;
+
+    // ---- Check preconditions.
+    assert(easy);
+    assert(uptoken);
+    assert(fname);
+
+    qn_easy_init_put_extra(ext, &real_ext);
+    if (! real_ext.attr.final_key) {
+        if (! qn_easy_check_putting_key(easy, uptoken, &pp, &real_ext)) {
+            qn_json_destroy_object(pp);
+            return NULL;
+        } // if
+    } // if
+
+    fl = qn_fl_open(fname, NULL);
+    if (! fl) {
+        qn_json_destroy_object(pp);
+        return NULL;
+    } // if
+
+    put_ret = qn_easy_put_huge(easy, uptoken, qn_fl_to_io_reader(fl), &real_ext);
+    qn_fl_close(fl);
+    qn_json_destroy_object(pp);
     return put_ret;
 }
 
