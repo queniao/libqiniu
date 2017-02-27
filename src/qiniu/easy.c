@@ -300,19 +300,46 @@ static qn_json_object_ptr qn_easy_put_file_in_one_piece(qn_easy_ptr restrict eas
     return ret;
 }
 
-static qn_json_object_ptr qn_easy_put_file_in_many_pieces(qn_easy_ptr restrict easy, const char * restrict uptoken, const char * restrict fname, qn_io_reader_itf restrict io_rdr, qn_easy_put_extra_ptr restrict ext)
+static qn_json_object_ptr qn_easy_put_huge(qn_easy_ptr restrict easy, const char * restrict uptoken, qn_io_reader_itf restrict data_rdr, qn_easy_put_extra_ptr restrict ext)
 {
-    qn_json_object_ptr ret;
-    qn_stor_rput_extra_ptr rput_ext;
+    int start_idx = 0;
+    qn_string resumable_info = NULL;
+    qn_stor_upload_extra_ptr ue = NULL;
+    qn_json_object_ptr put_ret;
+    qn_stor_resumable_upload_ptr ru;
 
-    if (! (rput_ext = qn_stor_rpe_create())) return NULL;
+    if (ext) {
+        ue = qn_stor_ue_create();
+        if (ext->attr.final_key) {
+            qn_stor_ue_set_final_key(ue, ext->attr.final_key);
+        } // if
 
-    qn_stor_rpe_set_final_key(rput_ext, ext->attr.final_key);
-    qn_stor_rpe_set_source_reader(rput_ext, io_rdr, ext->put_ctrl.fsize);
+        resumable_info = ext->put_ctrl.resumable_info;
+    } // if
 
-    ret = qn_stor_rp_put_file(easy->stor, uptoken, &ext->put_ctrl.rput_ss, fname, rput_ext);
-    qn_stor_rpe_destroy(rput_ext);
-    return ret;
+    if (resumable_info) {
+        ru = qn_stor_ru_from_string(qn_str_cstr(resumable_info), qn_str_size(resumable_info));
+        if (! ru || ! qn_stor_ru_attach(ru, data_rdr)) goto QN_EASY_PUT_HUGE_ERROR_HANDLING;
+    } else {
+        ru = qn_stor_ru_create(data_rdr);
+        if (! ru) goto QN_EASY_PUT_HUGE_ERROR_HANDLING;
+    } // if
+
+    put_ret = qn_stor_ru_upload_huge(easy->stor, uptoken, ru, &start_idx, QN_STOR_UP_CHUNK_DEFAULT_SIZE, ue);
+    qn_str_destroy(ext->put_ctrl.resumable_info);
+
+    if (ext) {
+        if (put_ret && qn_json_get_integer(put_ret, "fn-code", -1) == 200) {
+            ext->put_ctrl.resumable_info = NULL;
+        } else {
+            ext->put_ctrl.resumable_info = qn_stor_ru_to_string(ru);
+        } // if
+    } // if
+
+QN_EASY_PUT_HUGE_ERROR_HANDLING:
+    qn_stor_ru_destroy(ru);
+    qn_stor_ue_destroy(ue);
+    return put_ret;
 }
 
 static qn_bool qn_easy_parse_putting_policy(qn_easy_ptr restrict easy, const char * restrict str, size_t str_size, qn_json_object_ptr * restrict pp)
@@ -438,48 +465,6 @@ static qn_bool qn_easy_check_putting_key(qn_easy_ptr restrict easy, const char *
     return qn_true;
 }
 
-static qn_json_object_ptr qn_easy_put_huge(qn_easy_ptr restrict easy, const char * restrict uptoken, qn_io_reader_itf restrict data_rdr, qn_easy_put_extra_ptr restrict ext)
-{
-    int start_idx = 0;
-    qn_string resumable_info = NULL;
-    qn_stor_upload_extra_ptr ue = NULL;
-    qn_json_object_ptr put_ret;
-    qn_stor_resumable_upload_ptr ru;
-
-    if (ext) {
-        ue = qn_stor_ue_create();
-        if (ext->attr.final_key) {
-            qn_stor_ue_set_final_key(ue, ext->attr.final_key);
-        } // if
-
-        resumable_info = ext->put_ctrl.resumable_info;
-    } // if
-
-    if (resumable_info) {
-        ru = qn_stor_ru_from_string(qn_str_cstr(resumable_info), qn_str_size(resumable_info));
-        if (! ru || ! qn_stor_ru_attach(ru, data_rdr)) goto QN_EASY_PUT_HUGE_ERROR_HANDLING;
-    } else {
-        ru = qn_stor_ru_create(data_rdr);
-        if (! ru) goto QN_EASY_PUT_HUGE_ERROR_HANDLING;
-    } // if
-
-    put_ret = qn_stor_ru_upload_huge(easy->stor, uptoken, ru, &start_idx, QN_STOR_UP_CHUNK_DEFAULT_SIZE, ue);
-    qn_str_destroy(ext->put_ctrl.resumable_info);
-
-    if (ext) {
-        if (put_ret && qn_json_get_integer(put_ret, "fn-code", -1) == 200) {
-            ext->put_ctrl.resumable_info = NULL;
-        } else {
-            ext->put_ctrl.resumable_info = qn_stor_ru_to_string(ru);
-        } // if
-    } // if
-
-QN_EASY_PUT_HUGE_ERROR_HANDLING:
-    qn_stor_ru_destroy(ru);
-    qn_stor_ue_destroy(ue);
-    return put_ret;
-}
-
 QN_API qn_json_object_ptr qn_easy_put_file(qn_easy_ptr restrict easy, const char * restrict uptoken, const char * restrict fname, qn_easy_put_extra_ptr restrict ext)
 {
     int i;
@@ -523,7 +508,7 @@ QN_API qn_json_object_ptr qn_easy_put_file(qn_easy_ptr restrict easy, const char
         if (real_ext.put_ctrl.fsize <= real_ext.put_ctrl.min_resumable_fsize) {
             put_ret = qn_easy_put_file_in_one_piece(easy, uptoken, fname, io_rdr, &real_ext);
         } else {
-            put_ret = qn_easy_put_file_in_many_pieces(easy, uptoken, fname, io_rdr, &real_ext);
+            put_ret = qn_easy_put_huge(easy, uptoken, io_rdr, &real_ext);
         } // if
     } else {
         for (i = 0, put_ret = NULL; i < qn_rgn_host_entry_count(rgn_host) && ! put_ret; i += 1) {
@@ -532,7 +517,7 @@ QN_API qn_json_object_ptr qn_easy_put_file(qn_easy_ptr restrict easy, const char
             if (real_ext.put_ctrl.fsize <= real_ext.put_ctrl.min_resumable_fsize) {
                 put_ret = qn_easy_put_file_in_one_piece(easy, uptoken, fname, io_rdr, &real_ext);
             } else {
-                put_ret = qn_easy_put_file_in_many_pieces(easy, uptoken, fname, io_rdr, &real_ext);
+                put_ret = qn_easy_put_huge(easy, uptoken, io_rdr, &real_ext);
             } // if
         } // for
     } // if
