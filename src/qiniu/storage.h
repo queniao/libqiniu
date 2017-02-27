@@ -249,7 +249,7 @@ QN_API extern void qn_stor_ue_set_region_entry(qn_stor_upload_extra_ptr restrict
 QN_API extern qn_json_object_ptr qn_stor_upload_file(qn_storage_ptr restrict stor, const char * restrict uptoken, const char * restrict fname, qn_stor_upload_extra_ptr restrict ext);
 QN_API extern qn_json_object_ptr qn_stor_upload_buffer(qn_storage_ptr restrict stor, const char * restrict uptoken, const char * restrict buf, int buf_size, qn_stor_upload_extra_ptr restrict ext);
 
-QN_API extern qn_json_object_ptr qn_stor_upload(qn_storage_ptr restrict stor, const char * restrict uptoken, qn_io_reader_itf restrict rdr, qn_stor_upload_extra_ptr restrict ext);
+QN_API extern qn_json_object_ptr qn_stor_api_upload(qn_storage_ptr restrict stor, const char * restrict uptoken, qn_io_reader_itf restrict data_rdr, qn_stor_upload_extra_ptr restrict ext);
 
 // ----
 

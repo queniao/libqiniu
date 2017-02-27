@@ -292,7 +292,7 @@ static qn_json_object_ptr qn_easy_put_file_in_one_piece(qn_easy_ptr restrict eas
     qn_stor_ue_set_final_key(put_ext, ext->attr.final_key);
 
     if (io_rdr) {
-        ret = qn_stor_upload(easy->stor, uptoken, io_rdr, put_ext);
+        ret = qn_stor_api_upload(easy->stor, uptoken, io_rdr, put_ext);
     } else {
         ret = qn_stor_upload_file(easy->stor, uptoken, fname, put_ext);
     } // if

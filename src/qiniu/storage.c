@@ -2376,14 +2376,14 @@ static size_t qn_stor_upload_callback_fn(void * user_data, char * buf, size_t si
     return ret;
 }
 
-QN_API qn_json_object_ptr qn_stor_upload(qn_storage_ptr restrict stor, const char * restrict uptoken, qn_io_reader_itf restrict rdr, qn_stor_upload_extra_ptr restrict ext)
+QN_API qn_json_object_ptr qn_stor_api_upload(qn_storage_ptr restrict stor, const char * restrict uptoken, qn_io_reader_itf restrict data_rdr, qn_stor_upload_extra_ptr restrict ext)
 {
     qn_bool ret;
     qn_rgn_entry_ptr rgn_entry;
 
     assert(stor);
     assert(uptoken);
-    assert(rdr);
+    assert(data_rdr);
 
     if (ext) {
         if (! (rgn_entry = ext->rgn_entry)) qn_rgn_tbl_choose_first_entry(NULL, QN_RGN_SVC_UP, NULL, &rgn_entry);
@@ -2394,10 +2394,10 @@ QN_API qn_json_object_ptr qn_stor_upload(qn_storage_ptr restrict stor, const cha
 
     if (! qn_stor_prepare_for_upload(stor, uptoken, ext)) return NULL;
 
-    ret = qn_http_form_add_file_reader(qn_http_req_get_form(stor->req), "file", qn_str_cstr(qn_io_name(rdr)), NULL, qn_io_size(rdr), stor->req);
+    ret = qn_http_form_add_file_reader(qn_http_req_get_form(stor->req), "file", qn_str_cstr(qn_io_name(data_rdr)), NULL, qn_io_size(data_rdr), stor->req);
     if (! ret) return NULL;
 
-    qn_http_req_set_body_reader(stor->req, rdr, qn_stor_upload_callback_fn, qn_io_size(rdr));
+    qn_http_req_set_body_reader(stor->req, data_rdr, qn_stor_upload_callback_fn, qn_io_size(data_rdr));
 
     // ----
     if (rgn_entry->hostname && !qn_http_req_set_header(stor->req, "Host", qn_str_cstr(rgn_entry->hostname))) return NULL;
