@@ -3133,7 +3133,7 @@ QN_API qn_json_object_ptr qn_stor_rp_put_file(qn_storage_ptr restrict stor, cons
 
 // -------- Resumable Upload APIs --------
 
-typedef struct _QN_STOR_UPLOAD_PROGRESS
+typedef struct _QN_STOR_RESUMABLE_UPLOAD
 {
     qn_io_reader_ptr rdr_vtbl;
     qn_json_object_ptr progress;
@@ -3144,11 +3144,11 @@ typedef struct _QN_STOR_UPLOAD_PROGRESS
     int need_comma:1;
     qn_fsize fsize;
     qn_fsize uploaded_fsize;
-} qn_stor_upload_progress_st;
+} qn_stor_resumable_upload_st;
 
-static inline qn_stor_upload_progress_ptr qn_ctx_from_io_reader(qn_io_reader_itf restrict itf)
+static inline qn_stor_resumable_upload_ptr qn_ctx_from_io_reader(qn_io_reader_itf restrict itf)
 {
-    return (qn_stor_upload_progress_ptr)( ( (char *)itf ) - (char *)( &((qn_stor_upload_progress_ptr)0)->rdr_vtbl ) );
+    return (qn_stor_resumable_upload_ptr)( ( (char *)itf ) - (char *)( &((qn_stor_resumable_upload_ptr)0)->rdr_vtbl ) );
 }
 
 static ssize_t qn_ctx_read_vfn(qn_io_reader_itf restrict itf, char * restrict buf, size_t buf_size)
@@ -3156,39 +3156,39 @@ static ssize_t qn_ctx_read_vfn(qn_io_reader_itf restrict itf, char * restrict bu
     qn_json_array_ptr blk_arr;
     qn_json_object_ptr blk_info;
     qn_string ctx;
-    qn_stor_upload_progress_ptr up = qn_ctx_from_io_reader(itf);
+    qn_stor_resumable_upload_ptr ru = qn_ctx_from_io_reader(itf);
     char * pos = buf;
     size_t rem_size = buf_size;
     int copy_bytes;
 
-    blk_arr = qn_json_get_array(up->progress, "blocks", NULL);
+    blk_arr = qn_json_get_array(ru->progress, "blocks", NULL);
 
-    while (rem_size > 0 && up->ctx_idx < qn_json_size_array(blk_arr)) {
-        if (up->need_comma) {
+    while (rem_size > 0 && ru->ctx_idx < qn_json_size_array(blk_arr)) {
+        if (ru->need_comma) {
             *pos++ = ',';
             rem_size -= 1;
         } // if
 
-        blk_info = qn_json_pick_object(blk_arr, up->ctx_idx, NULL);
+        blk_info = qn_json_pick_object(blk_arr, ru->ctx_idx, NULL);
         ctx = qn_json_get_string(blk_info, "ctx", NULL);
         if (! ctx) {
             qn_err_stor_set_lack_of_block_context();
             return -1;
         } // if
 
-        copy_bytes = qn_str_size(ctx) - up->ctx_pos;
+        copy_bytes = qn_str_size(ctx) - ru->ctx_pos;
         if (rem_size < copy_bytes) copy_bytes = rem_size;
 
         if (copy_bytes > 0) {
-            memcpy(pos, qn_str_cstr(ctx) + up->ctx_pos, copy_bytes);
+            memcpy(pos, qn_str_cstr(ctx) + ru->ctx_pos, copy_bytes);
             pos += copy_bytes;
             rem_size -= copy_bytes;
-            up->ctx_pos += copy_bytes;
+            ru->ctx_pos += copy_bytes;
 
-            if (up->ctx_pos == qn_str_size(ctx)) {
-                up->need_comma = 1;
-                up->ctx_pos = 0;
-                up->ctx_idx += 1;
+            if (ru->ctx_pos == qn_str_size(ctx)) {
+                ru->need_comma = 1;
+                ru->ctx_pos = 0;
+                ru->ctx_idx += 1;
             } // if
         } // if
     } // while
@@ -3202,9 +3202,9 @@ static qn_fsize qn_ctx_size_vfn(qn_io_reader_itf restrict itf)
     qn_string ctx;
     int i;
     qn_fsize size;
-    qn_stor_upload_progress_ptr up = qn_ctx_from_io_reader(itf);
+    qn_stor_resumable_upload_ptr ru = qn_ctx_from_io_reader(itf);
 
-    blk_arr = qn_json_get_array(up->progress, "blocks", NULL);
+    blk_arr = qn_json_get_array(ru->progress, "blocks", NULL);
 
     size = 0;
     for (i = 0; i < qn_json_size_array(blk_arr); i += 1) {
@@ -3233,165 +3233,165 @@ static qn_io_reader_st qn_ctx_rdr_vtable = {
     &qn_ctx_size_vfn  // SIZE
 };
 
-static inline int qn_stor_up_calculate_block_count(qn_fsize fsize)
+static inline int qn_stor_ru_calculate_block_count(qn_fsize fsize)
 {
     return (fsize + QN_STOR_UP_BLOCK_MAX_SIZE - 1) / QN_STOR_UP_BLOCK_MAX_SIZE;
 }
 
-QN_API qn_stor_upload_progress_ptr qn_stor_up_create(qn_io_reader_itf restrict data_rdr)
+QN_API qn_stor_resumable_upload_ptr qn_stor_ru_create(qn_io_reader_itf restrict data_rdr)
 {
-    qn_stor_upload_progress_ptr up;
+    qn_stor_resumable_upload_ptr ru;
 
     assert(data_rdr);
 
-    up = calloc(1, sizeof(qn_stor_upload_progress_st));
-    if (! up) {
+    ru = calloc(1, sizeof(qn_stor_resumable_upload_st));
+    if (! ru) {
         qn_err_set_out_of_memory();
         return NULL;
     } // if
 
-    up->progress = qn_json_create_object();
-    if (! up->progress) {
-        free(up);
+    ru->progress = qn_json_create_object();
+    if (! ru->progress) {
+        free(ru);
         return NULL;
     } // if
 
-    up->fsize = qn_io_size(data_rdr);
-    up->blk_cnt = qn_stor_up_calculate_block_count(up->fsize);
+    ru->fsize = qn_io_size(data_rdr);
+    ru->blk_cnt = qn_stor_ru_calculate_block_count(ru->fsize);
 
-    if (! qn_json_set_integer(up->progress, "bcount", up->blk_cnt)) {
-        qn_json_destroy_object(up->progress);
-        free(up);
+    if (! qn_json_set_integer(ru->progress, "bcount", ru->blk_cnt)) {
+        qn_json_destroy_object(ru->progress);
+        free(ru);
         return NULL;
     } // if
-    if (! qn_json_create_and_set_array(up->progress, "blocks")) {
-        qn_json_destroy_object(up->progress);
-        free(up);
-        return NULL;
-    } // if
-
-    up->src_rdr = qn_io_duplicate(data_rdr);
-    if (! up->src_rdr) {
-        qn_json_destroy_object(up->progress);
-        free(up);
+    if (! qn_json_create_and_set_array(ru->progress, "blocks")) {
+        qn_json_destroy_object(ru->progress);
+        free(ru);
         return NULL;
     } // if
 
-    up->rdr_vtbl = &qn_ctx_rdr_vtable;
-    return up;
+    ru->src_rdr = qn_io_duplicate(data_rdr);
+    if (! ru->src_rdr) {
+        qn_json_destroy_object(ru->progress);
+        free(ru);
+        return NULL;
+    } // if
+
+    ru->rdr_vtbl = &qn_ctx_rdr_vtable;
+    return ru;
 }
 
-QN_API void qn_stor_up_destroy(qn_stor_upload_progress_ptr restrict up)
+QN_API void qn_stor_ru_destroy(qn_stor_resumable_upload_ptr restrict ru)
 {
-    if (up) {
-        qn_json_destroy_object(up->progress);
-        qn_io_close(up->src_rdr);
-        free(up);
+    if (ru) {
+        qn_json_destroy_object(ru->progress);
+        qn_io_close(ru->src_rdr);
+        free(ru);
     } // if
 }
 
-QN_API qn_string qn_stor_up_to_string(qn_stor_upload_progress_ptr restrict up)
+QN_API qn_string qn_stor_ru_to_string(qn_stor_resumable_upload_ptr restrict ru)
 {
     qn_bool ret;
     qn_string fsize_str;
 
-    fsize_str = qn_cs_sprintf("%ld", up->fsize);
-    ret = qn_json_set_text(up->progress, "fsize", qn_str_cstr(fsize_str), qn_str_size(fsize_str));
+    fsize_str = qn_cs_sprintf("%ld", ru->fsize);
+    ret = qn_json_set_text(ru->progress, "fsize", qn_str_cstr(fsize_str), qn_str_size(fsize_str));
     qn_str_destroy(fsize_str);
     if (! ret) return NULL;
 
-    fsize_str = qn_cs_sprintf("%ld", up->uploaded_fsize);
-    ret = qn_json_set_text(up->progress, "uploaded_fsize", qn_str_cstr(fsize_str), qn_str_size(fsize_str));
+    fsize_str = qn_cs_sprintf("%ld", ru->uploaded_fsize);
+    ret = qn_json_set_text(ru->progress, "uploaded_fsize", qn_str_cstr(fsize_str), qn_str_size(fsize_str));
     qn_str_destroy(fsize_str);
     if (! ret) return NULL;
 
-    return qn_json_object_to_string(up->progress);
+    return qn_json_object_to_string(ru->progress);
 }
 
-QN_API qn_stor_upload_progress_ptr qn_stor_up_from_string(const char * restrict str, size_t str_len)
+QN_API qn_stor_resumable_upload_ptr qn_stor_ru_from_string(const char * restrict str, size_t str_len)
 {
     qn_string fsize_str;
-    qn_stor_upload_progress_ptr up;
+    qn_stor_resumable_upload_ptr ru;
 
     assert(str && str_len > 0);
 
-    up = calloc(1, sizeof(qn_stor_upload_progress_st));
-    if (! up) {
+    ru = calloc(1, sizeof(qn_stor_resumable_upload_st));
+    if (! ru) {
         qn_err_set_out_of_memory();
         return NULL;
     } // if
 
-    up->progress = qn_json_object_from_string(str, str_len);
-    if (! up->progress) {
-        free(up);
+    ru->progress = qn_json_object_from_string(str, str_len);
+    if (! ru->progress) {
+        free(ru);
         return NULL;
     } // if
 
-    fsize_str = qn_json_get_string(up->progress, "fsize", NULL);
+    fsize_str = qn_json_get_string(ru->progress, "fsize", NULL);
     if (! fsize_str) {
-        qn_json_destroy_object(up->progress);
-        free(up);
+        qn_json_destroy_object(ru->progress);
+        free(ru);
         qn_err_stor_set_lack_of_file_size();
         return NULL;
     } // if
-    up->fsize = atoll(qn_str_cstr(fsize_str));
+    ru->fsize = atoll(qn_str_cstr(fsize_str));
 
-    fsize_str = qn_json_get_string(up->progress, "uploaded_fsize", NULL);
+    fsize_str = qn_json_get_string(ru->progress, "uploaded_fsize", NULL);
     if (! fsize_str) {
-        qn_json_destroy_object(up->progress);
-        free(up);
+        qn_json_destroy_object(ru->progress);
+        free(ru);
         qn_err_stor_set_lack_of_file_size();
         return NULL;
     } // if
-    up->uploaded_fsize = atoll(qn_str_cstr(fsize_str));
+    ru->uploaded_fsize = atoll(qn_str_cstr(fsize_str));
 
-    up->blk_cnt = qn_json_get_integer(up->progress, "bcount", 0);
-    if (up->blk_cnt == 0 && up->fsize > 0) {
-        up->blk_cnt = qn_stor_up_calculate_block_count(up->fsize);
-        if (! qn_json_set_integer(up->progress, "bcount", up->blk_cnt)) {
-            qn_json_destroy_object(up->progress);
-            free(up);
+    ru->blk_cnt = qn_json_get_integer(ru->progress, "bcount", 0);
+    if (ru->blk_cnt == 0 && ru->fsize > 0) {
+        ru->blk_cnt = qn_stor_ru_calculate_block_count(ru->fsize);
+        if (! qn_json_set_integer(ru->progress, "bcount", ru->blk_cnt)) {
+            qn_json_destroy_object(ru->progress);
+            free(ru);
             return NULL;
         } // if
     } // if
 
-    up->rdr_vtbl = &qn_ctx_rdr_vtable;
-    return up;
+    ru->rdr_vtbl = &qn_ctx_rdr_vtable;
+    return ru;
 }
 
-QN_API qn_bool qn_stor_up_attach(qn_stor_upload_progress_ptr restrict up, qn_io_reader_itf restrict data_rdr)
+QN_API qn_bool qn_stor_ru_attach(qn_stor_resumable_upload_ptr restrict ru, qn_io_reader_itf restrict data_rdr)
 {
     qn_io_reader_itf new_rdr;
 
-    assert(up);
+    assert(ru);
     assert(data_rdr);
 
     new_rdr = qn_io_duplicate(data_rdr);
     if (! new_rdr) return qn_false;
 
-    if (up->src_rdr) {
-        qn_io_close(up->src_rdr);
-        up->src_rdr = NULL;
+    if (ru->src_rdr) {
+        qn_io_close(ru->src_rdr);
+        ru->src_rdr = NULL;
     } // if
 
-    up->src_rdr = new_rdr;
+    ru->src_rdr = new_rdr;
     return qn_true;
 }
 
-QN_API int qn_stor_up_get_block_count(qn_stor_upload_progress_ptr restrict up)
+QN_API int qn_stor_ru_get_block_count(qn_stor_resumable_upload_ptr restrict ru)
 {
-    assert(up);
-    return up->blk_cnt;
+    assert(ru);
+    return ru->blk_cnt;
 }
 
-QN_API qn_json_object_ptr qn_stor_up_get_block_info(qn_stor_upload_progress_ptr restrict up, int blk_idx)
+QN_API qn_json_object_ptr qn_stor_ru_get_block_info(qn_stor_resumable_upload_ptr restrict ru, int blk_idx)
 {
     qn_json_array_ptr blk_arr;
 
-    assert(up);
+    assert(ru);
     assert(0 <= blk_idx);
 
-    blk_arr = qn_json_get_array(up->progress, "blocks", NULL);
+    blk_arr = qn_json_get_array(ru->progress, "blocks", NULL);
     if (blk_idx > qn_json_size_array(blk_arr)) {
         qn_err_set_out_of_range();
         return NULL;
@@ -3402,7 +3402,7 @@ QN_API qn_json_object_ptr qn_stor_up_get_block_info(qn_stor_upload_progress_ptr 
     return qn_json_pick_object(blk_arr, blk_idx, NULL);
 }
 
-QN_API qn_json_object_ptr qn_stor_up_update_block_info(qn_stor_upload_progress_ptr restrict up, int blk_idx, qn_json_object_ptr restrict up_ret)
+QN_API qn_json_object_ptr qn_stor_ru_update_block_info(qn_stor_resumable_upload_ptr restrict ru, int blk_idx, qn_json_object_ptr restrict up_ret)
 {
     qn_string ctx;
     qn_string checksum;
@@ -3415,11 +3415,11 @@ QN_API qn_json_object_ptr qn_stor_up_update_block_info(qn_stor_upload_progress_p
     qn_json_object_ptr blk_info;
     qn_json_object_ptr new_blk_info;
 
-    assert(up);
+    assert(ru);
     assert(0 <= blk_idx);
     assert(up_ret);
 
-    if (! (blk_info = qn_stor_up_get_block_info(up, blk_idx))) return NULL;
+    if (! (blk_info = qn_stor_ru_get_block_info(ru, blk_idx))) return NULL;
     old_offset = qn_json_get_integer(blk_info, "offset", 0);
 
     blk_size = qn_json_get_integer(blk_info, "bsize", -1);
@@ -3446,9 +3446,9 @@ QN_API qn_json_object_ptr qn_stor_up_update_block_info(qn_stor_upload_progress_p
     if (! qn_json_set_integer(new_blk_info, "offset", new_offset)) goto QN_STOR_UP_UPDATE_BLOCK_INFO_ERROR_HANDLING;
     if (! qn_json_set_integer(new_blk_info, "bsize", blk_size)) goto QN_STOR_UP_UPDATE_BLOCK_INFO_ERROR_HANDLING;
 
-    blk_arr = qn_json_get_array(up->progress, "blocks", NULL);
+    blk_arr = qn_json_get_array(ru->progress, "blocks", NULL);
     if (! qn_json_replace_object(blk_arr, blk_idx, new_blk_info)) goto QN_STOR_UP_UPDATE_BLOCK_INFO_ERROR_HANDLING;
-    up->uploaded_fsize += new_offset - old_offset;
+    ru->uploaded_fsize += new_offset - old_offset;
     return new_blk_info;
 
 QN_STOR_UP_UPDATE_BLOCK_INFO_ERROR_HANDLING:
@@ -3456,27 +3456,27 @@ QN_STOR_UP_UPDATE_BLOCK_INFO_ERROR_HANDLING:
     return NULL;
 }
 
-QN_API qn_io_reader_itf qn_stor_up_create_block_reader(qn_stor_upload_progress_ptr restrict up, int blk_idx, qn_json_object_ptr * restrict blk_info)
+QN_API qn_io_reader_itf qn_stor_ru_create_block_reader(qn_stor_resumable_upload_ptr restrict ru, int blk_idx, qn_json_object_ptr * restrict blk_info)
 {
     int i;
     int blk_size = QN_STOR_UP_BLOCK_MAX_SIZE;
     qn_json_object_ptr new_blk_info;
     qn_json_array_ptr blk_arr;
 
-    assert(up);
+    assert(ru);
     assert(0 <= blk_idx);
 
-    blk_arr = qn_json_get_array(up->progress, "blocks", NULL);
-    if (up->blk_cnt == 0) {
+    blk_arr = qn_json_get_array(ru->progress, "blocks", NULL);
+    if (ru->blk_cnt == 0) {
         // -- The source reader is a file with unknown size.
         // -- Return the very next block's reader.
         if (! (new_blk_info = qn_json_create_and_push_object(blk_arr))) return NULL;
         if (! qn_json_set_integer(new_blk_info, "bsize", blk_size)) return NULL;
         *blk_info = new_blk_info;
-        return qn_io_section(up->src_rdr, 0, blk_size);
+        return qn_io_section(ru->src_rdr, 0, blk_size);
     } // if
 
-    if (up->blk_cnt <= blk_idx) {
+    if (ru->blk_cnt <= blk_idx) {
         qn_err_set_out_of_range();
         return NULL;
     } // if
@@ -3486,35 +3486,35 @@ QN_API qn_io_reader_itf qn_stor_up_create_block_reader(qn_stor_upload_progress_p
             if (! (new_blk_info = qn_json_create_and_push_object(blk_arr))) return NULL;
             if (! qn_json_set_integer(new_blk_info, "bsize", blk_size)) return NULL;
         } // for
-        if (i == up->blk_cnt - 1) blk_size = (qn_io_size(up->src_rdr) % QN_STOR_UP_BLOCK_MAX_SIZE);
+        if (i == ru->blk_cnt - 1) blk_size = (qn_io_size(ru->src_rdr) % QN_STOR_UP_BLOCK_MAX_SIZE);
         if (! (new_blk_info = qn_json_create_and_push_object(blk_arr))) return NULL;
         if (! qn_json_set_integer(new_blk_info, "bsize", blk_size)) return NULL;
     } // if
 
     // -- The source reader is a file.
     *blk_info = new_blk_info;
-    return qn_io_section(up->src_rdr, blk_idx * QN_STOR_UP_BLOCK_MAX_SIZE, blk_size);
+    return qn_io_section(ru->src_rdr, blk_idx * QN_STOR_UP_BLOCK_MAX_SIZE, blk_size);
 }
 
-QN_API qn_io_reader_itf qn_stor_up_to_context_reader(qn_stor_upload_progress_ptr restrict up)
+QN_API qn_io_reader_itf qn_stor_ru_to_context_reader(qn_stor_resumable_upload_ptr restrict ru)
 {
-    up->ctx_idx = 0;
-    up->ctx_pos = 0;
-    up->need_comma = 0;
-    return &up->rdr_vtbl;
+    ru->ctx_idx = 0;
+    ru->ctx_pos = 0;
+    ru->need_comma = 0;
+    return &ru->rdr_vtbl;
 }
 
-QN_API qn_fsize qn_stor_up_total_fsize(qn_stor_upload_progress_ptr restrict up)
+QN_API qn_fsize qn_stor_ru_total_fsize(qn_stor_resumable_upload_ptr restrict ru)
 {
-    return up->fsize;
+    return ru->fsize;
 }
 
-QN_API qn_fsize qn_stor_up_uploaded_fsize(qn_stor_upload_progress_ptr restrict up)
+QN_API qn_fsize qn_stor_ru_uploaded_fsize(qn_stor_resumable_upload_ptr restrict ru)
 {
-    return up->uploaded_fsize;
+    return ru->uploaded_fsize;
 }
 
-QN_API qn_bool qn_stor_up_is_block_uploaded(qn_json_object_ptr restrict blk_info)
+QN_API qn_bool qn_stor_ru_is_block_uploaded(qn_json_object_ptr restrict blk_info)
 {
     // | offset | bsize | status    |
     // | -1     | > 0   | uploading |
@@ -3522,9 +3522,9 @@ QN_API qn_bool qn_stor_up_is_block_uploaded(qn_json_object_ptr restrict blk_info
     return (qn_json_get_integer(blk_info, "offset", -1) == qn_json_get_integer(blk_info, "bsize", 0));
 }
 
-QN_API qn_bool qn_stor_up_is_file_uploaded(qn_stor_upload_progress_ptr restrict up)
+QN_API qn_bool qn_stor_ru_is_file_uploaded(qn_stor_resumable_upload_ptr restrict ru)
 {
-    return up->uploaded_fsize == up->fsize;
+    return ru->uploaded_fsize == ru->fsize;
 }
 
 static inline qn_bool qn_stor_prepare_error_info(qn_storage_ptr restrict stor)
@@ -3584,7 +3584,7 @@ static qn_bool qn_stor_prepare_request_for_upload(qn_storage_ptr restrict stor, 
     return qn_true;
 }
 
-QN_API extern qn_json_object_ptr qn_stor_api_mkblk(qn_storage_ptr restrict stor, const char * restrict uptoken, qn_io_reader_itf restrict data_rdr, qn_json_object_ptr restrict blk_info, int chk_size, qn_stor_upload_extra_ptr restrict ext)
+QN_API extern qn_json_object_ptr qn_stor_ru_api_mlblk(qn_storage_ptr restrict stor, const char * restrict uptoken, qn_io_reader_itf restrict data_rdr, qn_json_object_ptr restrict blk_info, int chk_size, qn_stor_upload_extra_ptr restrict ext)
 {
     qn_bool ret;
     int blk_size;
@@ -3626,7 +3626,7 @@ QN_API extern qn_json_object_ptr qn_stor_api_mkblk(qn_storage_ptr restrict stor,
     return qn_stor_rename_error_info(stor);
 }
 
-QN_API extern qn_json_object_ptr qn_stor_api_bput(qn_storage_ptr restrict stor, const char * restrict uptoken, qn_io_reader_itf restrict data_rdr, qn_json_object_ptr restrict blk_info, int chk_size, qn_stor_upload_extra_ptr restrict ext)
+QN_API extern qn_json_object_ptr qn_stor_ru_api_bput(qn_storage_ptr restrict stor, const char * restrict uptoken, qn_io_reader_itf restrict data_rdr, qn_json_object_ptr restrict blk_info, int chk_size, qn_stor_upload_extra_ptr restrict ext)
 {
     qn_bool ret;
     qn_string url;
@@ -3689,7 +3689,7 @@ QN_API extern qn_json_object_ptr qn_stor_api_bput(qn_storage_ptr restrict stor, 
     return qn_stor_rename_error_info(stor);
 }
 
-QN_API qn_json_object_ptr qn_stor_api_mkfile(qn_storage_ptr restrict stor, const char * restrict uptoken, qn_io_reader_itf restrict ctx_rdr, qn_json_object_ptr restrict last_blk_info, qn_fsize fsize, qn_stor_upload_extra_ptr restrict ext)
+QN_API qn_json_object_ptr qn_stor_ru_api_mkfile(qn_storage_ptr restrict stor, const char * restrict uptoken, qn_io_reader_itf restrict ctx_rdr, qn_json_object_ptr restrict last_blk_info, qn_fsize fsize, qn_stor_upload_extra_ptr restrict ext)
 {
     qn_string url;
     qn_string url_tmp;
@@ -3751,7 +3751,7 @@ QN_API qn_json_object_ptr qn_stor_api_mkfile(qn_storage_ptr restrict stor, const
     return qn_stor_rename_error_info(stor);
 }
 
-QN_API qn_json_object_ptr qn_stor_upload_huge(qn_storage_ptr restrict stor, const char * restrict uptoken, qn_stor_upload_progress_ptr up, int * start_idx, int chk_size, qn_stor_upload_extra_ptr restrict ext)
+QN_API qn_json_object_ptr qn_stor_ru_upload_huge(qn_storage_ptr restrict stor, const char * restrict uptoken, qn_stor_resumable_upload_ptr ru, int * start_idx, int chk_size, qn_stor_upload_extra_ptr restrict ext)
 {
     int i;
     qn_integer offset;
@@ -3763,7 +3763,7 @@ QN_API qn_json_object_ptr qn_stor_upload_huge(qn_storage_ptr restrict stor, cons
     // ---- Check preconditions.
     assert(stor);
     assert(uptoken);
-    assert(up);
+    assert(ru);
     assert(0 <= *start_idx);
 
     // ---- Prepare internal objects.
@@ -3772,11 +3772,11 @@ QN_API qn_json_object_ptr qn_stor_upload_huge(qn_storage_ptr restrict stor, cons
     if (! chk_rdr) return NULL;
 
     // ---- Start from the given index.
-    for (i = *start_idx; i < qn_stor_up_get_block_count(up); i += 1) {
-        blk_info = qn_stor_up_get_block_info(up, i);
-        if (blk_info && qn_stor_up_is_block_uploaded(blk_info)) continue;
+    for (i = *start_idx; i < qn_stor_ru_get_block_count(ru); i += 1) {
+        blk_info = qn_stor_ru_get_block_info(ru, i);
+        if (blk_info && qn_stor_ru_is_block_uploaded(blk_info)) continue;
 
-        if (! (sec_rdr = qn_stor_up_create_block_reader(up, i, &blk_info))) {
+        if (! (sec_rdr = qn_stor_ru_create_block_reader(ru, i, &blk_info))) {
             qn_io_srdr_destroy(chk_rdr);
             *start_idx = i;
             return NULL;
@@ -3784,9 +3784,9 @@ QN_API qn_json_object_ptr qn_stor_upload_huge(qn_storage_ptr restrict stor, cons
 
         if ((offset = qn_json_get_integer(blk_info, "offset", 0)) == 0) {
             qn_io_srdr_reset(chk_rdr, sec_rdr, chk_size);
-            up_ret = qn_stor_api_mkblk(stor, uptoken, qn_io_srdr_to_io_reader(chk_rdr), blk_info, chk_size, ext);
+            up_ret = qn_stor_ru_api_mlblk(stor, uptoken, qn_io_srdr_to_io_reader(chk_rdr), blk_info, chk_size, ext);
             if (! up_ret || qn_json_get_integer(up_ret, "fn-code", -1) != 200) goto QN_STOR_UPLOAD_HUGE_ERROR_HANDLING;
-            if (! (blk_info = qn_stor_up_update_block_info(up, i, up_ret))) {
+            if (! (blk_info = qn_stor_ru_update_block_info(ru, i, up_ret))) {
                 up_ret = NULL;
                 goto QN_STOR_UPLOAD_HUGE_ERROR_HANDLING;
             } // if
@@ -3795,11 +3795,11 @@ QN_API qn_json_object_ptr qn_stor_upload_huge(qn_storage_ptr restrict stor, cons
         } // if
 
         // ---- If the whole block is uploaded through the /mkblk API, skip all subsequent calls to the /bput API.
-        while (! qn_stor_up_is_block_uploaded(blk_info)) {
+        while (! qn_stor_ru_is_block_uploaded(blk_info)) {
             qn_io_srdr_reset(chk_rdr, sec_rdr, chk_size);
-            up_ret = qn_stor_api_bput(stor, uptoken, qn_io_srdr_to_io_reader(chk_rdr), blk_info, chk_size, ext);
+            up_ret = qn_stor_ru_api_bput(stor, uptoken, qn_io_srdr_to_io_reader(chk_rdr), blk_info, chk_size, ext);
             if (! up_ret || qn_json_get_integer(up_ret, "fn-code", -1) != 200) goto QN_STOR_UPLOAD_HUGE_ERROR_HANDLING;
-            if (! (blk_info = qn_stor_up_update_block_info(up, i, up_ret))) {
+            if (! (blk_info = qn_stor_ru_update_block_info(ru, i, up_ret))) {
                 up_ret = NULL;
                 goto QN_STOR_UPLOAD_HUGE_ERROR_HANDLING;
             } // if
@@ -3809,7 +3809,7 @@ QN_API qn_json_object_ptr qn_stor_upload_huge(qn_storage_ptr restrict stor, cons
 
     qn_io_srdr_destroy(chk_rdr);
     *start_idx = i;
-    return qn_stor_api_mkfile(stor, uptoken, qn_stor_up_to_context_reader(up), blk_info, qn_stor_up_uploaded_fsize(up), ext);
+    return qn_stor_ru_api_mkfile(stor, uptoken, qn_stor_ru_to_context_reader(ru), blk_info, qn_stor_ru_uploaded_fsize(ru), ext);
 
 QN_STOR_UPLOAD_HUGE_ERROR_HANDLING:
     qn_io_close(sec_rdr);

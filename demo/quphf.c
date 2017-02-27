@@ -11,7 +11,7 @@ int main(int argc, char * argv[])
     const char * bucket;
     const char * key;
     const char * fname;
-    qn_stor_upload_progress_ptr up;
+    qn_stor_resumable_upload_ptr ru;
     qn_file_ptr fl;
     qn_mac_ptr mac;
     qn_string uptoken;
@@ -59,8 +59,8 @@ int main(int argc, char * argv[])
         return 1;
     } // if
 
-    up = qn_stor_up_create(qn_fl_to_io_reader(fl));
-    if (! up) {
+    ru = qn_stor_ru_create(qn_fl_to_io_reader(fl));
+    if (! ru) {
         qn_str_destroy(uptoken);
         qn_fl_close(fl);
         printf("Cannot create a new upload progress object due to application error `%s`.\n", qn_err_get_message());
@@ -81,17 +81,17 @@ int main(int argc, char * argv[])
     if (! stor) {
         qn_stor_ue_destroy(ue);
         qn_str_destroy(uptoken);
-        qn_stor_up_destroy(up);
+        qn_stor_ru_destroy(ru);
         qn_fl_close(fl);
         printf("Cannot initialize a new storage object due to application error `%s`.\n", qn_err_get_message());
         return 1;
     } // if
 
     start_idx = 0;
-    up_ret = qn_stor_upload_huge(stor, uptoken, up, &start_idx, QN_STOR_UP_CHUNK_DEFAULT_SIZE, ue);
+    up_ret = qn_stor_ru_upload_huge(stor, uptoken, ru, &start_idx, QN_STOR_UP_CHUNK_DEFAULT_SIZE, ue);
     qn_stor_ue_destroy(ue);
     qn_str_destroy(uptoken);
-    qn_stor_up_destroy(up);
+    qn_stor_ru_destroy(ru);
     qn_fl_close(fl);
     if (! up_ret) {
         qn_stor_destroy(stor);
