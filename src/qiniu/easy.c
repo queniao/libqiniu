@@ -41,7 +41,6 @@ typedef struct _QN_EASY_PUT_EXTRA
         qn_fsize fsize;             // The size of the local file provided by the caller.
         qn_io_reader_itf rdr;       // A customized data reader provided by the caller.
 
-        qn_stor_rput_session_ptr rput_ss;
         qn_string resumable_info;
 
         qn_rgn_entry_ptr rgn_entry;
@@ -68,7 +67,6 @@ QN_API void qn_easy_pe_destroy(qn_easy_put_extra_ptr restrict pe)
     if (pe) {
         qn_str_destroy(pe->put_ctrl.resumable_info);
 
-        if (! pe->put_ctrl.extern_ss && pe->put_ctrl.rput_ss) qn_stor_rs_destroy(pe->put_ctrl.rput_ss);
         if (pe->attr.local_qetag) qn_str_destroy(pe->attr.local_qetag);
 
         if (pe->temp.qetag) qn_etag_ctx_destroy(pe->temp.qetag);
@@ -78,7 +76,6 @@ QN_API void qn_easy_pe_destroy(qn_easy_put_extra_ptr restrict pe)
 
 QN_API void qn_easy_pe_reset(qn_easy_put_extra_ptr restrict pe)
 {
-    if (! pe->put_ctrl.extern_ss && pe->put_ctrl.rput_ss) qn_stor_rs_destroy(pe->put_ctrl.rput_ss);
     if (pe->attr.local_qetag) qn_str_destroy(pe->attr.local_qetag);
 
     memset(&pe->put_ctrl, 0, sizeof(pe->put_ctrl));
@@ -139,17 +136,6 @@ QN_API void qn_easy_pe_set_source_reader(qn_easy_put_extra_ptr restrict pe, qn_i
 {
     pe->put_ctrl.rdr = rdr;
     pe->put_ctrl.fsize = fsize;
-}
-
-QN_API void qn_easy_pe_set_rput_session(qn_easy_put_extra_ptr restrict pe, qn_stor_rput_session_ptr restrict rput_ss)
-{
-    pe->put_ctrl.extern_ss = (rput_ss) ? 1 : 0;
-    pe->put_ctrl.rput_ss = rput_ss;
-}
-
-QN_API qn_stor_rput_session_ptr qn_easy_pe_get_rput_session(qn_easy_put_extra_ptr restrict pe)
-{
-    return pe->put_ctrl.rput_ss;
 }
 
 QN_API qn_bool qn_easy_pe_clone_and_set_resumable_info(qn_easy_put_extra_ptr restrict pe, const char * restrict str, size_t str_size)

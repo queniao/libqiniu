@@ -251,47 +251,6 @@ QN_API extern qn_json_object_ptr qn_stor_upload_buffer(qn_storage_ptr restrict s
 
 QN_API extern qn_json_object_ptr qn_stor_api_upload(qn_storage_ptr restrict stor, const char * restrict uptoken, qn_io_reader_itf restrict data_rdr, qn_stor_upload_extra_ptr restrict ext);
 
-// ----
-
-/***************************************************************************//**
-* @defgroup Storage-Resumable-Put Resumable Put Functions
-*******************************************************************************/
-
-struct _QN_STOR_RESUMABLE_PUT_SESSION;
-typedef struct _QN_STOR_RESUMABLE_PUT_SESSION * qn_stor_rput_session_ptr;
-
-QN_API extern qn_stor_rput_session_ptr qn_stor_rs_create(qn_fsize fsize);
-QN_API extern void qn_stor_rs_destroy(qn_stor_rput_session_ptr restrict ss);
-
-QN_API extern qn_stor_rput_session_ptr qn_stor_rs_from_string(const char * restrict str, size_t str_size);
-QN_API extern qn_string qn_stor_rs_to_string(const qn_stor_rput_session_ptr restrict ss);
-
-QN_API extern int qn_stor_rs_block_count(const qn_stor_rput_session_ptr restrict ss);
-QN_API extern int qn_stor_rs_block_size(const qn_stor_rput_session_ptr restrict ss, int n);
-QN_API extern qn_json_object_ptr qn_stor_rs_block_info(const qn_stor_rput_session_ptr restrict ss, int n);
-QN_API extern qn_bool qn_stor_rs_is_putting_block_done(const qn_stor_rput_session_ptr restrict ss, int n);
-
-struct _QN_STOR_RESUMABLE_PUT_EXTRA;
-typedef struct _QN_STOR_RESUMABLE_PUT_EXTRA * qn_stor_rput_extra_ptr;
-
-QN_API extern qn_stor_rput_extra_ptr qn_stor_rpe_create(void);
-QN_API extern void qn_stor_rpe_destroy(qn_stor_rput_extra_ptr restrict rpe);
-QN_API extern void qn_stor_rpe_reset(qn_stor_rput_extra_ptr restrict rpe);
-
-QN_API extern void qn_stor_rpe_set_chunk_size(qn_stor_rput_extra_ptr restrict rpe, int chk_size);
-QN_API extern void qn_stor_rpe_set_final_key(qn_stor_rput_extra_ptr restrict rpe, const char * restrict key);
-QN_API extern void qn_stor_rpe_set_region_entry(qn_stor_rput_extra_ptr restrict rpe, qn_rgn_entry_ptr restrict entry);
-
-QN_API extern void qn_stor_rpe_set_source_reader(qn_stor_rput_extra_ptr restrict rpe, qn_io_reader_itf restrict rdr, qn_fsize fsize);
-
-// ----
-
-QN_API extern qn_json_object_ptr qn_stor_rp_put_chunk(qn_storage_ptr restrict stor, const char * restrict uptoken, qn_json_object_ptr restrict blk_info, qn_io_reader_itf restrict rdr, int chk_size, qn_stor_rput_extra_ptr restrict ext);
-QN_API extern qn_json_object_ptr qn_stor_rp_put_block(qn_storage_ptr restrict stor, const char * restrict uptoken, qn_json_object_ptr restrict blk_info, qn_io_reader_itf restrict rdr, qn_stor_rput_extra_ptr restrict ext);
-QN_API extern qn_json_object_ptr qn_stor_rp_make_file(qn_storage_ptr restrict stor, const char * restrict uptoken, qn_stor_rput_session_ptr restrict ss, qn_stor_rput_extra_ptr restrict ext);
-
-QN_API extern qn_json_object_ptr qn_stor_rp_put_file(qn_storage_ptr restrict stor, const char * restrict uptoken, qn_stor_rput_session_ptr * restrict ss, const char * restrict fname, qn_stor_rput_extra_ptr restrict ext);
-
 // -------- Resumable Upload APIs --------
 
 // --------
