@@ -278,9 +278,9 @@ static qn_json_object_ptr qn_easy_put_file_in_one_piece(qn_easy_ptr restrict eas
     qn_stor_ue_set_final_key(put_ext, ext->attr.final_key);
 
     if (io_rdr) {
-        ret = qn_stor_api_upload(easy->stor, uptoken, io_rdr, put_ext);
+        ret = qn_stor_up_api_upload(easy->stor, uptoken, io_rdr, put_ext);
     } else {
-        ret = qn_stor_upload_file(easy->stor, uptoken, fname, put_ext);
+        ret = qn_stor_up_api_upload_file(easy->stor, uptoken, fname, put_ext);
     } // if
     qn_stor_ue_destroy(put_ext);
     return ret;
@@ -311,7 +311,7 @@ static qn_json_object_ptr qn_easy_put_huge(qn_easy_ptr restrict easy, const char
         if (! ru) goto QN_EASY_PUT_HUGE_ERROR_HANDLING;
     } // if
 
-    put_ret = qn_stor_ru_upload_huge(easy->stor, uptoken, ru, &start_idx, QN_STOR_UP_CHUNK_DEFAULT_SIZE, ue);
+    put_ret = qn_stor_ru_upload_huge(easy->stor, uptoken, ru, &start_idx, QN_STOR_RU_CHUNK_DEFAULT_SIZE, ue);
     qn_str_destroy(ext->put_ctrl.resumable_info);
 
     if (ext) {

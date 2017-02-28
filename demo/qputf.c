@@ -115,7 +115,7 @@ int main(int argc, char * argv[])
         return 1;
     } // if
 
-    put_ret = qn_stor_upload_file(stor, uptoken, fname, ue);
+    put_ret = qn_stor_up_api_upload_file(stor, uptoken, fname, ue);
     qn_stor_ue_destroy(ue);
     qn_rgn_tbl_destroy(rgn_tbl);
     qn_str_destroy(uptoken);

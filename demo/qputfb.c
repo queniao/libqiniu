@@ -107,7 +107,7 @@ int main(int argc, char * argv[])
         return 1;
     } // if
 
-    put_ret = qn_stor_upload_buffer(stor, uptoken, buf, buf_size, ue);
+    put_ret = qn_stor_up_api_upload_buffer(stor, uptoken, buf, buf_size, ue);
     qn_stor_ue_destroy(ue);
     free(buf);
     qn_str_destroy(uptoken);

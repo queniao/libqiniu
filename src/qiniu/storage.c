@@ -1882,7 +1882,7 @@ QN_API qn_json_object_ptr qn_stor_execute_batch_opertions(qn_storage_ptr restric
     return stor->obj_body;
 }
 
-// ---- Definition of Put Policy ----
+// -------- Put Policy (abbreviation: pp) --------
 
 QN_API qn_json_object_ptr qn_stor_pp_create(const char * restrict bucket, const char * restrict key, qn_uint32 deadline)
 {
@@ -2124,12 +2124,7 @@ QN_API qn_string qn_stor_pp_to_uptoken(qn_json_object_ptr restrict pp, qn_mac_pt
     return uptoken;
 }
 
-// ---- Definition of Upload ----
-
-typedef struct _QN_STOR_UPLOAD_READER
-{
-    qn_stor_upload_extra_ptr ext;
-} qn_stor_put_reader_st, *qn_stor_put_reader_ptr;
+// -------- Upload Extra (abbreviation: ue) --------
 
 typedef struct _QN_STOR_UPLOAD_EXTRA
 {
@@ -2184,6 +2179,8 @@ QN_API extern void qn_stor_ue_set_region_entry(qn_stor_upload_extra_ptr restrict
 {
     ue->rgn_entry = entry;
 }
+
+// -------- Ordinary Upload (abbreviation: up) --------
 
 static qn_bool qn_stor_prepare_for_upload(qn_storage_ptr restrict stor, const char * restrict uptoken, qn_stor_upload_extra_ptr restrict ext)
 {
@@ -2292,7 +2289,7 @@ static qn_bool qn_stor_prepare_for_upload(qn_storage_ptr restrict stor, const ch
 *         If fails, the function returns a NULL value and the caller can call
 *         qn_err_get_message() to check out what happened.
 *******************************************************************************/
-QN_API qn_json_object_ptr qn_stor_upload_file(qn_storage_ptr restrict stor, const char * restrict uptoken, const char * restrict fname, qn_stor_upload_extra_ptr restrict ext)
+QN_API qn_json_object_ptr qn_stor_up_api_upload_file(qn_storage_ptr restrict stor, const char * restrict uptoken, const char * restrict fname, qn_stor_upload_extra_ptr restrict ext)
 {
     qn_bool ret;
     qn_fl_info_ptr fi;
@@ -2333,7 +2330,7 @@ QN_API qn_json_object_ptr qn_stor_upload_file(qn_storage_ptr restrict stor, cons
     return stor->obj_body;
 }
 
-QN_API qn_json_object_ptr qn_stor_upload_buffer(qn_storage_ptr restrict stor, const char * restrict uptoken, const char * restrict buf, int buf_size, qn_stor_upload_extra_ptr restrict ext)
+QN_API qn_json_object_ptr qn_stor_up_api_upload_buffer(qn_storage_ptr restrict stor, const char * restrict uptoken, const char * restrict buf, int buf_size, qn_stor_upload_extra_ptr restrict ext)
 {
     qn_bool ret;
     qn_http_form_ptr form;
@@ -2376,7 +2373,7 @@ static size_t qn_stor_upload_callback_fn(void * user_data, char * buf, size_t si
     return ret;
 }
 
-QN_API qn_json_object_ptr qn_stor_api_upload(qn_storage_ptr restrict stor, const char * restrict uptoken, qn_io_reader_itf restrict data_rdr, qn_stor_upload_extra_ptr restrict ext)
+QN_API qn_json_object_ptr qn_stor_up_api_upload(qn_storage_ptr restrict stor, const char * restrict uptoken, qn_io_reader_itf restrict data_rdr, qn_stor_upload_extra_ptr restrict ext)
 {
     qn_bool ret;
     qn_rgn_entry_ptr rgn_entry;
@@ -2409,7 +2406,7 @@ QN_API qn_json_object_ptr qn_stor_api_upload(qn_storage_ptr restrict stor, const
     return stor->obj_body;
 }
 
-// -------- Resumable Upload APIs --------
+// -------- Resumable Upload (abbreviation: ru) --------
 
 typedef struct _QN_STOR_RESUMABLE_UPLOAD
 {
@@ -2513,7 +2510,7 @@ static qn_io_reader_st qn_ctx_rdr_vtable = {
 
 static inline int qn_stor_ru_calculate_block_count(qn_fsize fsize)
 {
-    return (fsize + QN_STOR_UP_BLOCK_MAX_SIZE - 1) / QN_STOR_UP_BLOCK_MAX_SIZE;
+    return (fsize + QN_STOR_RU_BLOCK_MAX_SIZE - 1) / QN_STOR_RU_BLOCK_MAX_SIZE;
 }
 
 QN_API qn_stor_resumable_upload_ptr qn_stor_ru_create(qn_io_reader_itf restrict data_rdr)
@@ -2674,7 +2671,7 @@ QN_API qn_json_object_ptr qn_stor_ru_get_block_info(qn_stor_resumable_upload_ptr
         qn_err_set_out_of_range();
         return NULL;
     } // if
-    if (blk_idx == QN_STOR_UP_BLOCK_LAST_INDEX) {
+    if (blk_idx == QN_STOR_RU_BLOCK_LAST_INDEX) {
         blk_idx = qn_json_size_array(blk_arr) - 1;
     } // if
     return qn_json_pick_object(blk_arr, blk_idx, NULL);
@@ -2717,19 +2714,19 @@ QN_API qn_json_object_ptr qn_stor_ru_update_block_info(qn_stor_resumable_upload_
     new_blk_info = qn_json_create_object();
     if (! new_blk_info) return NULL;
 
-    if (! qn_json_set_string(new_blk_info, "ctx", ctx)) goto QN_STOR_UP_UPDATE_BLOCK_INFO_ERROR_HANDLING;
-    if (! qn_json_set_string(new_blk_info, "checksum", checksum)) goto QN_STOR_UP_UPDATE_BLOCK_INFO_ERROR_HANDLING;
-    if (! qn_json_set_string(new_blk_info, "host", host)) goto QN_STOR_UP_UPDATE_BLOCK_INFO_ERROR_HANDLING;
-    if (! qn_json_set_integer(new_blk_info, "crc32", crc32)) goto QN_STOR_UP_UPDATE_BLOCK_INFO_ERROR_HANDLING;
-    if (! qn_json_set_integer(new_blk_info, "offset", new_offset)) goto QN_STOR_UP_UPDATE_BLOCK_INFO_ERROR_HANDLING;
-    if (! qn_json_set_integer(new_blk_info, "bsize", blk_size)) goto QN_STOR_UP_UPDATE_BLOCK_INFO_ERROR_HANDLING;
+    if (! qn_json_set_string(new_blk_info, "ctx", ctx)) goto QN_STOR_RU_UPDATE_BLOCK_INFO_ERROR_HANDLING;
+    if (! qn_json_set_string(new_blk_info, "checksum", checksum)) goto QN_STOR_RU_UPDATE_BLOCK_INFO_ERROR_HANDLING;
+    if (! qn_json_set_string(new_blk_info, "host", host)) goto QN_STOR_RU_UPDATE_BLOCK_INFO_ERROR_HANDLING;
+    if (! qn_json_set_integer(new_blk_info, "crc32", crc32)) goto QN_STOR_RU_UPDATE_BLOCK_INFO_ERROR_HANDLING;
+    if (! qn_json_set_integer(new_blk_info, "offset", new_offset)) goto QN_STOR_RU_UPDATE_BLOCK_INFO_ERROR_HANDLING;
+    if (! qn_json_set_integer(new_blk_info, "bsize", blk_size)) goto QN_STOR_RU_UPDATE_BLOCK_INFO_ERROR_HANDLING;
 
     blk_arr = qn_json_get_array(ru->progress, "blocks", NULL);
-    if (! qn_json_replace_object(blk_arr, blk_idx, new_blk_info)) goto QN_STOR_UP_UPDATE_BLOCK_INFO_ERROR_HANDLING;
+    if (! qn_json_replace_object(blk_arr, blk_idx, new_blk_info)) goto QN_STOR_RU_UPDATE_BLOCK_INFO_ERROR_HANDLING;
     ru->uploaded_fsize += new_offset - old_offset;
     return new_blk_info;
 
-QN_STOR_UP_UPDATE_BLOCK_INFO_ERROR_HANDLING:
+QN_STOR_RU_UPDATE_BLOCK_INFO_ERROR_HANDLING:
     qn_json_destroy_object(new_blk_info);
     return NULL;
 }
@@ -2737,7 +2734,7 @@ QN_STOR_UP_UPDATE_BLOCK_INFO_ERROR_HANDLING:
 QN_API qn_io_reader_itf qn_stor_ru_create_block_reader(qn_stor_resumable_upload_ptr restrict ru, int blk_idx, qn_json_object_ptr * restrict blk_info)
 {
     int i;
-    int blk_size = QN_STOR_UP_BLOCK_MAX_SIZE;
+    int blk_size = QN_STOR_RU_BLOCK_MAX_SIZE;
     qn_json_object_ptr new_blk_info;
     qn_json_array_ptr blk_arr;
 
@@ -2764,14 +2761,14 @@ QN_API qn_io_reader_itf qn_stor_ru_create_block_reader(qn_stor_resumable_upload_
             if (! (new_blk_info = qn_json_create_and_push_object(blk_arr))) return NULL;
             if (! qn_json_set_integer(new_blk_info, "bsize", blk_size)) return NULL;
         } // for
-        if (i == ru->blk_cnt - 1) blk_size = (qn_io_size(ru->src_rdr) % QN_STOR_UP_BLOCK_MAX_SIZE);
+        if (i == ru->blk_cnt - 1) blk_size = (qn_io_size(ru->src_rdr) % QN_STOR_RU_BLOCK_MAX_SIZE);
         if (! (new_blk_info = qn_json_create_and_push_object(blk_arr))) return NULL;
         if (! qn_json_set_integer(new_blk_info, "bsize", blk_size)) return NULL;
     } // if
 
     // -- The source reader is a file.
     *blk_info = new_blk_info;
-    return qn_io_section(ru->src_rdr, blk_idx * QN_STOR_UP_BLOCK_MAX_SIZE, blk_size);
+    return qn_io_section(ru->src_rdr, blk_idx * QN_STOR_RU_BLOCK_MAX_SIZE, blk_size);
 }
 
 QN_API qn_io_reader_itf qn_stor_ru_to_context_reader(qn_stor_resumable_upload_ptr restrict ru)
@@ -2881,7 +2878,7 @@ QN_API extern qn_json_object_ptr qn_stor_ru_api_mlblk(qn_storage_ptr restrict st
         return NULL;
     } // if
 
-    if (chk_size <= 0) chk_size = QN_STOR_UP_CHUNK_DEFAULT_SIZE;
+    if (chk_size <= 0) chk_size = QN_STOR_RU_CHUNK_DEFAULT_SIZE;
     if (chk_size > blk_size) chk_size = blk_size;
 
     // ---- Process all extra options.
@@ -2944,7 +2941,7 @@ QN_API extern qn_json_object_ptr qn_stor_ru_api_bput(qn_storage_ptr restrict sto
         return NULL;
     } // if
 
-    if (chk_size <= 0) chk_size = QN_STOR_UP_CHUNK_DEFAULT_SIZE;
+    if (chk_size <= 0) chk_size = QN_STOR_RU_CHUNK_DEFAULT_SIZE;
     if (chk_size > (blk_size - offset)) chk_size = (blk_size - offset);
 
     // ---- Process all extra options.

@@ -138,9 +138,9 @@ int main(int argc, char * argv[])
     } // if
 
     if (! ctrl_rdr) {
-        put_ret = qn_stor_upload_file(stor, uptoken, fname, ue);
+        put_ret = qn_stor_up_api_upload_file(stor, uptoken, fname, ue);
     } else {
-        put_ret = qn_stor_api_upload(stor, uptoken, qn_rdr_to_io_reader(ctrl_rdr), ue);
+        put_ret = qn_stor_up_api_upload(stor, uptoken, qn_rdr_to_io_reader(ctrl_rdr), ue);
     } // if
     qn_stor_ue_destroy(ue);
     qn_str_destroy(uptoken);

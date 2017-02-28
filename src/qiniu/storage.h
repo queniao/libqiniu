@@ -192,9 +192,7 @@ QN_API extern void qn_stor_be_set_region_entry(qn_stor_batch_extra_ptr restrict 
 
 QN_API extern qn_json_object_ptr qn_stor_execute_batch_opertions(qn_storage_ptr restrict stor, const qn_mac_ptr restrict mac, const qn_stor_batch_ptr restrict bt, qn_stor_batch_extra_ptr restrict ext);
 
-// ---- Declaration of Upload ----
-
-// ---- Declaration of Put Policy ----
+// -------- Put Policy (abbreviation: pp) --------
 
 QN_API extern qn_json_object_ptr qn_stor_pp_create(const char * restrict bucket, const char * restrict key, qn_uint32 deadline);
 QN_API extern void qn_stor_pp_destroy(qn_json_object_ptr restrict pp);
@@ -232,7 +230,7 @@ QN_API extern qn_bool qn_stor_pp_upload_message(qn_json_object_ptr restrict pp, 
 
 QN_API extern qn_string qn_stor_pp_to_uptoken(qn_json_object_ptr restrict pp, qn_mac_ptr restrict mac);
 
-// ---- 
+// -------- Upload Extra (abbreviation: ue) --------
 
 struct _QN_STOR_UPLOAD_EXTRA;
 typedef struct _QN_STOR_UPLOAD_EXTRA * qn_stor_upload_extra_ptr;
@@ -246,18 +244,21 @@ QN_API extern void qn_stor_ue_set_local_crc32(qn_stor_upload_extra_ptr restrict 
 QN_API extern void qn_stor_ue_set_accept_type(qn_stor_upload_extra_ptr restrict ue, const char * restrict accept_type);
 QN_API extern void qn_stor_ue_set_region_entry(qn_stor_upload_extra_ptr restrict ue, qn_rgn_entry_ptr restrict entry);
 
-QN_API extern qn_json_object_ptr qn_stor_upload_file(qn_storage_ptr restrict stor, const char * restrict uptoken, const char * restrict fname, qn_stor_upload_extra_ptr restrict ext);
-QN_API extern qn_json_object_ptr qn_stor_upload_buffer(qn_storage_ptr restrict stor, const char * restrict uptoken, const char * restrict buf, int buf_size, qn_stor_upload_extra_ptr restrict ext);
+// -------- Ordinary Upload (abbreviation: up) --------
 
-QN_API extern qn_json_object_ptr qn_stor_api_upload(qn_storage_ptr restrict stor, const char * restrict uptoken, qn_io_reader_itf restrict data_rdr, qn_stor_upload_extra_ptr restrict ext);
+QN_API extern qn_json_object_ptr qn_stor_up_api_upload_file(qn_storage_ptr restrict stor, const char * restrict uptoken, const char * restrict fname, qn_stor_upload_extra_ptr restrict ext);
+QN_API extern qn_json_object_ptr qn_stor_up_api_upload_buffer(qn_storage_ptr restrict stor, const char * restrict uptoken, const char * restrict buf, int buf_size, qn_stor_upload_extra_ptr restrict ext);
 
-// -------- Resumable Upload APIs --------
+QN_API extern qn_json_object_ptr qn_stor_up_api_upload(qn_storage_ptr restrict stor, const char * restrict uptoken, qn_io_reader_itf restrict data_rdr, qn_stor_upload_extra_ptr restrict ext);
 
-// --------
+// -------- Resumable Upload (abbreviation: ru) --------
 
-#define QN_STOR_UP_BLOCK_MAX_SIZE (1L << 22)
-#define QN_STOR_UP_CHUNK_DEFAULT_SIZE (1024 * 256)
-#define QN_STOR_UP_BLOCK_LAST_INDEX (-1)
+enum
+{
+    QN_STOR_RU_CHUNK_DEFAULT_SIZE = (1024 * 256),
+    QN_STOR_RU_BLOCK_MAX_SIZE = (1024 * 1024 * 4),
+    QN_STOR_RU_BLOCK_LAST_INDEX = (-1)
+};
 
 struct _QN_STOR_RESUMABLE_UPLOAD;
 typedef struct _QN_STOR_RESUMABLE_UPLOAD * qn_stor_resumable_upload_ptr;

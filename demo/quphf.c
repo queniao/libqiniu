@@ -88,7 +88,7 @@ int main(int argc, char * argv[])
     } // if
 
     start_idx = 0;
-    up_ret = qn_stor_ru_upload_huge(stor, uptoken, ru, &start_idx, QN_STOR_UP_CHUNK_DEFAULT_SIZE, ue);
+    up_ret = qn_stor_ru_upload_huge(stor, uptoken, ru, &start_idx, QN_STOR_RU_CHUNK_DEFAULT_SIZE, ue);
     qn_stor_ue_destroy(ue);
     qn_str_destroy(uptoken);
     qn_stor_ru_destroy(ru);
