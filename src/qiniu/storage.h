@@ -47,7 +47,7 @@ typedef struct _QN_STOR_PUT_CTRL
     qn_io_reader_itf rdr;
 } qn_stor_put_ctrl, *qn_stor_put_ctrl_ptr;
 
-// ---- Declaration of Storage Basic Functions ----
+// -------- Storage Object (abbreviation: stor) --------
 
 struct _QN_STORAGE;
 typedef struct _QN_STORAGE * qn_storage_ptr;
@@ -59,105 +59,27 @@ QN_API extern qn_json_object_ptr qn_stor_get_object_body(const qn_storage_ptr re
 QN_API extern qn_json_array_ptr qn_stor_get_array_body(const qn_storage_ptr restrict stor);
 QN_API extern qn_http_hdr_iterator_ptr qn_stor_resp_get_header_iterator(const qn_storage_ptr restrict stor);
 
-// ---- Declaration of Storage Management Functions ----
+// -------- Management Extra (abbreviation: mne) --------
 
-// ----
+struct _QN_STOR_MANAGEMENT_EXTRA;
+typedef struct _QN_STOR_MANAGEMENT_EXTRA * qn_stor_management_extra_ptr;
 
-struct _QN_STOR_STAT_EXTRA;
-typedef struct _QN_STOR_STAT_EXTRA * qn_stor_stat_extra_ptr;
+QN_API extern qn_stor_management_extra_ptr qn_stor_mne_create(void);
+QN_API extern void qn_stor_mne_destroy(qn_stor_management_extra_ptr restrict me);
+QN_API extern void qn_stor_mne_reset(qn_stor_management_extra_ptr restrict me);
 
-QN_API extern qn_stor_stat_extra_ptr qn_stor_se_create(void);
-QN_API extern void qn_stor_se_destroy(qn_stor_stat_extra_ptr restrict se);
-QN_API extern void qn_stor_se_reset(qn_stor_stat_extra_ptr restrict se);
+QN_API extern void qn_stor_mne_set_force_overwrite(qn_stor_management_extra_ptr restrict me, qn_bool force);
+QN_API extern void qn_stor_mne_set_region_entry(qn_stor_management_extra_ptr restrict me, qn_rgn_entry_ptr restrict entry);
 
-QN_API extern void qn_stor_se_set_region_entry(qn_stor_stat_extra_ptr restrict se, qn_rgn_entry_ptr restrict entry);
+// -------- Management Functions (abbreviation: mn) --------
 
-QN_API extern qn_json_object_ptr qn_stor_mn_api_stat(qn_storage_ptr restrict stor, const qn_mac_ptr restrict mac, const char * restrict bucket, const char * restrict key, qn_stor_stat_extra_ptr restrict ext);
+QN_API extern qn_json_object_ptr qn_stor_mn_api_stat(qn_storage_ptr restrict stor, const qn_mac_ptr restrict mac, const char * restrict bucket, const char * restrict key, qn_stor_management_extra_ptr restrict mne);
+QN_API extern qn_json_object_ptr qn_stor_mn_api_copy(qn_storage_ptr restrict stor, const qn_mac_ptr restrict mac, const char * restrict src_bucket, const char * restrict src_key, const char * restrict dest_bucket, const char * restrict dest_key, qn_stor_management_extra_ptr restrict mne);
+QN_API extern qn_json_object_ptr qn_stor_mn_api_move(qn_storage_ptr restrict stor, const qn_mac_ptr restrict mac, const char * restrict src_bucket, const char * restrict src_key, const char * restrict dest_bucket, const char * restrict dest_key, qn_stor_management_extra_ptr restrict mne);
+QN_API extern qn_json_object_ptr qn_stor_mn_api_delete(qn_storage_ptr restrict stor, const qn_mac_ptr restrict mac, const char * restrict bucket, const char * restrict key, qn_stor_management_extra_ptr restrict mne);
+QN_API extern qn_json_object_ptr qn_stor_mn_api_chgm(qn_storage_ptr restrict stor, const qn_mac_ptr restrict mac, const char * restrict bucket, const char * restrict key, const char * restrict mime, qn_stor_management_extra_ptr restrict mne);
 
-// ----
-
-struct _QN_STOR_LIST_EXTRA;
-typedef struct _QN_STOR_LIST_EXTRA * qn_stor_list_extra_ptr;
-
-QN_API extern qn_stor_list_extra_ptr qn_stor_le_create(void);
-QN_API extern void qn_stor_le_destroy(qn_stor_list_extra_ptr restrict le);
-QN_API extern void qn_stor_le_reset(qn_stor_list_extra_ptr restrict le);
-
-QN_API extern void qn_stor_le_set_prefix(qn_stor_list_extra_ptr restrict le, const char * restrict prefix);
-QN_API extern void qn_stor_le_set_delimiter(qn_stor_list_extra_ptr restrict le, const char * restrict delimiter);
-QN_API extern void qn_stor_le_set_marker(qn_stor_list_extra_ptr restrict le, const char * restrict marker);
-QN_API extern void qn_stor_le_set_limit(qn_stor_list_extra_ptr restrict le, int limit);
-
-QN_API extern qn_json_object_ptr qn_stor_mn_api_list(qn_storage_ptr restrict stor, const qn_mac_ptr restrict mac, const char * restrict bucket, qn_stor_list_extra_ptr restrict ext);
-
-// ----
-
-struct _QN_STOR_COPY_EXTRA;
-typedef struct _QN_STOR_COPY_EXTRA * qn_stor_copy_extra_ptr;
-
-QN_API extern qn_stor_copy_extra_ptr qn_stor_ce_create(void);
-QN_API extern void qn_stor_ce_destroy(qn_stor_copy_extra_ptr restrict ce);
-QN_API extern void qn_stor_ce_reset(qn_stor_copy_extra_ptr restrict ce);
-
-QN_API extern void qn_stor_ce_set_force_overwrite(qn_stor_copy_extra_ptr restrict ce, qn_bool force);
-QN_API extern void qn_stor_ce_set_region_entry(qn_stor_copy_extra_ptr restrict ce, qn_rgn_entry_ptr restrict entry);
-
-QN_API extern qn_json_object_ptr qn_stor_mn_api_copy(qn_storage_ptr restrict stor, const qn_mac_ptr restrict mac, const char * restrict src_bucket, const char * restrict src_key, const char * restrict dest_bucket, const char * restrict dest_key, qn_stor_copy_extra_ptr restrict ext);
-
-// ----
-
-struct _QN_STOR_MOVE_EXTRA;
-typedef struct _QN_STOR_MOVE_EXTRA * qn_stor_move_extra_ptr;
-
-QN_API extern qn_stor_move_extra_ptr qn_stor_me_create(void);
-QN_API extern void qn_stor_me_destroy(qn_stor_move_extra_ptr restrict me);
-QN_API extern void qn_stor_me_reset(qn_stor_move_extra_ptr restrict me);
-
-QN_API extern void qn_stor_me_set_region_entry(qn_stor_move_extra_ptr restrict me, qn_rgn_entry_ptr restrict entry);
-
-QN_API extern qn_json_object_ptr qn_stor_mn_api_move(qn_storage_ptr restrict stor, const qn_mac_ptr restrict mac, const char * restrict src_bucket, const char * restrict src_key, const char * restrict dest_bucket, const char * restrict dest_key, qn_stor_move_extra_ptr restrict ext);
-
-// ----
-
-struct _QN_STOR_DELETE_EXTRA;
-typedef struct _QN_STOR_DELETE_EXTRA * qn_stor_delete_extra_ptr;
-
-QN_API extern qn_stor_delete_extra_ptr qn_stor_de_create(void);
-QN_API extern void qn_stor_de_destroy(qn_stor_delete_extra_ptr restrict de);
-QN_API extern void qn_stor_de_reset(qn_stor_delete_extra_ptr restrict de);
-
-QN_API extern void qn_stor_de_set_region_entry(qn_stor_delete_extra_ptr restrict de, qn_rgn_entry_ptr restrict entry);
-
-QN_API extern qn_json_object_ptr qn_stor_mn_api_delete(qn_storage_ptr restrict stor, const qn_mac_ptr restrict mac, const char * restrict bucket, const char * restrict key, qn_stor_delete_extra_ptr restrict ext);
-
-// ----
-
-struct _QN_STOR_CHANGE_MIME_EXTRA;
-typedef struct _QN_STOR_CHANGE_MIME_EXTRA * qn_stor_change_mime_extra_ptr;
-
-QN_API extern qn_stor_change_mime_extra_ptr qn_stor_cme_create(void);
-QN_API extern void qn_stor_cme_destroy(qn_stor_change_mime_extra_ptr restrict cme);
-QN_API extern void qn_stor_cme_reset(qn_stor_change_mime_extra_ptr restrict cme);
-
-QN_API extern void qn_stor_cme_set_region_entry(qn_stor_change_mime_extra_ptr restrict cme, qn_rgn_entry_ptr restrict entry);
-
-QN_API extern qn_json_object_ptr qn_stor_mn_api_chgm(qn_storage_ptr restrict stor, const qn_mac_ptr restrict mac, const char * restrict bucket, const char * restrict key, const char * restrict mime, qn_stor_change_mime_extra_ptr restrict ext);
-
-// ----
-
-struct _QN_STOR_FETCH_EXTRA;
-typedef struct _QN_STOR_FETCH_EXTRA * qn_stor_fetch_extra_ptr;
-
-QN_API extern qn_stor_fetch_extra_ptr qn_stor_fe_create(void);
-QN_API extern void qn_stor_fe_destroy(qn_stor_fetch_extra_ptr restrict fe);
-QN_API extern void qn_stor_fe_reset(qn_stor_fetch_extra_ptr restrict fe);
-
-QN_API extern void qn_stor_fe_set_region_entry(qn_stor_fetch_extra_ptr restrict fe, qn_rgn_entry_ptr restrict entry);
-
-QN_API extern qn_json_object_ptr qn_stor_ft_api_fetch(qn_storage_ptr restrict stor, const qn_mac_ptr restrict mac, const char * restrict src_url, const char * restrict dest_bucket, const char * restrict dest_key, qn_stor_fetch_extra_ptr restrict ext);
-QN_API extern qn_json_object_ptr qn_stor_ft_api_prefetch(qn_storage_ptr restrict stor, const qn_mac_ptr restrict mac, const char * restrict dest_bucket, const char * restrict dest_key, qn_stor_fetch_extra_ptr restrict ext);
-
-// ----
+// -------- Batch Operations (abbreviation: bt) --------
 
 struct _QN_STOR_BATCH;
 typedef struct _QN_STOR_BATCH * qn_stor_batch_ptr;
@@ -171,16 +93,42 @@ QN_API extern qn_bool qn_stor_bt_add_copy_op(qn_stor_batch_ptr restrict bt, cons
 QN_API extern qn_bool qn_stor_bt_add_move_op(qn_stor_batch_ptr restrict bt, const char * restrict src_bucket, const char * restrict src_key, const char * restrict dest_bucket, const char * restrict dest_key);
 QN_API extern qn_bool qn_stor_bt_add_delete_op(qn_stor_batch_ptr restrict bt, const char * restrict bucket, const char * restrict key);
 
-struct _QN_STOR_BATCH_EXTRA;
-typedef struct _QN_STOR_BATCH_EXTRA * qn_stor_batch_extra_ptr;
+// -------- Batch Functions (abbreviation: bt) --------
 
-QN_API extern qn_stor_batch_extra_ptr qn_stor_be_create(void);
-QN_API extern void qn_stor_be_destroy(qn_stor_batch_extra_ptr restrict be);
-QN_API extern void qn_stor_be_reset(qn_stor_batch_extra_ptr restrict be);
+QN_API extern qn_json_object_ptr qn_stor_bt_api_batch(qn_storage_ptr restrict stor, const qn_mac_ptr restrict mac, const qn_stor_batch_ptr restrict bt, qn_stor_management_extra_ptr restrict mne);
 
-QN_API extern void qn_stor_be_set_region_entry(qn_stor_batch_extra_ptr restrict be, qn_rgn_entry_ptr restrict entry);
+// -------- List Extra (abbreviation: lse) --------
 
-QN_API extern qn_json_object_ptr qn_stor_mn_api_batch(qn_storage_ptr restrict stor, const qn_mac_ptr restrict mac, const qn_stor_batch_ptr restrict bt, qn_stor_batch_extra_ptr restrict ext);
+struct _QN_STOR_LIST_EXTRA;
+typedef struct _QN_STOR_LIST_EXTRA * qn_stor_list_extra_ptr;
+
+QN_API extern qn_stor_list_extra_ptr qn_stor_lse_create(void);
+QN_API extern void qn_stor_lse_destroy(qn_stor_list_extra_ptr restrict lse);
+QN_API extern void qn_stor_lse_reset(qn_stor_list_extra_ptr restrict lse);
+
+QN_API extern void qn_stor_lse_set_prefix(qn_stor_list_extra_ptr restrict lse, const char * restrict prefix, const char * restrict delimiter);
+QN_API extern void qn_stor_lse_set_marker(qn_stor_list_extra_ptr restrict lse, const char * restrict marker);
+QN_API extern void qn_stor_lse_set_limit(qn_stor_list_extra_ptr restrict lse, int limit);
+
+// -------- List Functions (abbreviation: ls) --------
+
+QN_API extern qn_json_object_ptr qn_stor_ls_api_list(qn_storage_ptr restrict stor, const qn_mac_ptr restrict mac, const char * restrict bucket, qn_stor_list_extra_ptr restrict lse);
+
+// -------- Fetch Extra (abbreviation: fte) --------
+
+struct _QN_STOR_FETCH_EXTRA;
+typedef struct _QN_STOR_FETCH_EXTRA * qn_stor_fetch_extra_ptr;
+
+QN_API extern qn_stor_fetch_extra_ptr qn_stor_fte_create(void);
+QN_API extern void qn_stor_fte_destroy(qn_stor_fetch_extra_ptr restrict fte);
+QN_API extern void qn_stor_fte_reset(qn_stor_fetch_extra_ptr restrict fte);
+
+QN_API extern void qn_stor_fte_set_region_entry(qn_stor_fetch_extra_ptr restrict fte, qn_rgn_entry_ptr restrict entry);
+
+// -------- Fetch Functions (abbreviation: ft) --------
+
+QN_API extern qn_json_object_ptr qn_stor_ft_api_fetch(qn_storage_ptr restrict stor, const qn_mac_ptr restrict mac, const char * restrict src_url, const char * restrict dest_bucket, const char * restrict dest_key, qn_stor_fetch_extra_ptr restrict fte);
+QN_API extern qn_json_object_ptr qn_stor_ft_api_prefetch(qn_storage_ptr restrict stor, const qn_mac_ptr restrict mac, const char * restrict dest_bucket, const char * restrict dest_key, qn_stor_fetch_extra_ptr restrict fte);
 
 // -------- Put Policy (abbreviation: pp) --------
 
@@ -220,26 +168,26 @@ QN_API extern qn_bool qn_stor_pp_upload_message(qn_json_object_ptr restrict pp, 
 
 QN_API extern qn_string qn_stor_pp_to_uptoken(qn_json_object_ptr restrict pp, qn_mac_ptr restrict mac);
 
-// -------- Upload Extra (abbreviation: ue) --------
+// -------- Upload Extra (abbreviation: upe) --------
 
 struct _QN_STOR_UPLOAD_EXTRA;
 typedef struct _QN_STOR_UPLOAD_EXTRA * qn_stor_upload_extra_ptr;
 
-QN_API extern qn_stor_upload_extra_ptr qn_stor_ue_create(void);
-QN_API extern void qn_stor_ue_destroy(qn_stor_upload_extra_ptr restrict ue);
-QN_API extern void qn_stor_ue_reset(qn_stor_upload_extra_ptr restrict ue);
+QN_API extern qn_stor_upload_extra_ptr qn_stor_upe_create(void);
+QN_API extern void qn_stor_upe_destroy(qn_stor_upload_extra_ptr restrict upe);
+QN_API extern void qn_stor_upe_reset(qn_stor_upload_extra_ptr restrict upe);
 
-QN_API extern void qn_stor_ue_set_final_key(qn_stor_upload_extra_ptr restrict ue, const char * restrict final_key);
-QN_API extern void qn_stor_ue_set_local_crc32(qn_stor_upload_extra_ptr restrict ue, const char * restrict crc32);
-QN_API extern void qn_stor_ue_set_accept_type(qn_stor_upload_extra_ptr restrict ue, const char * restrict accept_type);
-QN_API extern void qn_stor_ue_set_region_entry(qn_stor_upload_extra_ptr restrict ue, qn_rgn_entry_ptr restrict entry);
+QN_API extern void qn_stor_upe_set_final_key(qn_stor_upload_extra_ptr restrict upe, const char * restrict final_key);
+QN_API extern void qn_stor_upe_set_local_crc32(qn_stor_upload_extra_ptr restrict upe, const char * restrict crc32);
+QN_API extern void qn_stor_upe_set_accept_type(qn_stor_upload_extra_ptr restrict upe, const char * restrict accept_type);
+QN_API extern void qn_stor_upe_set_region_entry(qn_stor_upload_extra_ptr restrict upe, qn_rgn_entry_ptr restrict entry);
 
 // -------- Ordinary Upload (abbreviation: up) --------
 
-QN_API extern qn_json_object_ptr qn_stor_up_api_upload_file(qn_storage_ptr restrict stor, const char * restrict uptoken, const char * restrict fname, qn_stor_upload_extra_ptr restrict ext);
-QN_API extern qn_json_object_ptr qn_stor_up_api_upload_buffer(qn_storage_ptr restrict stor, const char * restrict uptoken, const char * restrict buf, int buf_size, qn_stor_upload_extra_ptr restrict ext);
+QN_API extern qn_json_object_ptr qn_stor_up_api_upload_file(qn_storage_ptr restrict stor, const char * restrict uptoken, const char * restrict fname, qn_stor_upload_extra_ptr restrict upe);
+QN_API extern qn_json_object_ptr qn_stor_up_api_upload_buffer(qn_storage_ptr restrict stor, const char * restrict uptoken, const char * restrict buf, int buf_size, qn_stor_upload_extra_ptr restrict upe);
 
-QN_API extern qn_json_object_ptr qn_stor_up_api_upload(qn_storage_ptr restrict stor, const char * restrict uptoken, qn_io_reader_itf restrict data_rdr, qn_stor_upload_extra_ptr restrict ext);
+QN_API extern qn_json_object_ptr qn_stor_up_api_upload(qn_storage_ptr restrict stor, const char * restrict uptoken, qn_io_reader_itf restrict data_rdr, qn_stor_upload_extra_ptr restrict upe);
 
 // -------- Resumable Upload (abbreviation: ru) --------
 
@@ -277,11 +225,11 @@ QN_API extern qn_bool qn_stor_ru_is_file_uploaded(qn_stor_resumable_upload_ptr r
 
 // --------
 
-QN_API extern qn_json_object_ptr qn_stor_ru_api_mkblk(qn_storage_ptr restrict stor, const char * restrict uptoken, qn_io_reader_itf restrict data_rdr, qn_json_object_ptr restrict blk_info, int chk_size, qn_stor_upload_extra_ptr restrict ext);
-QN_API extern qn_json_object_ptr qn_stor_ru_api_bput(qn_storage_ptr restrict stor, const char * restrict uptoken, qn_io_reader_itf restrict data_rdr, qn_json_object_ptr restrict blk_info, int chk_size, qn_stor_upload_extra_ptr restrict ext);
-QN_API extern qn_json_object_ptr qn_stor_ru_api_mkfile(qn_storage_ptr restrict stor, const char * restrict uptoken, qn_io_reader_itf restrict ctx_rdr, qn_json_object_ptr restrict last_blk_info, qn_fsize fsize, qn_stor_upload_extra_ptr restrict ext);
+QN_API extern qn_json_object_ptr qn_stor_ru_api_mkblk(qn_storage_ptr restrict stor, const char * restrict uptoken, qn_io_reader_itf restrict data_rdr, qn_json_object_ptr restrict blk_info, int chk_size, qn_stor_upload_extra_ptr restrict upe);
+QN_API extern qn_json_object_ptr qn_stor_ru_api_bput(qn_storage_ptr restrict stor, const char * restrict uptoken, qn_io_reader_itf restrict data_rdr, qn_json_object_ptr restrict blk_info, int chk_size, qn_stor_upload_extra_ptr restrict upe);
+QN_API extern qn_json_object_ptr qn_stor_ru_api_mkfile(qn_storage_ptr restrict stor, const char * restrict uptoken, qn_io_reader_itf restrict ctx_rdr, qn_json_object_ptr restrict last_blk_info, qn_fsize fsize, qn_stor_upload_extra_ptr restrict upe);
 
-QN_API extern qn_json_object_ptr qn_stor_ru_upload_huge(qn_storage_ptr restrict stor, const char * restrict uptoken, qn_stor_resumable_upload_ptr ru, int * start_idx, int chk_size, qn_stor_upload_extra_ptr restrict ext);
+QN_API extern qn_json_object_ptr qn_stor_ru_upload_huge(qn_storage_ptr restrict stor, const char * restrict uptoken, qn_stor_resumable_upload_ptr ru, int * start_idx, int chk_size, qn_stor_upload_extra_ptr restrict upe);
 
 // --------
 

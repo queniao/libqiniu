@@ -146,16 +146,17 @@ static inline void qn_stor_reset(qn_storage_ptr restrict stor)
     } // if
 }
 
-// ----
+// -------- Management Extra (abbreviation: mne) --------
 
-typedef struct _QN_STOR_STAT_EXTRA
+typedef struct _QN_STOR_MANAGEMENT_EXTRA
 {
+    unsigned int force:1;
     qn_rgn_entry_ptr rgn_entry;
-} qn_stor_stat_extra_st;
+} qn_stor_management_extra_st;
 
-QN_API qn_stor_stat_extra_ptr qn_stor_se_create(void)
+QN_API qn_stor_management_extra_ptr qn_stor_mne_create(void)
 {
-    qn_stor_stat_extra_ptr new_se = calloc(1, sizeof(qn_stor_stat_extra_st));
+    qn_stor_management_extra_ptr new_se = calloc(1, sizeof(qn_stor_management_extra_st));
     if (! new_se) {
         qn_err_set_out_of_memory();
         return NULL;
@@ -163,22 +164,29 @@ QN_API qn_stor_stat_extra_ptr qn_stor_se_create(void)
     return new_se;
 }
 
-QN_API void qn_stor_se_destroy(qn_stor_stat_extra_ptr restrict se)
+QN_API void qn_stor_mne_destroy(qn_stor_management_extra_ptr restrict mne)
 {
-    if (se) {
-        free(se);
+    if (mne) {
+        free(mne);
     } // if
 }
 
-QN_API void qn_stor_se_reset(qn_stor_stat_extra_ptr restrict se)
+QN_API void qn_stor_mne_reset(qn_stor_management_extra_ptr restrict mne)
 {
-    memset(se, 0, sizeof(qn_stor_stat_extra_st));
+    memset(mne, 0, sizeof(qn_stor_management_extra_st));
 }
 
-QN_API void qn_stor_se_set_region_entry(qn_stor_stat_extra_ptr restrict se, qn_rgn_entry_ptr restrict entry)
+QN_API void qn_stor_mne_set_force_overwrite(qn_stor_management_extra_ptr restrict mne, qn_bool force)
 {
-    se->rgn_entry = entry;
+    mne->force = (force) ? 1 : 0;
 }
+
+QN_API void qn_stor_mne_set_region_entry(qn_stor_management_extra_ptr restrict mne, qn_rgn_entry_ptr restrict entry)
+{
+    mne->rgn_entry = entry;
+}
+
+// -------- Management Functions (abbreviation: mn) --------
 
 static const qn_string qn_stor_make_stat_op(const char * restrict bucket, const char * restrict key)
 {
@@ -262,7 +270,7 @@ static const qn_string qn_stor_make_stat_op(const char * restrict bucket, const 
 *         If fails, the function returns a NULL value and the caller can call
 *         qn_err_get_message() to check out what happened.
 *******************************************************************************/
-QN_API qn_json_object_ptr qn_stor_mn_api_stat(qn_storage_ptr restrict stor, const qn_mac_ptr restrict mac, const char * restrict bucket, const char * restrict key, qn_stor_stat_extra_ptr restrict ext)
+QN_API qn_json_object_ptr qn_stor_mn_api_stat(qn_storage_ptr restrict stor, const qn_mac_ptr restrict mac, const char * restrict bucket, const char * restrict key, qn_stor_management_extra_ptr restrict mne)
 {
     qn_bool ret;
     qn_string op;
@@ -275,8 +283,8 @@ QN_API qn_json_object_ptr qn_stor_mn_api_stat(qn_storage_ptr restrict stor, cons
     assert(key);
 
     // ---- Process all extra options.
-    if (ext) {
-        if (! (rgn_entry = ext->rgn_entry)) qn_rgn_tbl_choose_first_entry(NULL, QN_RGN_SVC_RS, NULL, &rgn_entry);
+    if (mne) {
+        if (! (rgn_entry = mne->rgn_entry)) qn_rgn_tbl_choose_first_entry(NULL, QN_RGN_SVC_RS, NULL, &rgn_entry);
     } else {
         rgn_entry = NULL;
         qn_rgn_tbl_choose_first_entry(NULL, QN_RGN_SVC_RS, NULL, &rgn_entry);
@@ -324,45 +332,6 @@ QN_API qn_json_object_ptr qn_stor_mn_api_stat(qn_storage_ptr restrict stor, cons
     qn_json_set_integer(stor->obj_body, "fn-code", qn_http_resp_get_code(stor->resp));
     if (!qn_json_rename(stor->obj_body, "error", "fn-error")) return (qn_err_is_no_such_entry()) ? stor->obj_body : NULL;
     return stor->obj_body;
-}
-
-typedef struct _QN_STOR_COPY_EXTRA
-{
-    unsigned int force:1;
-
-    qn_rgn_entry_ptr rgn_entry;
-} qn_stor_copy_extra_st;
-
-QN_API qn_stor_copy_extra_ptr qn_stor_ce_create(void)
-{
-    qn_stor_copy_extra_ptr new_ce = calloc(1, sizeof(qn_stor_copy_extra_st));
-    if (! new_ce) {
-        qn_err_set_out_of_memory();
-        return NULL;
-    } // if
-    return new_ce;
-}
-
-QN_API void qn_stor_ce_destroy(qn_stor_copy_extra_ptr restrict ce)
-{
-    if (ce) {
-        free(ce);
-    } // if
-}
-
-QN_API void qn_stor_ce_reset(qn_stor_copy_extra_ptr restrict ce)
-{
-    memset(ce, 0, sizeof(qn_stor_copy_extra_st));
-}
-
-QN_API void qn_stor_ce_set_force_overwrite(qn_stor_copy_extra_ptr restrict ce, qn_bool force)
-{
-    ce->force = (force) ? 1 : 0;
-}
-
-QN_API void qn_stor_ce_set_region_entry(qn_stor_copy_extra_ptr restrict ce, qn_rgn_entry_ptr restrict entry)
-{
-    ce->rgn_entry = entry;
 }
 
 static const qn_string qn_stor_make_copy_op(const char * restrict src_bucket, const char * restrict src_key, const char * restrict dest_bucket, const char * restrict dest_key)
@@ -451,7 +420,7 @@ static const qn_string qn_stor_make_copy_op(const char * restrict src_bucket, co
 *         If fails, the function returns a NULL value and the caller can call
 *         qn_err_get_message() to check out what happened.
 *******************************************************************************/
-QN_API qn_json_object_ptr qn_stor_mn_api_copy(qn_storage_ptr restrict stor, const qn_mac_ptr restrict mac, const char * restrict src_bucket, const char * restrict src_key, const char * restrict dest_bucket, const char * restrict dest_key, qn_stor_copy_extra_ptr restrict ext)
+QN_API qn_json_object_ptr qn_stor_mn_api_copy(qn_storage_ptr restrict stor, const qn_mac_ptr restrict mac, const char * restrict src_bucket, const char * restrict src_key, const char * restrict dest_bucket, const char * restrict dest_key, qn_stor_management_extra_ptr restrict mne)
 {
     qn_bool ret;
     qn_string op;
@@ -467,8 +436,8 @@ QN_API qn_json_object_ptr qn_stor_mn_api_copy(qn_storage_ptr restrict stor, cons
     assert(dest_key);
 
     // ---- Process all extra options.
-    if (ext) {
-        if (! (rgn_entry = ext->rgn_entry)) qn_rgn_tbl_choose_first_entry(NULL, QN_RGN_SVC_RS, NULL, &rgn_entry);
+    if (mne) {
+        if (! (rgn_entry = mne->rgn_entry)) qn_rgn_tbl_choose_first_entry(NULL, QN_RGN_SVC_RS, NULL, &rgn_entry);
     } else {
         rgn_entry = NULL;
         qn_rgn_tbl_choose_first_entry(NULL, QN_RGN_SVC_RS, NULL, &rgn_entry);
@@ -483,8 +452,8 @@ QN_API qn_json_object_ptr qn_stor_mn_api_copy(qn_storage_ptr restrict stor, cons
     if (!url) return NULL;
 
     // -- Handle the request to overwrite an existing file.
-    if (ext) {
-        if (ext->force) {
+    if (mne) {
+        if (mne->force) {
             url_tmp = qn_cs_sprintf("%s/force/true", url);
             qn_str_destroy(url);
             if (!url_tmp) return NULL;
@@ -529,38 +498,6 @@ QN_API qn_json_object_ptr qn_stor_mn_api_copy(qn_storage_ptr restrict stor, cons
     qn_json_set_integer(stor->obj_body, "fn-code", qn_http_resp_get_code(stor->resp));
     if (!qn_json_rename(stor->obj_body, "error", "fn-error")) return (qn_err_is_no_such_entry()) ? stor->obj_body : NULL;
     return stor->obj_body;
-}
-
-typedef struct _QN_STOR_MOVE_EXTRA
-{
-    qn_rgn_entry_ptr rgn_entry;
-} qn_stor_move_extra_st;
-
-QN_API qn_stor_move_extra_ptr qn_stor_me_create(void)
-{
-    qn_stor_move_extra_ptr new_me = calloc(1, sizeof(qn_stor_move_extra_st));
-    if (! new_me) {
-        qn_err_set_out_of_memory();
-        return NULL;
-    } // if
-    return new_me;
-}
-
-QN_API void qn_stor_me_destroy(qn_stor_move_extra_ptr restrict me)
-{
-    if (me) {
-        free(me);
-    } // if
-}
-
-QN_API void qn_stor_me_reset(qn_stor_move_extra_ptr restrict me)
-{
-    memset(me, 0, sizeof(qn_stor_move_extra_st));
-}
-
-QN_API void qn_stor_me_set_region_entry(qn_stor_move_extra_ptr restrict me, qn_rgn_entry_ptr restrict entry)
-{
-    me->rgn_entry = entry;
 }
 
 static const qn_string qn_stor_make_move_op(const char * restrict src_bucket, const char * restrict src_key, const char * restrict dest_bucket, const char * restrict dest_key)
@@ -649,7 +586,7 @@ static const qn_string qn_stor_make_move_op(const char * restrict src_bucket, co
 *         If fails, the function returns a NULL value and the caller can call
 *         qn_err_get_message() to check out what happened.
 *******************************************************************************/
-QN_API qn_json_object_ptr qn_stor_mn_api_move(qn_storage_ptr restrict stor, const qn_mac_ptr restrict mac, const char * restrict src_bucket, const char * restrict src_key, const char * restrict dest_bucket, const char * restrict dest_key, qn_stor_move_extra_ptr restrict ext)
+QN_API qn_json_object_ptr qn_stor_mn_api_move(qn_storage_ptr restrict stor, const qn_mac_ptr restrict mac, const char * restrict src_bucket, const char * restrict src_key, const char * restrict dest_bucket, const char * restrict dest_key, qn_stor_management_extra_ptr restrict mne)
 {
     qn_bool ret;
     qn_string op;
@@ -664,8 +601,8 @@ QN_API qn_json_object_ptr qn_stor_mn_api_move(qn_storage_ptr restrict stor, cons
     assert(dest_key);
 
     // ---- Process all extra options.
-    if (ext) {
-        if (! (rgn_entry = ext->rgn_entry)) qn_rgn_tbl_choose_first_entry(NULL, QN_RGN_SVC_RS, NULL, &rgn_entry);
+    if (mne) {
+        if (! (rgn_entry = mne->rgn_entry)) qn_rgn_tbl_choose_first_entry(NULL, QN_RGN_SVC_RS, NULL, &rgn_entry);
     } else {
         rgn_entry = NULL;
         qn_rgn_tbl_choose_first_entry(NULL, QN_RGN_SVC_RS, NULL, &rgn_entry);
@@ -716,38 +653,6 @@ QN_API qn_json_object_ptr qn_stor_mn_api_move(qn_storage_ptr restrict stor, cons
     qn_json_set_integer(stor->obj_body, "fn-code", qn_http_resp_get_code(stor->resp));
     if (!qn_json_rename(stor->obj_body, "error", "fn-error")) return (qn_err_is_no_such_entry()) ? stor->obj_body : NULL;
     return stor->obj_body;
-}
-
-typedef struct _QN_STOR_DELETE_EXTRA
-{
-    qn_rgn_entry_ptr rgn_entry;
-} qn_stor_delete_extra_st;
-
-QN_API qn_stor_delete_extra_ptr qn_stor_de_create(void)
-{
-    qn_stor_delete_extra_ptr new_de = calloc(1, sizeof(qn_stor_delete_extra_st));
-    if (! new_de) {
-        qn_err_set_out_of_memory();
-        return NULL;
-    } // if
-    return new_de;
-}
-
-QN_API void qn_stor_de_destroy(qn_stor_delete_extra_ptr restrict de)
-{
-    if (de) {
-        free(de);
-    } // if
-}
-
-QN_API void qn_stor_de_reset(qn_stor_delete_extra_ptr restrict de)
-{
-    memset(de, 0, sizeof(qn_stor_delete_extra_st));
-}
-
-QN_API void qn_stor_de_set_region_entry(qn_stor_delete_extra_ptr restrict de, qn_rgn_entry_ptr restrict entry)
-{
-    de->rgn_entry = entry;
 }
 
 static qn_string qn_stor_make_delete_op(const char * restrict bucket, const char * restrict key)
@@ -822,7 +727,7 @@ static qn_string qn_stor_make_delete_op(const char * restrict bucket, const char
 *         If fails, the function returns a NULL value and the caller can call
 *         qn_err_get_message() to check out what happened.
 *******************************************************************************/
-QN_API qn_json_object_ptr qn_stor_mn_api_delete(qn_storage_ptr restrict stor, const qn_mac_ptr restrict mac, const char * restrict bucket, const char * restrict key, qn_stor_delete_extra_ptr restrict ext)
+QN_API qn_json_object_ptr qn_stor_mn_api_delete(qn_storage_ptr restrict stor, const qn_mac_ptr restrict mac, const char * restrict bucket, const char * restrict key, qn_stor_management_extra_ptr restrict mne)
 {
     qn_bool ret;
     qn_string op;
@@ -835,8 +740,8 @@ QN_API qn_json_object_ptr qn_stor_mn_api_delete(qn_storage_ptr restrict stor, co
     assert(key);
 
     // ---- Process all extra options.
-    if (ext) {
-        if (! (rgn_entry = ext->rgn_entry)) qn_rgn_tbl_choose_first_entry(NULL, QN_RGN_SVC_RS, NULL, &rgn_entry);
+    if (mne) {
+        if (! (rgn_entry = mne->rgn_entry)) qn_rgn_tbl_choose_first_entry(NULL, QN_RGN_SVC_RS, NULL, &rgn_entry);
     } else {
         rgn_entry = NULL;
         qn_rgn_tbl_choose_first_entry(NULL, QN_RGN_SVC_RS, NULL, &rgn_entry);
@@ -887,38 +792,6 @@ QN_API qn_json_object_ptr qn_stor_mn_api_delete(qn_storage_ptr restrict stor, co
     qn_json_set_integer(stor->obj_body, "fn-code", qn_http_resp_get_code(stor->resp));
     if (!qn_json_rename(stor->obj_body, "error", "fn-error")) return (qn_err_is_no_such_entry()) ? stor->obj_body : NULL;
     return stor->obj_body;
-}
-
-typedef struct _QN_STOR_CHANGE_MIME_EXTRA
-{
-    qn_rgn_entry_ptr rgn_entry;
-} qn_stor_change_mime_extra_st;
-
-QN_API qn_stor_change_mime_extra_ptr qn_stor_cme_create(void)
-{
-    qn_stor_change_mime_extra_ptr new_cme = calloc(1, sizeof(qn_stor_change_mime_extra_st));
-    if (! new_cme) {
-        qn_err_set_out_of_memory();
-        return NULL;
-    } // if
-    return new_cme;
-}
-
-QN_API void qn_stor_cme_destroy(qn_stor_change_mime_extra_ptr restrict cme)
-{
-    if (cme) {
-        free(cme);
-    } // if
-}
-
-QN_API void qn_stor_cme_reset(qn_stor_change_mime_extra_ptr restrict cme)
-{
-    memset(cme, 0, sizeof(qn_stor_change_mime_extra_st));
-}
-
-QN_API void qn_stor_cme_set_region_entry(qn_stor_change_mime_extra_ptr restrict cme, qn_rgn_entry_ptr restrict entry)
-{
-    cme->rgn_entry = entry;
 }
 
 /***************************************************************************//**
@@ -981,7 +854,7 @@ QN_API void qn_stor_cme_set_region_entry(qn_stor_change_mime_extra_ptr restrict 
 *         If fails, the function returns a NULL value and the caller can call
 *         qn_err_get_message() to check out what happened.
 *******************************************************************************/
-QN_API qn_json_object_ptr qn_stor_mn_api_chgm(qn_storage_ptr restrict stor, const qn_mac_ptr restrict mac, const char * restrict bucket, const char * restrict key, const char * restrict mime, qn_stor_change_mime_extra_ptr restrict ext)
+QN_API qn_json_object_ptr qn_stor_mn_api_chgm(qn_storage_ptr restrict stor, const qn_mac_ptr restrict mac, const char * restrict bucket, const char * restrict key, const char * restrict mime, qn_stor_management_extra_ptr restrict mne)
 {
     qn_bool ret;
     qn_string encoded_uri;
@@ -996,8 +869,8 @@ QN_API qn_json_object_ptr qn_stor_mn_api_chgm(qn_storage_ptr restrict stor, cons
     assert(mime);
 
     // ---- Process all extra options.
-    if (ext) {
-        if (! (rgn_entry = ext->rgn_entry)) qn_rgn_tbl_choose_first_entry(NULL, QN_RGN_SVC_RS, NULL, &rgn_entry);
+    if (mne) {
+        if (! (rgn_entry = mne->rgn_entry)) qn_rgn_tbl_choose_first_entry(NULL, QN_RGN_SVC_RS, NULL, &rgn_entry);
     } else {
         rgn_entry = NULL;
         qn_rgn_tbl_choose_first_entry(NULL, QN_RGN_SVC_RS, NULL, &rgn_entry);
@@ -1056,14 +929,477 @@ QN_API qn_json_object_ptr qn_stor_mn_api_chgm(qn_storage_ptr restrict stor, cons
     return stor->obj_body;
 }
 
-// ----
+// -------- Batch Operations (abbreviation: bt) --------
+
+typedef struct _QN_STOR_BATCH
+{
+    qn_string * ops;
+    int cnt;
+    int cap;
+} qn_stor_batch;
+
+QN_API qn_stor_batch_ptr qn_stor_bt_create(void)
+{
+    qn_stor_batch_ptr new_bt = calloc(1, sizeof(qn_stor_batch));
+    if (!new_bt) {
+        qn_err_set_out_of_memory();
+        return NULL;
+    } // if
+
+    new_bt->cap = 4;
+    new_bt->ops = calloc(new_bt->cap, sizeof(qn_string));
+    if (!new_bt->ops) {
+        free(new_bt);
+        qn_err_set_out_of_memory();
+        return NULL;
+    } // if
+    return new_bt;
+}
+
+QN_API void qn_stor_bt_destroy(qn_stor_batch_ptr restrict bt)
+{
+    if (bt) {
+        qn_stor_bt_reset(bt);
+        free(bt->ops);
+        free(bt);
+    } // if
+}
+
+QN_API void qn_stor_bt_reset(qn_stor_batch_ptr restrict bt)
+{
+    while (bt->cnt > 0) qn_str_destroy(bt->ops[--bt->cnt]);
+}
+
+static qn_bool qn_stor_bt_augment(qn_stor_batch_ptr restrict bt)
+{
+    int new_cap = bt->cnt + (bt->cnt >> 1); // 1.5 times
+    qn_string * new_ops = calloc(new_cap, sizeof(qn_string));
+    if (!new_ops) {
+        qn_err_set_out_of_memory();
+        return NULL;
+    } // if
+
+    memcpy(new_ops, bt->ops, bt->cnt * sizeof(qn_string));
+    free(bt->ops);
+    bt->ops = new_ops;
+    bt->cap = new_cap;
+    return qn_true;
+}
+
+static qn_bool qn_stor_bt_add_op(qn_stor_batch_ptr restrict bt, const qn_string restrict op)
+{
+    qn_string encoded_op;
+    qn_string entry;
+
+    if (bt->cnt == bt->cap && !qn_stor_bt_augment(bt)) return qn_false;
+
+    encoded_op = qn_cs_percent_encode(qn_str_cstr(op), qn_str_size(op));
+    if (!encoded_op) return qn_false;
+
+    entry = qn_cs_sprintf("op=%.*s", qn_str_size(encoded_op), qn_str_cstr(encoded_op));
+    qn_str_destroy(encoded_op);
+    if (!entry) return qn_false;
+
+    bt->ops[bt->cnt++] = entry;
+    return qn_true;
+}
+
+QN_API qn_bool qn_stor_bt_add_stat_op(qn_stor_batch_ptr restrict bt, const char * restrict bucket, const char * restrict key)
+{
+    qn_bool ret;
+    qn_string op;
+
+    op = qn_stor_make_stat_op(bucket, key);
+    if (!op) return qn_false;
+
+    ret = qn_stor_bt_add_op(bt, op);
+    qn_str_destroy(op);
+    return ret;
+}
+
+QN_API qn_bool qn_stor_bt_add_copy_op(qn_stor_batch_ptr restrict bt, const char * restrict src_bucket, const char * restrict src_key, const char * restrict dest_bucket, const char * restrict dest_key)
+{
+    qn_bool ret;
+    qn_string op;
+
+    op = qn_stor_make_copy_op(src_bucket, src_key, dest_bucket, dest_key);
+    if (!op) return qn_false;
+
+    ret = qn_stor_bt_add_op(bt, op);
+    qn_str_destroy(op);
+    return ret;
+}
+
+QN_API qn_bool qn_stor_bt_add_move_op(qn_stor_batch_ptr restrict bt, const char * restrict src_bucket, const char * restrict src_key, const char * restrict dest_bucket, const char * restrict dest_key)
+{
+    qn_bool ret;
+    qn_string op;
+
+    op = qn_stor_make_move_op(src_bucket, src_key, dest_bucket, dest_key);
+    if (!op) return qn_false;
+
+    ret = qn_stor_bt_add_op(bt, op);
+    qn_str_destroy(op);
+    return ret;
+}
+
+QN_API qn_bool qn_stor_bt_add_delete_op(qn_stor_batch_ptr restrict bt, const char * restrict bucket, const char * restrict key)
+{
+    qn_bool ret;
+    qn_string op;
+
+    op = qn_stor_make_delete_op(bucket, key);
+    if (!op) return qn_false;
+
+    ret = qn_stor_bt_add_op(bt, op);
+    qn_str_destroy(op);
+    return ret;
+}
+
+// -------- Batch Functions (abbreviation: bt) --------
+
+QN_API qn_json_object_ptr qn_stor_bt_api_batch(qn_storage_ptr restrict stor, const qn_mac_ptr restrict mac, const qn_stor_batch_ptr restrict bt, qn_stor_management_extra_ptr restrict mne)
+{
+    qn_bool ret;
+    qn_string body;
+    qn_string url;
+    qn_json_object_ptr fake_obj_body;
+    qn_rgn_entry_ptr rgn_entry;
+
+    assert(stor);
+    assert(mac);
+    assert(bt);
+
+    // ---- Process all extra options.
+    if (mne) {
+        if (! (rgn_entry = mne->rgn_entry)) qn_rgn_tbl_choose_first_entry(NULL, QN_RGN_SVC_RS, NULL, &rgn_entry);
+    } else {
+        rgn_entry = NULL;
+        qn_rgn_tbl_choose_first_entry(NULL, QN_RGN_SVC_RS, NULL, &rgn_entry);
+    } // if
+
+    // ---- Prepare the batch URL.
+    body = qn_str_join_list("&", bt->ops, bt->cnt);
+    if (!body) return NULL;
+
+    url = qn_cs_sprintf("%.*s/batch", qn_str_size(rgn_entry->base_url), qn_str_cstr(rgn_entry->base_url));
+    if (!url) {
+        qn_str_destroy(body);
+        return NULL;
+    } // if
+
+    // ---- Prepare the request and response.
+    qn_stor_reset(stor);
+
+    qn_http_req_set_body_data(stor->req, qn_str_cstr(body), qn_str_size(body));
+
+    if (!qn_stor_prepare_for_managing(stor, url, rgn_entry->hostname, mac)) {
+        qn_str_destroy(url);
+        qn_str_destroy(body);
+        return NULL;
+    } // if
+
+    // Use a fake object to match the return type of all storage main functions.
+    if (! (fake_obj_body = qn_json_create_object())) {
+        qn_str_destroy(url);
+        qn_str_destroy(body);
+        return NULL;
+    } // if
+
+    if (! (qn_json_set_integer(fake_obj_body, "fn-code", 0))) {
+        qn_str_destroy(url);
+        qn_str_destroy(body);
+        return NULL;
+    } // if
+
+    if (! (qn_json_set_string(fake_obj_body, "fn-error", "OK"))) {
+        qn_str_destroy(url);
+        qn_str_destroy(body);
+        return NULL;
+    } // if
+
+    if (! (stor->arr_body = qn_json_create_and_set_array(fake_obj_body, "items"))) {
+        qn_str_destroy(url);
+        qn_str_destroy(body);
+        return NULL;
+    } // if
+
+    qn_http_json_wrt_prepare(stor->resp_json_wrt, &stor->obj_body, &stor->arr_body);
+    qn_http_resp_set_data_writer(stor->resp, stor->resp_json_wrt, &qn_http_json_wrt_callback);
+
+    // ---- Do the batch action.
+    ret = qn_http_conn_post(stor->conn, url, stor->req, stor->resp);
+    qn_str_destroy(url);
+    qn_str_destroy(body);
+    stor->arr_body = NULL; // Keep from destroying the array twice.
+
+    if (!ret) return NULL;
+    if (stor->obj_body) {
+        // Get an object rather than an array.
+        // TODO: Trace the change of return value to this API and make the corresponding fix.
+        qn_json_destroy_object(fake_obj_body);
+    } else {
+        stor->obj_body = fake_obj_body;
+    } // if
+
+    qn_json_set_integer(stor->obj_body, "fn-code", qn_http_resp_get_code(stor->resp));
+    if (!qn_json_rename(stor->obj_body, "error", "fn-error")) return (qn_err_is_no_such_entry()) ? stor->obj_body : NULL;
+    return stor->obj_body;
+}
+
+// -------- List Extra (abbreviation: lse) --------
+
+typedef struct _QN_STOR_LIST_EXTRA
+{
+    const char * prefix;
+    const char * delimiter;
+    const char * marker;
+    int limit;
+
+    qn_http_query_ptr qry;
+    qn_rgn_entry_ptr rgn_entry;
+} qn_stor_list_extra_st;
+
+QN_API qn_stor_list_extra_ptr qn_stor_lse_create(void)
+{
+    qn_stor_list_extra_ptr new_le = malloc(sizeof(qn_stor_list_extra_st));
+    if (! new_le) {
+        qn_err_set_out_of_memory();
+        return NULL;
+    } // if
+
+    new_le->qry = qn_http_qry_create();
+    if (! new_le->qry) {
+        free(new_le);
+        return NULL;
+    } // if
+
+    qn_stor_lse_reset(new_le);
+    return new_le;
+}
+
+QN_API void qn_stor_lse_destroy(qn_stor_list_extra_ptr restrict lse)
+{
+    if (lse) {
+        qn_http_qry_destroy(lse->qry);
+        free(lse);
+    } // if
+}
+
+QN_API void qn_stor_lse_reset(qn_stor_list_extra_ptr restrict lse)
+{
+    lse->prefix = NULL;
+    lse->delimiter = NULL;
+    lse->marker = NULL;
+    lse->limit = 1000;
+    lse->rgn_entry = NULL;
+}
+
+QN_API void qn_stor_lse_set_prefix(qn_stor_list_extra_ptr restrict lse, const char * restrict prefix, const char * restrict delimiter)
+{
+    lse->prefix = prefix;
+    lse->delimiter = delimiter;
+}
+
+QN_API void qn_stor_lse_set_marker(qn_stor_list_extra_ptr restrict lse, const char * restrict marker)
+{
+    lse->marker = marker;
+}
+
+QN_API void qn_stor_lse_set_limit(qn_stor_list_extra_ptr restrict lse, int limit)
+{
+    lse->limit = limit;
+}
+
+/***************************************************************************//**
+* @ingroup Storage-Management
+*
+* List all files belong to the specified bucket.
+*
+* @param [in] stor The pointer to the storage object.
+* @param [in] auth The pointer to the authorization information. The function
+*                  uses its content to archieve or generate appropriate access
+*                  token.
+* @param [in] bucket The pointer to a string specifies the bucket.
+*                    destination file.
+* @param [in] ext The pointer to an extra option structure. The function uses
+*                 options set in it to tune actual behaviors.
+*
+* @retval non-NULL The pointer to a result object about the list operation,
+*                  or an error object (see the REMARK section).
+* @retval NULL Failed in listing files.
+*
+* @remark The qn_stor_list() funciton lists all or part of files belong to a
+*         bucket.
+*
+*         If succeeds, the function will return the pointer to a result object
+*         contains following fields:
+*
+*         ```
+*             {
+*                 "fn-code": <The HTTP code of the response>,
+*                 "fn-error": "<The HTTP message of the response>",
+*
+*                 "marker": "<Marker used internally to sustain a query session>",
+*
+*                 "commonPrefixes": [
+*                     "<Common prefix to some files",
+*                     ...
+*                 ],
+*
+*                 "items": [
+*                     {
+*                         "key": "<File's key>",
+*                         "putTime": <File's last upload timestamp>,
+*                         "hash": "<File's hash digest generated by Qiniu-ETAG algorithm>",
+*                         "fsize": <File's size in bytes>,
+*                         "mimeType": "<File's MIME type>",
+*                         "customer": "<File's user-identified data (if any)>"
+*                     },
+*                     ...
+*                 ]
+*             }
+*         ```
+*
+*         The `fn-code` and `fn-error` fields hold the HTTP response's status
+*         code and message, respectively. They are always returned by the function
+*         if the HTTP response returns successfully, no matter the API's operation
+*         succeeds or not.
+*
+*         **NOTE** : Do NOT touch the `mark` field since it is used internally.
+*
+*         The `commonPrefixes` field holds every unique and common path prefix to
+*         different files. It will be returned only in the case that the `delimiter`
+*         option field of the `ext` argument is set to a delimiter string like `/`
+*         which is used to delimit the path name and file name parts of the key,
+*         and the `prefix` option field unset at the same time. The server collects
+*         all path name parts in a JSON object, treats them as common prefixes,
+*         and returns with all repeats removed.
+*
+*         The `items` field holds all records of files, one object for each. It is
+*         returned always, even though there are no files at all (and it is an
+*         empty array in this case).
+*
+*         All HTTP codes and corresponding messages list as follow.
+*
+*         +-------+-------------------------------------------------------+
+*         | Code  | Message                                               |
+*         +-------+-------------------------------------------------------+
+*         | 200   | OK.                                                   |
+*         +-------+-------------------------------------------------------+
+*         | 400   | Invalid HTTP request.                                 |
+*         +-------+-------------------------------------------------------+
+*         | 401   | Bad access token (failed in authorization check).     |
+*         +-------+-------------------------------------------------------+
+*         | 599   | Server failed due to unknown reason and CONTACT US!   |
+*         +-------+-------------------------------------------------------+
+*         | 631   | Bucket doesn't exist.                                 |
+*         +-------+-------------------------------------------------------+
+*
+*         **NOTE**: The caller MUST NOT destroy the result or error object
+*                   because the next call to storage core functions will do
+*                   that.
+*
+*         If fails, the function returns a NULL value and the caller can call
+*         qn_err_get_message() to check out what happened.
+*******************************************************************************/
+QN_API qn_json_object_ptr qn_stor_ls_api_list(qn_storage_ptr restrict stor, const qn_mac_ptr restrict mac, const char * restrict bucket, qn_stor_list_extra_ptr restrict lse)
+{
+    qn_bool ret;
+    qn_string url;
+    qn_string qry_str;
+    qn_http_query_ptr qry;
+    qn_rgn_entry_ptr rgn_entry;
+    int limit = 1000;
+
+    assert(stor);
+    assert(mac);
+    assert(bucket);
+
+    // ---- Process all extra options.
+    if (lse) {
+        if (! (rgn_entry = lse->rgn_entry)) qn_rgn_tbl_choose_first_entry(NULL, QN_RGN_SVC_RSF, NULL, &rgn_entry);
+
+        qry = lse->qry;
+
+        limit = (0 < lse->limit && lse->limit <= 1000) ? lse->limit : 1000;
+
+        if (lse->delimiter && strlen(lse->delimiter) && ! qn_http_qry_set_string(qry, "delimiter", lse->delimiter)) return NULL;
+        if (lse->prefix && strlen(lse->prefix) && ! qn_http_qry_set_string(qry, "prefix", lse->prefix)) return NULL;
+        if (lse->marker && strlen(lse->marker) && ! qn_http_qry_set_string(qry, "marker", lse->marker)) return NULL;
+    } else {
+        rgn_entry = NULL;
+        qn_rgn_tbl_choose_first_entry(NULL, QN_RGN_SVC_RSF, NULL, &rgn_entry);
+
+        qry = qn_http_qry_create();
+        if (! qry) return NULL;
+    } // if
+
+    if (! qn_http_qry_set_string(qry, "bucket", bucket)) {
+        if (! lse) qn_http_qry_destroy(qry);
+        return NULL;
+    } // if
+
+    if (! qn_http_qry_set_integer(qry, "limit", limit)) {
+        if (! lse) qn_http_qry_destroy(qry);
+        return NULL;
+    } // if
+
+    qry_str = qn_http_qry_to_string(qry);
+    if (! lse) qn_http_qry_destroy(qry);
+    if (! qry_str) return NULL;
+
+    // ---- Prepare the copy URL.
+    url = qn_cs_sprintf("%.*s/list?%.*s", qn_str_size(rgn_entry->base_url), qn_str_cstr(rgn_entry->base_url), qn_str_size(qry_str), qn_str_cstr(qry_str));
+    qn_str_destroy(qry_str);
+    if (! url) return NULL;
+
+    // ---- Prepare the request and response.
+    qn_stor_reset(stor);
+
+    qn_http_req_set_body_data(stor->req, "", 0);
+
+    if (! qn_stor_prepare_for_managing(stor, url, rgn_entry->hostname, mac)) {
+        qn_str_destroy(url);
+        return NULL;
+    } // if
+
+    if (! (stor->obj_body = qn_json_create_object())) {
+        qn_str_destroy(url);
+        return NULL;
+    } // if
+
+    if (! (qn_json_set_integer(stor->obj_body, "fn-code", 0))) {
+        qn_str_destroy(url);
+        return NULL;
+    } // if
+
+    if (! (qn_json_set_string(stor->obj_body, "fn-error", "OK"))) {
+        qn_str_destroy(url);
+        return NULL;
+    } // if
+
+    qn_http_json_wrt_prepare(stor->resp_json_wrt, &stor->obj_body, NULL);
+    qn_http_resp_set_data_writer(stor->resp, stor->resp_json_wrt, &qn_http_json_wrt_callback);
+
+    // ---- Do the list action.
+    ret = qn_http_conn_post(stor->conn, url, stor->req, stor->resp);
+    qn_str_destroy(url);
+    if (! ret) return NULL;
+
+    qn_json_set_integer(stor->obj_body, "fn-code", qn_http_resp_get_code(stor->resp));
+    if (! qn_json_rename(stor->obj_body, "error", "fn-error") && ! qn_err_is_no_such_entry()) return NULL;
+    return stor->obj_body;
+}
+
+// -------- Fetch Extra (abbreviation: fte) --------
 
 typedef struct _QN_STOR_FETCH_EXTRA
 {
     qn_rgn_entry_ptr rgn_entry;
 } qn_stor_fetch_extra_st;
 
-QN_API qn_stor_fetch_extra_ptr qn_stor_fe_create(void)
+QN_API qn_stor_fetch_extra_ptr qn_stor_fte_create(void)
 {
     qn_stor_fetch_extra_ptr new_fe = calloc(1, sizeof(qn_stor_fetch_extra_st));
     if (! new_fe) {
@@ -1073,21 +1409,21 @@ QN_API qn_stor_fetch_extra_ptr qn_stor_fe_create(void)
     return new_fe;
 }
 
-QN_API void qn_stor_fe_destroy(qn_stor_fetch_extra_ptr restrict fe)
+QN_API void qn_stor_fte_destroy(qn_stor_fetch_extra_ptr restrict fte)
 {
-    if (fe) {
-        free(fe);
+    if (fte) {
+        free(fte);
     } // if
 }
 
-QN_API void qn_stor_fe_reset(qn_stor_fetch_extra_ptr restrict fe)
+QN_API void qn_stor_fte_reset(qn_stor_fetch_extra_ptr restrict fte)
 {
-    memset(fe, 0, sizeof(qn_stor_fetch_extra_st));
+    memset(fte, 0, sizeof(qn_stor_fetch_extra_st));
 }
 
-QN_API void qn_stor_fe_set_region_entry(qn_stor_fetch_extra_ptr restrict fe, qn_rgn_entry_ptr restrict entry)
+QN_API void qn_stor_fte_set_region_entry(qn_stor_fetch_extra_ptr restrict fte, qn_rgn_entry_ptr restrict entry)
 {
-    fe->rgn_entry = entry;
+    fte->rgn_entry = entry;
 }
 
 /***************************************************************************//**
@@ -1169,7 +1505,7 @@ QN_API void qn_stor_fe_set_region_entry(qn_stor_fetch_extra_ptr restrict fe, qn_
 *         If fails, the function returns a NULL value and the caller can call
 *         qn_err_get_message() to check out what happened.
 *******************************************************************************/
-QN_API qn_json_object_ptr qn_stor_ft_api_fetch(qn_storage_ptr restrict stor, const qn_mac_ptr restrict mac, const char * restrict src_url, const char * restrict dest_bucket, const char * restrict dest_key, qn_stor_fetch_extra_ptr restrict ext)
+QN_API qn_json_object_ptr qn_stor_ft_api_fetch(qn_storage_ptr restrict stor, const qn_mac_ptr restrict mac, const char * restrict src_url, const char * restrict dest_bucket, const char * restrict dest_key, qn_stor_fetch_extra_ptr restrict fte)
 {
     qn_bool ret;
     qn_string encoded_src_url;
@@ -1184,8 +1520,8 @@ QN_API qn_json_object_ptr qn_stor_ft_api_fetch(qn_storage_ptr restrict stor, con
     assert(dest_key);
 
     // ---- Process all extra options.
-    if (ext) {
-        if (! (rgn_entry = ext->rgn_entry)) qn_rgn_tbl_choose_first_entry(NULL, QN_RGN_SVC_IO, NULL, &rgn_entry);
+    if (fte) {
+        if (! (rgn_entry = fte->rgn_entry)) qn_rgn_tbl_choose_first_entry(NULL, QN_RGN_SVC_IO, NULL, &rgn_entry);
     } else {
         rgn_entry = NULL;
         qn_rgn_tbl_choose_first_entry(NULL, QN_RGN_SVC_IO, NULL, &rgn_entry);
@@ -1318,7 +1654,7 @@ QN_API qn_json_object_ptr qn_stor_ft_api_fetch(qn_storage_ptr restrict stor, con
 *         If fails, the function returns a NULL value and the caller can call
 *         qn_err_get_message() to check out what happened.
 *******************************************************************************/
-QN_API qn_json_object_ptr qn_stor_ft_api_prefetch(qn_storage_ptr restrict stor, const qn_mac_ptr restrict mac, const char * restrict dest_bucket, const char * restrict dest_key, qn_stor_fetch_extra_ptr restrict ext)
+QN_API qn_json_object_ptr qn_stor_ft_api_prefetch(qn_storage_ptr restrict stor, const qn_mac_ptr restrict mac, const char * restrict dest_bucket, const char * restrict dest_key, qn_stor_fetch_extra_ptr restrict fte)
 {
     qn_bool ret;
     qn_string encoded_dest_uri;
@@ -1331,8 +1667,8 @@ QN_API qn_json_object_ptr qn_stor_ft_api_prefetch(qn_storage_ptr restrict stor, 
     assert(dest_key);
 
     // ---- Process all extra options.
-    if (ext) {
-        if (! (rgn_entry = ext->rgn_entry)) qn_rgn_tbl_choose_first_entry(NULL, QN_RGN_SVC_IO, NULL, &rgn_entry);
+    if (fte) {
+        if (! (rgn_entry = fte->rgn_entry)) qn_rgn_tbl_choose_first_entry(NULL, QN_RGN_SVC_IO, NULL, &rgn_entry);
     } else {
         rgn_entry = NULL;
         qn_rgn_tbl_choose_first_entry(NULL, QN_RGN_SVC_IO, NULL, &rgn_entry);
@@ -1387,500 +1723,7 @@ QN_API qn_json_object_ptr qn_stor_ft_api_prefetch(qn_storage_ptr restrict stor, 
 
 // ----
 
-typedef struct _QN_STOR_LIST_EXTRA
-{
-    const char * prefix;
-    const char * delimiter;
-    const char * marker;
-    int limit;
-
-    qn_http_query_ptr qry;
-    qn_rgn_entry_ptr rgn_entry;
-} qn_stor_list_extra_st;
-
-QN_API qn_stor_list_extra_ptr qn_stor_le_create(void)
-{
-    qn_stor_list_extra_ptr new_le = malloc(sizeof(qn_stor_list_extra_st));
-    if (! new_le) {
-        qn_err_set_out_of_memory();
-        return NULL;
-    } // if
-
-    new_le->qry = qn_http_qry_create();
-    if (! new_le->qry) {
-        free(new_le);
-        return NULL;
-    } // if
-
-    qn_stor_le_reset(new_le);
-    return new_le;
-}
-
-QN_API void qn_stor_le_destroy(qn_stor_list_extra_ptr restrict le)
-{
-    if (le) {
-        qn_http_qry_destroy(le->qry);
-        free(le);
-    } // if
-}
-
-QN_API void qn_stor_le_reset(qn_stor_list_extra_ptr restrict le)
-{
-    le->prefix = NULL;
-    le->delimiter = NULL;
-    le->marker = NULL;
-    le->limit = 1000;
-    le->rgn_entry = NULL;
-}
-
-QN_API void qn_stor_le_set_prefix(qn_stor_list_extra_ptr restrict le, const char * restrict prefix)
-{
-    le->prefix = prefix;
-}
-
-QN_API void qn_stor_le_set_delimiter(qn_stor_list_extra_ptr restrict le, const char * restrict delimiter)
-{
-    le->delimiter = delimiter;
-}
-
-QN_API void qn_stor_le_set_marker(qn_stor_list_extra_ptr restrict le, const char * restrict marker)
-{
-    le->marker = marker;
-}
-
-QN_API void qn_stor_le_set_limit(qn_stor_list_extra_ptr restrict le, int limit)
-{
-    le->limit = limit;
-}
-
-/***************************************************************************//**
-* @ingroup Storage-Management
-*
-* List all files belong to the specified bucket.
-*
-* @param [in] stor The pointer to the storage object.
-* @param [in] auth The pointer to the authorization information. The function
-*                  uses its content to archieve or generate appropriate access
-*                  token.
-* @param [in] bucket The pointer to a string specifies the bucket.
-*                    destination file.
-* @param [in] ext The pointer to an extra option structure. The function uses
-*                 options set in it to tune actual behaviors.
-*
-* @retval non-NULL The pointer to a result object about the list operation,
-*                  or an error object (see the REMARK section).
-* @retval NULL Failed in listing files.
-*
-* @remark The qn_stor_list() funciton lists all or part of files belong to a
-*         bucket.
-*
-*         If succeeds, the function will return the pointer to a result object
-*         contains following fields:
-*
-*         ```
-*             {
-*                 "fn-code": <The HTTP code of the response>,
-*                 "fn-error": "<The HTTP message of the response>",
-*
-*                 "marker": "<Marker used internally to sustain a query session>",
-*
-*                 "commonPrefixes": [
-*                     "<Common prefix to some files",
-*                     ...
-*                 ],
-*
-*                 "items": [
-*                     {
-*                         "key": "<File's key>",
-*                         "putTime": <File's last upload timestamp>,
-*                         "hash": "<File's hash digest generated by Qiniu-ETAG algorithm>",
-*                         "fsize": <File's size in bytes>,
-*                         "mimeType": "<File's MIME type>",
-*                         "customer": "<File's user-identified data (if any)>"
-*                     },
-*                     ...
-*                 ]
-*             }
-*         ```
-*
-*         The `fn-code` and `fn-error` fields hold the HTTP response's status
-*         code and message, respectively. They are always returned by the function
-*         if the HTTP response returns successfully, no matter the API's operation
-*         succeeds or not.
-*
-*         **NOTE** : Do NOT touch the `mark` field since it is used internally.
-*
-*         The `commonPrefixes` field holds every unique and common path prefix to
-*         different files. It will be returned only in the case that the `delimiter`
-*         option field of the `ext` argument is set to a delimiter string like `/`
-*         which is used to delimit the path name and file name parts of the key,
-*         and the `prefix` option field unset at the same time. The server collects
-*         all path name parts in a JSON object, treats them as common prefixes,
-*         and returns with all repeats removed.
-*
-*         The `items` field holds all records of files, one object for each. It is
-*         returned always, even though there are no files at all (and it is an
-*         empty array in this case).
-*
-*         All HTTP codes and corresponding messages list as follow.
-*
-*         +-------+-------------------------------------------------------+
-*         | Code  | Message                                               |
-*         +-------+-------------------------------------------------------+
-*         | 200   | OK.                                                   |
-*         +-------+-------------------------------------------------------+
-*         | 400   | Invalid HTTP request.                                 |
-*         +-------+-------------------------------------------------------+
-*         | 401   | Bad access token (failed in authorization check).     |
-*         +-------+-------------------------------------------------------+
-*         | 599   | Server failed due to unknown reason and CONTACT US!   |
-*         +-------+-------------------------------------------------------+
-*         | 631   | Bucket doesn't exist.                                 |
-*         +-------+-------------------------------------------------------+
-*
-*         **NOTE**: The caller MUST NOT destroy the result or error object
-*                   because the next call to storage core functions will do
-*                   that.
-*
-*         If fails, the function returns a NULL value and the caller can call
-*         qn_err_get_message() to check out what happened.
-*******************************************************************************/
-QN_API qn_json_object_ptr qn_stor_mn_api_list(qn_storage_ptr restrict stor, const qn_mac_ptr restrict mac, const char * restrict bucket, qn_stor_list_extra_ptr restrict ext)
-{
-    qn_bool ret;
-    qn_string url;
-    qn_string qry_str;
-    qn_http_query_ptr qry;
-    qn_rgn_entry_ptr rgn_entry;
-    int limit = 1000;
-
-    assert(stor);
-    assert(mac);
-    assert(bucket);
-
-    // ---- Process all extra options.
-    if (ext) {
-        if (! (rgn_entry = ext->rgn_entry)) qn_rgn_tbl_choose_first_entry(NULL, QN_RGN_SVC_RSF, NULL, &rgn_entry);
-
-        qry = ext->qry;
-
-        limit = (0 < ext->limit && ext->limit <= 1000) ? ext->limit : 1000;
-
-        if (ext->delimiter && strlen(ext->delimiter) && ! qn_http_qry_set_string(qry, "delimiter", ext->delimiter)) return NULL;
-        if (ext->prefix && strlen(ext->prefix) && ! qn_http_qry_set_string(qry, "prefix", ext->prefix)) return NULL;
-        if (ext->marker && strlen(ext->marker) && ! qn_http_qry_set_string(qry, "marker", ext->marker)) return NULL;
-    } else {
-        rgn_entry = NULL;
-        qn_rgn_tbl_choose_first_entry(NULL, QN_RGN_SVC_RSF, NULL, &rgn_entry);
-
-        qry = qn_http_qry_create();
-        if (! qry) return NULL;
-    } // if
-
-    if (! qn_http_qry_set_string(qry, "bucket", bucket)) {
-        if (! ext) qn_http_qry_destroy(qry);
-        return NULL;
-    } // if
-
-    if (! qn_http_qry_set_integer(qry, "limit", limit)) {
-        if (! ext) qn_http_qry_destroy(qry);
-        return NULL;
-    } // if
-
-    qry_str = qn_http_qry_to_string(qry);
-    if (! ext) qn_http_qry_destroy(qry);
-    if (! qry_str) return NULL;
-
-    // ---- Prepare the copy URL.
-    url = qn_cs_sprintf("%.*s/list?%.*s", qn_str_size(rgn_entry->base_url), qn_str_cstr(rgn_entry->base_url), qn_str_size(qry_str), qn_str_cstr(qry_str));
-    qn_str_destroy(qry_str);
-    if (! url) return NULL;
-
-    // ---- Prepare the request and response.
-    qn_stor_reset(stor);
-
-    qn_http_req_set_body_data(stor->req, "", 0);
-
-    if (! qn_stor_prepare_for_managing(stor, url, rgn_entry->hostname, mac)) {
-        qn_str_destroy(url);
-        return NULL;
-    } // if
-
-    if (! (stor->obj_body = qn_json_create_object())) {
-        qn_str_destroy(url);
-        return NULL;
-    } // if
-
-    if (! (qn_json_set_integer(stor->obj_body, "fn-code", 0))) {
-        qn_str_destroy(url);
-        return NULL;
-    } // if
-
-    if (! (qn_json_set_string(stor->obj_body, "fn-error", "OK"))) {
-        qn_str_destroy(url);
-        return NULL;
-    } // if
-
-    qn_http_json_wrt_prepare(stor->resp_json_wrt, &stor->obj_body, NULL);
-    qn_http_resp_set_data_writer(stor->resp, stor->resp_json_wrt, &qn_http_json_wrt_callback);
-
-    // ---- Do the list action.
-    ret = qn_http_conn_post(stor->conn, url, stor->req, stor->resp);
-    qn_str_destroy(url);
-    if (! ret) return NULL;
-
-    qn_json_set_integer(stor->obj_body, "fn-code", qn_http_resp_get_code(stor->resp));
-    if (! qn_json_rename(stor->obj_body, "error", "fn-error") && ! qn_err_is_no_such_entry()) return NULL;
-    return stor->obj_body;
-}
-
 // ----
-
-typedef struct _QN_STOR_BATCH
-{
-    qn_string * ops;
-    int cnt;
-    int cap;
-} qn_stor_batch;
-
-QN_API qn_stor_batch_ptr qn_stor_bt_create(void)
-{
-    qn_stor_batch_ptr new_bt = calloc(1, sizeof(qn_stor_batch));
-    if (!new_bt) {
-        qn_err_set_out_of_memory();
-        return NULL;
-    } // if
-
-    new_bt->cap = 4;
-    new_bt->ops = calloc(new_bt->cap, sizeof(qn_string));
-    if (!new_bt->ops) {
-        free(new_bt);
-        qn_err_set_out_of_memory();
-        return NULL;
-    } // if
-    return new_bt;
-}
-
-QN_API void qn_stor_bt_destroy(qn_stor_batch_ptr restrict bt)
-{
-    if (bt) {
-        qn_stor_bt_reset(bt);
-        free(bt->ops);
-        free(bt);
-    } // if
-}
-
-QN_API void qn_stor_bt_reset(qn_stor_batch_ptr restrict bt)
-{
-    while (bt->cnt > 0) qn_str_destroy(bt->ops[--bt->cnt]);
-}
-
-static qn_bool qn_stor_bt_augment(qn_stor_batch_ptr restrict bt)
-{
-    int new_cap = bt->cnt + (bt->cnt >> 1); // 1.5 times
-    qn_string * new_ops = calloc(new_cap, sizeof(qn_string));
-    if (!new_ops) {
-        qn_err_set_out_of_memory();
-        return NULL;
-    } // if
-
-    memcpy(new_ops, bt->ops, bt->cnt * sizeof(qn_string));
-    free(bt->ops);
-    bt->ops = new_ops;
-    bt->cap = new_cap;
-    return qn_true;
-}
-
-static qn_bool qn_stor_bt_add_op(qn_stor_batch_ptr restrict bt, const qn_string restrict op)
-{
-    qn_string encoded_op;
-    qn_string entry;
-
-    if (bt->cnt == bt->cap && !qn_stor_bt_augment(bt)) return qn_false;
-
-    encoded_op = qn_cs_percent_encode(qn_str_cstr(op), qn_str_size(op));
-    if (!encoded_op) return qn_false;
-
-    entry = qn_cs_sprintf("op=%.*s", qn_str_size(encoded_op), qn_str_cstr(encoded_op));
-    qn_str_destroy(encoded_op);
-    if (!entry) return qn_false;
-
-    bt->ops[bt->cnt++] = entry;
-    return qn_true;
-}
-
-QN_API qn_bool qn_stor_bt_add_stat_op(qn_stor_batch_ptr restrict bt, const char * restrict bucket, const char * restrict key)
-{
-    qn_bool ret;
-    qn_string op;
-
-    op = qn_stor_make_stat_op(bucket, key);
-    if (!op) return qn_false;
-
-    ret = qn_stor_bt_add_op(bt, op);
-    qn_str_destroy(op);
-    return ret;
-}
-
-QN_API qn_bool qn_stor_bt_add_copy_op(qn_stor_batch_ptr restrict bt, const char * restrict src_bucket, const char * restrict src_key, const char * restrict dest_bucket, const char * restrict dest_key)
-{
-    qn_bool ret;
-    qn_string op;
-
-    op = qn_stor_make_copy_op(src_bucket, src_key, dest_bucket, dest_key);
-    if (!op) return qn_false;
-
-    ret = qn_stor_bt_add_op(bt, op);
-    qn_str_destroy(op);
-    return ret;
-}
-
-QN_API qn_bool qn_stor_bt_add_move_op(qn_stor_batch_ptr restrict bt, const char * restrict src_bucket, const char * restrict src_key, const char * restrict dest_bucket, const char * restrict dest_key)
-{
-    qn_bool ret;
-    qn_string op;
-
-    op = qn_stor_make_move_op(src_bucket, src_key, dest_bucket, dest_key);
-    if (!op) return qn_false;
-
-    ret = qn_stor_bt_add_op(bt, op);
-    qn_str_destroy(op);
-    return ret;
-}
-
-QN_API qn_bool qn_stor_bt_add_delete_op(qn_stor_batch_ptr restrict bt, const char * restrict bucket, const char * restrict key)
-{
-    qn_bool ret;
-    qn_string op;
-
-    op = qn_stor_make_delete_op(bucket, key);
-    if (!op) return qn_false;
-
-    ret = qn_stor_bt_add_op(bt, op);
-    qn_str_destroy(op);
-    return ret;
-}
-
-typedef struct _QN_STOR_BATCH_EXTRA
-{
-    qn_rgn_entry_ptr rgn_entry;
-} qn_stor_batch_extra_st;
-
-QN_API qn_stor_batch_extra_ptr qn_stor_be_create(void)
-{
-    qn_stor_batch_extra_ptr new_be = calloc(1, sizeof(qn_stor_batch_extra_st));
-    if (! new_be) {
-        qn_err_set_out_of_memory();
-        return NULL;
-    } // if
-    return new_be;
-}
-
-QN_API void qn_stor_be_destroy(qn_stor_batch_extra_ptr restrict be)
-{
-    if (be) {
-        free(be);
-    } // if
-}
-
-QN_API void qn_stor_be_reset(qn_stor_batch_extra_ptr restrict be)
-{
-    memset(be, 0, sizeof(qn_stor_batch_extra_st));
-}
-
-QN_API void qn_stor_be_set_region_entry(qn_stor_batch_extra_ptr restrict be, qn_rgn_entry_ptr restrict entry)
-{
-    be->rgn_entry = entry;
-}
-
-QN_API qn_json_object_ptr qn_stor_mn_api_batch(qn_storage_ptr restrict stor, const qn_mac_ptr restrict mac, const qn_stor_batch_ptr restrict bt, qn_stor_batch_extra_ptr restrict ext)
-{
-    qn_bool ret;
-    qn_string body;
-    qn_string url;
-    qn_json_object_ptr fake_obj_body;
-    qn_rgn_entry_ptr rgn_entry;
-
-    assert(stor);
-    assert(mac);
-    assert(bt);
-
-    // ---- Process all extra options.
-    if (ext) {
-        if (! (rgn_entry = ext->rgn_entry)) qn_rgn_tbl_choose_first_entry(NULL, QN_RGN_SVC_RS, NULL, &rgn_entry);
-    } else {
-        rgn_entry = NULL;
-        qn_rgn_tbl_choose_first_entry(NULL, QN_RGN_SVC_RS, NULL, &rgn_entry);
-    } // if
-
-    // ---- Prepare the batch URL.
-    body = qn_str_join_list("&", bt->ops, bt->cnt);
-    if (!body) return NULL;
-
-    url = qn_cs_sprintf("%.*s/batch", qn_str_size(rgn_entry->base_url), qn_str_cstr(rgn_entry->base_url));
-    if (!url) {
-        qn_str_destroy(body);
-        return NULL;
-    } // if
-
-    // ---- Prepare the request and response.
-    qn_stor_reset(stor);
-
-    qn_http_req_set_body_data(stor->req, qn_str_cstr(body), qn_str_size(body));
-
-    if (!qn_stor_prepare_for_managing(stor, url, rgn_entry->hostname, mac)) {
-        qn_str_destroy(url);
-        qn_str_destroy(body);
-        return NULL;
-    } // if
-
-    // Use a fake object to match the return type of all storage main functions.
-    if (! (fake_obj_body = qn_json_create_object())) {
-        qn_str_destroy(url);
-        qn_str_destroy(body);
-        return NULL;
-    } // if
-
-    if (! (qn_json_set_integer(fake_obj_body, "fn-code", 0))) {
-        qn_str_destroy(url);
-        qn_str_destroy(body);
-        return NULL;
-    } // if
-
-    if (! (qn_json_set_string(fake_obj_body, "fn-error", "OK"))) {
-        qn_str_destroy(url);
-        qn_str_destroy(body);
-        return NULL;
-    } // if
-
-    if (! (stor->arr_body = qn_json_create_and_set_array(fake_obj_body, "items"))) {
-        qn_str_destroy(url);
-        qn_str_destroy(body);
-        return NULL;
-    } // if
-
-    qn_http_json_wrt_prepare(stor->resp_json_wrt, &stor->obj_body, &stor->arr_body);
-    qn_http_resp_set_data_writer(stor->resp, stor->resp_json_wrt, &qn_http_json_wrt_callback);
-
-    // ---- Do the batch action.
-    ret = qn_http_conn_post(stor->conn, url, stor->req, stor->resp);
-    qn_str_destroy(url);
-    qn_str_destroy(body);
-    stor->arr_body = NULL; // Keep from destroying the array twice.
-
-    if (!ret) return NULL;
-    if (stor->obj_body) {
-        // Get an object rather than an array.
-        // TODO: Trace the change of return value to this API and make the corresponding fix.
-        qn_json_destroy_object(fake_obj_body);
-    } else {
-        stor->obj_body = fake_obj_body;
-    } // if
-
-    qn_json_set_integer(stor->obj_body, "fn-code", qn_http_resp_get_code(stor->resp));
-    if (!qn_json_rename(stor->obj_body, "error", "fn-error")) return (qn_err_is_no_such_entry()) ? stor->obj_body : NULL;
-    return stor->obj_body;
-}
 
 // -------- Put Policy (abbreviation: pp) --------
 
@@ -2124,7 +1967,7 @@ QN_API qn_string qn_stor_pp_to_uptoken(qn_json_object_ptr restrict pp, qn_mac_pt
     return uptoken;
 }
 
-// -------- Upload Extra (abbreviation: ue) --------
+// -------- Upload Extra (abbreviation: upe) --------
 
 typedef struct _QN_STOR_UPLOAD_EXTRA
 {
@@ -2138,7 +1981,7 @@ typedef struct _QN_STOR_UPLOAD_EXTRA
     qn_io_reader_itf rdr;
 } qn_stor_upload_extra_st;
 
-QN_API qn_stor_upload_extra_ptr qn_stor_ue_create(void)
+QN_API qn_stor_upload_extra_ptr qn_stor_upe_create(void)
 {
     qn_stor_upload_extra_ptr new_pe = calloc(1, sizeof(qn_stor_upload_extra_st));
     if (! new_pe) {
@@ -2148,41 +1991,41 @@ QN_API qn_stor_upload_extra_ptr qn_stor_ue_create(void)
     return new_pe;
 }
 
-QN_API void qn_stor_ue_destroy(qn_stor_upload_extra_ptr restrict ue)
+QN_API void qn_stor_upe_destroy(qn_stor_upload_extra_ptr restrict upe)
 {
-    if (ue) {
-        free(ue);
+    if (upe) {
+        free(upe);
     } // if
 }
 
-QN_API void qn_stor_ue_reset(qn_stor_upload_extra_ptr restrict ue)
+QN_API void qn_stor_upe_reset(qn_stor_upload_extra_ptr restrict upe)
 {
-    memset(ue, 0, sizeof(qn_stor_upload_extra_st));
+    memset(upe, 0, sizeof(qn_stor_upload_extra_st));
 }
 
-QN_API void qn_stor_ue_set_final_key(qn_stor_upload_extra_ptr restrict ue, const char * restrict final_key)
+QN_API void qn_stor_upe_set_final_key(qn_stor_upload_extra_ptr restrict upe, const char * restrict final_key)
 {
-    ue->final_key = final_key;
+    upe->final_key = final_key;
 }
 
-QN_API extern void qn_stor_ue_set_local_crc32(qn_stor_upload_extra_ptr restrict ue, const char * restrict crc32)
+QN_API extern void qn_stor_upe_set_local_crc32(qn_stor_upload_extra_ptr restrict upe, const char * restrict crc32)
 {
-    ue->crc32 = crc32;
+    upe->crc32 = crc32;
 }
 
-QN_API extern void qn_stor_ue_set_accept_type(qn_stor_upload_extra_ptr restrict ue, const char * restrict accept_type)
+QN_API extern void qn_stor_upe_set_accept_type(qn_stor_upload_extra_ptr restrict upe, const char * restrict accept_type)
 {
-    ue->accept_type = accept_type;
+    upe->accept_type = accept_type;
 }
 
-QN_API extern void qn_stor_ue_set_region_entry(qn_stor_upload_extra_ptr restrict ue, qn_rgn_entry_ptr restrict entry)
+QN_API extern void qn_stor_upe_set_region_entry(qn_stor_upload_extra_ptr restrict upe, qn_rgn_entry_ptr restrict entry)
 {
-    ue->rgn_entry = entry;
+    upe->rgn_entry = entry;
 }
 
 // -------- Ordinary Upload (abbreviation: up) --------
 
-static qn_bool qn_stor_prepare_for_upload(qn_storage_ptr restrict stor, const char * restrict uptoken, qn_stor_upload_extra_ptr restrict ext)
+static qn_bool qn_stor_prepare_for_upload(qn_storage_ptr restrict stor, const char * restrict uptoken, qn_stor_upload_extra_ptr restrict upe)
 {
     qn_http_form_ptr form;
 
@@ -2197,9 +2040,9 @@ static qn_bool qn_stor_prepare_for_upload(qn_storage_ptr restrict stor, const ch
 
     // **NOTE** : The uptoken MUST be the first form item.
     if (!qn_http_form_add_string(form, "token", uptoken, strlen(uptoken))) return qn_false;
-    if (ext->final_key && !qn_http_form_add_string(form, "key", ext->final_key, strlen(ext->final_key))) return qn_false;
-    if (ext->crc32 && !qn_http_form_add_string(form, "crc32", ext->crc32, strlen(ext->crc32))) return qn_false;
-    if (ext->accept_type && !qn_http_form_add_string(form, "accept", ext->accept_type, strlen(ext->accept_type))) return qn_false;
+    if (upe->final_key && !qn_http_form_add_string(form, "key", upe->final_key, strlen(upe->final_key))) return qn_false;
+    if (upe->crc32 && !qn_http_form_add_string(form, "crc32", upe->crc32, strlen(upe->crc32))) return qn_false;
+    if (upe->accept_type && !qn_http_form_add_string(form, "accept", upe->accept_type, strlen(upe->accept_type))) return qn_false;
 
     // TODO: User defined variabales.
 
@@ -2289,7 +2132,7 @@ static qn_bool qn_stor_prepare_for_upload(qn_storage_ptr restrict stor, const ch
 *         If fails, the function returns a NULL value and the caller can call
 *         qn_err_get_message() to check out what happened.
 *******************************************************************************/
-QN_API qn_json_object_ptr qn_stor_up_api_upload_file(qn_storage_ptr restrict stor, const char * restrict uptoken, const char * restrict fname, qn_stor_upload_extra_ptr restrict ext)
+QN_API qn_json_object_ptr qn_stor_up_api_upload_file(qn_storage_ptr restrict stor, const char * restrict uptoken, const char * restrict fname, qn_stor_upload_extra_ptr restrict upe)
 {
     qn_bool ret;
     qn_fl_info_ptr fi;
@@ -2299,14 +2142,14 @@ QN_API qn_json_object_ptr qn_stor_up_api_upload_file(qn_storage_ptr restrict sto
     assert(stor);
     assert(uptoken);
 
-    if (ext) {
-        if (! (rgn_entry = ext->rgn_entry)) qn_rgn_tbl_choose_first_entry(NULL, QN_RGN_SVC_UP, NULL, &rgn_entry);
+    if (upe) {
+        if (! (rgn_entry = upe->rgn_entry)) qn_rgn_tbl_choose_first_entry(NULL, QN_RGN_SVC_UP, NULL, &rgn_entry);
     } else {
         rgn_entry = NULL;
         qn_rgn_tbl_choose_first_entry(NULL, QN_RGN_SVC_UP, NULL, &rgn_entry);
     } // if
 
-    if (!qn_stor_prepare_for_upload(stor, uptoken, ext)) return NULL;
+    if (!qn_stor_prepare_for_upload(stor, uptoken, upe)) return NULL;
 
     // ----
     form = qn_http_req_get_form(stor->req);
@@ -2330,7 +2173,7 @@ QN_API qn_json_object_ptr qn_stor_up_api_upload_file(qn_storage_ptr restrict sto
     return stor->obj_body;
 }
 
-QN_API qn_json_object_ptr qn_stor_up_api_upload_buffer(qn_storage_ptr restrict stor, const char * restrict uptoken, const char * restrict buf, int buf_size, qn_stor_upload_extra_ptr restrict ext)
+QN_API qn_json_object_ptr qn_stor_up_api_upload_buffer(qn_storage_ptr restrict stor, const char * restrict uptoken, const char * restrict buf, int buf_size, qn_stor_upload_extra_ptr restrict upe)
 {
     qn_bool ret;
     qn_http_form_ptr form;
@@ -2340,14 +2183,14 @@ QN_API qn_json_object_ptr qn_stor_up_api_upload_buffer(qn_storage_ptr restrict s
     assert(uptoken);
     assert(buf);
 
-    if (ext) {
-        if (! (rgn_entry = ext->rgn_entry)) qn_rgn_tbl_choose_first_entry(NULL, QN_RGN_SVC_UP, NULL, &rgn_entry);
+    if (upe) {
+        if (! (rgn_entry = upe->rgn_entry)) qn_rgn_tbl_choose_first_entry(NULL, QN_RGN_SVC_UP, NULL, &rgn_entry);
     } else {
         rgn_entry = NULL;
         qn_rgn_tbl_choose_first_entry(NULL, QN_RGN_SVC_UP, NULL, &rgn_entry);
     } // if
 
-    if (!qn_stor_prepare_for_upload(stor, uptoken, ext)) return NULL;
+    if (!qn_stor_prepare_for_upload(stor, uptoken, upe)) return NULL;
 
     form = qn_http_req_get_form(stor->req);
 
@@ -2373,7 +2216,7 @@ static size_t qn_stor_upload_callback_fn(void * user_data, char * buf, size_t si
     return ret;
 }
 
-QN_API qn_json_object_ptr qn_stor_up_api_upload(qn_storage_ptr restrict stor, const char * restrict uptoken, qn_io_reader_itf restrict data_rdr, qn_stor_upload_extra_ptr restrict ext)
+QN_API qn_json_object_ptr qn_stor_up_api_upload(qn_storage_ptr restrict stor, const char * restrict uptoken, qn_io_reader_itf restrict data_rdr, qn_stor_upload_extra_ptr restrict upe)
 {
     qn_bool ret;
     qn_rgn_entry_ptr rgn_entry;
@@ -2382,14 +2225,14 @@ QN_API qn_json_object_ptr qn_stor_up_api_upload(qn_storage_ptr restrict stor, co
     assert(uptoken);
     assert(data_rdr);
 
-    if (ext) {
-        if (! (rgn_entry = ext->rgn_entry)) qn_rgn_tbl_choose_first_entry(NULL, QN_RGN_SVC_UP, NULL, &rgn_entry);
+    if (upe) {
+        if (! (rgn_entry = upe->rgn_entry)) qn_rgn_tbl_choose_first_entry(NULL, QN_RGN_SVC_UP, NULL, &rgn_entry);
     } else {
         rgn_entry = NULL;
         qn_rgn_tbl_choose_first_entry(NULL, QN_RGN_SVC_UP, NULL, &rgn_entry);
     } // if
 
-    if (! qn_stor_prepare_for_upload(stor, uptoken, ext)) return NULL;
+    if (! qn_stor_prepare_for_upload(stor, uptoken, upe)) return NULL;
 
     ret = qn_http_form_add_file_reader(qn_http_req_get_form(stor->req), "file", qn_str_cstr(qn_io_name(data_rdr)), NULL, qn_io_size(data_rdr), stor->req);
     if (! ret) return NULL;
@@ -2859,7 +2702,7 @@ static qn_bool qn_stor_prepare_request_for_upload(qn_storage_ptr restrict stor, 
     return qn_true;
 }
 
-QN_API extern qn_json_object_ptr qn_stor_ru_api_mlblk(qn_storage_ptr restrict stor, const char * restrict uptoken, qn_io_reader_itf restrict data_rdr, qn_json_object_ptr restrict blk_info, int chk_size, qn_stor_upload_extra_ptr restrict ext)
+QN_API extern qn_json_object_ptr qn_stor_ru_api_mkblk(qn_storage_ptr restrict stor, const char * restrict uptoken, qn_io_reader_itf restrict data_rdr, qn_json_object_ptr restrict blk_info, int chk_size, qn_stor_upload_extra_ptr restrict upe)
 {
     qn_bool ret;
     int blk_size;
@@ -2882,8 +2725,8 @@ QN_API extern qn_json_object_ptr qn_stor_ru_api_mlblk(qn_storage_ptr restrict st
     if (chk_size > blk_size) chk_size = blk_size;
 
     // ---- Process all extra options.
-    if (ext) {
-        if (! (rgn_entry = ext->rgn_entry)) qn_rgn_tbl_choose_first_entry(NULL, QN_RGN_SVC_UP, NULL, &rgn_entry);
+    if (upe) {
+        if (! (rgn_entry = upe->rgn_entry)) qn_rgn_tbl_choose_first_entry(NULL, QN_RGN_SVC_UP, NULL, &rgn_entry);
     } else {
         rgn_entry = NULL;
         qn_rgn_tbl_choose_first_entry(NULL, QN_RGN_SVC_UP, NULL, &rgn_entry);
@@ -2901,7 +2744,7 @@ QN_API extern qn_json_object_ptr qn_stor_ru_api_mlblk(qn_storage_ptr restrict st
     return qn_stor_rename_error_info(stor);
 }
 
-QN_API extern qn_json_object_ptr qn_stor_ru_api_bput(qn_storage_ptr restrict stor, const char * restrict uptoken, qn_io_reader_itf restrict data_rdr, qn_json_object_ptr restrict blk_info, int chk_size, qn_stor_upload_extra_ptr restrict ext)
+QN_API extern qn_json_object_ptr qn_stor_ru_api_bput(qn_storage_ptr restrict stor, const char * restrict uptoken, qn_io_reader_itf restrict data_rdr, qn_json_object_ptr restrict blk_info, int chk_size, qn_stor_upload_extra_ptr restrict upe)
 {
     qn_bool ret;
     qn_string url;
@@ -2945,8 +2788,8 @@ QN_API extern qn_json_object_ptr qn_stor_ru_api_bput(qn_storage_ptr restrict sto
     if (chk_size > (blk_size - offset)) chk_size = (blk_size - offset);
 
     // ---- Process all extra options.
-    if (ext) {
-        if (! (rgn_entry = ext->rgn_entry)) qn_rgn_tbl_choose_first_entry(NULL, QN_RGN_SVC_UP, NULL, &rgn_entry);
+    if (upe) {
+        if (! (rgn_entry = upe->rgn_entry)) qn_rgn_tbl_choose_first_entry(NULL, QN_RGN_SVC_UP, NULL, &rgn_entry);
     } else {
         rgn_entry = NULL;
         qn_rgn_tbl_choose_first_entry(NULL, QN_RGN_SVC_UP, NULL, &rgn_entry);
@@ -2964,7 +2807,7 @@ QN_API extern qn_json_object_ptr qn_stor_ru_api_bput(qn_storage_ptr restrict sto
     return qn_stor_rename_error_info(stor);
 }
 
-QN_API qn_json_object_ptr qn_stor_ru_api_mkfile(qn_storage_ptr restrict stor, const char * restrict uptoken, qn_io_reader_itf restrict ctx_rdr, qn_json_object_ptr restrict last_blk_info, qn_fsize fsize, qn_stor_upload_extra_ptr restrict ext)
+QN_API qn_json_object_ptr qn_stor_ru_api_mkfile(qn_storage_ptr restrict stor, const char * restrict uptoken, qn_io_reader_itf restrict ctx_rdr, qn_json_object_ptr restrict last_blk_info, qn_fsize fsize, qn_stor_upload_extra_ptr restrict upe)
 {
     qn_string url;
     qn_string url_tmp;
@@ -2988,8 +2831,8 @@ QN_API qn_json_object_ptr qn_stor_ru_api_mkfile(qn_storage_ptr restrict stor, co
     ctx_size = qn_io_size(ctx_rdr);
 
     // ---- Process all extra options.
-    if (ext) {
-        if (! (rgn_entry = ext->rgn_entry)) qn_rgn_tbl_choose_first_entry(NULL, QN_RGN_SVC_UP, NULL, &rgn_entry);
+    if (upe) {
+        if (! (rgn_entry = upe->rgn_entry)) qn_rgn_tbl_choose_first_entry(NULL, QN_RGN_SVC_UP, NULL, &rgn_entry);
     } else {
         rgn_entry = NULL;
         qn_rgn_tbl_choose_first_entry(NULL, QN_RGN_SVC_UP, NULL, &rgn_entry);
@@ -3004,9 +2847,9 @@ QN_API qn_json_object_ptr qn_stor_ru_api_mkfile(qn_storage_ptr restrict stor, co
     url = qn_cs_sprintf("%.*s/mkfile/%.*s", qn_str_size(host), qn_str_cstr(host), qn_str_size(tmp_str), qn_str_cstr(tmp_str));
     qn_str_destroy(tmp_str);
 
-    if (ext) {
-        if (ext->final_key) {
-            tmp_str = qn_cs_encode_base64_urlsafe(ext->final_key, strlen(ext->final_key));
+    if (upe) {
+        if (upe->final_key) {
+            tmp_str = qn_cs_encode_base64_urlsafe(upe->final_key, strlen(upe->final_key));
             if (! tmp_str) {
                 qn_str_destroy(url);
                 return NULL;
@@ -3026,7 +2869,7 @@ QN_API qn_json_object_ptr qn_stor_ru_api_mkfile(qn_storage_ptr restrict stor, co
     return qn_stor_rename_error_info(stor);
 }
 
-QN_API qn_json_object_ptr qn_stor_ru_upload_huge(qn_storage_ptr restrict stor, const char * restrict uptoken, qn_stor_resumable_upload_ptr ru, int * start_idx, int chk_size, qn_stor_upload_extra_ptr restrict ext)
+QN_API qn_json_object_ptr qn_stor_ru_upload_huge(qn_storage_ptr restrict stor, const char * restrict uptoken, qn_stor_resumable_upload_ptr ru, int * start_idx, int chk_size, qn_stor_upload_extra_ptr restrict upe)
 {
     int i;
     qn_integer offset;
@@ -3059,7 +2902,7 @@ QN_API qn_json_object_ptr qn_stor_ru_upload_huge(qn_storage_ptr restrict stor, c
 
         if ((offset = qn_json_get_integer(blk_info, "offset", 0)) == 0) {
             qn_io_srdr_reset(chk_rdr, sec_rdr, chk_size);
-            up_ret = qn_stor_ru_api_mlblk(stor, uptoken, qn_io_srdr_to_io_reader(chk_rdr), blk_info, chk_size, ext);
+            up_ret = qn_stor_ru_api_mkblk(stor, uptoken, qn_io_srdr_to_io_reader(chk_rdr), blk_info, chk_size, upe);
             if (! up_ret || qn_json_get_integer(up_ret, "fn-code", -1) != 200) goto QN_STOR_UPLOAD_HUGE_ERROR_HANDLING;
             if (! (blk_info = qn_stor_ru_update_block_info(ru, i, up_ret))) {
                 up_ret = NULL;
@@ -3072,7 +2915,7 @@ QN_API qn_json_object_ptr qn_stor_ru_upload_huge(qn_storage_ptr restrict stor, c
         // ---- If the whole block is uploaded through the /mkblk API, skip all subsequent calls to the /bput API.
         while (! qn_stor_ru_is_block_uploaded(blk_info)) {
             qn_io_srdr_reset(chk_rdr, sec_rdr, chk_size);
-            up_ret = qn_stor_ru_api_bput(stor, uptoken, qn_io_srdr_to_io_reader(chk_rdr), blk_info, chk_size, ext);
+            up_ret = qn_stor_ru_api_bput(stor, uptoken, qn_io_srdr_to_io_reader(chk_rdr), blk_info, chk_size, upe);
             if (! up_ret || qn_json_get_integer(up_ret, "fn-code", -1) != 200) goto QN_STOR_UPLOAD_HUGE_ERROR_HANDLING;
             if (! (blk_info = qn_stor_ru_update_block_info(ru, i, up_ret))) {
                 up_ret = NULL;
@@ -3084,7 +2927,7 @@ QN_API qn_json_object_ptr qn_stor_ru_upload_huge(qn_storage_ptr restrict stor, c
 
     qn_io_srdr_destroy(chk_rdr);
     *start_idx = i;
-    return qn_stor_ru_api_mkfile(stor, uptoken, qn_stor_ru_to_context_reader(ru), blk_info, qn_stor_ru_uploaded_fsize(ru), ext);
+    return qn_stor_ru_api_mkfile(stor, uptoken, qn_stor_ru_to_context_reader(ru), blk_info, qn_stor_ru_uploaded_fsize(ru), upe);
 
 QN_STOR_UPLOAD_HUGE_ERROR_HANDLING:
     qn_io_close(sec_rdr);

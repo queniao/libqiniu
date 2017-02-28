@@ -34,30 +34,29 @@ int main(int argc, char * argv[])
     if (argc > 5) delimiter = argv[5];
     if (argc > 6) limit = argv[6];
 
-    le = qn_stor_le_create();
+    le = qn_stor_lse_create();
     if (! le) {
         qn_mac_destroy(mac);
         printf("Cannot create a copy extra due to application error `%s`.\n", qn_err_get_message());
         return 1;
     } // if
 
-    if (prefix) qn_stor_le_set_prefix(le, prefix);
-    if (delimiter) qn_stor_le_set_delimiter(le, delimiter);
-    if (limit) qn_stor_le_set_limit(le, atoi(limit));
+    if (prefix) qn_stor_lse_set_prefix(le, prefix, delimiter);
+    if (limit) qn_stor_lse_set_limit(le, atoi(limit));
 
     stor = qn_stor_create();
     if (! stor) {
-        qn_stor_le_destroy(le);
+        qn_stor_lse_destroy(le);
         qn_mac_destroy(mac);
         printf("Cannot initialize a new storage object due to application error `%s`.\n", qn_err_get_message());
         return 1;
     } // if
 
     do {
-        list_ret = qn_stor_mn_api_list(stor, mac, bucket, le);
+        list_ret = qn_stor_ls_api_list(stor, mac, bucket, le);
         if (! list_ret) {
             qn_stor_destroy(stor);
-            qn_stor_le_destroy(le);
+            qn_stor_lse_destroy(le);
             qn_mac_destroy(mac);
             printf("Cannot list all files in the `%s` bucket due to application error `%s`.\n", bucket, qn_err_get_message());
             return 2;
@@ -70,7 +69,7 @@ int main(int argc, char * argv[])
         list_ret_str = qn_json_object_to_string(list_ret);
         if (! list_ret_str) {
             qn_stor_destroy(stor);
-            qn_stor_le_destroy(le);
+            qn_stor_lse_destroy(le);
             qn_mac_destroy(mac);
             printf("Cannot format the list result due to application error `%s`.\n", qn_err_get_message());
             return 3;
@@ -80,11 +79,11 @@ int main(int argc, char * argv[])
         qn_str_destroy(list_ret_str);
 
         marker = qn_json_get_string(list_ret, "marker", NULL);
-        qn_stor_le_set_marker(le, marker);
+        qn_stor_lse_set_marker(le, marker);
     } while (marker && strlen(marker));
 
     qn_stor_destroy(stor);
-    qn_stor_le_destroy(le);
+    qn_stor_lse_destroy(le);
     qn_mac_destroy(mac);
 
     return 0;

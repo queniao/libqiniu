@@ -17,7 +17,7 @@ int main(int argc, char * argv[])
     qn_file_ptr fl;
     qn_fl_info_ptr fi;
     qn_storage_ptr stor;
-    qn_stor_upload_extra_ptr ue;
+    qn_stor_upload_extra_ptr upe;
     qn_http_hdr_iterator_ptr hdr_itr;
     qn_string hdr_ent;
     char * buf;
@@ -88,27 +88,27 @@ int main(int argc, char * argv[])
     } // if
     qn_fl_close(fl);
 
-    ue = qn_stor_ue_create();
-    if (! ue) {
+    upe = qn_stor_upe_create();
+    if (! upe) {
         free(buf);
         qn_str_destroy(uptoken);
         printf("Cannot create a put extra due to application error `%s`.\n", qn_err_get_message());
         return 1;
     } // if
 
-    qn_stor_ue_set_final_key(ue, key);
+    qn_stor_upe_set_final_key(upe, key);
 
     stor = qn_stor_create();
     if (!stor) {
-        qn_stor_ue_destroy(ue);
+        qn_stor_upe_destroy(upe);
         free(buf);
         qn_str_destroy(uptoken);
         printf("Cannot initialize a new storage object due to application error `%s`.\n", qn_err_get_message());
         return 1;
     } // if
 
-    put_ret = qn_stor_up_api_upload_buffer(stor, uptoken, buf, buf_size, ue);
-    qn_stor_ue_destroy(ue);
+    put_ret = qn_stor_up_api_upload_buffer(stor, uptoken, buf, buf_size, upe);
+    qn_stor_upe_destroy(upe);
     free(buf);
     qn_str_destroy(uptoken);
     if (! put_ret) {

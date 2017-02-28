@@ -273,16 +273,16 @@ static qn_json_object_ptr qn_easy_put_file_in_one_piece(qn_easy_ptr restrict eas
     qn_json_object_ptr ret;
     qn_stor_upload_extra_ptr put_ext;
 
-    if (! (put_ext = qn_stor_ue_create())) return NULL;
+    if (! (put_ext = qn_stor_upe_create())) return NULL;
 
-    qn_stor_ue_set_final_key(put_ext, ext->attr.final_key);
+    qn_stor_upe_set_final_key(put_ext, ext->attr.final_key);
 
     if (io_rdr) {
         ret = qn_stor_up_api_upload(easy->stor, uptoken, io_rdr, put_ext);
     } else {
         ret = qn_stor_up_api_upload_file(easy->stor, uptoken, fname, put_ext);
     } // if
-    qn_stor_ue_destroy(put_ext);
+    qn_stor_upe_destroy(put_ext);
     return ret;
 }
 
@@ -295,9 +295,9 @@ static qn_json_object_ptr qn_easy_put_huge(qn_easy_ptr restrict easy, const char
     qn_stor_resumable_upload_ptr ru;
 
     if (ext) {
-        ue = qn_stor_ue_create();
+        ue = qn_stor_upe_create();
         if (ext->attr.final_key) {
-            qn_stor_ue_set_final_key(ue, ext->attr.final_key);
+            qn_stor_upe_set_final_key(ue, ext->attr.final_key);
         } // if
 
         resumable_info = ext->put_ctrl.resumable_info;
@@ -324,7 +324,7 @@ static qn_json_object_ptr qn_easy_put_huge(qn_easy_ptr restrict easy, const char
 
 QN_EASY_PUT_HUGE_ERROR_HANDLING:
     qn_stor_ru_destroy(ru);
-    qn_stor_ue_destroy(ue);
+    qn_stor_upe_destroy(ue);
     return put_ret;
 }
 
@@ -604,7 +604,7 @@ QN_API extern qn_json_object_ptr qn_easy_list(qn_easy_ptr restrict easy, const q
     qn_json_object_ptr list_ret;
     qn_json_object_ptr item;
     qn_json_array_ptr items;
-    qn_stor_list_extra_ptr le;
+    qn_stor_list_extra_ptr lse;
     qn_easy_list_extra_st real_ext;
     int i;
 
@@ -620,38 +620,37 @@ QN_API extern qn_json_object_ptr qn_easy_list(qn_easy_ptr restrict easy, const q
 
     if (real_ext.limit == 0 || real_ext.limit > 1000) real_ext.limit = 1000;
 
-    le = qn_stor_le_create();
-    if (! le) return NULL;
+    lse = qn_stor_lse_create();
+    if (! lse) return NULL;
 
-    if (real_ext.prefix) qn_stor_le_set_prefix(le, real_ext.prefix);
-    if (real_ext.delimiter) qn_stor_le_set_delimiter(le, real_ext.delimiter);
-    if (real_ext.limit) qn_stor_le_set_limit(le, real_ext.limit);
+    if (real_ext.prefix) qn_stor_lse_set_prefix(lse, real_ext.prefix, real_ext.delimiter);
+    if (real_ext.limit) qn_stor_lse_set_limit(lse, real_ext.limit);
 
     do {
-        if (marker) qn_stor_le_set_marker(le, qn_str_cstr(marker));
+        if (marker) qn_stor_lse_set_marker(lse, qn_str_cstr(marker));
 
-        list_ret = qn_stor_mn_api_list(easy->stor, mac, bucket, le);
+        list_ret = qn_stor_ls_api_list(easy->stor, mac, bucket, lse);
         qn_str_destroy(marker);
         if (! list_ret) {
-            qn_stor_le_destroy(le);
+            qn_stor_lse_destroy(lse);
             return NULL;
         } // if
         if (qn_json_get_integer(list_ret, "fn-code", 0) != 200) {
-            qn_stor_le_destroy(le);
+            qn_stor_lse_destroy(lse);
             return list_ret;
         } // if
 
         items = qn_json_get_array(list_ret, "items", NULL);
         if (! items) {
             // TODO: Set an appropriate error.
-            qn_stor_le_destroy(le);
+            qn_stor_lse_destroy(lse);
             return list_ret;
         } // if
 
         for (i = 0; i < qn_json_size_array(items); i += 1) {
             item = qn_json_pick_object(items, i, NULL);
             if (! itr(itr_data, item)) {
-                qn_stor_le_destroy(le);
+                qn_stor_lse_destroy(lse);
                 return NULL;
             } // if
         } // for
@@ -660,7 +659,7 @@ QN_API extern qn_json_object_ptr qn_easy_list(qn_easy_ptr restrict easy, const q
             marker = qn_cs_duplicate(qn_json_get_string(list_ret, "marker", NULL));
             if (! marker) {
                 qn_err_set_out_of_memory();
-                qn_stor_le_destroy(le);
+                qn_stor_lse_destroy(lse);
                 return NULL;
             } // if
         } else {

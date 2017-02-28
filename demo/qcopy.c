@@ -14,7 +14,7 @@ int main(int argc, char * argv[])
     qn_string copy_ret_str;
     qn_json_object_ptr copy_ret;
     qn_storage_ptr stor;
-    qn_stor_copy_extra_ptr ce;
+    qn_stor_management_extra_ptr mne;
     qn_http_hdr_iterator_ptr hdr_itr;
     qn_string hdr_ent;
 
@@ -37,15 +37,15 @@ int main(int argc, char * argv[])
         force = argv[7];
     } // if
 
-    ce = qn_stor_ce_create();
-    if (! ce) {
+    mne = qn_stor_mne_create();
+    if (! mne) {
         qn_mac_destroy(mac);
         printf("Cannot create a copy extra due to application error `%s`.\n", qn_err_get_message());
         return 1;
     } // if
 
     if (force) {
-        qn_stor_ce_set_force_overwrite(ce, qn_true);
+        qn_stor_mne_set_force_overwrite(mne, qn_true);
     } // if
 
     stor = qn_stor_create();
@@ -55,8 +55,8 @@ int main(int argc, char * argv[])
         return 1;
     } // if
 
-    copy_ret = qn_stor_mn_api_copy(stor, mac, src_bucket, src_key, dest_bucket, dest_key, ce);
-    qn_stor_ce_destroy(ce);
+    copy_ret = qn_stor_mn_api_copy(stor, mac, src_bucket, src_key, dest_bucket, dest_key, mne);
+    qn_stor_mne_destroy(mne);
     qn_mac_destroy(mac);
     if (! copy_ret) {
         qn_stor_destroy(stor);

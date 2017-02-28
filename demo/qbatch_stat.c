@@ -9,7 +9,7 @@ int main(int argc, char * argv[])
     qn_string bucket;
     qn_string key;
     qn_string stat_ret_str;
-    qn_json_object_ptr stat_ret;
+    qn_json_object_ptr bt_ret;
     qn_stor_batch_ptr bt;
     qn_storage_ptr stor;
     qn_http_hdr_iterator_ptr hdr_itr;
@@ -55,10 +55,10 @@ int main(int argc, char * argv[])
         } // if
     } // if
 
-    stat_ret = qn_stor_mn_api_batch(stor, mac, bt, NULL);
+    bt_ret = qn_stor_bt_api_batch(stor, mac, bt, NULL);
     qn_stor_bt_destroy(bt);
     qn_mac_destroy(mac);
-    if (! stat_ret) {
+    if (! bt_ret) {
         qn_stor_bt_destroy(bt);
         qn_stor_destroy(stor);
         printf("Cannot stat the given files due to application error `%s`.\n", qn_err_get_message());
@@ -69,9 +69,9 @@ int main(int argc, char * argv[])
     while ((hdr_ent = qn_http_hdr_itr_next_entry(hdr_itr))) printf("%s\n", qn_str_cstr(hdr_ent));
     qn_http_hdr_itr_destroy(hdr_itr);
 
-    stat_ret_str = qn_json_object_to_string(stat_ret);
+    stat_ret_str = qn_json_object_to_string(bt_ret);
     qn_stor_destroy(stor);
-    if (! stat_ret) {
+    if (! bt_ret) {
         printf("Cannot format the result object due to application error `%s`.\n", qn_err_get_message());
         return 3;
     } // if

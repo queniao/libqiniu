@@ -19,7 +19,7 @@ int main(int argc, char * argv[])
     qn_json_object_ptr put_policy;
     qn_json_object_ptr up_ret;
     qn_storage_ptr stor;
-    qn_stor_upload_extra_ptr ue;
+    qn_stor_upload_extra_ptr upe;
 
     if (argc < 5) {
         printf("Demo qputh - Put single file in many HTTP sessions.\n");
@@ -67,19 +67,19 @@ int main(int argc, char * argv[])
         return 1;
     } // if
 
-    ue = qn_stor_ue_create();
-    if (! ue) {
+    upe = qn_stor_upe_create();
+    if (! upe) {
         qn_str_destroy(uptoken);
         qn_fl_close(fl);
         printf("Cannot create a upload extra due to application error `%s`.\n", qn_err_get_message());
         return 1;
     } // if
 
-    qn_stor_ue_set_final_key(ue, key);
+    qn_stor_upe_set_final_key(upe, key);
 
     stor = qn_stor_create();
     if (! stor) {
-        qn_stor_ue_destroy(ue);
+        qn_stor_upe_destroy(upe);
         qn_str_destroy(uptoken);
         qn_stor_ru_destroy(ru);
         qn_fl_close(fl);
@@ -88,8 +88,8 @@ int main(int argc, char * argv[])
     } // if
 
     start_idx = 0;
-    up_ret = qn_stor_ru_upload_huge(stor, uptoken, ru, &start_idx, QN_STOR_RU_CHUNK_DEFAULT_SIZE, ue);
-    qn_stor_ue_destroy(ue);
+    up_ret = qn_stor_ru_upload_huge(stor, uptoken, ru, &start_idx, QN_STOR_RU_CHUNK_DEFAULT_SIZE, upe);
+    qn_stor_upe_destroy(upe);
     qn_str_destroy(uptoken);
     qn_stor_ru_destroy(ru);
     qn_fl_close(fl);
