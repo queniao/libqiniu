@@ -28,25 +28,6 @@ extern "C"
 {
 #endif
 
-// ---- Declaration of Storage Extension ----
-
-/***************************************************************************//**
-* @defgroup Storage-Extension Storage Extension Interface
-*
-*******************************************************************************/
-
-typedef struct _QN_STOR_RGN
-{
-    qn_rgn_table_ptr rtbl;
-    qn_rgn_entry_ptr entry;
-} qn_stor_rgn, *qn_stor_rgn_ptr;
-
-typedef struct _QN_STOR_PUT_CTRL
-{
-    qn_fsize fsize;
-    qn_io_reader_itf rdr;
-} qn_stor_put_ctrl, *qn_stor_put_ctrl_ptr;
-
 // -------- Storage Object (abbreviation: stor) --------
 
 struct _QN_STORAGE;
@@ -189,7 +170,7 @@ QN_API extern qn_json_object_ptr qn_stor_up_api_upload_buffer(qn_storage_ptr res
 
 QN_API extern qn_json_object_ptr qn_stor_up_api_upload(qn_storage_ptr restrict stor, const char * restrict uptoken, qn_io_reader_itf restrict data_rdr, qn_stor_upload_extra_ptr restrict upe);
 
-// -------- Resumable Upload (abbreviation: ru) --------
+// -------- Resumable Upload Object (abbreviation: ru) --------
 
 enum
 {
@@ -223,15 +204,13 @@ QN_API extern qn_fsize qn_stor_ru_uploaded_fsize(qn_stor_resumable_upload_ptr re
 QN_API extern qn_bool qn_stor_ru_is_block_uploaded(qn_json_object_ptr restrict blk_info);
 QN_API extern qn_bool qn_stor_ru_is_file_uploaded(qn_stor_resumable_upload_ptr restrict ru);
 
-// --------
+// -------- Resumable Upload Functions (abbreviation: ru) --------
 
 QN_API extern qn_json_object_ptr qn_stor_ru_api_mkblk(qn_storage_ptr restrict stor, const char * restrict uptoken, qn_io_reader_itf restrict data_rdr, qn_json_object_ptr restrict blk_info, int chk_size, qn_stor_upload_extra_ptr restrict upe);
 QN_API extern qn_json_object_ptr qn_stor_ru_api_bput(qn_storage_ptr restrict stor, const char * restrict uptoken, qn_io_reader_itf restrict data_rdr, qn_json_object_ptr restrict blk_info, int chk_size, qn_stor_upload_extra_ptr restrict upe);
 QN_API extern qn_json_object_ptr qn_stor_ru_api_mkfile(qn_storage_ptr restrict stor, const char * restrict uptoken, qn_io_reader_itf restrict ctx_rdr, qn_json_object_ptr restrict last_blk_info, qn_fsize fsize, qn_stor_upload_extra_ptr restrict upe);
 
 QN_API extern qn_json_object_ptr qn_stor_ru_upload_huge(qn_storage_ptr restrict stor, const char * restrict uptoken, qn_stor_resumable_upload_ptr ru, int * start_idx, int chk_size, qn_stor_upload_extra_ptr restrict upe);
-
-// --------
 
 #ifdef __cplusplus
 }
