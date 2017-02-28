@@ -2025,7 +2025,7 @@ QN_API extern void qn_stor_upe_set_region_entry(qn_stor_upload_extra_ptr restric
 
 // -------- Ordinary Upload (abbreviation: up) --------
 
-static qn_bool qn_stor_up_prepare(qn_storage_ptr restrict stor, const char * restrict uptoken, qn_stor_upload_extra_ptr restrict upe)
+static qn_bool qn_stor_up_prepare_for_upload(qn_storage_ptr restrict stor, const char * restrict uptoken, qn_stor_upload_extra_ptr restrict upe)
 {
     qn_http_form_ptr form;
 
@@ -2149,7 +2149,7 @@ QN_API qn_json_object_ptr qn_stor_up_api_upload_file(qn_storage_ptr restrict sto
         qn_rgn_tbl_choose_first_entry(NULL, QN_RGN_SVC_UP, NULL, &rgn_entry);
     } // if
 
-    if (! qn_stor_up_prepare(stor, uptoken, upe)) return NULL;
+    if (! qn_stor_up_prepare_for_upload(stor, uptoken, upe)) return NULL;
 
     // ----
     form = qn_http_req_get_form(stor->req);
@@ -2190,7 +2190,7 @@ QN_API qn_json_object_ptr qn_stor_up_api_upload_buffer(qn_storage_ptr restrict s
         qn_rgn_tbl_choose_first_entry(NULL, QN_RGN_SVC_UP, NULL, &rgn_entry);
     } // if
 
-    if (! qn_stor_up_prepare(stor, uptoken, upe)) return NULL;
+    if (! qn_stor_up_prepare_for_upload(stor, uptoken, upe)) return NULL;
 
     form = qn_http_req_get_form(stor->req);
 
@@ -2232,7 +2232,7 @@ QN_API qn_json_object_ptr qn_stor_up_api_upload(qn_storage_ptr restrict stor, co
         qn_rgn_tbl_choose_first_entry(NULL, QN_RGN_SVC_UP, NULL, &rgn_entry);
     } // if
 
-    if (! qn_stor_up_prepare(stor, uptoken, upe)) return NULL;
+    if (! qn_stor_up_prepare_for_upload(stor, uptoken, upe)) return NULL;
 
     ret = qn_http_form_add_file_reader(qn_http_req_get_form(stor->req), "file", qn_str_cstr(qn_io_name(data_rdr)), NULL, qn_io_size(data_rdr), stor->req);
     if (! ret) return NULL;
@@ -2659,7 +2659,7 @@ static inline qn_json_object_ptr qn_stor_rename_error_info(qn_storage_ptr restri
     return stor->obj_body;
 }
 
-static qn_bool qn_stor_up_prepare_request(qn_storage_ptr restrict stor, const char * restrict uptoken, const char * restrict mime, qn_io_reader_itf restrict rdr, int size, qn_rgn_entry_ptr rgn_entry)
+static qn_bool qn_stor_ru_prepare_for_resumable_upload(qn_storage_ptr restrict stor, const char * restrict uptoken, const char * restrict mime, qn_io_reader_itf restrict rdr, int size, qn_rgn_entry_ptr rgn_entry)
 {
     qn_bool ret;
     qn_string tmp_hdr;
@@ -2734,7 +2734,7 @@ QN_API extern qn_json_object_ptr qn_stor_ru_api_mkblk(qn_storage_ptr restrict st
         qn_rgn_tbl_choose_first_entry(NULL, QN_RGN_SVC_UP, NULL, &rgn_entry);
     } // if
 
-    if (! qn_stor_up_prepare_request(stor, uptoken, "application/octet-stream", data_rdr, chk_size, rgn_entry)) return NULL;
+    if (! qn_stor_ru_prepare_for_resumable_upload(stor, uptoken, "application/octet-stream", data_rdr, chk_size, rgn_entry)) return NULL;
 
     // ---- Prepare upload URL.
     url = qn_cs_sprintf("%.*s/mkblk/%d", qn_str_size(rgn_entry->base_url), qn_str_cstr(rgn_entry->base_url), blk_size);
@@ -2797,7 +2797,7 @@ QN_API extern qn_json_object_ptr qn_stor_ru_api_bput(qn_storage_ptr restrict sto
         qn_rgn_tbl_choose_first_entry(NULL, QN_RGN_SVC_UP, NULL, &rgn_entry);
     } // if
 
-    if (! qn_stor_up_prepare_request(stor, uptoken, "application/octet-stream", data_rdr, chk_size, rgn_entry)) return NULL;
+    if (! qn_stor_ru_prepare_for_resumable_upload(stor, uptoken, "application/octet-stream", data_rdr, chk_size, rgn_entry)) return NULL;
 
     // ---- Prepare upload URL.
     url = qn_cs_sprintf("%.*s/bput/%.*s/%d", qn_str_size(host), qn_str_cstr(host), qn_str_size(ctx), qn_str_cstr(ctx), offset);
@@ -2840,7 +2840,7 @@ QN_API qn_json_object_ptr qn_stor_ru_api_mkfile(qn_storage_ptr restrict stor, co
         qn_rgn_tbl_choose_first_entry(NULL, QN_RGN_SVC_UP, NULL, &rgn_entry);
     } // if
 
-    if (! qn_stor_up_prepare_request(stor, uptoken, "text/plain", ctx_rdr, ctx_size, rgn_entry)) return NULL;
+    if (! qn_stor_ru_prepare_for_resumable_upload(stor, uptoken, "text/plain", ctx_rdr, ctx_size, rgn_entry)) return NULL;
 
     // ---- Prepare upload URL.
     // TODO: Use the correct directive depends on the type of fsize on different platforms.
