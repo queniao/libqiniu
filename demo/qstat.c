@@ -35,7 +35,7 @@ int main(int argc, char * argv[])
         return 1;
     } // if
 
-    stat_ret = qn_stor_stat(stor, mac, bucket, key, NULL);
+    stat_ret = qn_stor_mn_api_stat(stor, mac, bucket, key, NULL);
     qn_mac_destroy(mac);
     if (!stat_ret) {
         qn_stor_destroy(stor);

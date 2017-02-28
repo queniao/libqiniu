@@ -630,7 +630,7 @@ QN_API extern qn_json_object_ptr qn_easy_list(qn_easy_ptr restrict easy, const q
     do {
         if (marker) qn_stor_le_set_marker(le, qn_str_cstr(marker));
 
-        list_ret = qn_stor_list(easy->stor, mac, bucket, le);
+        list_ret = qn_stor_mn_api_list(easy->stor, mac, bucket, le);
         qn_str_destroy(marker);
         if (! list_ret) {
             qn_stor_le_destroy(le);

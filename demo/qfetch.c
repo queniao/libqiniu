@@ -38,7 +38,7 @@ int main(int argc, char * argv[])
         return 1;
     } // if
 
-    fetch_ret = qn_stor_fetch(stor, mac, src_url, bucket, key, NULL);
+    fetch_ret = qn_stor_ft_api_fetch(stor, mac, src_url, bucket, key, NULL);
     qn_mac_destroy(mac);
     if (! fetch_ret) {
         qn_stor_destroy(stor);

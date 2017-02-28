@@ -55,7 +55,7 @@ int main(int argc, char * argv[])
         return 1;
     } // if
 
-    copy_ret = qn_stor_copy(stor, mac, src_bucket, src_key, dest_bucket, dest_key, ce);
+    copy_ret = qn_stor_mn_api_copy(stor, mac, src_bucket, src_key, dest_bucket, dest_key, ce);
     qn_stor_ce_destroy(ce);
     qn_mac_destroy(mac);
     if (! copy_ret) {

@@ -54,7 +54,7 @@ int main(int argc, char * argv[])
     } // if
 
     do {
-        list_ret = qn_stor_list(stor, mac, bucket, le);
+        list_ret = qn_stor_mn_api_list(stor, mac, bucket, le);
         if (! list_ret) {
             qn_stor_destroy(stor);
             qn_stor_le_destroy(le);

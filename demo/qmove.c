@@ -39,7 +39,7 @@ int main(int argc, char * argv[])
         return 1;
     } // if
 
-    move_ret = qn_stor_move(stor, mac, src_bucket, src_key, dest_bucket, dest_key, NULL);
+    move_ret = qn_stor_mn_api_move(stor, mac, src_bucket, src_key, dest_bucket, dest_key, NULL);
     qn_mac_destroy(mac);
     if (! move_ret) {
         qn_stor_destroy(stor);

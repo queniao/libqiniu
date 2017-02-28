@@ -35,7 +35,7 @@ int main(int argc, char * argv[])
         return 1;
     } // if
 
-    del_ret = qn_stor_delete(stor, mac, bucket, key, NULL);
+    del_ret = qn_stor_mn_api_delete(stor, mac, bucket, key, NULL);
     qn_mac_destroy(mac);
     if (! del_ret) {
         qn_stor_destroy(stor);

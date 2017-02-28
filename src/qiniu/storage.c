@@ -262,7 +262,7 @@ static const qn_string qn_stor_make_stat_op(const char * restrict bucket, const 
 *         If fails, the function returns a NULL value and the caller can call
 *         qn_err_get_message() to check out what happened.
 *******************************************************************************/
-QN_API qn_json_object_ptr qn_stor_stat(qn_storage_ptr restrict stor, const qn_mac_ptr restrict mac, const char * restrict bucket, const char * restrict key, qn_stor_stat_extra_ptr restrict ext)
+QN_API qn_json_object_ptr qn_stor_mn_api_stat(qn_storage_ptr restrict stor, const qn_mac_ptr restrict mac, const char * restrict bucket, const char * restrict key, qn_stor_stat_extra_ptr restrict ext)
 {
     qn_bool ret;
     qn_string op;
@@ -451,7 +451,7 @@ static const qn_string qn_stor_make_copy_op(const char * restrict src_bucket, co
 *         If fails, the function returns a NULL value and the caller can call
 *         qn_err_get_message() to check out what happened.
 *******************************************************************************/
-QN_API qn_json_object_ptr qn_stor_copy(qn_storage_ptr restrict stor, const qn_mac_ptr restrict mac, const char * restrict src_bucket, const char * restrict src_key, const char * restrict dest_bucket, const char * restrict dest_key, qn_stor_copy_extra_ptr restrict ext)
+QN_API qn_json_object_ptr qn_stor_mn_api_copy(qn_storage_ptr restrict stor, const qn_mac_ptr restrict mac, const char * restrict src_bucket, const char * restrict src_key, const char * restrict dest_bucket, const char * restrict dest_key, qn_stor_copy_extra_ptr restrict ext)
 {
     qn_bool ret;
     qn_string op;
@@ -649,7 +649,7 @@ static const qn_string qn_stor_make_move_op(const char * restrict src_bucket, co
 *         If fails, the function returns a NULL value and the caller can call
 *         qn_err_get_message() to check out what happened.
 *******************************************************************************/
-QN_API qn_json_object_ptr qn_stor_move(qn_storage_ptr restrict stor, const qn_mac_ptr restrict mac, const char * restrict src_bucket, const char * restrict src_key, const char * restrict dest_bucket, const char * restrict dest_key, qn_stor_move_extra_ptr restrict ext)
+QN_API qn_json_object_ptr qn_stor_mn_api_move(qn_storage_ptr restrict stor, const qn_mac_ptr restrict mac, const char * restrict src_bucket, const char * restrict src_key, const char * restrict dest_bucket, const char * restrict dest_key, qn_stor_move_extra_ptr restrict ext)
 {
     qn_bool ret;
     qn_string op;
@@ -822,7 +822,7 @@ static qn_string qn_stor_make_delete_op(const char * restrict bucket, const char
 *         If fails, the function returns a NULL value and the caller can call
 *         qn_err_get_message() to check out what happened.
 *******************************************************************************/
-QN_API qn_json_object_ptr qn_stor_delete(qn_storage_ptr restrict stor, const qn_mac_ptr restrict mac, const char * restrict bucket, const char * restrict key, qn_stor_delete_extra_ptr restrict ext)
+QN_API qn_json_object_ptr qn_stor_mn_api_delete(qn_storage_ptr restrict stor, const qn_mac_ptr restrict mac, const char * restrict bucket, const char * restrict key, qn_stor_delete_extra_ptr restrict ext)
 {
     qn_bool ret;
     qn_string op;
@@ -981,7 +981,7 @@ QN_API void qn_stor_cme_set_region_entry(qn_stor_change_mime_extra_ptr restrict 
 *         If fails, the function returns a NULL value and the caller can call
 *         qn_err_get_message() to check out what happened.
 *******************************************************************************/
-QN_API qn_json_object_ptr qn_stor_change_mime(qn_storage_ptr restrict stor, const qn_mac_ptr restrict mac, const char * restrict bucket, const char * restrict key, const char * restrict mime, qn_stor_change_mime_extra_ptr restrict ext)
+QN_API qn_json_object_ptr qn_stor_mn_api_chgm(qn_storage_ptr restrict stor, const qn_mac_ptr restrict mac, const char * restrict bucket, const char * restrict key, const char * restrict mime, qn_stor_change_mime_extra_ptr restrict ext)
 {
     qn_bool ret;
     qn_string encoded_uri;
@@ -1169,7 +1169,7 @@ QN_API void qn_stor_fe_set_region_entry(qn_stor_fetch_extra_ptr restrict fe, qn_
 *         If fails, the function returns a NULL value and the caller can call
 *         qn_err_get_message() to check out what happened.
 *******************************************************************************/
-QN_API qn_json_object_ptr qn_stor_fetch(qn_storage_ptr restrict stor, const qn_mac_ptr restrict mac, const char * restrict src_url, const char * restrict dest_bucket, const char * restrict dest_key, qn_stor_fetch_extra_ptr restrict ext)
+QN_API qn_json_object_ptr qn_stor_ft_api_fetch(qn_storage_ptr restrict stor, const qn_mac_ptr restrict mac, const char * restrict src_url, const char * restrict dest_bucket, const char * restrict dest_key, qn_stor_fetch_extra_ptr restrict ext)
 {
     qn_bool ret;
     qn_string encoded_src_url;
@@ -1318,7 +1318,7 @@ QN_API qn_json_object_ptr qn_stor_fetch(qn_storage_ptr restrict stor, const qn_m
 *         If fails, the function returns a NULL value and the caller can call
 *         qn_err_get_message() to check out what happened.
 *******************************************************************************/
-QN_API qn_json_object_ptr qn_stor_prefetch(qn_storage_ptr restrict stor, const qn_mac_ptr restrict mac, const char * restrict dest_bucket, const char * restrict dest_key, qn_stor_fetch_extra_ptr restrict ext)
+QN_API qn_json_object_ptr qn_stor_ft_api_prefetch(qn_storage_ptr restrict stor, const qn_mac_ptr restrict mac, const char * restrict dest_bucket, const char * restrict dest_key, qn_stor_fetch_extra_ptr restrict ext)
 {
     qn_bool ret;
     qn_string encoded_dest_uri;
@@ -1545,7 +1545,7 @@ QN_API void qn_stor_le_set_limit(qn_stor_list_extra_ptr restrict le, int limit)
 *         If fails, the function returns a NULL value and the caller can call
 *         qn_err_get_message() to check out what happened.
 *******************************************************************************/
-QN_API qn_json_object_ptr qn_stor_list(qn_storage_ptr restrict stor, const qn_mac_ptr restrict mac, const char * restrict bucket, qn_stor_list_extra_ptr restrict ext)
+QN_API qn_json_object_ptr qn_stor_mn_api_list(qn_storage_ptr restrict stor, const qn_mac_ptr restrict mac, const char * restrict bucket, qn_stor_list_extra_ptr restrict ext)
 {
     qn_bool ret;
     qn_string url;
@@ -1793,7 +1793,7 @@ QN_API void qn_stor_be_set_region_entry(qn_stor_batch_extra_ptr restrict be, qn_
     be->rgn_entry = entry;
 }
 
-QN_API qn_json_object_ptr qn_stor_execute_batch_opertions(qn_storage_ptr restrict stor, const qn_mac_ptr restrict mac, const qn_stor_batch_ptr restrict bt, qn_stor_batch_extra_ptr restrict ext)
+QN_API qn_json_object_ptr qn_stor_mn_api_batch(qn_storage_ptr restrict stor, const qn_mac_ptr restrict mac, const qn_stor_batch_ptr restrict bt, qn_stor_batch_extra_ptr restrict ext)
 {
     qn_bool ret;
     qn_string body;

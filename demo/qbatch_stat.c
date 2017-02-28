@@ -55,7 +55,7 @@ int main(int argc, char * argv[])
         } // if
     } // if
 
-    stat_ret = qn_stor_execute_batch_opertions(stor, mac, bt, NULL);
+    stat_ret = qn_stor_mn_api_batch(stor, mac, bt, NULL);
     qn_stor_bt_destroy(bt);
     qn_mac_destroy(mac);
     if (! stat_ret) {

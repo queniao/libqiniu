@@ -38,7 +38,7 @@ int main(int argc, char * argv[])
         return 1;
     } // if
 
-    chgm_ret = qn_stor_change_mime(stor, mac, bucket, key, mime, NULL);
+    chgm_ret = qn_stor_mn_api_chgm(stor, mac, bucket, key, mime, NULL);
     qn_mac_destroy(mac);
     if (! chgm_ret) {
         qn_stor_destroy(stor);
