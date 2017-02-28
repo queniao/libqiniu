@@ -22,7 +22,7 @@ typedef struct _QN_RGN_HOST
     qn_rgn_pos cap;
 } qn_rgn_host;
 
-QN_API qn_rgn_host_ptr qn_rgn_host_create(void)
+QN_SDK qn_rgn_host_ptr qn_rgn_host_create(void)
 {
     qn_rgn_host_ptr new_host = calloc(1, sizeof(qn_rgn_host));
     if (!new_host) {
@@ -40,7 +40,7 @@ QN_API qn_rgn_host_ptr qn_rgn_host_create(void)
     return new_host;
 }
 
-QN_API void qn_rgn_host_destroy(qn_rgn_host_ptr restrict host)
+QN_SDK void qn_rgn_host_destroy(qn_rgn_host_ptr restrict host)
 {
     if (host) {
         qn_rgn_host_reset(host);
@@ -49,7 +49,7 @@ QN_API void qn_rgn_host_destroy(qn_rgn_host_ptr restrict host)
     } // if
 }
 
-QN_API void qn_rgn_host_reset(qn_rgn_host_ptr restrict host)
+QN_SDK void qn_rgn_host_reset(qn_rgn_host_ptr restrict host)
 {
     while (host->cnt > 0) {
         host->cnt -= 1;
@@ -116,17 +116,17 @@ static qn_rgn_host_ptr qn_rgn_host_duplicate(qn_rgn_host_ptr restrict host)
     return new_host;
 }
 
-QN_API int qn_rgn_host_entry_count(qn_rgn_host_ptr restrict host)
+QN_SDK int qn_rgn_host_entry_count(qn_rgn_host_ptr restrict host)
 {
     return host->cnt;
 }
 
-QN_API qn_bool qn_rgn_host_add_entry(qn_rgn_host_ptr restrict host, const char * restrict base_url, const char * restrict hostname)
+QN_SDK qn_bool qn_rgn_host_add_entry(qn_rgn_host_ptr restrict host, const char * restrict base_url, const char * restrict hostname)
 {
     return qn_rgn_host_add_entry_raw(host, base_url, strlen(base_url), hostname, strlen(hostname));
 }
 
-QN_API qn_rgn_entry_ptr qn_rgn_host_get_entry(qn_rgn_host_ptr restrict host, int n)
+QN_SDK qn_rgn_entry_ptr qn_rgn_host_get_entry(qn_rgn_host_ptr restrict host, int n)
 {
     return (n < host->cnt) ? &host->entries[n] : NULL;
 }
@@ -144,7 +144,7 @@ typedef struct _QN_REGION
     qn_rgn_host_ptr api;
 } qn_region, *qn_region_ptr;
 
-QN_API qn_region_ptr qn_rgn_create(const char * restrict name)
+QN_SDK qn_region_ptr qn_rgn_create(const char * restrict name)
 {
     qn_region_ptr new_rgn = calloc(1, sizeof(qn_region));
     if (!new_rgn) {
@@ -216,7 +216,7 @@ QN_RGB_CLONE_CLEAN_FOR_NAME:
     return NULL;
 }
 
-QN_API void qn_rgn_destroy(qn_region_ptr restrict rgn)
+QN_SDK void qn_rgn_destroy(qn_region_ptr restrict rgn)
 {
     if (rgn) {
         qn_rgn_host_destroy(rgn->api);
@@ -229,7 +229,7 @@ QN_API void qn_rgn_destroy(qn_region_ptr restrict rgn)
     } // if
 }
 
-QN_API void qn_rgn_reset(qn_region_ptr restrict rgn)
+QN_SDK void qn_rgn_reset(qn_region_ptr restrict rgn)
 {
     qn_rgn_host_reset(rgn->api);
     qn_rgn_host_reset(rgn->rsf);
@@ -238,27 +238,27 @@ QN_API void qn_rgn_reset(qn_region_ptr restrict rgn)
     qn_rgn_host_reset(rgn->up);
 }
 
-QN_API qn_rgn_host_ptr qn_rgn_get_up_host(qn_region_ptr restrict rgn)
+QN_SDK qn_rgn_host_ptr qn_rgn_get_up_host(qn_region_ptr restrict rgn)
 {
     return rgn->up;
 }
 
-QN_API qn_rgn_host_ptr qn_rgn_get_io_host(qn_region_ptr restrict rgn)
+QN_SDK qn_rgn_host_ptr qn_rgn_get_io_host(qn_region_ptr restrict rgn)
 {
     return rgn->io;
 }
 
-QN_API qn_rgn_host_ptr qn_rgn_get_rs_host(qn_region_ptr restrict rgn)
+QN_SDK qn_rgn_host_ptr qn_rgn_get_rs_host(qn_region_ptr restrict rgn)
 {
     return rgn->rs;
 }
 
-QN_API qn_rgn_host_ptr qn_rgn_get_rsf_host(qn_region_ptr restrict rgn)
+QN_SDK qn_rgn_host_ptr qn_rgn_get_rsf_host(qn_region_ptr restrict rgn)
 {
     return rgn->rsf;
 }
 
-QN_API qn_rgn_host_ptr qn_rgn_get_api_host(qn_region_ptr restrict rgn)
+QN_SDK qn_rgn_host_ptr qn_rgn_get_api_host(qn_region_ptr restrict rgn)
 {
     return rgn->api;
 }
@@ -272,7 +272,7 @@ typedef struct _QN_RGN_TABLE
     qn_rgn_pos cap;
 } qn_rgn_table;
 
-QN_API qn_rgn_table_ptr qn_rgn_tbl_create(void)
+QN_SDK qn_rgn_table_ptr qn_rgn_tbl_create(void)
 {
     qn_rgn_table_ptr new_rtbl = calloc(1, sizeof(qn_rgn_table));
     if (!new_rtbl) {
@@ -290,7 +290,7 @@ QN_API qn_rgn_table_ptr qn_rgn_tbl_create(void)
     return new_rtbl;
 }
 
-QN_API void qn_rgn_tbl_destroy(qn_rgn_table_ptr restrict rtbl)
+QN_SDK void qn_rgn_tbl_destroy(qn_rgn_table_ptr restrict rtbl)
 {
    if (rtbl) { 
         qn_rgn_tbl_reset(rtbl);
@@ -299,7 +299,7 @@ QN_API void qn_rgn_tbl_destroy(qn_rgn_table_ptr restrict rtbl)
     } // if
 }
 
-QN_API void qn_rgn_tbl_reset(qn_rgn_table_ptr restrict rtbl)
+QN_SDK void qn_rgn_tbl_reset(qn_rgn_table_ptr restrict rtbl)
 {
     while (rtbl->cnt > 0) qn_rgn_destroy(rtbl->regions[--rtbl->cnt]);
 }
@@ -338,13 +338,13 @@ static qn_rgn_pos qn_rgn_tbl_bsearch(qn_region_ptr * restrict regions, const qn_
     return begin;
 }
 
-QN_API const qn_region_ptr qn_rgn_tbl_get_region(qn_rgn_table_ptr restrict rtbl, const char * restrict name)
+QN_SDK const qn_region_ptr qn_rgn_tbl_get_region(qn_rgn_table_ptr restrict rtbl, const char * restrict name)
 {
     qn_rgn_pos pos = qn_rgn_tbl_bsearch(rtbl->regions, rtbl->cnt, name);
     return (pos < rtbl->cnt) ? rtbl->regions[pos] : NULL;
 }
 
-QN_API qn_bool qn_rgn_tbl_set_region(qn_rgn_table_ptr restrict rtbl, const char * restrict name, const qn_region_ptr restrict rgn)
+QN_SDK qn_bool qn_rgn_tbl_set_region(qn_rgn_table_ptr restrict rtbl, const char * restrict name, const qn_region_ptr restrict rgn)
 {
     qn_region_ptr new_rgn;
     qn_rgn_pos pos = qn_rgn_tbl_bsearch(rtbl->regions, rtbl->cnt, name);
@@ -391,7 +391,7 @@ static qn_region qn_rgn_default_region = {
     &qn_rgn_default_api_host
 };
 
-QN_API const qn_region_ptr qn_rgn_tbl_get_default_region(qn_rgn_table_ptr restrict rtbl)
+QN_SDK const qn_region_ptr qn_rgn_tbl_get_default_region(qn_rgn_table_ptr restrict rtbl)
 {
     qn_region_ptr rgn;
 
@@ -401,12 +401,12 @@ QN_API const qn_region_ptr qn_rgn_tbl_get_default_region(qn_rgn_table_ptr restri
     return (rgn) ? rgn : &qn_rgn_default_region;
 }
 
-QN_API qn_bool qn_rgn_tbl_set_default_region(qn_rgn_table_ptr restrict rtbl, const qn_region_ptr restrict rgn)
+QN_SDK qn_bool qn_rgn_tbl_set_default_region(qn_rgn_table_ptr restrict rtbl, const qn_region_ptr restrict rgn)
 {
     return qn_rgn_tbl_set_region(rtbl, "default", rgn);
 }
 
-QN_API void qn_rgn_tbl_choose_first_entry(qn_rgn_table_ptr restrict rtbl, int svc, const char * restrict name, qn_rgn_entry_ptr * restrict entry)
+QN_SDK void qn_rgn_tbl_choose_first_entry(qn_rgn_table_ptr restrict rtbl, int svc, const char * restrict name, qn_rgn_entry_ptr * restrict entry)
 {
     qn_region_ptr rgn;
     qn_rgn_host_ptr host;
@@ -448,7 +448,7 @@ typedef struct _QN_RGN_ITERATOR
     qn_rgn_pos pos;
 } qn_rgn_iterator;
 
-QN_API qn_rgn_iterator_ptr qn_rgn_itr_create(qn_rgn_table_ptr restrict rtbl)
+QN_SDK qn_rgn_iterator_ptr qn_rgn_itr_create(qn_rgn_table_ptr restrict rtbl)
 {
     qn_rgn_iterator_ptr new_itr = calloc(1, sizeof(qn_rgn_iterator));
     if (!new_itr) {
@@ -461,19 +461,19 @@ QN_API qn_rgn_iterator_ptr qn_rgn_itr_create(qn_rgn_table_ptr restrict rtbl)
     return new_itr;
 }
 
-QN_API void qn_rgn_itr_destroy(qn_rgn_iterator_ptr restrict itr)
+QN_SDK void qn_rgn_itr_destroy(qn_rgn_iterator_ptr restrict itr)
 {
     if (itr) {
         free(itr);
     } // if
 }
 
-QN_API void qn_rgn_itr_rewind(qn_rgn_iterator_ptr restrict itr)
+QN_SDK void qn_rgn_itr_rewind(qn_rgn_iterator_ptr restrict itr)
 {
     itr->pos = 0;
 }
 
-QN_API qn_bool qn_rgn_itr_next_pair(qn_rgn_iterator_ptr restrict itr, const char ** restrict name, qn_region_ptr * restrict rgn)
+QN_SDK qn_bool qn_rgn_itr_next_pair(qn_rgn_iterator_ptr restrict itr, const char ** restrict name, qn_region_ptr * restrict rgn)
 {
     if (itr->pos == itr->rtbl->cnt) return qn_false;
     *name = qn_str_cstr(itr->rtbl->regions[itr->pos]->name);
@@ -492,7 +492,7 @@ typedef struct _QN_RGN_SERVICE
     qn_http_json_writer_ptr resp_json_wrt;
 } qn_rgn_service;
 
-QN_API qn_rgn_service_ptr qn_rgn_svc_create(void)
+QN_SDK qn_rgn_service_ptr qn_rgn_svc_create(void)
 {
     qn_rgn_service_ptr new_svc = calloc(1, sizeof(qn_rgn_service));
     if (!new_svc) {
@@ -532,7 +532,7 @@ QN_API qn_rgn_service_ptr qn_rgn_svc_create(void)
     return new_svc;
 }
 
-QN_API void qn_rgn_svc_destroy(qn_rgn_service_ptr restrict svc)
+QN_SDK void qn_rgn_svc_destroy(qn_rgn_service_ptr restrict svc)
 {
     if (svc) {
         qn_http_json_wrt_destroy(svc->resp_json_wrt);
@@ -618,7 +618,7 @@ static qn_bool qn_rgn_svc_extract_and_add_entries(qn_json_object_ptr root, qn_re
     return qn_true;
 }
 
-QN_API qn_bool qn_rgn_svc_grab_bucket_region(qn_rgn_service_ptr restrict svc, qn_rgn_auth_ptr restrict auth, const char * restrict bucket, qn_rgn_table_ptr restrict rtbl)
+QN_SDK qn_bool qn_rgn_svc_grab_bucket_region(qn_rgn_service_ptr restrict svc, qn_rgn_auth_ptr restrict auth, const char * restrict bucket, qn_rgn_table_ptr restrict rtbl)
 {
     qn_bool ret;
     qn_string url;

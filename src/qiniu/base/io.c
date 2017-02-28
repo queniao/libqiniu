@@ -90,7 +90,7 @@ static qn_io_reader_st qn_io_srdr_vtable = {
     &qn_io_srdr_size_vfn
 };
 
-QN_API qn_io_section_reader_ptr qn_io_srdr_create(qn_io_reader_itf restrict src_rdr, size_t section_size)
+QN_SDK qn_io_section_reader_ptr qn_io_srdr_create(qn_io_reader_itf restrict src_rdr, size_t section_size)
 {
     qn_io_section_reader_ptr new_srdr;
 
@@ -107,14 +107,14 @@ QN_API qn_io_section_reader_ptr qn_io_srdr_create(qn_io_reader_itf restrict src_
     return new_srdr;
 }
 
-QN_API void qn_io_srdr_destroy(qn_io_section_reader_ptr restrict srdr)
+QN_SDK void qn_io_srdr_destroy(qn_io_section_reader_ptr restrict srdr)
 {
     if (srdr) {
         free(srdr);
     } // if
 }
 
-QN_API void qn_io_srdr_reset(qn_io_section_reader_ptr restrict srdr, qn_io_reader_itf restrict src_rdr, size_t section_size)
+QN_SDK void qn_io_srdr_reset(qn_io_section_reader_ptr restrict srdr, qn_io_reader_itf restrict src_rdr, size_t section_size)
 {
     assert(srdr);
     assert(src_rdr);
@@ -125,7 +125,7 @@ QN_API void qn_io_srdr_reset(qn_io_section_reader_ptr restrict srdr, qn_io_reade
     srdr->sec_size = section_size;
 }
 
-QN_API qn_io_reader_itf qn_io_srdr_to_io_reader(qn_io_section_reader_ptr restrict srdr)
+QN_SDK qn_io_reader_itf qn_io_srdr_to_io_reader(qn_io_section_reader_ptr restrict srdr)
 {
     assert(srdr);
     return &srdr->rdr_vtbl;

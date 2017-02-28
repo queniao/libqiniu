@@ -41,7 +41,7 @@ typedef struct _QN_JSON_FORMATTER {
 
 #define QN_JSON_FMT_PAGE_SIZE 4096
 
-QN_API qn_json_formatter_ptr qn_json_fmt_create(void)
+QN_SDK qn_json_formatter_ptr qn_json_fmt_create(void)
 {
     qn_json_formatter_ptr new_fmt = NULL;
 
@@ -63,7 +63,7 @@ QN_API qn_json_formatter_ptr qn_json_fmt_create(void)
     return new_fmt;
 }
 
-QN_API void qn_json_fmt_destroy(qn_json_formatter_ptr restrict fmt)
+QN_SDK void qn_json_fmt_destroy(qn_json_formatter_ptr restrict fmt)
 {
     if (fmt) {
         qn_json_itr_destroy(fmt->iterator);
@@ -71,18 +71,18 @@ QN_API void qn_json_fmt_destroy(qn_json_formatter_ptr restrict fmt)
     } // for
 }
 
-QN_API void qn_json_fmt_reset(qn_json_formatter_ptr restrict fmt)
+QN_SDK void qn_json_fmt_reset(qn_json_formatter_ptr restrict fmt)
 {
     qn_json_itr_reset(fmt->iterator);
     fmt->flags = 0;
 }
 
-QN_API void qn_json_fmt_enable_escape_utf8_string(qn_json_formatter_ptr restrict fmt)
+QN_SDK void qn_json_fmt_enable_escape_utf8_string(qn_json_formatter_ptr restrict fmt)
 {
     fmt->flags |= QN_JSON_FMT_ESCAPE_UTF8_STRING;
 }
 
-QN_API void qn_json_fmt_disable_escape_utf8_string(qn_json_formatter_ptr restrict fmt)
+QN_SDK void qn_json_fmt_disable_escape_utf8_string(qn_json_formatter_ptr restrict fmt)
 {
     fmt->flags &= ~QN_JSON_FMT_ESCAPE_UTF8_STRING;
 }
@@ -367,7 +367,7 @@ static qn_bool qn_json_fmt_format(qn_json_formatter_ptr fmt, char * restrict buf
     return qn_true;
 }
 
-QN_API qn_bool qn_json_fmt_format_object(qn_json_formatter_ptr restrict fmt, qn_json_object_ptr restrict root, char * restrict buf, size_t * restrict buf_size)
+QN_SDK qn_bool qn_json_fmt_format_object(qn_json_formatter_ptr restrict fmt, qn_json_object_ptr restrict root, char * restrict buf, size_t * restrict buf_size)
 {
     qn_bool ret = qn_false;
 
@@ -387,7 +387,7 @@ QN_API qn_bool qn_json_fmt_format_object(qn_json_formatter_ptr restrict fmt, qn_
     return ret;
 }
 
-QN_API qn_bool qn_json_fmt_format_array(qn_json_formatter_ptr restrict fmt, qn_json_array_ptr restrict root, char * restrict buf, size_t * restrict buf_size)
+QN_SDK qn_bool qn_json_fmt_format_array(qn_json_formatter_ptr restrict fmt, qn_json_array_ptr restrict root, char * restrict buf, size_t * restrict buf_size)
 {
     qn_bool ret = qn_false;
 
@@ -407,7 +407,7 @@ QN_API qn_bool qn_json_fmt_format_array(qn_json_formatter_ptr restrict fmt, qn_j
     return ret;
 }
 
-QN_API qn_string qn_json_object_to_string(qn_json_object_ptr restrict root)
+QN_SDK qn_string qn_json_object_to_string(qn_json_object_ptr restrict root)
 {
     qn_json_formatter_ptr fmt = NULL;
     char * buf;
@@ -460,7 +460,7 @@ QN_API qn_string qn_json_object_to_string(qn_json_object_ptr restrict root)
     return buf;
 }
 
-QN_API qn_string qn_json_array_to_string(qn_json_array_ptr restrict root)
+QN_SDK qn_string qn_json_array_to_string(qn_json_array_ptr restrict root)
 {
     qn_json_formatter_ptr fmt = NULL;
     char * buf;

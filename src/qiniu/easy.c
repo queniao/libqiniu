@@ -52,7 +52,7 @@ typedef struct _QN_EASY_PUT_EXTRA
     } temp;
 } qn_easy_put_extra_st;
 
-QN_API qn_easy_put_extra_ptr qn_easy_pe_create(void)
+QN_SDK qn_easy_put_extra_ptr qn_easy_pe_create(void)
 {
     qn_easy_put_extra_ptr new_pe = calloc(1, sizeof(qn_easy_put_extra_st));
     if (! new_pe) {
@@ -62,7 +62,7 @@ QN_API qn_easy_put_extra_ptr qn_easy_pe_create(void)
     return new_pe;
 }
 
-QN_API void qn_easy_pe_destroy(qn_easy_put_extra_ptr restrict pe)
+QN_SDK void qn_easy_pe_destroy(qn_easy_put_extra_ptr restrict pe)
 {
     if (pe) {
         qn_str_destroy(pe->put_ctrl.resumable_info);
@@ -74,7 +74,7 @@ QN_API void qn_easy_pe_destroy(qn_easy_put_extra_ptr restrict pe)
     } // if
 }
 
-QN_API void qn_easy_pe_reset(qn_easy_put_extra_ptr restrict pe)
+QN_SDK void qn_easy_pe_reset(qn_easy_put_extra_ptr restrict pe)
 {
     if (pe->attr.local_qetag) qn_str_destroy(pe->attr.local_qetag);
 
@@ -82,27 +82,27 @@ QN_API void qn_easy_pe_reset(qn_easy_put_extra_ptr restrict pe)
     memset(&pe->attr, 0, sizeof(pe->attr));
 }
 
-QN_API void qn_easy_pe_set_final_key(qn_easy_put_extra_ptr restrict pe, const char * restrict key)
+QN_SDK void qn_easy_pe_set_final_key(qn_easy_put_extra_ptr restrict pe, const char * restrict key)
 {
     pe->attr.final_key = key;
 }
 
-QN_API void qn_easy_pe_set_owner_description(qn_easy_put_extra_ptr restrict pe, const char * restrict desc)
+QN_SDK void qn_easy_pe_set_owner_description(qn_easy_put_extra_ptr restrict pe, const char * restrict desc)
 {
     pe->attr.owner_desc = desc;
 }
 
-QN_API void qn_easy_pe_set_crc32_checking(qn_easy_put_extra_ptr restrict pe, qn_bool check)
+QN_SDK void qn_easy_pe_set_crc32_checking(qn_easy_put_extra_ptr restrict pe, qn_bool check)
 {
     pe->put_ctrl.check_crc32 = (check) ? 1 : 0;
 }
 
-QN_API void qn_easy_pe_set_md5_checking(qn_easy_put_extra_ptr restrict pe, qn_bool check)
+QN_SDK void qn_easy_pe_set_md5_checking(qn_easy_put_extra_ptr restrict pe, qn_bool check)
 {
     pe->put_ctrl.check_md5 = (check) ? 1 : 0;
 }
 
-QN_API void qn_easy_pe_set_qetag_checking(qn_easy_put_extra_ptr restrict pe, qn_bool check)
+QN_SDK void qn_easy_pe_set_qetag_checking(qn_easy_put_extra_ptr restrict pe, qn_bool check)
 {
     if (check) {
         pe->put_ctrl.check_qetag = 1;
@@ -112,33 +112,33 @@ QN_API void qn_easy_pe_set_qetag_checking(qn_easy_put_extra_ptr restrict pe, qn_
     } // if
 }
 
-QN_API const qn_string qn_easy_pe_get_qetag(qn_easy_put_extra_ptr restrict pe)
+QN_SDK const qn_string qn_easy_pe_get_qetag(qn_easy_put_extra_ptr restrict pe)
 {
     return pe->attr.local_qetag;
 }
 
-QN_API void qn_easy_pe_set_abort_variable(qn_easy_put_extra_ptr restrict pe, const volatile qn_bool * abort)
+QN_SDK void qn_easy_pe_set_abort_variable(qn_easy_put_extra_ptr restrict pe, const volatile qn_bool * abort)
 {
     pe->put_ctrl.abort = abort;
 }
 
-QN_API void qn_easy_pe_set_min_resumable_fsize(qn_easy_put_extra_ptr restrict pe, size_t fsize)
+QN_SDK void qn_easy_pe_set_min_resumable_fsize(qn_easy_put_extra_ptr restrict pe, size_t fsize)
 {
     pe->put_ctrl.min_resumable_fsize = fsize;
 }
 
-QN_API void qn_easy_pe_set_local_crc32(qn_easy_put_extra_ptr restrict pe, qn_uint32 crc32)
+QN_SDK void qn_easy_pe_set_local_crc32(qn_easy_put_extra_ptr restrict pe, qn_uint32 crc32)
 {
     pe->put_ctrl.fcrc32 = crc32;
 }
 
-QN_API void qn_easy_pe_set_source_reader(qn_easy_put_extra_ptr restrict pe, qn_io_reader_itf restrict rdr, qn_fsize fsize)
+QN_SDK void qn_easy_pe_set_source_reader(qn_easy_put_extra_ptr restrict pe, qn_io_reader_itf restrict rdr, qn_fsize fsize)
 {
     pe->put_ctrl.rdr = rdr;
     pe->put_ctrl.fsize = fsize;
 }
 
-QN_API qn_bool qn_easy_pe_clone_and_set_resumable_info(qn_easy_put_extra_ptr restrict pe, const char * restrict str, size_t str_size)
+QN_SDK qn_bool qn_easy_pe_clone_and_set_resumable_info(qn_easy_put_extra_ptr restrict pe, const char * restrict str, size_t str_size)
 {
     qn_string tmp = qn_cs_clone(str, str_size);
     if (! tmp) return qn_false;
@@ -148,17 +148,17 @@ QN_API qn_bool qn_easy_pe_clone_and_set_resumable_info(qn_easy_put_extra_ptr res
     return qn_true;
 }
 
-QN_API qn_string qn_easy_pe_get_resumable_info(qn_easy_put_extra_ptr restrict pe)
+QN_SDK qn_string qn_easy_pe_get_resumable_info(qn_easy_put_extra_ptr restrict pe)
 {
     return pe->put_ctrl.resumable_info;
 }
 
-QN_API void qn_easy_pe_set_region_host(qn_easy_put_extra_ptr restrict pe, qn_rgn_host_ptr restrict rgn_host)
+QN_SDK void qn_easy_pe_set_region_host(qn_easy_put_extra_ptr restrict pe, qn_rgn_host_ptr restrict rgn_host)
 {
     pe->put_ctrl.rgn_host = rgn_host;
 }
 
-QN_API void qn_easy_pe_set_region_entry(qn_easy_put_extra_ptr restrict pe, qn_rgn_entry_ptr restrict rgn_entry)
+QN_SDK void qn_easy_pe_set_region_entry(qn_easy_put_extra_ptr restrict pe, qn_rgn_entry_ptr restrict rgn_entry)
 {
     pe->put_ctrl.rgn_entry = rgn_entry;
 }
@@ -173,7 +173,7 @@ typedef struct _QN_EASY
     qn_rgn_table_ptr rgn_tbl;
 } qn_easy_st;
 
-QN_API qn_easy_ptr qn_easy_create(void)
+QN_SDK qn_easy_ptr qn_easy_create(void)
 {
     qn_easy_ptr new_easy = calloc(1, sizeof(qn_easy_st));
     if (! new_easy) {
@@ -189,7 +189,7 @@ QN_API qn_easy_ptr qn_easy_create(void)
     return new_easy;
 }
 
-QN_API void qn_easy_destroy(qn_easy_ptr restrict easy)
+QN_SDK void qn_easy_destroy(qn_easy_ptr restrict easy)
 {
     if (easy) {
         if (easy->rgn_tbl) qn_rgn_tbl_destroy(easy->rgn_tbl);
@@ -451,7 +451,7 @@ static qn_bool qn_easy_check_putting_key(qn_easy_ptr restrict easy, const char *
     return qn_true;
 }
 
-QN_API qn_json_object_ptr qn_easy_put_file(qn_easy_ptr restrict easy, const char * restrict uptoken, const char * restrict fname, qn_easy_put_extra_ptr restrict ext)
+QN_SDK qn_json_object_ptr qn_easy_put_file(qn_easy_ptr restrict easy, const char * restrict uptoken, const char * restrict fname, qn_easy_put_extra_ptr restrict ext)
 {
     int i;
     qn_string tmp_str;
@@ -527,7 +527,7 @@ QN_API qn_json_object_ptr qn_easy_put_file(qn_easy_ptr restrict easy, const char
     return put_ret;
 }
 
-QN_API qn_json_object_ptr qn_easy_put_huge_file(qn_easy_ptr restrict easy, const char * restrict uptoken, const char * restrict fname, qn_easy_put_extra_ptr restrict ext)
+QN_SDK qn_json_object_ptr qn_easy_put_huge_file(qn_easy_ptr restrict easy, const char * restrict uptoken, const char * restrict fname, qn_easy_put_extra_ptr restrict ext)
 {
     qn_json_object_ptr pp = NULL;
     qn_json_object_ptr put_ret;
@@ -568,7 +568,7 @@ typedef struct _QN_EASY_LIST_EXTRA
     unsigned int limit;
 } qn_easy_list_extra_st;
 
-QN_API qn_easy_list_extra_ptr qn_easy_le_create(void)
+QN_SDK qn_easy_list_extra_ptr qn_easy_le_create(void)
 {
     qn_easy_list_extra_ptr new_le = calloc(1, sizeof(qn_easy_list_extra_st));
     if (! new_le) {
@@ -578,27 +578,27 @@ QN_API qn_easy_list_extra_ptr qn_easy_le_create(void)
     return new_le;
 }
 
-QN_API void qn_easy_le_destroy(qn_easy_list_extra_ptr restrict le)
+QN_SDK void qn_easy_le_destroy(qn_easy_list_extra_ptr restrict le)
 {
     if (le) {
         free(le);
     } // if
 }
 
-QN_API void qn_easy_le_set_prefix(qn_easy_list_extra_ptr restrict le, const char * restrict prefix, const char * delimiter)
+QN_SDK void qn_easy_le_set_prefix(qn_easy_list_extra_ptr restrict le, const char * restrict prefix, const char * delimiter)
 {
     le->prefix = prefix;
     le->delimiter = delimiter;
 }
 
-QN_API void qn_easy_le_set_limit(qn_easy_list_extra_ptr restrict le, unsigned int limit)
+QN_SDK void qn_easy_le_set_limit(qn_easy_list_extra_ptr restrict le, unsigned int limit)
 {
     le->limit = limit;
 }
 
 // ----
 
-QN_API extern qn_json_object_ptr qn_easy_list(qn_easy_ptr restrict easy, const qn_mac_ptr restrict mac, const char * restrict bucket, void * restrict itr_data, qn_easy_le_iterator_fn itr, qn_easy_list_extra_ptr restrict ext)
+QN_SDK extern qn_json_object_ptr qn_easy_list(qn_easy_ptr restrict easy, const qn_mac_ptr restrict mac, const char * restrict bucket, void * restrict itr_data, qn_easy_le_iterator_fn itr, qn_easy_list_extra_ptr restrict ext)
 {
     qn_string marker = NULL;
     qn_json_object_ptr list_ret;

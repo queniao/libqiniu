@@ -32,7 +32,7 @@ typedef struct _QN_ETAG_BLOCK
     SHA_CTX sha1_ctx; 
 } qn_etag_block;
 
-QN_API qn_bool qn_etag_blk_update(qn_etag_block_ptr restrict blk, char * restrict buf, int buf_size)
+QN_SDK qn_bool qn_etag_blk_update(qn_etag_block_ptr restrict blk, char * restrict buf, int buf_size)
 {
     if (SHA1_Update(&blk->sha1_ctx, buf, buf_size) == 0) {
         qn_err_etag_set_updating_block_failed();
@@ -64,7 +64,7 @@ typedef struct _QN_ETAG_CONTEXT
     SHA_CTX sha1_ctx;
 } qn_etag_context;
 
-QN_API qn_etag_context_ptr qn_etag_ctx_create(void)
+QN_SDK qn_etag_context_ptr qn_etag_ctx_create(void)
 {
     qn_etag_context_ptr new_ctx = calloc(1, sizeof(qn_etag_context));
     if (!new_ctx) {
@@ -78,7 +78,7 @@ QN_API qn_etag_context_ptr qn_etag_ctx_create(void)
     return new_ctx;
 }
 
-QN_API void qn_etag_ctx_destroy(qn_etag_context_ptr restrict ctx)
+QN_SDK void qn_etag_ctx_destroy(qn_etag_context_ptr restrict ctx)
 {
     if (ctx) {
         free(ctx);
@@ -115,7 +115,7 @@ static qn_bool qn_etag_ctx_merge_blocks(qn_etag_context_ptr ctx)
     return qn_true;
 }
 
-QN_API qn_bool qn_etag_ctx_init(qn_etag_context_ptr restrict ctx)
+QN_SDK qn_bool qn_etag_ctx_init(qn_etag_context_ptr restrict ctx)
 {
     if (SHA1_Init(&ctx->sha1_ctx) == 0) {
         qn_err_etag_set_initializing_context_failed();
@@ -134,7 +134,7 @@ QN_API qn_bool qn_etag_ctx_init(qn_etag_context_ptr restrict ctx)
     return qn_true;
 }
 
-QN_API qn_bool qn_etag_ctx_update(qn_etag_context_ptr restrict ctx, char * restrict buf, int buf_size)
+QN_SDK qn_bool qn_etag_ctx_update(qn_etag_context_ptr restrict ctx, char * restrict buf, int buf_size)
 {
     int update_size;
     int rem_size = buf_size;
@@ -160,7 +160,7 @@ QN_API qn_bool qn_etag_ctx_update(qn_etag_context_ptr restrict ctx, char * restr
     return qn_true;
 }
 
-QN_API qn_string qn_etag_ctx_final(qn_etag_context_ptr restrict ctx)
+QN_SDK qn_string qn_etag_ctx_final(qn_etag_context_ptr restrict ctx)
 {
     unsigned char digest_data[4 + SHA_DIGEST_LENGTH];
 
@@ -190,7 +190,7 @@ QN_API qn_string qn_etag_ctx_final(qn_etag_context_ptr restrict ctx)
     return qn_cs_encode_base64_urlsafe((char *)digest_data, 1 + SHA_DIGEST_LENGTH);
 }
 
-QN_API qn_bool qn_etag_ctx_allocate_block(qn_etag_context_ptr restrict ctx, qn_etag_block_ptr * restrict blk, int * restrict buf_cap)
+QN_SDK qn_bool qn_etag_ctx_allocate_block(qn_etag_context_ptr restrict ctx, qn_etag_block_ptr * restrict blk, int * restrict buf_cap)
 {
     if (ctx->unused == 0) return qn_false;
 
@@ -210,7 +210,7 @@ QN_API qn_bool qn_etag_ctx_allocate_block(qn_etag_context_ptr restrict ctx, qn_e
     return qn_true;
 }
 
-QN_API qn_bool qn_etag_ctx_commit_block(qn_etag_context_ptr restrict ctx, qn_etag_block_ptr blk)
+QN_SDK qn_bool qn_etag_ctx_commit_block(qn_etag_context_ptr restrict ctx, qn_etag_block_ptr blk)
 {
     int pos = blk - &ctx->blks[0];
     QN_ETAG_ALLOC_SET(ctx->allocs, pos);
@@ -226,9 +226,9 @@ QN_API qn_bool qn_etag_ctx_commit_block(qn_etag_context_ptr restrict ctx, qn_eta
 
 // ----
 
-QN_API extern qn_string qn_etag_digest_file(const char * restrict fname);
+QN_SDK extern qn_string qn_etag_digest_file(const char * restrict fname);
 
-QN_API qn_string qn_etag_digest_buffer(char * restrict buf, int buf_size)
+QN_SDK qn_string qn_etag_digest_buffer(char * restrict buf, int buf_size)
 {
     qn_string digest;
     qn_etag_context_ptr ctx = qn_etag_ctx_create();

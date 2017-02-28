@@ -143,7 +143,7 @@ static size_t qn_b64_decode(char * restrict decoded_bin, size_t decoded_cap, con
 
 static char qn_b64_urlsafe_map[] = {"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_"};
 
-QN_API size_t qn_b64_encode_urlsafe(char * restrict encoded_str, size_t encoded_cap, const char * restrict bin, size_t bin_size, qn_uint32 opts)
+QN_SDK size_t qn_b64_encode_urlsafe(char * restrict encoded_str, size_t encoded_cap, const char * restrict bin, size_t bin_size, qn_uint32 opts)
 {
     // Include spaces for two padding chars, but none for the NUL char.
     size_t encoding_size = ((bin_size / 3) * 4) + ((bin_size % 3 > 0) ? 4 : 0);
@@ -156,7 +156,7 @@ QN_API size_t qn_b64_encode_urlsafe(char * restrict encoded_str, size_t encoded_
     return qn_b64_encode(encoded_str, encoded_cap, bin, bin_size, opts, qn_b64_urlsafe_map);
 }
 
-QN_API size_t qn_b64_decode_urlsafe(char * restrict decoded_bin, size_t decoded_cap, const char * restrict str, size_t str_size, qn_uint32 opts)
+QN_SDK size_t qn_b64_decode_urlsafe(char * restrict decoded_bin, size_t decoded_cap, const char * restrict str, size_t str_size, qn_uint32 opts)
 {
     size_t decoding_size = ((str_size / 4) * 3) + ((str_size % 4 > 0) ? 3 : 0);
 

@@ -7,7 +7,7 @@ extern "C"
 {
 #endif
 
-QN_API qn_uint32 qn_misc_localtime(void)
+QN_SDK qn_uint32 qn_misc_localtime(void)
 {
     return time(NULL);
 }

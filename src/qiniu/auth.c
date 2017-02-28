@@ -16,7 +16,7 @@ typedef struct _QN_MAC
     qn_string secret_key;
 } qn_mac;
 
-QN_API qn_mac_ptr qn_mac_create(const char * restrict access_key, const char * restrict secret_key)
+QN_SDK qn_mac_ptr qn_mac_create(const char * restrict access_key, const char * restrict secret_key)
 {
     qn_mac_ptr new_mac = malloc(sizeof(qn_mac_ptr));
     if (!new_mac) return NULL;
@@ -36,7 +36,7 @@ QN_API qn_mac_ptr qn_mac_create(const char * restrict access_key, const char * r
     return new_mac;
 }
 
-QN_API void qn_mac_destroy(qn_mac_ptr restrict mac)
+QN_SDK void qn_mac_destroy(qn_mac_ptr restrict mac)
 {
     if (mac) {
         qn_str_destroy(mac->secret_key);
@@ -62,7 +62,7 @@ static int qn_mac_hmac_update(HMAC_CTX * restrict ctx, const unsigned char * res
 #undef QN_MAC_HMAC_MAX_WRITING_BYTES
 }
 
-QN_API const qn_string qn_mac_make_uptoken(qn_mac_ptr restrict mac, const char * restrict pp, size_t pp_size)
+QN_SDK const qn_string qn_mac_make_uptoken(qn_mac_ptr restrict mac, const char * restrict pp, size_t pp_size)
 {
     qn_string sign;
     qn_string encoded_pp;
@@ -87,7 +87,7 @@ QN_API const qn_string qn_mac_make_uptoken(qn_mac_ptr restrict mac, const char *
     return sign;
 }
 
-QN_API const qn_string qn_mac_make_acctoken(qn_mac_ptr restrict mac, const char * restrict url, const char * restrict body, size_t body_size)
+QN_SDK const qn_string qn_mac_make_acctoken(qn_mac_ptr restrict mac, const char * restrict url, const char * restrict body, size_t body_size)
 {
     qn_string encoded_digest;
     qn_string acctoken;
@@ -127,7 +127,7 @@ QN_API const qn_string qn_mac_make_acctoken(qn_mac_ptr restrict mac, const char 
     return acctoken;
 }
 
-QN_API const qn_string qn_mac_make_dnurl(qn_mac_ptr restrict mac, const char * restrict url, qn_uint32 deadline)
+QN_SDK const qn_string qn_mac_make_dnurl(qn_mac_ptr restrict mac, const char * restrict url, qn_uint32 deadline)
 {
     qn_string url_with_deadline;
     qn_string url_with_token;

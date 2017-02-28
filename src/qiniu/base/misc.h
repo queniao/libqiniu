@@ -9,7 +9,7 @@ extern "C"
 {
 #endif
 
-QN_API extern qn_uint32 qn_misc_localtime(void);
+QN_SDK extern qn_uint32 qn_misc_localtime(void);
 
 #ifdef __cplusplus
 }

@@ -141,320 +141,320 @@ static int qn_err_compare(const void * restrict key, const void * restrict item)
     return 0;
 }
 
-QN_API extern ssize_t qn_err_format_message(char * buf, size_t buf_size)
+QN_SDK extern ssize_t qn_err_format_message(char * buf, size_t buf_size)
 {
     char * short_file = posix_strstr(qn_err_msg.file, "src/qiniu/") + 4;
     return qn_cs_snprintf(buf, buf_size, "%s:%d %s", short_file, qn_err_msg.line, qn_err_get_message());
 }
 
-QN_API const char * qn_err_get_message(void)
+QN_SDK const char * qn_err_get_message(void)
 {
     qn_err_message_map_ptr map = (qn_err_message_map_ptr) bsearch(&qn_err_msg.code, &qn_err_message_maps, sizeof(qn_err_message_maps) / sizeof(qn_err_message_maps[0]), sizeof(qn_err_message_maps[0]), &qn_err_compare);
     return map->message;
 }
 
-QN_API void qn_err_set_succeed_imp(const char * restrict file, int line)
+QN_SDK void qn_err_set_succeed_imp(const char * restrict file, int line)
 {
     qn_err_msg.file = file;
     qn_err_msg.line = line;
     qn_err_msg.code = QN_ERR_SUCCEED;
 }
 
-QN_API void qn_err_set_out_of_memory_imp(const char * restrict file, int line)
+QN_SDK void qn_err_set_out_of_memory_imp(const char * restrict file, int line)
 {
     qn_err_msg.file = file;
     qn_err_msg.line = line;
     qn_err_msg.code = QN_ERR_OUT_OF_MEMORY;
 }
 
-QN_API void qn_err_set_try_again_imp(const char * restrict file, int line)
+QN_SDK void qn_err_set_try_again_imp(const char * restrict file, int line)
 {
     qn_err_msg.file = file;
     qn_err_msg.line = line;
     qn_err_msg.code = QN_ERR_TRY_AGAIN;
 }
 
-QN_API void qn_err_set_invalid_argument_imp(const char * restrict file, int line)
+QN_SDK void qn_err_set_invalid_argument_imp(const char * restrict file, int line)
 {
     qn_err_msg.file = file;
     qn_err_msg.line = line;
     qn_err_msg.code = QN_ERR_INVALID_ARGUMENT;
 }
 
-QN_API void qn_err_set_overflow_upper_bound_imp(const char * restrict file, int line)
+QN_SDK void qn_err_set_overflow_upper_bound_imp(const char * restrict file, int line)
 {
     qn_err_msg.file = file;
     qn_err_msg.line = line;
     qn_err_msg.code = QN_ERR_OVERFLOW_UPPER_BOUND;
 }
 
-QN_API void qn_err_set_overflow_lower_bound_imp(const char * restrict file, int line)
+QN_SDK void qn_err_set_overflow_lower_bound_imp(const char * restrict file, int line)
 {
     qn_err_msg.file = file;
     qn_err_msg.line = line;
     qn_err_msg.code = QN_ERR_OVERFLOW_LOWER_BOUND;
 }
 
-QN_API void qn_err_set_bad_utf8_sequence_imp(const char * restrict file, int line)
+QN_SDK void qn_err_set_bad_utf8_sequence_imp(const char * restrict file, int line)
 {
     qn_err_msg.file = file;
     qn_err_msg.line = line;
     qn_err_msg.code = QN_ERR_BAD_UTF8_SEQUENCE;
 }
 
-QN_API void qn_err_set_out_of_buffer_imp(const char * restrict file, int line)
+QN_SDK void qn_err_set_out_of_buffer_imp(const char * restrict file, int line)
 {
     qn_err_msg.file = file;
     qn_err_msg.line = line;
     qn_err_msg.code = QN_ERR_OUT_OF_BUFFER;
 }
 
-QN_API void qn_err_set_out_of_capacity_imp(const char * restrict file, int line)
+QN_SDK void qn_err_set_out_of_capacity_imp(const char * restrict file, int line)
 {
     qn_err_msg.file = file;
     qn_err_msg.line = line;
     qn_err_msg.code = QN_ERR_OUT_OF_CAPACITY;
 }
 
-QN_API void qn_err_set_no_such_entry_imp(const char * restrict file, int line)
+QN_SDK void qn_err_set_no_such_entry_imp(const char * restrict file, int line)
 {
     qn_err_msg.file = file;
     qn_err_msg.line = line;
     qn_err_msg.code = QN_ERR_NO_SUCH_ENTRY;
 }
 
-QN_API void qn_err_set_out_of_range_imp(const char * restrict file, int line)
+QN_SDK void qn_err_set_out_of_range_imp(const char * restrict file, int line)
 {
     qn_err_msg.file = file;
     qn_err_msg.line = line;
     qn_err_msg.code = QN_ERR_OUT_OF_RANGE;
 }
 
-QN_API void qn_err_json_set_bad_text_input_imp(const char * restrict file, int line)
+QN_SDK void qn_err_json_set_bad_text_input_imp(const char * restrict file, int line)
 {
     qn_err_msg.file = file;
     qn_err_msg.line = line;
     qn_err_msg.code = QN_ERR_JSON_BAD_TEXT_INPUT;
 }
 
-QN_API void qn_err_json_set_too_many_parsing_levels_imp(const char * restrict file, int line)
+QN_SDK void qn_err_json_set_too_many_parsing_levels_imp(const char * restrict file, int line)
 {
     qn_err_msg.file = file;
     qn_err_msg.line = line;
     qn_err_msg.code = QN_ERR_JSON_TOO_MANY_PARSING_LEVELS;
 }
 
-QN_API void qn_err_json_set_need_more_text_input_imp(const char * restrict file, int line)
+QN_SDK void qn_err_json_set_need_more_text_input_imp(const char * restrict file, int line)
 {
     qn_err_msg.file = file;
     qn_err_msg.line = line;
     qn_err_msg.code = QN_ERR_JSON_NEED_MORE_TEXT_INPUT;
 }
 
-QN_API void qn_err_json_set_modifying_immutable_object_imp(const char * restrict file, int line)
+QN_SDK void qn_err_json_set_modifying_immutable_object_imp(const char * restrict file, int line)
 {
     qn_err_msg.file = file;
     qn_err_msg.line = line;
     qn_err_msg.code = QN_ERR_JSON_MODIFYING_IMMUTABLE_OBJECT;
 }
 
-QN_API void qn_err_json_set_modifying_immutable_array_imp(const char * restrict file, int line)
+QN_SDK void qn_err_json_set_modifying_immutable_array_imp(const char * restrict file, int line)
 {
     qn_err_msg.file = file;
     qn_err_msg.line = line;
     qn_err_msg.code = QN_ERR_JSON_MODIFYING_IMMUTABLE_ARRAY;
 }
 
-QN_API void qn_err_json_set_out_of_index_imp(const char * restrict file, int line)
+QN_SDK void qn_err_json_set_out_of_index_imp(const char * restrict file, int line)
 {
     qn_err_msg.file = file;
     qn_err_msg.line = line;
     qn_err_msg.code = QN_ERR_JSON_OUT_OF_INDEX;
 }
 
-QN_API void qn_err_http_set_invalid_header_syntax_imp(const char * restrict file, int line)
+QN_SDK void qn_err_http_set_invalid_header_syntax_imp(const char * restrict file, int line)
 {
     qn_err_msg.file = file;
     qn_err_msg.line = line;
     qn_err_msg.code = QN_ERR_HTTP_INVALID_HEADER_SYNTAX;
 }
 
-QN_API void qn_err_http_set_adding_string_field_failed_imp(const char * restrict file, int line)
+QN_SDK void qn_err_http_set_adding_string_field_failed_imp(const char * restrict file, int line)
 {
     qn_err_msg.file = file;
     qn_err_msg.line = line;
     qn_err_msg.code = QN_ERR_HTTP_ADDING_STRING_FIELD_FAILED;
 }
 
-QN_API void qn_err_http_set_adding_file_field_failed_imp(const char * restrict file, int line)
+QN_SDK void qn_err_http_set_adding_file_field_failed_imp(const char * restrict file, int line)
 {
     qn_err_msg.file = file;
     qn_err_msg.line = line;
     qn_err_msg.code = QN_ERR_HTTP_ADDING_FILE_FIELD_FAILED;
 }
 
-QN_API void qn_err_http_set_adding_buffer_field_failed_imp(const char * restrict file, int line)
+QN_SDK void qn_err_http_set_adding_buffer_field_failed_imp(const char * restrict file, int line)
 {
     qn_err_msg.file = file;
     qn_err_msg.line = line;
     qn_err_msg.code = QN_ERR_HTTP_ADDING_BUFFER_FIELD_FAILED;
 }
 
-QN_API void qn_err_fl_set_opening_file_failed_imp(const char * restrict file, int line)
+QN_SDK void qn_err_fl_set_opening_file_failed_imp(const char * restrict file, int line)
 {
     qn_err_msg.file = file;
     qn_err_msg.line = line;
     qn_err_msg.code = QN_ERR_FL_OPENING_FILE_FAILED;
 }
 
-QN_API void qn_err_fl_set_duplicating_file_failed_imp(const char * restrict file, int line)
+QN_SDK void qn_err_fl_set_duplicating_file_failed_imp(const char * restrict file, int line)
 {
     qn_err_msg.file = file;
     qn_err_msg.line = line;
     qn_err_msg.code = QN_ERR_FL_DUPLICATING_FILE_FAILED;
 }
 
-QN_API void qn_err_fl_set_reading_file_failed_imp(const char * restrict file, int line)
+QN_SDK void qn_err_fl_set_reading_file_failed_imp(const char * restrict file, int line)
 {
     qn_err_msg.file = file;
     qn_err_msg.line = line;
     qn_err_msg.code = QN_ERR_FL_READING_FILE_FAILED;
 }
 
-QN_API void qn_err_fl_set_seeking_file_failed_imp(const char * restrict file, int line)
+QN_SDK void qn_err_fl_set_seeking_file_failed_imp(const char * restrict file, int line)
 {
     qn_err_msg.file = file;
     qn_err_msg.line = line;
     qn_err_msg.code = QN_ERR_FL_SEEKING_FILE_FAILED;
 }
 
-QN_API void qn_err_fl_info_set_stating_file_info_failed_imp(const char * restrict file, int line)
+QN_SDK void qn_err_fl_info_set_stating_file_info_failed_imp(const char * restrict file, int line)
 {
     qn_err_msg.file = file;
     qn_err_msg.line = line;
     qn_err_msg.code = QN_ERR_FL_INFO_STATING_FILE_INFO_FAILED;
 }
 
-QN_API void qn_err_stor_set_lack_of_authorization_information_imp(const char * restrict file, int line)
+QN_SDK void qn_err_stor_set_lack_of_authorization_information_imp(const char * restrict file, int line)
 {
     qn_err_msg.file = file;
     qn_err_msg.line = line;
     qn_err_msg.code = QN_ERR_STOR_LACK_OF_AUTHORIZATION_INFORMATION;
 }
 
-QN_API void qn_err_stor_set_invalid_resumable_session_information_imp(const char * restrict file, int line)
+QN_SDK void qn_err_stor_set_invalid_resumable_session_information_imp(const char * restrict file, int line)
 {
     qn_err_msg.file = file;
     qn_err_msg.line = line;
     qn_err_msg.code = QN_ERR_STOR_INVALID_RESUMABLE_SESSION_INFORMATION;
 }
 
-QN_API void qn_err_stor_set_invalid_list_result_imp(const char * restrict file, int line)
+QN_SDK void qn_err_stor_set_invalid_list_result_imp(const char * restrict file, int line)
 {
     qn_err_msg.file = file;
     qn_err_msg.line = line;
     qn_err_msg.code = QN_ERR_STOR_INVALID_LIST_RESULT;
 }
 
-QN_API void qn_err_stor_set_upload_aborted_by_filter_pre_callback_imp(const char * restrict file, int line)
+QN_SDK void qn_err_stor_set_upload_aborted_by_filter_pre_callback_imp(const char * restrict file, int line)
 {
     qn_err_msg.file = file;
     qn_err_msg.line = line;
     qn_err_msg.code = QN_ERR_STOR_UPLOAD_ABORTED_BY_FILTER_PRE_CALLBACK;
 }
 
-QN_API void qn_err_stor_set_upload_aborted_by_filter_post_callback_imp(const char * restrict file, int line)
+QN_SDK void qn_err_stor_set_upload_aborted_by_filter_post_callback_imp(const char * restrict file, int line)
 {
     qn_err_msg.file = file;
     qn_err_msg.line = line;
     qn_err_msg.code = QN_ERR_STOR_UPLOAD_ABORTED_BY_FILTER_POST_CALLBACK;
 }
 
-QN_API void qn_err_stor_set_invalid_chunk_put_result_imp(const char * restrict file, int line)
+QN_SDK void qn_err_stor_set_invalid_chunk_put_result_imp(const char * restrict file, int line)
 {
     qn_err_msg.file = file;
     qn_err_msg.line = line;
     qn_err_msg.code = QN_ERR_STOR_INVALID_CHUNK_PUT_RESULT;
 }
 
-QN_API void qn_err_stor_set_api_return_no_value_imp(const char * restrict file, int line)
+QN_SDK void qn_err_stor_set_api_return_no_value_imp(const char * restrict file, int line)
 {
     qn_err_msg.file = file;
     qn_err_msg.line = line;
     qn_err_msg.code = QN_ERR_STOR_API_RETURN_NO_VALUE;
 }
 
-QN_API void qn_err_stor_set_lack_of_block_context_imp(const char * restrict file, int line)
+QN_SDK void qn_err_stor_set_lack_of_block_context_imp(const char * restrict file, int line)
 {
     qn_err_msg.file = file;
     qn_err_msg.line = line;
     qn_err_msg.code = QN_ERR_STOR_LACK_OF_BLOCK_CONTEXT;
 }
 
-QN_API void qn_err_stor_set_lack_of_block_info_imp(const char * restrict file, int line)
+QN_SDK void qn_err_stor_set_lack_of_block_info_imp(const char * restrict file, int line)
 {
     qn_err_msg.file = file;
     qn_err_msg.line = line;
     qn_err_msg.code = QN_ERR_STOR_LACK_OF_BLOCK_INFO;
 }
 
-QN_API void qn_err_stor_set_lack_of_file_size_imp(const char * restrict file, int line)
+QN_SDK void qn_err_stor_set_lack_of_file_size_imp(const char * restrict file, int line)
 {
     qn_err_msg.file = file;
     qn_err_msg.line = line;
     qn_err_msg.code = QN_ERR_STOR_LACK_OF_FILE_SIZE;
 }
 
-QN_API void qn_err_stor_set_invalid_upload_result_imp(const char * restrict file, int line)
+QN_SDK void qn_err_stor_set_invalid_upload_result_imp(const char * restrict file, int line)
 {
     qn_err_msg.file = file;
     qn_err_msg.line = line;
     qn_err_msg.code = QN_ERR_STOR_INVALID_UPLOAD_RESULT;
 }
 
-QN_API void qn_err_etag_set_initializing_context_failed_imp(const char * restrict file, int line)
+QN_SDK void qn_err_etag_set_initializing_context_failed_imp(const char * restrict file, int line)
 {
     qn_err_msg.file = file;
     qn_err_msg.line = line;
     qn_err_msg.code = QN_ERR_ETAG_INITIALIZING_CONTEXT_FAILED;
 }
 
-QN_API void qn_err_etag_set_updating_context_failed_imp(const char * restrict file, int line)
+QN_SDK void qn_err_etag_set_updating_context_failed_imp(const char * restrict file, int line)
 {
     qn_err_msg.file = file;
     qn_err_msg.line = line;
     qn_err_msg.code = QN_ERR_ETAG_UPDATING_CONTEXT_FAILED;
 }
 
-QN_API void qn_err_etag_set_initializing_block_failed_imp(const char * restrict file, int line)
+QN_SDK void qn_err_etag_set_initializing_block_failed_imp(const char * restrict file, int line)
 {
     qn_err_msg.file = file;
     qn_err_msg.line = line;
     qn_err_msg.code = QN_ERR_ETAG_INITIALIZING_BLOCK_FAILED;
 }
 
-QN_API void qn_err_etag_set_updating_block_failed_imp(const char * restrict file, int line)
+QN_SDK void qn_err_etag_set_updating_block_failed_imp(const char * restrict file, int line)
 {
     qn_err_msg.file = file;
     qn_err_msg.line = line;
     qn_err_msg.code = QN_ERR_ETAG_UPDATING_BLOCK_FAILED;
 }
 
-QN_API void qn_err_etag_set_making_digest_failed_imp(const char * restrict file, int line)
+QN_SDK void qn_err_etag_set_making_digest_failed_imp(const char * restrict file, int line)
 {
     qn_err_msg.file = file;
     qn_err_msg.line = line;
     qn_err_msg.code = QN_ERR_ETAG_MAKING_DIGEST_FAILED;
 }
 
-QN_API void qn_err_easy_set_invalid_uptoken_imp(const char * restrict file, int line)
+QN_SDK void qn_err_easy_set_invalid_uptoken_imp(const char * restrict file, int line)
 {
     qn_err_msg.file = file;
     qn_err_msg.line = line;
     qn_err_msg.code = QN_ERR_EASY_INVALID_UPTOKEN;
 }
 
-QN_API void qn_err_easy_set_invalid_put_policy_imp(const char * restrict file, int line)
+QN_SDK void qn_err_easy_set_invalid_put_policy_imp(const char * restrict file, int line)
 {
     qn_err_msg.file = file;
     qn_err_msg.line = line;
@@ -463,222 +463,222 @@ QN_API void qn_err_easy_set_invalid_put_policy_imp(const char * restrict file, i
 
 // ----
 
-QN_API qn_bool qn_err_is_succeed(void)
+QN_SDK qn_bool qn_err_is_succeed(void)
 {
     return (qn_err_msg.code == QN_ERR_SUCCEED);
 }
 
-QN_API qn_bool qn_err_is_out_of_memory(void)
+QN_SDK qn_bool qn_err_is_out_of_memory(void)
 {
     return (qn_err_msg.code == QN_ERR_OUT_OF_MEMORY);
 }
 
-QN_API qn_bool qn_err_is_try_again(void)
+QN_SDK qn_bool qn_err_is_try_again(void)
 {
     return (qn_err_msg.code == QN_ERR_TRY_AGAIN);
 }
 
-QN_API qn_bool qn_err_is_invalid_argument(void)
+QN_SDK qn_bool qn_err_is_invalid_argument(void)
 {
     return (qn_err_msg.code == QN_ERR_TRY_AGAIN);
 }
 
-QN_API qn_bool qn_err_is_overflow_upper_bound(void)
+QN_SDK qn_bool qn_err_is_overflow_upper_bound(void)
 {
     return (qn_err_msg.code == QN_ERR_OVERFLOW_UPPER_BOUND);
 }
 
-QN_API qn_bool qn_err_is_overflow_lower_bound(void)
+QN_SDK qn_bool qn_err_is_overflow_lower_bound(void)
 {
     return (qn_err_msg.code == QN_ERR_OVERFLOW_LOWER_BOUND);
 }
 
-QN_API qn_bool qn_err_is_bad_utf8_sequence(void)
+QN_SDK qn_bool qn_err_is_bad_utf8_sequence(void)
 {
     return (qn_err_msg.code == QN_ERR_BAD_UTF8_SEQUENCE);
 }
 
-QN_API qn_bool qn_err_is_out_of_buffer(void)
+QN_SDK qn_bool qn_err_is_out_of_buffer(void)
 {
     return (qn_err_msg.code == QN_ERR_OUT_OF_BUFFER);
 }
 
-QN_API qn_bool qn_err_is_out_of_capacity(void)
+QN_SDK qn_bool qn_err_is_out_of_capacity(void)
 {
     return (qn_err_msg.code == QN_ERR_OUT_OF_CAPACITY);
 }
 
-QN_API qn_bool qn_err_is_no_such_entry(void)
+QN_SDK qn_bool qn_err_is_no_such_entry(void)
 {
     return (qn_err_msg.code == QN_ERR_NO_SUCH_ENTRY);
 }
 
-QN_API qn_bool qn_err_is_out_of_range(void)
+QN_SDK qn_bool qn_err_is_out_of_range(void)
 {
     return (qn_err_msg.code == QN_ERR_OUT_OF_RANGE);
 }
 
-QN_API qn_bool qn_err_json_is_bad_text_input(void)
+QN_SDK qn_bool qn_err_json_is_bad_text_input(void)
 {
     return (qn_err_msg.code == QN_ERR_JSON_BAD_TEXT_INPUT);
 }
 
-QN_API qn_bool qn_err_json_is_too_many_parsing_levels(void)
+QN_SDK qn_bool qn_err_json_is_too_many_parsing_levels(void)
 {
     return (qn_err_msg.code == QN_ERR_JSON_TOO_MANY_PARSING_LEVELS);
 }
 
-QN_API qn_bool qn_err_json_is_need_more_text_input(void)
+QN_SDK qn_bool qn_err_json_is_need_more_text_input(void)
 {
     return (qn_err_msg.code == QN_ERR_JSON_NEED_MORE_TEXT_INPUT);
 }
 
-QN_API qn_bool qn_err_json_is_modifying_immutable_object(void)
+QN_SDK qn_bool qn_err_json_is_modifying_immutable_object(void)
 {
     return (qn_err_msg.code == QN_ERR_JSON_MODIFYING_IMMUTABLE_OBJECT);
 }
 
-QN_API qn_bool qn_err_json_is_modifying_immutable_array(void)
+QN_SDK qn_bool qn_err_json_is_modifying_immutable_array(void)
 {
     return (qn_err_msg.code == QN_ERR_JSON_MODIFYING_IMMUTABLE_ARRAY);
 }
 
-QN_API qn_bool qn_err_json_is_out_of_index(void)
+QN_SDK qn_bool qn_err_json_is_out_of_index(void)
 {
     return (qn_err_msg.code == QN_ERR_JSON_OUT_OF_INDEX);
 }
 
-QN_API qn_bool qn_err_http_is_invalid_header_syntax(void)
+QN_SDK qn_bool qn_err_http_is_invalid_header_syntax(void)
 {
     return (qn_err_msg.code == QN_ERR_HTTP_INVALID_HEADER_SYNTAX);
 }
 
-QN_API qn_bool qn_err_http_is_adding_string_field_failed(void)
+QN_SDK qn_bool qn_err_http_is_adding_string_field_failed(void)
 {
     return (qn_err_msg.code == QN_ERR_HTTP_ADDING_STRING_FIELD_FAILED);
 }
 
-QN_API qn_bool qn_err_http_is_adding_file_field_failed(void)
+QN_SDK qn_bool qn_err_http_is_adding_file_field_failed(void)
 {
     return (qn_err_msg.code == QN_ERR_HTTP_ADDING_FILE_FIELD_FAILED);
 }
 
-QN_API qn_bool qn_err_http_is_adding_buffer_field_failed(void)
+QN_SDK qn_bool qn_err_http_is_adding_buffer_field_failed(void)
 {
     return (qn_err_msg.code == QN_ERR_HTTP_ADDING_BUFFER_FIELD_FAILED);
 }
 
-QN_API qn_bool qn_err_fl_is_opening_file_failed(void)
+QN_SDK qn_bool qn_err_fl_is_opening_file_failed(void)
 {
     return (qn_err_msg.code == QN_ERR_FL_OPENING_FILE_FAILED);
 }
 
-QN_API qn_bool qn_err_fl_is_duplicating_file_failed(void)
+QN_SDK qn_bool qn_err_fl_is_duplicating_file_failed(void)
 {
     return (qn_err_msg.code == QN_ERR_FL_DUPLICATING_FILE_FAILED);
 }
 
-QN_API qn_bool qn_err_fl_is_reading_file_failed(void)
+QN_SDK qn_bool qn_err_fl_is_reading_file_failed(void)
 {
     return (qn_err_msg.code == QN_ERR_FL_READING_FILE_FAILED);
 }
 
-QN_API qn_bool qn_err_fl_is_seeking_file_failed(void)
+QN_SDK qn_bool qn_err_fl_is_seeking_file_failed(void)
 {
     return (qn_err_msg.code == QN_ERR_FL_SEEKING_FILE_FAILED);
 }
 
-QN_API qn_bool qn_err_fl_info_is_stating_file_info_failed(void)
+QN_SDK qn_bool qn_err_fl_info_is_stating_file_info_failed(void)
 {
     return (qn_err_msg.code == QN_ERR_FL_INFO_STATING_FILE_INFO_FAILED);
 }
 
-QN_API qn_bool qn_err_stor_is_lack_of_authorization_information(void)
+QN_SDK qn_bool qn_err_stor_is_lack_of_authorization_information(void)
 {
     return (qn_err_msg.code == QN_ERR_STOR_LACK_OF_AUTHORIZATION_INFORMATION);
 }
 
-QN_API qn_bool qn_err_stor_is_invalid_resumable_session_information(void)
+QN_SDK qn_bool qn_err_stor_is_invalid_resumable_session_information(void)
 {
     return (qn_err_msg.code == QN_ERR_STOR_INVALID_RESUMABLE_SESSION_INFORMATION);
 }
 
-QN_API qn_bool qn_err_stor_is_invalid_list_result(void)
+QN_SDK qn_bool qn_err_stor_is_invalid_list_result(void)
 {
     return (qn_err_msg.code == QN_ERR_STOR_INVALID_LIST_RESULT);
 }
 
-QN_API qn_bool qn_err_stor_is_upload_aborted_by_filter_pre_callback(void)
+QN_SDK qn_bool qn_err_stor_is_upload_aborted_by_filter_pre_callback(void)
 {
     return (qn_err_msg.code == QN_ERR_STOR_UPLOAD_ABORTED_BY_FILTER_PRE_CALLBACK);
 }
 
-QN_API qn_bool qn_err_stor_is_upload_aborted_by_filter_post_callback(void)
+QN_SDK qn_bool qn_err_stor_is_upload_aborted_by_filter_post_callback(void)
 {
     return (qn_err_msg.code == QN_ERR_STOR_UPLOAD_ABORTED_BY_FILTER_POST_CALLBACK);
 }
 
-QN_API qn_bool qn_err_stor_is_invalid_chunk_put_result(void)
+QN_SDK qn_bool qn_err_stor_is_invalid_chunk_put_result(void)
 {
     return (qn_err_msg.code == QN_ERR_STOR_INVALID_CHUNK_PUT_RESULT);
 }
 
-QN_API qn_bool qn_err_stor_is_api_return_no_value(void)
+QN_SDK qn_bool qn_err_stor_is_api_return_no_value(void)
 {
     return (qn_err_msg.code == QN_ERR_STOR_API_RETURN_NO_VALUE);
 }
 
-QN_API qn_bool qn_err_stor_is_lack_of_block_context(void)
+QN_SDK qn_bool qn_err_stor_is_lack_of_block_context(void)
 {
     return (qn_err_msg.code == QN_ERR_STOR_LACK_OF_BLOCK_CONTEXT);
 }
 
-QN_API qn_bool qn_err_stor_is_lack_of_block_info(void)
+QN_SDK qn_bool qn_err_stor_is_lack_of_block_info(void)
 {
     return (qn_err_msg.code == QN_ERR_STOR_LACK_OF_BLOCK_INFO);
 }
 
-QN_API qn_bool qn_err_stor_is_lack_of_file_size(void)
+QN_SDK qn_bool qn_err_stor_is_lack_of_file_size(void)
 {
     return (qn_err_msg.code == QN_ERR_STOR_LACK_OF_FILE_SIZE);
 }
 
-QN_API qn_bool qn_err_stor_is_invalid_upload_result(void)
+QN_SDK qn_bool qn_err_stor_is_invalid_upload_result(void)
 {
     return (qn_err_msg.code == QN_ERR_STOR_INVALID_UPLOAD_RESULT);
 }
 
-QN_API qn_bool qn_err_etag_is_initializing_context_failed(void)
+QN_SDK qn_bool qn_err_etag_is_initializing_context_failed(void)
 {
     return (qn_err_msg.code == QN_ERR_ETAG_INITIALIZING_CONTEXT_FAILED);
 }
 
-QN_API qn_bool qn_err_etag_is_updating_context_failed(void)
+QN_SDK qn_bool qn_err_etag_is_updating_context_failed(void)
 {
     return (qn_err_msg.code == QN_ERR_ETAG_UPDATING_CONTEXT_FAILED);
 }
 
-QN_API qn_bool qn_err_etag_is_initializing_block_failed(void)
+QN_SDK qn_bool qn_err_etag_is_initializing_block_failed(void)
 {
     return (qn_err_msg.code == QN_ERR_ETAG_INITIALIZING_BLOCK_FAILED);
 }
 
-QN_API qn_bool qn_err_etag_is_updating_block_failed(void)
+QN_SDK qn_bool qn_err_etag_is_updating_block_failed(void)
 {
     return (qn_err_msg.code == QN_ERR_ETAG_UPDATING_BLOCK_FAILED);
 }
 
-QN_API qn_bool qn_err_etag_is_making_digest_failed(void)
+QN_SDK qn_bool qn_err_etag_is_making_digest_failed(void)
 {
     return (qn_err_msg.code == QN_ERR_ETAG_MAKING_DIGEST_FAILED);
 }
 
-QN_API qn_bool qn_err_easy_is_invalid_uptoken(void)
+QN_SDK qn_bool qn_err_easy_is_invalid_uptoken(void)
 {
     return (qn_err_msg.code == QN_ERR_EASY_INVALID_UPTOKEN);
 }
 
-QN_API qn_bool qn_err_easy_is_invalid_put_policy(void)
+QN_SDK qn_bool qn_err_easy_is_invalid_put_policy(void)
 {
     return (qn_err_msg.code == QN_ERR_EASY_INVALID_PUT_POLICY);
 }

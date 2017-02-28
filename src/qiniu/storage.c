@@ -27,7 +27,7 @@ typedef struct _QN_STORAGE
     qn_json_array_ptr arr_body;
 } qn_storage;
 
-QN_API qn_storage_ptr qn_stor_create(void)
+QN_SDK qn_storage_ptr qn_stor_create(void)
 {
     qn_storage_ptr new_stor = NULL;
 
@@ -70,7 +70,7 @@ QN_API qn_storage_ptr qn_stor_create(void)
     return new_stor;
 }
 
-QN_API void qn_stor_destroy(qn_storage_ptr restrict stor)
+QN_SDK void qn_stor_destroy(qn_storage_ptr restrict stor)
 {
     if (stor) {
         if (stor->obj_body) qn_json_destroy_object(stor->obj_body);
@@ -83,17 +83,17 @@ QN_API void qn_stor_destroy(qn_storage_ptr restrict stor)
     } // if
 }
 
-QN_API qn_json_object_ptr qn_stor_get_object_body(const qn_storage_ptr restrict stor)
+QN_SDK qn_json_object_ptr qn_stor_get_object_body(const qn_storage_ptr restrict stor)
 {
     return stor->obj_body;
 }
 
-QN_API qn_json_array_ptr qn_stor_get_array_body(const qn_storage_ptr restrict stor)
+QN_SDK qn_json_array_ptr qn_stor_get_array_body(const qn_storage_ptr restrict stor)
 {
     return stor->arr_body;
 }
 
-QN_API qn_http_hdr_iterator_ptr qn_stor_resp_get_header_iterator(const qn_storage_ptr restrict stor)
+QN_SDK qn_http_hdr_iterator_ptr qn_stor_resp_get_header_iterator(const qn_storage_ptr restrict stor)
 {
     return qn_http_resp_get_header_iterator(stor->resp);
 }
@@ -129,7 +129,7 @@ typedef struct _QN_STOR_MANAGEMENT_EXTRA
     qn_rgn_entry_ptr rgn_entry;
 } qn_stor_management_extra_st;
 
-QN_API qn_stor_management_extra_ptr qn_stor_mne_create(void)
+QN_SDK qn_stor_management_extra_ptr qn_stor_mne_create(void)
 {
     qn_stor_management_extra_ptr new_se = calloc(1, sizeof(qn_stor_management_extra_st));
     if (! new_se) {
@@ -139,24 +139,24 @@ QN_API qn_stor_management_extra_ptr qn_stor_mne_create(void)
     return new_se;
 }
 
-QN_API void qn_stor_mne_destroy(qn_stor_management_extra_ptr restrict mne)
+QN_SDK void qn_stor_mne_destroy(qn_stor_management_extra_ptr restrict mne)
 {
     if (mne) {
         free(mne);
     } // if
 }
 
-QN_API void qn_stor_mne_reset(qn_stor_management_extra_ptr restrict mne)
+QN_SDK void qn_stor_mne_reset(qn_stor_management_extra_ptr restrict mne)
 {
     memset(mne, 0, sizeof(qn_stor_management_extra_st));
 }
 
-QN_API void qn_stor_mne_set_force_overwrite(qn_stor_management_extra_ptr restrict mne, qn_bool force)
+QN_SDK void qn_stor_mne_set_force_overwrite(qn_stor_management_extra_ptr restrict mne, qn_bool force)
 {
     mne->force = (force) ? 1 : 0;
 }
 
-QN_API void qn_stor_mne_set_region_entry(qn_stor_management_extra_ptr restrict mne, qn_rgn_entry_ptr restrict entry)
+QN_SDK void qn_stor_mne_set_region_entry(qn_stor_management_extra_ptr restrict mne, qn_rgn_entry_ptr restrict entry)
 {
     mne->rgn_entry = entry;
 }
@@ -266,7 +266,7 @@ static const qn_string qn_stor_mn_make_stat_op(const char * restrict bucket, con
 *         If fails, the function returns a NULL value and the caller can call
 *         qn_err_get_message() to check out what happened.
 *******************************************************************************/
-QN_API qn_json_object_ptr qn_stor_mn_api_stat(qn_storage_ptr restrict stor, const qn_mac_ptr restrict mac, const char * restrict bucket, const char * restrict key, qn_stor_management_extra_ptr restrict mne)
+QN_SDK qn_json_object_ptr qn_stor_mn_api_stat(qn_storage_ptr restrict stor, const qn_mac_ptr restrict mac, const char * restrict bucket, const char * restrict key, qn_stor_management_extra_ptr restrict mne)
 {
     qn_bool ret;
     qn_string op;
@@ -416,7 +416,7 @@ static const qn_string qn_stor_mn_make_copy_op(const char * restrict src_bucket,
 *         If fails, the function returns a NULL value and the caller can call
 *         qn_err_get_message() to check out what happened.
 *******************************************************************************/
-QN_API qn_json_object_ptr qn_stor_mn_api_copy(qn_storage_ptr restrict stor, const qn_mac_ptr restrict mac, const char * restrict src_bucket, const char * restrict src_key, const char * restrict dest_bucket, const char * restrict dest_key, qn_stor_management_extra_ptr restrict mne)
+QN_SDK qn_json_object_ptr qn_stor_mn_api_copy(qn_storage_ptr restrict stor, const qn_mac_ptr restrict mac, const char * restrict src_bucket, const char * restrict src_key, const char * restrict dest_bucket, const char * restrict dest_key, qn_stor_management_extra_ptr restrict mne)
 {
     qn_bool ret;
     qn_string op;
@@ -582,7 +582,7 @@ static const qn_string qn_stor_mn_make_move_op(const char * restrict src_bucket,
 *         If fails, the function returns a NULL value and the caller can call
 *         qn_err_get_message() to check out what happened.
 *******************************************************************************/
-QN_API qn_json_object_ptr qn_stor_mn_api_move(qn_storage_ptr restrict stor, const qn_mac_ptr restrict mac, const char * restrict src_bucket, const char * restrict src_key, const char * restrict dest_bucket, const char * restrict dest_key, qn_stor_management_extra_ptr restrict mne)
+QN_SDK qn_json_object_ptr qn_stor_mn_api_move(qn_storage_ptr restrict stor, const qn_mac_ptr restrict mac, const char * restrict src_bucket, const char * restrict src_key, const char * restrict dest_bucket, const char * restrict dest_key, qn_stor_management_extra_ptr restrict mne)
 {
     qn_bool ret;
     qn_string op;
@@ -723,7 +723,7 @@ static qn_string qn_stor_mn_make_delete_op(const char * restrict bucket, const c
 *         If fails, the function returns a NULL value and the caller can call
 *         qn_err_get_message() to check out what happened.
 *******************************************************************************/
-QN_API qn_json_object_ptr qn_stor_mn_api_delete(qn_storage_ptr restrict stor, const qn_mac_ptr restrict mac, const char * restrict bucket, const char * restrict key, qn_stor_management_extra_ptr restrict mne)
+QN_SDK qn_json_object_ptr qn_stor_mn_api_delete(qn_storage_ptr restrict stor, const qn_mac_ptr restrict mac, const char * restrict bucket, const char * restrict key, qn_stor_management_extra_ptr restrict mne)
 {
     qn_bool ret;
     qn_string op;
@@ -850,7 +850,7 @@ QN_API qn_json_object_ptr qn_stor_mn_api_delete(qn_storage_ptr restrict stor, co
 *         If fails, the function returns a NULL value and the caller can call
 *         qn_err_get_message() to check out what happened.
 *******************************************************************************/
-QN_API qn_json_object_ptr qn_stor_mn_api_chgm(qn_storage_ptr restrict stor, const qn_mac_ptr restrict mac, const char * restrict bucket, const char * restrict key, const char * restrict mime, qn_stor_management_extra_ptr restrict mne)
+QN_SDK qn_json_object_ptr qn_stor_mn_api_chgm(qn_storage_ptr restrict stor, const qn_mac_ptr restrict mac, const char * restrict bucket, const char * restrict key, const char * restrict mime, qn_stor_management_extra_ptr restrict mne)
 {
     qn_bool ret;
     qn_string encoded_uri;
@@ -934,7 +934,7 @@ typedef struct _QN_STOR_BATCH
     int cap;
 } qn_stor_batch;
 
-QN_API qn_stor_batch_ptr qn_stor_bt_create(void)
+QN_SDK qn_stor_batch_ptr qn_stor_bt_create(void)
 {
     qn_stor_batch_ptr new_bt = calloc(1, sizeof(qn_stor_batch));
     if (!new_bt) {
@@ -952,7 +952,7 @@ QN_API qn_stor_batch_ptr qn_stor_bt_create(void)
     return new_bt;
 }
 
-QN_API void qn_stor_bt_destroy(qn_stor_batch_ptr restrict bt)
+QN_SDK void qn_stor_bt_destroy(qn_stor_batch_ptr restrict bt)
 {
     if (bt) {
         qn_stor_bt_reset(bt);
@@ -961,7 +961,7 @@ QN_API void qn_stor_bt_destroy(qn_stor_batch_ptr restrict bt)
     } // if
 }
 
-QN_API void qn_stor_bt_reset(qn_stor_batch_ptr restrict bt)
+QN_SDK void qn_stor_bt_reset(qn_stor_batch_ptr restrict bt)
 {
     while (bt->cnt > 0) qn_str_destroy(bt->ops[--bt->cnt]);
 }
@@ -1000,7 +1000,7 @@ static qn_bool qn_stor_bt_add_op(qn_stor_batch_ptr restrict bt, const qn_string 
     return qn_true;
 }
 
-QN_API qn_bool qn_stor_bt_add_stat_op(qn_stor_batch_ptr restrict bt, const char * restrict bucket, const char * restrict key)
+QN_SDK qn_bool qn_stor_bt_add_stat_op(qn_stor_batch_ptr restrict bt, const char * restrict bucket, const char * restrict key)
 {
     qn_bool ret;
     qn_string op;
@@ -1013,7 +1013,7 @@ QN_API qn_bool qn_stor_bt_add_stat_op(qn_stor_batch_ptr restrict bt, const char 
     return ret;
 }
 
-QN_API qn_bool qn_stor_bt_add_copy_op(qn_stor_batch_ptr restrict bt, const char * restrict src_bucket, const char * restrict src_key, const char * restrict dest_bucket, const char * restrict dest_key)
+QN_SDK qn_bool qn_stor_bt_add_copy_op(qn_stor_batch_ptr restrict bt, const char * restrict src_bucket, const char * restrict src_key, const char * restrict dest_bucket, const char * restrict dest_key)
 {
     qn_bool ret;
     qn_string op;
@@ -1026,7 +1026,7 @@ QN_API qn_bool qn_stor_bt_add_copy_op(qn_stor_batch_ptr restrict bt, const char 
     return ret;
 }
 
-QN_API qn_bool qn_stor_bt_add_move_op(qn_stor_batch_ptr restrict bt, const char * restrict src_bucket, const char * restrict src_key, const char * restrict dest_bucket, const char * restrict dest_key)
+QN_SDK qn_bool qn_stor_bt_add_move_op(qn_stor_batch_ptr restrict bt, const char * restrict src_bucket, const char * restrict src_key, const char * restrict dest_bucket, const char * restrict dest_key)
 {
     qn_bool ret;
     qn_string op;
@@ -1039,7 +1039,7 @@ QN_API qn_bool qn_stor_bt_add_move_op(qn_stor_batch_ptr restrict bt, const char 
     return ret;
 }
 
-QN_API qn_bool qn_stor_bt_add_delete_op(qn_stor_batch_ptr restrict bt, const char * restrict bucket, const char * restrict key)
+QN_SDK qn_bool qn_stor_bt_add_delete_op(qn_stor_batch_ptr restrict bt, const char * restrict bucket, const char * restrict key)
 {
     qn_bool ret;
     qn_string op;
@@ -1054,7 +1054,7 @@ QN_API qn_bool qn_stor_bt_add_delete_op(qn_stor_batch_ptr restrict bt, const cha
 
 // -------- Batch Functions (abbreviation: bt) --------
 
-QN_API qn_json_object_ptr qn_stor_bt_api_batch(qn_storage_ptr restrict stor, const qn_mac_ptr restrict mac, const qn_stor_batch_ptr restrict bt, qn_stor_management_extra_ptr restrict mne)
+QN_SDK qn_json_object_ptr qn_stor_bt_api_batch(qn_storage_ptr restrict stor, const qn_mac_ptr restrict mac, const qn_stor_batch_ptr restrict bt, qn_stor_management_extra_ptr restrict mne)
 {
     qn_bool ret;
     qn_string body;
@@ -1156,7 +1156,7 @@ typedef struct _QN_STOR_LIST_EXTRA
     qn_rgn_entry_ptr rgn_entry;
 } qn_stor_list_extra_st;
 
-QN_API qn_stor_list_extra_ptr qn_stor_lse_create(void)
+QN_SDK qn_stor_list_extra_ptr qn_stor_lse_create(void)
 {
     qn_stor_list_extra_ptr new_le = malloc(sizeof(qn_stor_list_extra_st));
     if (! new_le) {
@@ -1174,7 +1174,7 @@ QN_API qn_stor_list_extra_ptr qn_stor_lse_create(void)
     return new_le;
 }
 
-QN_API void qn_stor_lse_destroy(qn_stor_list_extra_ptr restrict lse)
+QN_SDK void qn_stor_lse_destroy(qn_stor_list_extra_ptr restrict lse)
 {
     if (lse) {
         qn_http_qry_destroy(lse->qry);
@@ -1182,7 +1182,7 @@ QN_API void qn_stor_lse_destroy(qn_stor_list_extra_ptr restrict lse)
     } // if
 }
 
-QN_API void qn_stor_lse_reset(qn_stor_list_extra_ptr restrict lse)
+QN_SDK void qn_stor_lse_reset(qn_stor_list_extra_ptr restrict lse)
 {
     lse->prefix = NULL;
     lse->delimiter = NULL;
@@ -1191,18 +1191,18 @@ QN_API void qn_stor_lse_reset(qn_stor_list_extra_ptr restrict lse)
     lse->rgn_entry = NULL;
 }
 
-QN_API void qn_stor_lse_set_prefix(qn_stor_list_extra_ptr restrict lse, const char * restrict prefix, const char * restrict delimiter)
+QN_SDK void qn_stor_lse_set_prefix(qn_stor_list_extra_ptr restrict lse, const char * restrict prefix, const char * restrict delimiter)
 {
     lse->prefix = prefix;
     lse->delimiter = delimiter;
 }
 
-QN_API void qn_stor_lse_set_marker(qn_stor_list_extra_ptr restrict lse, const char * restrict marker)
+QN_SDK void qn_stor_lse_set_marker(qn_stor_list_extra_ptr restrict lse, const char * restrict marker)
 {
     lse->marker = marker;
 }
 
-QN_API void qn_stor_lse_set_limit(qn_stor_list_extra_ptr restrict lse, int limit)
+QN_SDK void qn_stor_lse_set_limit(qn_stor_list_extra_ptr restrict lse, int limit)
 {
     lse->limit = limit;
 }
@@ -1301,7 +1301,7 @@ QN_API void qn_stor_lse_set_limit(qn_stor_list_extra_ptr restrict lse, int limit
 *         If fails, the function returns a NULL value and the caller can call
 *         qn_err_get_message() to check out what happened.
 *******************************************************************************/
-QN_API qn_json_object_ptr qn_stor_ls_api_list(qn_storage_ptr restrict stor, const qn_mac_ptr restrict mac, const char * restrict bucket, qn_stor_list_extra_ptr restrict lse)
+QN_SDK qn_json_object_ptr qn_stor_ls_api_list(qn_storage_ptr restrict stor, const qn_mac_ptr restrict mac, const char * restrict bucket, qn_stor_list_extra_ptr restrict lse)
 {
     qn_bool ret;
     qn_string url;
@@ -1397,7 +1397,7 @@ typedef struct _QN_STOR_FETCH_EXTRA
     qn_rgn_entry_ptr rgn_entry;
 } qn_stor_fetch_extra_st;
 
-QN_API qn_stor_fetch_extra_ptr qn_stor_fte_create(void)
+QN_SDK qn_stor_fetch_extra_ptr qn_stor_fte_create(void)
 {
     qn_stor_fetch_extra_ptr new_fe = calloc(1, sizeof(qn_stor_fetch_extra_st));
     if (! new_fe) {
@@ -1407,19 +1407,19 @@ QN_API qn_stor_fetch_extra_ptr qn_stor_fte_create(void)
     return new_fe;
 }
 
-QN_API void qn_stor_fte_destroy(qn_stor_fetch_extra_ptr restrict fte)
+QN_SDK void qn_stor_fte_destroy(qn_stor_fetch_extra_ptr restrict fte)
 {
     if (fte) {
         free(fte);
     } // if
 }
 
-QN_API void qn_stor_fte_reset(qn_stor_fetch_extra_ptr restrict fte)
+QN_SDK void qn_stor_fte_reset(qn_stor_fetch_extra_ptr restrict fte)
 {
     memset(fte, 0, sizeof(qn_stor_fetch_extra_st));
 }
 
-QN_API void qn_stor_fte_set_region_entry(qn_stor_fetch_extra_ptr restrict fte, qn_rgn_entry_ptr restrict entry)
+QN_SDK void qn_stor_fte_set_region_entry(qn_stor_fetch_extra_ptr restrict fte, qn_rgn_entry_ptr restrict entry)
 {
     fte->rgn_entry = entry;
 }
@@ -1505,7 +1505,7 @@ QN_API void qn_stor_fte_set_region_entry(qn_stor_fetch_extra_ptr restrict fte, q
 *         If fails, the function returns a NULL value and the caller can call
 *         qn_err_get_message() to check out what happened.
 *******************************************************************************/
-QN_API qn_json_object_ptr qn_stor_ft_api_fetch(qn_storage_ptr restrict stor, const qn_mac_ptr restrict mac, const char * restrict src_url, const char * restrict dest_bucket, const char * restrict dest_key, qn_stor_fetch_extra_ptr restrict fte)
+QN_SDK qn_json_object_ptr qn_stor_ft_api_fetch(qn_storage_ptr restrict stor, const qn_mac_ptr restrict mac, const char * restrict src_url, const char * restrict dest_bucket, const char * restrict dest_key, qn_stor_fetch_extra_ptr restrict fte)
 {
     qn_bool ret;
     qn_string encoded_src_url;
@@ -1654,7 +1654,7 @@ QN_API qn_json_object_ptr qn_stor_ft_api_fetch(qn_storage_ptr restrict stor, con
 *         If fails, the function returns a NULL value and the caller can call
 *         qn_err_get_message() to check out what happened.
 *******************************************************************************/
-QN_API qn_json_object_ptr qn_stor_ft_api_prefetch(qn_storage_ptr restrict stor, const qn_mac_ptr restrict mac, const char * restrict dest_bucket, const char * restrict dest_key, qn_stor_fetch_extra_ptr restrict fte)
+QN_SDK qn_json_object_ptr qn_stor_ft_api_prefetch(qn_storage_ptr restrict stor, const qn_mac_ptr restrict mac, const char * restrict dest_bucket, const char * restrict dest_key, qn_stor_fetch_extra_ptr restrict fte)
 {
     qn_bool ret;
     qn_string encoded_dest_uri;
@@ -1727,7 +1727,7 @@ QN_API qn_json_object_ptr qn_stor_ft_api_prefetch(qn_storage_ptr restrict stor, 
 
 // -------- Put Policy (abbreviation: pp) --------
 
-QN_API qn_json_object_ptr qn_stor_pp_create(const char * restrict bucket, const char * restrict key, qn_uint32 deadline)
+QN_SDK qn_json_object_ptr qn_stor_pp_create(const char * restrict bucket, const char * restrict key, qn_uint32 deadline)
 {
     qn_json_object_ptr pp = qn_json_create_object();
     if (pp) {
@@ -1737,12 +1737,12 @@ QN_API qn_json_object_ptr qn_stor_pp_create(const char * restrict bucket, const 
     return pp;
 }
 
-QN_API void qn_stor_pp_destroy(qn_json_object_ptr restrict pp)
+QN_SDK void qn_stor_pp_destroy(qn_json_object_ptr restrict pp)
 {
     qn_json_destroy_object(pp);
 }
 
-QN_API qn_bool qn_stor_pp_set_scope(qn_json_object_ptr restrict pp, const char * restrict bucket, const char * restrict key)
+QN_SDK qn_bool qn_stor_pp_set_scope(qn_json_object_ptr restrict pp, const char * restrict bucket, const char * restrict key)
 {
     qn_bool ret;
     qn_string scope;
@@ -1757,43 +1757,43 @@ QN_API qn_bool qn_stor_pp_set_scope(qn_json_object_ptr restrict pp, const char *
     return ret;
 }
 
-QN_API qn_bool qn_stor_pp_set_deadline(qn_json_object_ptr restrict pp, qn_uint32 deadline)
+QN_SDK qn_bool qn_stor_pp_set_deadline(qn_json_object_ptr restrict pp, qn_uint32 deadline)
 {
     return qn_json_set_integer(pp, "deadline", deadline);
 }
 
-QN_API qn_bool qn_stor_pp_dont_overwrite(qn_json_object_ptr restrict pp)
+QN_SDK qn_bool qn_stor_pp_dont_overwrite(qn_json_object_ptr restrict pp)
 {
     return qn_json_set_integer(pp, "insertOnly", 1);
 }
 
-QN_API qn_bool qn_stor_pp_return_to_server(qn_json_object_ptr restrict pp, const char * restrict url, const char * restrict body)
+QN_SDK qn_bool qn_stor_pp_return_to_server(qn_json_object_ptr restrict pp, const char * restrict url, const char * restrict body)
 {
     if (!qn_json_set_string(pp, "returnUrl", url)) return qn_false;
     if (body) return qn_json_set_string(pp, "returnBody", body);
     return qn_true;
 }
 
-QN_API qn_bool qn_stor_pp_return_to_client(qn_json_object_ptr restrict pp, const char * restrict body)
+QN_SDK qn_bool qn_stor_pp_return_to_client(qn_json_object_ptr restrict pp, const char * restrict body)
 {
     return qn_json_set_string(pp, "returnBody", body);
 }
 
-QN_API qn_bool qn_stor_pp_callback_to_server(qn_json_object_ptr restrict pp, const char * restrict url, const char * restrict host_name)
+QN_SDK qn_bool qn_stor_pp_callback_to_server(qn_json_object_ptr restrict pp, const char * restrict url, const char * restrict host_name)
 {
     if (!qn_json_set_string(pp, "callbackUrl", url)) return qn_false;
     if (host_name) return qn_json_set_string(pp, "callbackHost", host_name);
     return qn_true;
 }
 
-QN_API qn_bool qn_stor_pp_callback_with_body(qn_json_object_ptr restrict pp, const char * restrict body, const char * restrict mime_type)
+QN_SDK qn_bool qn_stor_pp_callback_with_body(qn_json_object_ptr restrict pp, const char * restrict body, const char * restrict mime_type)
 {
     if (!qn_json_set_string(pp, "callbackBody", body)) return qn_false;
     if (mime_type) return qn_json_set_string(pp, "callbackBodyType", mime_type);
     return qn_true;
 }
 
-QN_API qn_bool qn_stor_pp_pfop_set_commands(qn_json_object_ptr restrict pp, const char * restrict pipeline, const char * restrict cmd1, const char * restrict cmd2, ...)
+QN_SDK qn_bool qn_stor_pp_pfop_set_commands(qn_json_object_ptr restrict pp, const char * restrict pipeline, const char * restrict cmd1, const char * restrict cmd2, ...)
 {
     va_list ap;
     qn_bool ret;
@@ -1815,7 +1815,7 @@ QN_API qn_bool qn_stor_pp_pfop_set_commands(qn_json_object_ptr restrict pp, cons
     return ret;
 }
 
-QN_API qn_bool qn_stor_pp_pfop_set_command_list(qn_json_object_ptr restrict pp, const char * restrict pipeline, const char ** restrict cmds, int cmd_count)
+QN_SDK qn_bool qn_stor_pp_pfop_set_command_list(qn_json_object_ptr restrict pp, const char * restrict pipeline, const char ** restrict cmds, int cmd_count)
 {
     qn_bool ret = qn_false;
     qn_string ops = NULL;
@@ -1834,17 +1834,17 @@ QN_API qn_bool qn_stor_pp_pfop_set_command_list(qn_json_object_ptr restrict pp, 
     return ret;
 }
 
-QN_API qn_bool qn_stor_pp_pfop_notify_to_server(qn_json_object_ptr restrict pp, const char * restrict url)
+QN_SDK qn_bool qn_stor_pp_pfop_notify_to_server(qn_json_object_ptr restrict pp, const char * restrict url)
 {
     return qn_json_set_string(pp, "persistentNotifyUrl", url);
 }
 
-QN_API qn_bool qn_stor_pp_mime_enable_auto_detecting(qn_json_object_ptr restrict pp)
+QN_SDK qn_bool qn_stor_pp_mime_enable_auto_detecting(qn_json_object_ptr restrict pp)
 {
     return qn_json_set_integer(pp, "detectMime", 1);
 }
 
-QN_API qn_bool qn_stor_pp_mime_allow(qn_json_object_ptr restrict pp, const char * restrict mime1, const char * restrict mime2, ...)
+QN_SDK qn_bool qn_stor_pp_mime_allow(qn_json_object_ptr restrict pp, const char * restrict mime1, const char * restrict mime2, ...)
 {
     va_list ap;
     qn_bool ret = qn_false;
@@ -1862,7 +1862,7 @@ QN_API qn_bool qn_stor_pp_mime_allow(qn_json_object_ptr restrict pp, const char 
     return ret;
 }
 
-QN_API qn_bool qn_stor_pp_mime_allow_list(qn_json_object_ptr restrict pp, const char ** restrict mime_list, int mime_count)
+QN_SDK qn_bool qn_stor_pp_mime_allow_list(qn_json_object_ptr restrict pp, const char ** restrict mime_list, int mime_count)
 {
     qn_bool ret = qn_false;
     qn_string mime_str = NULL;
@@ -1877,7 +1877,7 @@ QN_API qn_bool qn_stor_pp_mime_allow_list(qn_json_object_ptr restrict pp, const 
     return ret;
 }
 
-QN_API qn_bool qn_stor_pp_mime_deny(qn_json_object_ptr restrict pp, const char * restrict mime1, const char * restrict mime2, ...)
+QN_SDK qn_bool qn_stor_pp_mime_deny(qn_json_object_ptr restrict pp, const char * restrict mime1, const char * restrict mime2, ...)
 {
     va_list ap;
     qn_bool ret;
@@ -1901,7 +1901,7 @@ QN_API qn_bool qn_stor_pp_mime_deny(qn_json_object_ptr restrict pp, const char *
     return ret;
 }
 
-QN_API qn_bool qn_stor_pp_mime_deny_list(qn_json_object_ptr restrict pp, const char ** restrict mime_list, int mime_count)
+QN_SDK qn_bool qn_stor_pp_mime_deny_list(qn_json_object_ptr restrict pp, const char ** restrict mime_list, int mime_count)
 {
     qn_bool ret;
     qn_string deny_mime_str;
@@ -1922,32 +1922,32 @@ QN_API qn_bool qn_stor_pp_mime_deny_list(qn_json_object_ptr restrict pp, const c
     return ret;
 }
 
-QN_API qn_bool qn_stor_pp_fsize_set_minimum(qn_json_object_ptr restrict pp, qn_uint32 min_size)
+QN_SDK qn_bool qn_stor_pp_fsize_set_minimum(qn_json_object_ptr restrict pp, qn_uint32 min_size)
 {
     return qn_json_set_integer(pp, "fsizeMin", min_size);
 }
 
-QN_API qn_bool qn_stor_pp_fsize_set_maximum(qn_json_object_ptr restrict pp, qn_uint32 max_size)
+QN_SDK qn_bool qn_stor_pp_fsize_set_maximum(qn_json_object_ptr restrict pp, qn_uint32 max_size)
 {
     return qn_json_set_integer(pp, "fsizeLimit", max_size);
 }
 
-QN_API qn_bool qn_stor_pp_key_enable_fetching_from_callback_response(qn_json_object_ptr restrict pp)
+QN_SDK qn_bool qn_stor_pp_key_enable_fetching_from_callback_response(qn_json_object_ptr restrict pp)
 {
     return qn_json_set_integer(pp, "callbackFetchKey", 1);
 }
 
-QN_API qn_bool qn_stor_pp_key_make_from_template(qn_json_object_ptr restrict pp, const char * restrict key_template)
+QN_SDK qn_bool qn_stor_pp_key_make_from_template(qn_json_object_ptr restrict pp, const char * restrict key_template)
 {
     return qn_json_set_string(pp, "saveKey", key_template);
 }
 
-QN_API qn_bool qn_stor_pp_auto_delete_after_days(qn_json_object_ptr restrict pp, qn_uint32 days)
+QN_SDK qn_bool qn_stor_pp_auto_delete_after_days(qn_json_object_ptr restrict pp, qn_uint32 days)
 {
     return qn_json_set_integer(pp, "deleteAfterDays", days);
 }
 
-QN_API qn_bool qn_stor_pp_upload_message(qn_json_object_ptr restrict pp, const char * restrict msg_queue, const char * restrict msg_body, const char * restrict msg_mime_type)
+QN_SDK qn_bool qn_stor_pp_upload_message(qn_json_object_ptr restrict pp, const char * restrict msg_queue, const char * restrict msg_body, const char * restrict msg_mime_type)
 {
     if (! qn_json_set_string(pp, "notifyQueue", msg_queue)) return qn_false;
     if (! qn_json_set_string(pp, "notifyMessage", msg_body)) return qn_false;
@@ -1955,7 +1955,7 @@ QN_API qn_bool qn_stor_pp_upload_message(qn_json_object_ptr restrict pp, const c
     return qn_true;
 }
 
-QN_API qn_string qn_stor_pp_to_uptoken(qn_json_object_ptr restrict pp, qn_mac_ptr restrict mac)
+QN_SDK qn_string qn_stor_pp_to_uptoken(qn_json_object_ptr restrict pp, qn_mac_ptr restrict mac)
 {
     qn_string uptoken;
     qn_string str = qn_json_object_to_string(pp);
@@ -1981,7 +1981,7 @@ typedef struct _QN_STOR_UPLOAD_EXTRA
     qn_io_reader_itf rdr;
 } qn_stor_upload_extra_st;
 
-QN_API qn_stor_upload_extra_ptr qn_stor_upe_create(void)
+QN_SDK qn_stor_upload_extra_ptr qn_stor_upe_create(void)
 {
     qn_stor_upload_extra_ptr new_pe = calloc(1, sizeof(qn_stor_upload_extra_st));
     if (! new_pe) {
@@ -1991,34 +1991,34 @@ QN_API qn_stor_upload_extra_ptr qn_stor_upe_create(void)
     return new_pe;
 }
 
-QN_API void qn_stor_upe_destroy(qn_stor_upload_extra_ptr restrict upe)
+QN_SDK void qn_stor_upe_destroy(qn_stor_upload_extra_ptr restrict upe)
 {
     if (upe) {
         free(upe);
     } // if
 }
 
-QN_API void qn_stor_upe_reset(qn_stor_upload_extra_ptr restrict upe)
+QN_SDK void qn_stor_upe_reset(qn_stor_upload_extra_ptr restrict upe)
 {
     memset(upe, 0, sizeof(qn_stor_upload_extra_st));
 }
 
-QN_API void qn_stor_upe_set_final_key(qn_stor_upload_extra_ptr restrict upe, const char * restrict final_key)
+QN_SDK void qn_stor_upe_set_final_key(qn_stor_upload_extra_ptr restrict upe, const char * restrict final_key)
 {
     upe->final_key = final_key;
 }
 
-QN_API extern void qn_stor_upe_set_local_crc32(qn_stor_upload_extra_ptr restrict upe, const char * restrict crc32)
+QN_SDK extern void qn_stor_upe_set_local_crc32(qn_stor_upload_extra_ptr restrict upe, const char * restrict crc32)
 {
     upe->crc32 = crc32;
 }
 
-QN_API extern void qn_stor_upe_set_accept_type(qn_stor_upload_extra_ptr restrict upe, const char * restrict accept_type)
+QN_SDK extern void qn_stor_upe_set_accept_type(qn_stor_upload_extra_ptr restrict upe, const char * restrict accept_type)
 {
     upe->accept_type = accept_type;
 }
 
-QN_API extern void qn_stor_upe_set_region_entry(qn_stor_upload_extra_ptr restrict upe, qn_rgn_entry_ptr restrict entry)
+QN_SDK extern void qn_stor_upe_set_region_entry(qn_stor_upload_extra_ptr restrict upe, qn_rgn_entry_ptr restrict entry)
 {
     upe->rgn_entry = entry;
 }
@@ -2132,7 +2132,7 @@ static qn_bool qn_stor_up_prepare_for_upload(qn_storage_ptr restrict stor, const
 *         If fails, the function returns a NULL value and the caller can call
 *         qn_err_get_message() to check out what happened.
 *******************************************************************************/
-QN_API qn_json_object_ptr qn_stor_up_api_upload_file(qn_storage_ptr restrict stor, const char * restrict uptoken, const char * restrict fname, qn_stor_upload_extra_ptr restrict upe)
+QN_SDK qn_json_object_ptr qn_stor_up_api_upload_file(qn_storage_ptr restrict stor, const char * restrict uptoken, const char * restrict fname, qn_stor_upload_extra_ptr restrict upe)
 {
     qn_bool ret;
     qn_fl_info_ptr fi;
@@ -2173,7 +2173,7 @@ QN_API qn_json_object_ptr qn_stor_up_api_upload_file(qn_storage_ptr restrict sto
     return stor->obj_body;
 }
 
-QN_API qn_json_object_ptr qn_stor_up_api_upload_buffer(qn_storage_ptr restrict stor, const char * restrict uptoken, const char * restrict buf, int buf_size, qn_stor_upload_extra_ptr restrict upe)
+QN_SDK qn_json_object_ptr qn_stor_up_api_upload_buffer(qn_storage_ptr restrict stor, const char * restrict uptoken, const char * restrict buf, int buf_size, qn_stor_upload_extra_ptr restrict upe)
 {
     qn_bool ret;
     qn_http_form_ptr form;
@@ -2216,7 +2216,7 @@ static size_t qn_stor_upload_callback_cfn(void * user_data, char * buf, size_t s
     return ret;
 }
 
-QN_API qn_json_object_ptr qn_stor_up_api_upload(qn_storage_ptr restrict stor, const char * restrict uptoken, qn_io_reader_itf restrict data_rdr, qn_stor_upload_extra_ptr restrict upe)
+QN_SDK qn_json_object_ptr qn_stor_up_api_upload(qn_storage_ptr restrict stor, const char * restrict uptoken, qn_io_reader_itf restrict data_rdr, qn_stor_upload_extra_ptr restrict upe)
 {
     qn_bool ret;
     qn_rgn_entry_ptr rgn_entry;
@@ -2356,7 +2356,7 @@ static inline int qn_stor_ru_calculate_block_count(qn_fsize fsize)
     return (fsize + QN_STOR_RU_BLOCK_MAX_SIZE - 1) / QN_STOR_RU_BLOCK_MAX_SIZE;
 }
 
-QN_API qn_stor_resumable_upload_ptr qn_stor_ru_create(qn_io_reader_itf restrict data_rdr)
+QN_SDK qn_stor_resumable_upload_ptr qn_stor_ru_create(qn_io_reader_itf restrict data_rdr)
 {
     qn_stor_resumable_upload_ptr ru;
 
@@ -2399,7 +2399,7 @@ QN_API qn_stor_resumable_upload_ptr qn_stor_ru_create(qn_io_reader_itf restrict 
     return ru;
 }
 
-QN_API void qn_stor_ru_destroy(qn_stor_resumable_upload_ptr restrict ru)
+QN_SDK void qn_stor_ru_destroy(qn_stor_resumable_upload_ptr restrict ru)
 {
     if (ru) {
         qn_json_destroy_object(ru->progress);
@@ -2408,7 +2408,7 @@ QN_API void qn_stor_ru_destroy(qn_stor_resumable_upload_ptr restrict ru)
     } // if
 }
 
-QN_API qn_string qn_stor_ru_to_string(qn_stor_resumable_upload_ptr restrict ru)
+QN_SDK qn_string qn_stor_ru_to_string(qn_stor_resumable_upload_ptr restrict ru)
 {
     qn_bool ret;
     qn_string fsize_str;
@@ -2426,7 +2426,7 @@ QN_API qn_string qn_stor_ru_to_string(qn_stor_resumable_upload_ptr restrict ru)
     return qn_json_object_to_string(ru->progress);
 }
 
-QN_API qn_stor_resumable_upload_ptr qn_stor_ru_from_string(const char * restrict str, size_t str_len)
+QN_SDK qn_stor_resumable_upload_ptr qn_stor_ru_from_string(const char * restrict str, size_t str_len)
 {
     qn_string fsize_str;
     qn_stor_resumable_upload_ptr ru;
@@ -2477,7 +2477,7 @@ QN_API qn_stor_resumable_upload_ptr qn_stor_ru_from_string(const char * restrict
     return ru;
 }
 
-QN_API qn_bool qn_stor_ru_attach(qn_stor_resumable_upload_ptr restrict ru, qn_io_reader_itf restrict data_rdr)
+QN_SDK qn_bool qn_stor_ru_attach(qn_stor_resumable_upload_ptr restrict ru, qn_io_reader_itf restrict data_rdr)
 {
     qn_io_reader_itf new_rdr;
 
@@ -2496,13 +2496,13 @@ QN_API qn_bool qn_stor_ru_attach(qn_stor_resumable_upload_ptr restrict ru, qn_io
     return qn_true;
 }
 
-QN_API int qn_stor_ru_get_block_count(qn_stor_resumable_upload_ptr restrict ru)
+QN_SDK int qn_stor_ru_get_block_count(qn_stor_resumable_upload_ptr restrict ru)
 {
     assert(ru);
     return ru->blk_cnt;
 }
 
-QN_API qn_json_object_ptr qn_stor_ru_get_block_info(qn_stor_resumable_upload_ptr restrict ru, int blk_idx)
+QN_SDK qn_json_object_ptr qn_stor_ru_get_block_info(qn_stor_resumable_upload_ptr restrict ru, int blk_idx)
 {
     qn_json_array_ptr blk_arr;
 
@@ -2520,7 +2520,7 @@ QN_API qn_json_object_ptr qn_stor_ru_get_block_info(qn_stor_resumable_upload_ptr
     return qn_json_pick_object(blk_arr, blk_idx, NULL);
 }
 
-QN_API qn_json_object_ptr qn_stor_ru_update_block_info(qn_stor_resumable_upload_ptr restrict ru, int blk_idx, qn_json_object_ptr restrict up_ret)
+QN_SDK qn_json_object_ptr qn_stor_ru_update_block_info(qn_stor_resumable_upload_ptr restrict ru, int blk_idx, qn_json_object_ptr restrict up_ret)
 {
     qn_string ctx;
     qn_string checksum;
@@ -2574,7 +2574,7 @@ QN_STOR_RU_UPDATE_BLOCK_INFO_ERROR_HANDLING:
     return NULL;
 }
 
-QN_API qn_io_reader_itf qn_stor_ru_create_block_reader(qn_stor_resumable_upload_ptr restrict ru, int blk_idx, qn_json_object_ptr * restrict blk_info)
+QN_SDK qn_io_reader_itf qn_stor_ru_create_block_reader(qn_stor_resumable_upload_ptr restrict ru, int blk_idx, qn_json_object_ptr * restrict blk_info)
 {
     int i;
     int blk_size = QN_STOR_RU_BLOCK_MAX_SIZE;
@@ -2614,7 +2614,7 @@ QN_API qn_io_reader_itf qn_stor_ru_create_block_reader(qn_stor_resumable_upload_
     return qn_io_section(ru->src_rdr, blk_idx * QN_STOR_RU_BLOCK_MAX_SIZE, blk_size);
 }
 
-QN_API qn_io_reader_itf qn_stor_ru_to_context_reader(qn_stor_resumable_upload_ptr restrict ru)
+QN_SDK qn_io_reader_itf qn_stor_ru_to_context_reader(qn_stor_resumable_upload_ptr restrict ru)
 {
     ru->ctx_idx = 0;
     ru->ctx_pos = 0;
@@ -2622,17 +2622,17 @@ QN_API qn_io_reader_itf qn_stor_ru_to_context_reader(qn_stor_resumable_upload_pt
     return &ru->rdr_vtbl;
 }
 
-QN_API qn_fsize qn_stor_ru_total_fsize(qn_stor_resumable_upload_ptr restrict ru)
+QN_SDK qn_fsize qn_stor_ru_total_fsize(qn_stor_resumable_upload_ptr restrict ru)
 {
     return ru->fsize;
 }
 
-QN_API qn_fsize qn_stor_ru_uploaded_fsize(qn_stor_resumable_upload_ptr restrict ru)
+QN_SDK qn_fsize qn_stor_ru_uploaded_fsize(qn_stor_resumable_upload_ptr restrict ru)
 {
     return ru->uploaded_fsize;
 }
 
-QN_API qn_bool qn_stor_ru_is_block_uploaded(qn_json_object_ptr restrict blk_info)
+QN_SDK qn_bool qn_stor_ru_is_block_uploaded(qn_json_object_ptr restrict blk_info)
 {
     // | offset | bsize | status    |
     // | -1     | > 0   | uploading |
@@ -2640,7 +2640,7 @@ QN_API qn_bool qn_stor_ru_is_block_uploaded(qn_json_object_ptr restrict blk_info
     return (qn_json_get_integer(blk_info, "offset", -1) == qn_json_get_integer(blk_info, "bsize", 0));
 }
 
-QN_API qn_bool qn_stor_ru_is_file_uploaded(qn_stor_resumable_upload_ptr restrict ru)
+QN_SDK qn_bool qn_stor_ru_is_file_uploaded(qn_stor_resumable_upload_ptr restrict ru)
 {
     return ru->uploaded_fsize == ru->fsize;
 }
@@ -2704,7 +2704,7 @@ static qn_bool qn_stor_ru_prepare_for_resumable_upload(qn_storage_ptr restrict s
 
 // -------- Resumable Upload Functions (abbreviation: ru) --------
 
-QN_API extern qn_json_object_ptr qn_stor_ru_api_mkblk(qn_storage_ptr restrict stor, const char * restrict uptoken, qn_io_reader_itf restrict data_rdr, qn_json_object_ptr restrict blk_info, int chk_size, qn_stor_upload_extra_ptr restrict upe)
+QN_SDK extern qn_json_object_ptr qn_stor_ru_api_mkblk(qn_storage_ptr restrict stor, const char * restrict uptoken, qn_io_reader_itf restrict data_rdr, qn_json_object_ptr restrict blk_info, int chk_size, qn_stor_upload_extra_ptr restrict upe)
 {
     qn_bool ret;
     int blk_size;
@@ -2746,7 +2746,7 @@ QN_API extern qn_json_object_ptr qn_stor_ru_api_mkblk(qn_storage_ptr restrict st
     return qn_stor_rename_error_info(stor);
 }
 
-QN_API extern qn_json_object_ptr qn_stor_ru_api_bput(qn_storage_ptr restrict stor, const char * restrict uptoken, qn_io_reader_itf restrict data_rdr, qn_json_object_ptr restrict blk_info, int chk_size, qn_stor_upload_extra_ptr restrict upe)
+QN_SDK extern qn_json_object_ptr qn_stor_ru_api_bput(qn_storage_ptr restrict stor, const char * restrict uptoken, qn_io_reader_itf restrict data_rdr, qn_json_object_ptr restrict blk_info, int chk_size, qn_stor_upload_extra_ptr restrict upe)
 {
     qn_bool ret;
     qn_string url;
@@ -2809,7 +2809,7 @@ QN_API extern qn_json_object_ptr qn_stor_ru_api_bput(qn_storage_ptr restrict sto
     return qn_stor_rename_error_info(stor);
 }
 
-QN_API qn_json_object_ptr qn_stor_ru_api_mkfile(qn_storage_ptr restrict stor, const char * restrict uptoken, qn_io_reader_itf restrict ctx_rdr, qn_json_object_ptr restrict last_blk_info, qn_fsize fsize, qn_stor_upload_extra_ptr restrict upe)
+QN_SDK qn_json_object_ptr qn_stor_ru_api_mkfile(qn_storage_ptr restrict stor, const char * restrict uptoken, qn_io_reader_itf restrict ctx_rdr, qn_json_object_ptr restrict last_blk_info, qn_fsize fsize, qn_stor_upload_extra_ptr restrict upe)
 {
     qn_string url;
     qn_string url_tmp;
@@ -2871,7 +2871,7 @@ QN_API qn_json_object_ptr qn_stor_ru_api_mkfile(qn_storage_ptr restrict stor, co
     return qn_stor_rename_error_info(stor);
 }
 
-QN_API qn_json_object_ptr qn_stor_ru_upload_huge(qn_storage_ptr restrict stor, const char * restrict uptoken, qn_stor_resumable_upload_ptr ru, int * start_idx, int chk_size, qn_stor_upload_extra_ptr restrict upe)
+QN_SDK qn_json_object_ptr qn_stor_ru_upload_huge(qn_storage_ptr restrict stor, const char * restrict uptoken, qn_stor_resumable_upload_ptr ru, int * start_idx, int chk_size, qn_stor_upload_extra_ptr restrict upe)
 {
     int i;
     qn_integer offset;

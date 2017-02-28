@@ -92,7 +92,7 @@ static qn_io_reader_st qn_rdr_vtable = {
     &qn_rdr_size_fn
 };
 
-QN_API qn_reader_ptr qn_rdr_create(qn_io_reader_itf src_rdr, qn_rdr_pos filter_num)
+QN_SDK qn_reader_ptr qn_rdr_create(qn_io_reader_itf src_rdr, qn_rdr_pos filter_num)
 {
     qn_reader_ptr new_rdr;
 
@@ -118,7 +118,7 @@ QN_API qn_reader_ptr qn_rdr_create(qn_io_reader_itf src_rdr, qn_rdr_pos filter_n
     return new_rdr;
 }
 
-QN_API void qn_rdr_destroy(qn_reader_ptr restrict rdr)
+QN_SDK void qn_rdr_destroy(qn_reader_ptr restrict rdr)
 {
     if (rdr) {
         if (rdr->auto_close_source) qn_io_close(rdr->src_rdr);
@@ -126,18 +126,18 @@ QN_API void qn_rdr_destroy(qn_reader_ptr restrict rdr)
     } // if
 }
 
-QN_API void qn_rdr_reset(qn_reader_ptr restrict rdr)
+QN_SDK void qn_rdr_reset(qn_reader_ptr restrict rdr)
 {
     rdr->pre_end = 0;
     rdr->post_end = rdr->cap - 1;
 }
 
-QN_API qn_io_reader_itf qn_rdr_to_io_reader(qn_reader_ptr restrict rdr)
+QN_SDK qn_io_reader_itf qn_rdr_to_io_reader(qn_reader_ptr restrict rdr)
 {
     return &rdr->rdr_vtbl;
 }
 
-QN_API qn_bool qn_rdr_add_pre_filter(qn_reader_ptr restrict rdr, void * restrict filter_data, qn_rdr_filter_callback filter_cb)
+QN_SDK qn_bool qn_rdr_add_pre_filter(qn_reader_ptr restrict rdr, void * restrict filter_data, qn_rdr_filter_callback filter_cb)
 {
     if (rdr->post_end < rdr->pre_end) {
         qn_err_set_out_of_capacity();
@@ -150,7 +150,7 @@ QN_API qn_bool qn_rdr_add_pre_filter(qn_reader_ptr restrict rdr, void * restrict
     return qn_true;
 }
 
-QN_API qn_bool qn_rdr_add_post_filter(qn_reader_ptr restrict rdr, void * restrict filter_data, qn_rdr_filter_callback filter_cb)
+QN_SDK qn_bool qn_rdr_add_post_filter(qn_reader_ptr restrict rdr, void * restrict filter_data, qn_rdr_filter_callback filter_cb)
 {
     if (rdr->post_end < rdr->pre_end) {
         qn_err_set_out_of_capacity();
@@ -204,22 +204,22 @@ static ssize_t qn_rdr_do_read(qn_reader_ptr restrict rdr, char * restrict buf, s
     return real_size;
 }
 
-QN_API ssize_t qn_rdr_peek(qn_reader_ptr restrict rdr, char * restrict buf, size_t size)
+QN_SDK ssize_t qn_rdr_peek(qn_reader_ptr restrict rdr, char * restrict buf, size_t size)
 {
     return qn_rdr_do_read(rdr, buf, size, qn_true);
 }
 
-QN_API ssize_t qn_rdr_read(qn_reader_ptr restrict rdr, char * restrict buf, size_t size)
+QN_SDK ssize_t qn_rdr_read(qn_reader_ptr restrict rdr, char * restrict buf, size_t size)
 {
     return qn_rdr_do_read(rdr, buf, size, qn_false);
 }
 
-QN_API qn_bool qn_rdr_seek(qn_reader_ptr restrict rdr, qn_fsize offset)
+QN_SDK qn_bool qn_rdr_seek(qn_reader_ptr restrict rdr, qn_fsize offset)
 {
     return qn_io_seek(rdr->src_rdr, offset);
 }
 
-QN_API qn_bool qn_rdr_advance(qn_reader_ptr restrict rdr, size_t delta)
+QN_SDK qn_bool qn_rdr_advance(qn_reader_ptr restrict rdr, size_t delta)
 {
     return qn_io_advance(rdr->src_rdr, delta);
 }
@@ -240,26 +240,26 @@ static qn_reader_ptr qn_rdr_do_duplicate(qn_reader_ptr restrict rdr, qn_io_reade
     return new_rdr;
 }
 
-QN_API qn_reader_ptr qn_rdr_duplicate(qn_reader_ptr restrict rdr)
+QN_SDK qn_reader_ptr qn_rdr_duplicate(qn_reader_ptr restrict rdr)
 {
     qn_io_reader_itf new_src_rdr = qn_io_duplicate(rdr->src_rdr);
     if (!new_src_rdr) return NULL;
     return qn_rdr_do_duplicate(rdr, new_src_rdr);
 }
 
-QN_API qn_reader_ptr qn_rdr_section(qn_reader_ptr restrict rdr, qn_fsize offset, size_t sec_size)
+QN_SDK qn_reader_ptr qn_rdr_section(qn_reader_ptr restrict rdr, qn_fsize offset, size_t sec_size)
 {
     qn_io_reader_itf new_src_rdr = qn_io_section(rdr->src_rdr, offset, sec_size);
     if (!new_src_rdr) return NULL;
     return qn_rdr_do_duplicate(rdr, new_src_rdr);
 }
 
-QN_API qn_string qn_rdr_name(qn_reader_ptr restrict rdr)
+QN_SDK qn_string qn_rdr_name(qn_reader_ptr restrict rdr)
 {
     return qn_io_name(rdr->src_rdr);
 }
 
-QN_API qn_fsize qn_rdr_size(qn_reader_ptr restrict rdr)
+QN_SDK qn_fsize qn_rdr_size(qn_reader_ptr restrict rdr)
 {
     return qn_io_size(rdr->src_rdr);
 }

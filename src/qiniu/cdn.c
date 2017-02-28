@@ -20,7 +20,7 @@ static qn_bool qn_cdn_percent_encode_check(int c)
     return qn_cs_percent_encode_check(c);
 }
 
-QN_API qn_string qn_cdn_make_dnurl_with_deadline(const char * restrict key, const char * restrict url, qn_uint32 deadline)
+QN_SDK qn_string qn_cdn_make_dnurl_with_deadline(const char * restrict key, const char * restrict url, qn_uint32 deadline)
 {
     // ---- This function is based on the algorithm described on https://support.qiniu.com/question/195128 .
     int i;

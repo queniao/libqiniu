@@ -35,7 +35,7 @@ typedef struct _QN_HTTP_JSON_WRITER
     qn_json_parser_ptr prs;
 } qn_http_json_writer;
 
-QN_API qn_http_json_writer_ptr qn_http_json_wrt_create(void)
+QN_SDK qn_http_json_writer_ptr qn_http_json_wrt_create(void)
 {
     qn_http_json_writer_ptr new_body = malloc(sizeof(qn_http_json_writer));
     if (!new_body) {
@@ -51,13 +51,13 @@ QN_API qn_http_json_writer_ptr qn_http_json_wrt_create(void)
     return new_body;
 }
 
-QN_API void qn_http_json_wrt_destroy(qn_http_json_writer_ptr restrict writer)
+QN_SDK void qn_http_json_wrt_destroy(qn_http_json_writer_ptr restrict writer)
 {
     qn_json_prs_destroy(writer->prs);
     free(writer);
 }
 
-QN_API void qn_http_json_wrt_prepare(qn_http_json_writer_ptr restrict writer, qn_json_object_ptr * restrict obj, qn_json_array_ptr * restrict arr)
+QN_SDK void qn_http_json_wrt_prepare(qn_http_json_writer_ptr restrict writer, qn_json_object_ptr * restrict obj, qn_json_array_ptr * restrict arr)
 {
     writer->obj = obj;
     writer->arr = arr;
@@ -106,7 +106,7 @@ static size_t qn_http_json_wrt_parse_array(qn_http_json_writer_ptr w, char * res
     return 0;
 }
 
-QN_API size_t qn_http_json_wrt_callback(void * user_data, char * restrict buf, size_t buf_size)
+QN_SDK size_t qn_http_json_wrt_callback(void * user_data, char * restrict buf, size_t buf_size)
 {
     size_t ret;
     qn_http_json_writer_ptr w = (qn_http_json_writer_ptr) user_data;
@@ -144,7 +144,7 @@ typedef struct _QN_HTTP_FORM
     struct curl_httppost * last;
 } qn_http_form;
 
-QN_API qn_http_form_ptr qn_http_form_create(void)
+QN_SDK qn_http_form_ptr qn_http_form_create(void)
 {
     qn_http_form_ptr new_form = calloc(1, sizeof(qn_http_form));
     if (!new_form) {
@@ -154,7 +154,7 @@ QN_API qn_http_form_ptr qn_http_form_create(void)
     return new_form;
 }
 
-QN_API void qn_http_form_destroy(qn_http_form_ptr restrict form)
+QN_SDK void qn_http_form_destroy(qn_http_form_ptr restrict form)
 {
     if (form) {
         qn_http_form_reset(form);
@@ -162,14 +162,14 @@ QN_API void qn_http_form_destroy(qn_http_form_ptr restrict form)
     } // form
 }
 
-QN_API void qn_http_form_reset(qn_http_form_ptr restrict form)
+QN_SDK void qn_http_form_reset(qn_http_form_ptr restrict form)
 {
     curl_formfree(form->first);
     form->first = NULL;
     form->last = NULL;
 }
 
-QN_API qn_bool qn_http_form_add_string(qn_http_form_ptr restrict form, const char * restrict field, const char * restrict value, size_t size)
+QN_SDK qn_bool qn_http_form_add_string(qn_http_form_ptr restrict form, const char * restrict field, const char * restrict value, size_t size)
 {
     CURLFORMcode ret;
 
@@ -192,7 +192,7 @@ static inline const char * qn_http_get_fname_utf8(const char * restrict fname)
 #endif
 }
 
-QN_API qn_bool qn_http_form_add_file(qn_http_form_ptr restrict form, const char * restrict field, const char * restrict fname, const char * restrict fname_utf8, size_t fsize)
+QN_SDK qn_bool qn_http_form_add_file(qn_http_form_ptr restrict form, const char * restrict field, const char * restrict fname, const char * restrict fname_utf8, size_t fsize)
 {
     CURLFORMcode ret;
 
@@ -208,7 +208,7 @@ QN_API qn_bool qn_http_form_add_file(qn_http_form_ptr restrict form, const char 
     return qn_true;
 }
 
-QN_API qn_bool qn_http_form_add_file_reader(qn_http_form_ptr restrict form, const char * restrict field, const char * restrict fname, const char * restrict fname_utf8, size_t fsize, void * restrict req)
+QN_SDK qn_bool qn_http_form_add_file_reader(qn_http_form_ptr restrict form, const char * restrict field, const char * restrict fname, const char * restrict fname_utf8, size_t fsize, void * restrict req)
 {
     CURLFORMcode ret;
 
@@ -223,7 +223,7 @@ QN_API qn_bool qn_http_form_add_file_reader(qn_http_form_ptr restrict form, cons
     return qn_true;
 }
 
-QN_API qn_bool qn_http_form_add_buffer(qn_http_form_ptr restrict form, const char * restrict field, const char * restrict fname, const char * restrict buf, int buf_size)
+QN_SDK qn_bool qn_http_form_add_buffer(qn_http_form_ptr restrict form, const char * restrict field, const char * restrict fname, const char * restrict buf, int buf_size)
 {
     CURLFORMcode ret = curl_formadd(&form->first, &form->last, CURLFORM_COPYNAME, field, CURLFORM_BUFFER, fname, CURLFORM_BUFFERPTR, buf, CURLFORM_BUFFERLENGTH, buf_size, CURLFORM_END);
     if (ret != 0) {
@@ -253,7 +253,7 @@ typedef struct _QN_HTTP_REQUEST
     qn_http_body_reader_callback body_rdr_cb;
 } qn_http_request;
 
-QN_API qn_http_request_ptr qn_http_req_create(void)
+QN_SDK qn_http_request_ptr qn_http_req_create(void)
 {
     qn_http_request_ptr new_req = NULL;
 
@@ -271,7 +271,7 @@ QN_API qn_http_request_ptr qn_http_req_create(void)
     return new_req;
 }
 
-QN_API void qn_http_req_destroy(qn_http_request_ptr restrict req)
+QN_SDK void qn_http_req_destroy(qn_http_request_ptr restrict req)
 {
     if (req) {
         if (req->flags & QN_HTTP_REQ_USING_LOCAL_FORM) qn_http_form_destroy(req->form);
@@ -280,7 +280,7 @@ QN_API void qn_http_req_destroy(qn_http_request_ptr restrict req)
     } // if
 }
 
-QN_API void qn_http_req_reset(qn_http_request_ptr restrict req)
+QN_SDK void qn_http_req_reset(qn_http_request_ptr restrict req)
 {
     if (req->flags & QN_HTTP_REQ_USING_LOCAL_FORM) {
         qn_http_form_destroy(req->form);
@@ -298,12 +298,12 @@ QN_API void qn_http_req_reset(qn_http_request_ptr restrict req)
 
 // ----
 
-QN_API const char * qn_http_req_get_header(qn_http_request_ptr restrict req, const char * restrict hdr)
+QN_SDK const char * qn_http_req_get_header(qn_http_request_ptr restrict req, const char * restrict hdr)
 {
     return qn_http_hdr_get_value(req->hdr, hdr);
 }
 
-QN_API qn_bool qn_http_req_set_header_with_values(qn_http_request_ptr restrict req, const qn_string restrict hdr, const qn_string restrict val1, const qn_string restrict val2, ...)
+QN_SDK qn_bool qn_http_req_set_header_with_values(qn_http_request_ptr restrict req, const qn_string restrict hdr, const qn_string restrict val1, const qn_string restrict val2, ...)
 {
     va_list ap;
     qn_bool ret = qn_false;
@@ -319,31 +319,31 @@ QN_API qn_bool qn_http_req_set_header_with_values(qn_http_request_ptr restrict r
     return ret;
 }
 
-QN_API qn_bool qn_http_req_set_header(qn_http_request_ptr restrict req, const qn_string restrict hdr, const qn_string restrict val)
+QN_SDK qn_bool qn_http_req_set_header(qn_http_request_ptr restrict req, const qn_string restrict hdr, const qn_string restrict val)
 {
     return qn_http_hdr_set_text(req->hdr, qn_str_cstr(hdr), qn_str_cstr(val), qn_str_size(val));
 }
 
-QN_API void qn_http_req_unset_header(qn_http_request_ptr restrict req, const qn_string restrict hdr)
+QN_SDK void qn_http_req_unset_header(qn_http_request_ptr restrict req, const qn_string restrict hdr)
 {
     qn_http_hdr_unset(req->hdr, hdr);
 }
 
 // ----
 
-QN_API qn_http_form_ptr qn_http_req_prepare_form(qn_http_request_ptr restrict req)
+QN_SDK qn_http_form_ptr qn_http_req_prepare_form(qn_http_request_ptr restrict req)
 {
     if (req->form) qn_http_form_destroy(req->form);
     req->flags |= QN_HTTP_REQ_USING_LOCAL_FORM;
     return (req->form = qn_http_form_create());
 }
 
-QN_API qn_http_form_ptr qn_http_req_get_form(qn_http_request_ptr restrict req)
+QN_SDK qn_http_form_ptr qn_http_req_get_form(qn_http_request_ptr restrict req)
 {
     return req->form;
 }
 
-QN_API void qn_http_req_set_form(qn_http_request_ptr restrict req, qn_http_form_ptr restrict form)
+QN_SDK void qn_http_req_set_form(qn_http_request_ptr restrict req, qn_http_form_ptr restrict form)
 {
     req->flags &= ~QN_HTTP_REQ_USING_LOCAL_FORM;
     req->form = form;
@@ -351,25 +351,25 @@ QN_API void qn_http_req_set_form(qn_http_request_ptr restrict req, qn_http_form_
 
 // ----
 
-QN_API void qn_http_req_set_body_data(qn_http_request_ptr restrict req, char * restrict body_data, size_t body_size)
+QN_SDK void qn_http_req_set_body_data(qn_http_request_ptr restrict req, char * restrict body_data, size_t body_size)
 {
     req->body_data = body_data;
     req->body_size = body_size;
 }
 
-QN_API void qn_http_req_set_body_reader(qn_http_request_ptr restrict req, void * restrict body_rdr, qn_http_body_reader_callback body_rdr_cb, size_t body_size)
+QN_SDK void qn_http_req_set_body_reader(qn_http_request_ptr restrict req, void * restrict body_rdr, qn_http_body_reader_callback body_rdr_cb, size_t body_size)
 {
     req->body_rdr = body_rdr;
     req->body_rdr_cb = body_rdr_cb;
     req->body_size = body_size;
 }
 
-QN_API char * qn_http_req_body_data(qn_http_request_ptr restrict req)
+QN_SDK char * qn_http_req_body_data(qn_http_request_ptr restrict req)
 {
     return req->body_data;
 }
 
-QN_API size_t qn_http_req_body_size(qn_http_request_ptr restrict req)
+QN_SDK size_t qn_http_req_body_size(qn_http_request_ptr restrict req)
 {
     return req->body_size;
 }
@@ -397,7 +397,7 @@ typedef struct _QN_HTTP_RESPONSE
     qn_http_header_ptr hdr;
 } qn_http_response;
 
-QN_API qn_http_response_ptr qn_http_resp_create(void)
+QN_SDK qn_http_response_ptr qn_http_resp_create(void)
 {
     qn_http_response_ptr new_resp = NULL;
 
@@ -416,7 +416,7 @@ QN_API qn_http_response_ptr qn_http_resp_create(void)
     return new_resp;
 }
 
-QN_API void qn_http_resp_destroy(qn_http_response_ptr restrict resp)
+QN_SDK void qn_http_resp_destroy(qn_http_response_ptr restrict resp)
 {
     if (resp) {
         qn_str_destroy(resp->http_ver);
@@ -426,7 +426,7 @@ QN_API void qn_http_resp_destroy(qn_http_response_ptr restrict resp)
     } // if
 }
 
-QN_API void qn_http_resp_reset(qn_http_response_ptr restrict resp)
+QN_SDK void qn_http_resp_reset(qn_http_response_ptr restrict resp)
 {
     qn_str_destroy(resp->http_ver);
     resp->http_ver = NULL;
@@ -441,37 +441,37 @@ QN_API void qn_http_resp_reset(qn_http_response_ptr restrict resp)
     qn_http_hdr_reset(resp->hdr);
 }
 
-QN_API int qn_http_resp_get_code(qn_http_response_ptr restrict resp)
+QN_SDK int qn_http_resp_get_code(qn_http_response_ptr restrict resp)
 {
     return resp->http_code;
 }
 
-QN_API int qn_http_resp_get_writer_retcode(qn_http_response_ptr restrict resp)
+QN_SDK int qn_http_resp_get_writer_retcode(qn_http_response_ptr restrict resp)
 {
     return resp->body_wrt_code;
 }
 
-QN_API qn_http_hdr_iterator_ptr qn_http_resp_get_header_iterator(qn_http_response_ptr restrict resp)
+QN_SDK qn_http_hdr_iterator_ptr qn_http_resp_get_header_iterator(qn_http_response_ptr restrict resp)
 {
     return qn_http_hdr_itr_create(resp->hdr);
 }
 
-QN_API const char * qn_http_resp_get_header(qn_http_response_ptr restrict resp, const char * restrict hdr)
+QN_SDK const char * qn_http_resp_get_header(qn_http_response_ptr restrict resp, const char * restrict hdr)
 {
     return qn_http_hdr_get_value(resp->hdr, hdr);
 }
 
-QN_API qn_bool qn_http_resp_set_header(qn_http_response_ptr restrict resp, const char * restrict hdr, const char * restrict val, int val_size)
+QN_SDK qn_bool qn_http_resp_set_header(qn_http_response_ptr restrict resp, const char * restrict hdr, const char * restrict val, int val_size)
 {
     return qn_http_hdr_set_text(resp->hdr, hdr, val, val_size);
 }
 
-QN_API void qn_http_resp_unset_header(qn_http_response_ptr restrict resp, const qn_string restrict hdr)
+QN_SDK void qn_http_resp_unset_header(qn_http_response_ptr restrict resp, const qn_string restrict hdr)
 {
     qn_http_hdr_unset(resp->hdr, hdr);
 }
 
-QN_API void qn_http_resp_set_data_writer(qn_http_response_ptr restrict resp, void * restrict body_wrt, qn_http_data_writer_callback body_wrt_cb)
+QN_SDK void qn_http_resp_set_data_writer(qn_http_response_ptr restrict resp, void * restrict body_wrt, qn_http_data_writer_callback body_wrt_cb)
 {
     resp->body_wrt = body_wrt;
     resp->body_wrt_cb = body_wrt_cb;
@@ -578,7 +578,7 @@ typedef struct _QN_HTTP_CONNECTION
     CURL * curl;
 } qn_http_connection;
 
-QN_API qn_http_connection_ptr qn_http_conn_create(void)
+QN_SDK qn_http_connection_ptr qn_http_conn_create(void)
 {
     qn_http_connection_ptr new_conn = NULL;
 
@@ -597,7 +597,7 @@ QN_API qn_http_connection_ptr qn_http_conn_create(void)
     return new_conn;
 }
 
-QN_API void qn_http_conn_destroy(qn_http_connection_ptr restrict conn)
+QN_SDK void qn_http_conn_destroy(qn_http_connection_ptr restrict conn)
 {
     if (conn) {
         curl_easy_cleanup(conn->curl);
@@ -659,7 +659,7 @@ static qn_bool qn_http_conn_do_request(qn_http_connection_ptr restrict conn, qn_
     return qn_true;
 }
 
-QN_API qn_bool qn_http_conn_get(qn_http_connection_ptr restrict conn, const qn_string restrict url, qn_http_request_ptr restrict req, qn_http_response_ptr restrict resp)
+QN_SDK qn_bool qn_http_conn_get(qn_http_connection_ptr restrict conn, const qn_string restrict url, qn_http_request_ptr restrict req, qn_http_response_ptr restrict resp)
 {
     curl_easy_reset(conn->curl);
     curl_easy_setopt(conn->curl, CURLOPT_POST, 0);
@@ -667,7 +667,7 @@ QN_API qn_bool qn_http_conn_get(qn_http_connection_ptr restrict conn, const qn_s
     return qn_http_conn_do_request(conn, req, resp);
 }
 
-QN_API qn_bool qn_http_conn_post(qn_http_connection_ptr restrict conn, const qn_string restrict url, qn_http_request_ptr restrict req, qn_http_response_ptr restrict resp)
+QN_SDK qn_bool qn_http_conn_post(qn_http_connection_ptr restrict conn, const qn_string restrict url, qn_http_request_ptr restrict req, qn_http_response_ptr restrict resp)
 {
     curl_easy_reset(conn->curl);
 

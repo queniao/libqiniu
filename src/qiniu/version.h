@@ -16,8 +16,8 @@ typedef struct _QN_VERSION
     const char * release;
 } qn_version, *qn_version_ptr;
 
-QN_API extern const char * qn_ver_get_full_string(void);
-QN_API extern void qn_ver_get_numbers(qn_version_ptr restrict ver);
+QN_SDK extern const char * qn_ver_get_full_string(void);
+QN_SDK extern void qn_ver_get_numbers(qn_version_ptr restrict ver);
 
 #ifdef __cplusplus
 }

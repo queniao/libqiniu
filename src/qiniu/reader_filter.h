@@ -14,12 +14,12 @@ extern "C"
 struct _QN_FLT_ETAG;
 typedef struct _QN_FLT_ETAG * qn_flt_etag_ptr;
 
-QN_API extern qn_flt_etag_ptr qn_flt_etag_create(void);
-QN_API extern void qn_flt_etag_destroy(qn_flt_etag_ptr restrict etag);
-QN_API extern qn_bool qn_flt_etag_reset(qn_flt_etag_ptr restrict etag);
+QN_SDK extern qn_flt_etag_ptr qn_flt_etag_create(void);
+QN_SDK extern void qn_flt_etag_destroy(qn_flt_etag_ptr restrict etag);
+QN_SDK extern qn_bool qn_flt_etag_reset(qn_flt_etag_ptr restrict etag);
 
-QN_API extern qn_string qn_flt_etag_result(qn_flt_etag_ptr restrict etag);
-QN_API extern ssize_t qn_flt_etag_callback(void * restrict user_data, char ** restrict buf, size_t * restrict size);
+QN_SDK extern qn_string qn_flt_etag_result(qn_flt_etag_ptr restrict etag);
+QN_SDK extern ssize_t qn_flt_etag_callback(void * restrict user_data, char ** restrict buf, size_t * restrict size);
 
 #ifdef __cplusplus
 }

@@ -14,7 +14,7 @@ typedef struct _QN_FL_INFO
     qn_fsize fsize;
 } qn_file_info_st;
 
-QN_API void qn_fl_info_destroy(qn_fl_info_ptr restrict fi)
+QN_SDK void qn_fl_info_destroy(qn_fl_info_ptr restrict fi)
 {
     if (fi) {
         qn_str_destroy(fi->fname);
@@ -22,12 +22,12 @@ QN_API void qn_fl_info_destroy(qn_fl_info_ptr restrict fi)
     } // fi
 }
 
-QN_API qn_fsize qn_fl_info_fsize(qn_fl_info_ptr restrict fi)
+QN_SDK qn_fsize qn_fl_info_fsize(qn_fl_info_ptr restrict fi)
 {
     return fi->fsize;
 }
 
-QN_API qn_string qn_fl_info_fname(qn_fl_info_ptr restrict fi)
+QN_SDK qn_string qn_fl_info_fname(qn_fl_info_ptr restrict fi)
 {
     return fi->fname;
 }
@@ -133,7 +133,7 @@ static qn_io_reader_st qn_fl_rdr_vtable = {
     &qn_fl_size_fn
 };
 
-QN_API qn_file_ptr qn_fl_open(const char * restrict fname, qn_fl_open_extra_ptr restrict extra)
+QN_SDK qn_file_ptr qn_fl_open(const char * restrict fname, qn_fl_open_extra_ptr restrict extra)
 {
     qn_file_ptr new_file = calloc(1, sizeof(qn_file_st));
     if (!new_file) {
@@ -158,7 +158,7 @@ QN_API qn_file_ptr qn_fl_open(const char * restrict fname, qn_fl_open_extra_ptr 
     return new_file;
 }
 
-QN_API qn_file_ptr qn_fl_duplicate(qn_file_ptr restrict fl)
+QN_SDK qn_file_ptr qn_fl_duplicate(qn_file_ptr restrict fl)
 {
     qn_file_ptr new_file = calloc(1, sizeof(qn_file_st));
     if (!new_file) {
@@ -183,7 +183,7 @@ QN_API qn_file_ptr qn_fl_duplicate(qn_file_ptr restrict fl)
     return new_file;
 }
 
-QN_API void qn_fl_close(qn_file_ptr restrict fl)
+QN_SDK void qn_fl_close(qn_file_ptr restrict fl)
 {
     if (fl) {
         qn_fl_info_destroy(fl->fi);
@@ -192,29 +192,29 @@ QN_API void qn_fl_close(qn_file_ptr restrict fl)
     } // if
 }
 
-QN_API qn_io_reader_itf qn_fl_to_io_reader(qn_file_ptr restrict fl)
+QN_SDK qn_io_reader_itf qn_fl_to_io_reader(qn_file_ptr restrict fl)
 {
     return &fl->rdr_vtbl;
 }
 
-QN_API qn_string qn_fl_fname(qn_file_ptr restrict fl)
+QN_SDK qn_string qn_fl_fname(qn_file_ptr restrict fl)
 {
     return fl->fi->fname;
 }
 
-QN_API qn_fsize qn_fl_fsize(qn_file_ptr restrict fl)
+QN_SDK qn_fsize qn_fl_fsize(qn_file_ptr restrict fl)
 {
     return fl->fi->fsize;
 }
 
-QN_API ssize_t qn_fl_peek(qn_file_ptr restrict fl, char * restrict buf, size_t buf_size)
+QN_SDK ssize_t qn_fl_peek(qn_file_ptr restrict fl, char * restrict buf, size_t buf_size)
 {
     ssize_t ret = qn_fl_read(fl, buf, buf_size);
     if (ret >= 0 && !qn_fl_advance(fl, -ret)) return QN_IO_RDR_READING_FAILED;
     return ret;
 }
 
-QN_API ssize_t qn_fl_read(qn_file_ptr restrict fl, char * restrict buf, size_t buf_size)
+QN_SDK ssize_t qn_fl_read(qn_file_ptr restrict fl, char * restrict buf, size_t buf_size)
 {
     ssize_t ret = read(fl->fd, buf, buf_size);
     if (ret < 0) {
@@ -224,7 +224,7 @@ QN_API ssize_t qn_fl_read(qn_file_ptr restrict fl, char * restrict buf, size_t b
     return ret;
 }
 
-QN_API qn_bool qn_fl_seek(qn_file_ptr restrict fl, qn_fsize offset)
+QN_SDK qn_bool qn_fl_seek(qn_file_ptr restrict fl, qn_fsize offset)
 {
     if (lseek(fl->fd, offset, SEEK_SET) < 0) {
         qn_err_fl_set_seeking_file_failed();
@@ -233,7 +233,7 @@ QN_API qn_bool qn_fl_seek(qn_file_ptr restrict fl, qn_fsize offset)
     return qn_true;
 }
 
-QN_API qn_bool qn_fl_advance(qn_file_ptr restrict fl, size_t delta)
+QN_SDK qn_bool qn_fl_advance(qn_file_ptr restrict fl, size_t delta)
 {
     if (lseek(fl->fd, delta, SEEK_CUR) < 0) {
         qn_err_fl_set_seeking_file_failed();
@@ -242,14 +242,14 @@ QN_API qn_bool qn_fl_advance(qn_file_ptr restrict fl, size_t delta)
     return qn_true;
 }
 
-QN_API qn_fl_section_ptr qn_fl_section(qn_file_ptr restrict fl, qn_fsize offset, size_t sec_size)
+QN_SDK qn_fl_section_ptr qn_fl_section(qn_file_ptr restrict fl, qn_fsize offset, size_t sec_size)
 {
     qn_fl_section_ptr new_sec = qn_fl_sec_create(fl, offset, sec_size);
     if (!new_sec) return NULL;
     return new_sec;
 }
 
-QN_API size_t qn_fl_reader_callback(void * restrict user_data, char * restrict buf, size_t buf_size)
+QN_SDK size_t qn_fl_reader_callback(void * restrict user_data, char * restrict buf, size_t buf_size)
 {
     qn_file_ptr fl = (qn_file_ptr) user_data;
     return qn_fl_read(fl, buf, buf_size);
@@ -257,7 +257,7 @@ QN_API size_t qn_fl_reader_callback(void * restrict user_data, char * restrict b
 
 // ---- Definition of file info depends on operating system ----
 
-QN_API qn_fl_info_ptr qn_fl_info_stat(const char * restrict fname)
+QN_SDK qn_fl_info_ptr qn_fl_info_stat(const char * restrict fname)
 {
     struct stat st;
 
@@ -352,7 +352,7 @@ static qn_io_reader_st qn_fl_sec_rdr_vtable = {
     &qn_fl_sec_section_fn
 };
 
-QN_API qn_fl_section_ptr qn_fl_sec_create(qn_file_ptr restrict fl, qn_fsize offset, size_t sec_size)
+QN_SDK qn_fl_section_ptr qn_fl_sec_create(qn_file_ptr restrict fl, qn_fsize offset, size_t sec_size)
 {
     qn_fl_section_ptr new_section = calloc(1, sizeof(qn_fl_section_st));
     if (!new_section) {
@@ -381,12 +381,12 @@ QN_API qn_fl_section_ptr qn_fl_sec_create(qn_file_ptr restrict fl, qn_fsize offs
     return new_section;
 }
 
-QN_API qn_fl_section_ptr qn_fl_sec_duplicate(qn_fl_section_ptr restrict fs)
+QN_SDK qn_fl_section_ptr qn_fl_sec_duplicate(qn_fl_section_ptr restrict fs)
 {
     return qn_fl_sec_create(fs->file, fs->offset, fs->sec_size);
 }
 
-QN_API qn_fl_section_ptr qn_fl_sec_section(qn_fl_section_ptr restrict fs, qn_fsize offset, size_t sec_size)
+QN_SDK qn_fl_section_ptr qn_fl_sec_section(qn_fl_section_ptr restrict fs, qn_fsize offset, size_t sec_size)
 {
     if (offset < fs->offset || offset + sec_size > fs->offset + fs->sec_size) return NULL;
     qn_fl_section_ptr new_section = qn_fl_sec_create(fs->file, offset, sec_size);
@@ -394,7 +394,7 @@ QN_API qn_fl_section_ptr qn_fl_sec_section(qn_fl_section_ptr restrict fs, qn_fsi
     return new_section;
 }
 
-QN_API void qn_fl_sec_destroy(qn_fl_section_ptr restrict fs)
+QN_SDK void qn_fl_sec_destroy(qn_fl_section_ptr restrict fs)
 {
     if (fs) {
 #if !defined(QN_OS_FILE_SHARED_FOR_SECTION)
@@ -404,7 +404,7 @@ QN_API void qn_fl_sec_destroy(qn_fl_section_ptr restrict fs)
     } // if
 }
 
-QN_API qn_bool qn_fl_sec_reset(qn_fl_section_ptr restrict fs)
+QN_SDK qn_bool qn_fl_sec_reset(qn_fl_section_ptr restrict fs)
 {
 #if !defined(QN_OS_FILE_SHARED_FOR_SECTION)
     if (! qn_fl_seek(fs->file, fs->offset)) return qn_false;
@@ -414,12 +414,12 @@ QN_API qn_bool qn_fl_sec_reset(qn_fl_section_ptr restrict fs)
     return qn_true;
 }
 
-QN_API qn_io_reader_itf qn_fl_sec_to_io_reader(qn_fl_section_ptr restrict fs)
+QN_SDK qn_io_reader_itf qn_fl_sec_to_io_reader(qn_fl_section_ptr restrict fs)
 {
     return &fs->rdr_vtbl;
 }
 
-QN_API ssize_t qn_fl_sec_peek(qn_fl_section_ptr restrict fs, char * restrict buf, size_t buf_size)
+QN_SDK ssize_t qn_fl_sec_peek(qn_fl_section_ptr restrict fs, char * restrict buf, size_t buf_size)
 {
     ssize_t ret;
     size_t read_size;
@@ -444,7 +444,7 @@ QN_API ssize_t qn_fl_sec_peek(qn_fl_section_ptr restrict fs, char * restrict buf
     return ret;
 }
 
-QN_API ssize_t qn_fl_sec_read(qn_fl_section_ptr restrict fs, char * restrict buf, size_t buf_size)
+QN_SDK ssize_t qn_fl_sec_read(qn_fl_section_ptr restrict fs, char * restrict buf, size_t buf_size)
 {
     ssize_t ret;
     size_t read_size;
@@ -468,7 +468,7 @@ QN_API ssize_t qn_fl_sec_read(qn_fl_section_ptr restrict fs, char * restrict buf
     return ret;
 }
 
-QN_API qn_bool qn_fl_sec_seek(qn_fl_section_ptr restrict fs, qn_fsize offset)
+QN_SDK qn_bool qn_fl_sec_seek(qn_fl_section_ptr restrict fs, qn_fsize offset)
 {
     if (offset < fs->offset) {
 #if !defined(QN_OS_FILE_SHARED_FOR_SECTION)
@@ -489,7 +489,7 @@ QN_API qn_bool qn_fl_sec_seek(qn_fl_section_ptr restrict fs, qn_fsize offset)
     return qn_true;
 }
 
-QN_API qn_bool qn_fl_sec_advance(qn_fl_section_ptr restrict fs, size_t delta)
+QN_SDK qn_bool qn_fl_sec_advance(qn_fl_section_ptr restrict fs, size_t delta)
 {
     if (delta <= fs->rem_size) {
 #if !defined(QN_OS_FILE_SHARED_FOR_SECTION)
@@ -505,7 +505,7 @@ QN_API qn_bool qn_fl_sec_advance(qn_fl_section_ptr restrict fs, size_t delta)
     return qn_true;
 }
 
-QN_API size_t qn_fl_sec_reader_callback(void * restrict user_data, char * restrict buf, size_t buf_size)
+QN_SDK size_t qn_fl_sec_reader_callback(void * restrict user_data, char * restrict buf, size_t buf_size)
 {
     size_t ret;
     qn_fl_section_ptr fs = (qn_fl_section_ptr) user_data;

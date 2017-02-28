@@ -15,7 +15,7 @@ typedef struct _QN_HTTP_QUERY
     qn_etable_ptr etbl;
 } qn_http_query;
 
-QN_API qn_http_query_ptr qn_http_qry_create(void)
+QN_SDK qn_http_query_ptr qn_http_qry_create(void)
 {
     qn_http_query_ptr new_qry = calloc(1, sizeof(qn_http_query));
     if (!new_qry) {
@@ -32,7 +32,7 @@ QN_API qn_http_query_ptr qn_http_qry_create(void)
     return new_qry;
 }
 
-QN_API void qn_http_qry_destroy(qn_http_query_ptr restrict qry)
+QN_SDK void qn_http_qry_destroy(qn_http_query_ptr restrict qry)
 {
     if (qry) {
         qn_etbl_destroy(qry->etbl);
@@ -40,17 +40,17 @@ QN_API void qn_http_qry_destroy(qn_http_query_ptr restrict qry)
     } // if
 }
 
-QN_API void qn_http_qry_reset(qn_http_query_ptr restrict qry)
+QN_SDK void qn_http_qry_reset(qn_http_query_ptr restrict qry)
 {
     qn_etbl_reset(qry->etbl); 
 }
 
-QN_API int qn_http_qry_count(qn_http_query_ptr restrict qry)
+QN_SDK int qn_http_qry_count(qn_http_query_ptr restrict qry)
 {
     return qn_etbl_count(qry->etbl);
 }
 
-QN_API qn_bool qn_http_qry_set_raw(qn_http_query_ptr restrict qry, const char * restrict key, size_t key_size, const char * restrict val, size_t val_size)
+QN_SDK qn_bool qn_http_qry_set_raw(qn_http_query_ptr restrict qry, const char * restrict key, size_t key_size, const char * restrict val, size_t val_size)
 {
     qn_bool ret;
     qn_string encoded_val = qn_cs_percent_encode(val, val_size);
@@ -59,12 +59,12 @@ QN_API qn_bool qn_http_qry_set_raw(qn_http_query_ptr restrict qry, const char * 
     return ret;
 }
 
-QN_API qn_bool qn_http_qry_set_integer(qn_http_query_ptr restrict qry, const char * restrict key, int value)
+QN_SDK qn_bool qn_http_qry_set_integer(qn_http_query_ptr restrict qry, const char * restrict key, int value)
 {
     return qn_etbl_set_integer(qry->etbl, key, value);
 }
 
-QN_API qn_string qn_http_qry_to_string(qn_http_query_ptr restrict qry)
+QN_SDK qn_string qn_http_qry_to_string(qn_http_query_ptr restrict qry)
 {
     return qn_str_join_list("&", qn_etbl_entries(qry->etbl), qn_etbl_count(qry->etbl));
 }

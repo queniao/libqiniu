@@ -9,7 +9,7 @@ extern "C"
 {
 #endif
 
-QN_API extern qn_string qn_misc_encode_uri(const char * restrict bucket, const char * restrict key);
+QN_SDK extern qn_string qn_misc_encode_uri(const char * restrict bucket, const char * restrict key);
 
 #ifdef __cplusplus
 }

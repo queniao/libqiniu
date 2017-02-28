@@ -19,7 +19,7 @@ extern "C"
 {
 #endif
 
-QN_API extern qn_string qn_cdn_make_dnurl_with_deadline(const char * restrict key, const char * restrict url, qn_uint32 deadline);
+QN_SDK extern qn_string qn_cdn_make_dnurl_with_deadline(const char * restrict key, const char * restrict url, qn_uint32 deadline);
 
 #ifdef __cplusplus
 }
