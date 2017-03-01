@@ -1,0 +1,33 @@
+.TH QN_STOR_CREATE 3 "MARCH 2017" "Qiniu Cloud" "Qiniu Cloud User Manuals"
+.SH NAME
+
+qn_stor_create, qn_stor_destroy \- Create or destroy a storage object
+
+.SH SYNOPSIS
+.nf
+.R #include <qiniu/storage.h>
+.sp
+.RI "qn_storage_ptr qn_stor_create(void);"
+.RI "void qn_stor_destroy(qn_storage_ptr restrict " stor ");"
+.fi
+
+.SH DESCRIPTION
+.BR qn_stor_create ()
+creates a new storage object that other storage functions use to connect to the storage server and manage all connections when they are keeping alive.
+.BR qn_stor_destroy ()
+does some clean-up work and free the memory occupied by the storage object. It's safe to pass a NULL pointer to it.
+
+.SH RETURN VALUE
+If succeeds,
+.BR qn_stor_create ()
+returns a non NULL pointer to the new object. Otherwise a NULL pointer will be returned as some kind of error happened.
+
+.SH ERROR CODE
+
+QN_ERR_OUT_OF_MEMORY        There is not enough memory to create the new object.
+
+.SH AUTHORS
+LIANG Tao, a consultant works in Qiniu Cloud (QQ 510857, or emails to liangtao@qiniu.com or amethyst.black@gmail.com).
+
+.SH SEE ALSO
+.BR qn_stor_get_object_body "(3), " qn_stor_get_array_body "(3), " qn_stor_resp_get_header_iterator "(3), " qn_stor_up_api_upload "(3)"
