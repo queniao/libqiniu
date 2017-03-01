@@ -1,0 +1,28 @@
+.TH QN_STOR_GET_OBJECT_BODY 3 "MARCH 2017" "Qiniu Cloud" "Qiniu Cloud User Manuals"
+.SH NAME
+
+qn_stor_get_object_body, qn_stor_get_array_object \- Get the JSON result object or array
+
+.SH SYNOPSIS
+.nf
+.R #include <qiniu/storage.h>
+.sp
+.RI "qn_json_object_ptr qn_stor_get_object_body(const qn_storage_ptr restrict " stor ");"
+.RI "qn_json_array_ptr qn_stor_get_array_body(const qn_storage_ptr restrict " stor ");"
+.fi
+
+.SH DESCRIPTION
+All Qiniu Storage APIs return a result string formatted as a JSON object or array. Use these two functions to get parsed object or array from the underlying HTTP response. The caller must not call
+.BR qn_json_destroy_object ()
+and
+.BR qn_json_destroy_array ()
+against the returned values.
+
+.SH RETURN VALUE
+A non-NULL pointer to the result object or array, otherwise NULL.
+
+.SH AUTHORS
+LIANG Tao, a consultant works in Qiniu Cloud (QQ 510857, or emails to liangtao@qiniu.com or amethyst.black@gmail.com).
+
+.SH SEE ALSO
+.BR qn_stor_create "(3), " qn_stor_up_api_upload "(3), " qn_stor_mn_api_stat "(3)"
