@@ -1,6 +1,8 @@
 #ifndef __QN_OS_TYPES_CONV_H__
 #define __QN_OS_TYPES_CONV_H__
 
+#include "qiniu/base/string.h"
+
 #include "qiniu/macros.h"
 
 #ifdef __cplusplus
@@ -23,8 +25,6 @@ extern "C"
 #define qn_type_string_to_foffset qn_type_string_to_long
 
 #endif
-
-#include "qiniu/base/string.h"
 
 QN_SDK extern qn_string qn_type_long_long_to_string(long long val);
 QN_SDK extern qn_bool qn_type_string_to_long_long(const char * restrict str, size_t str_len, long long * restrict val);

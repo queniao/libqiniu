@@ -1,4 +1,6 @@
-#include "qiniu/os/types.h"
+#include <stdio.h>
+
+#include "qiniu/os/types_conv.h"
 
 #ifdef __cplusplus
 extern "C"
@@ -12,7 +14,7 @@ QN_SDK qn_string qn_type_long_long_to_string(long long val)
 
 QN_SDK qn_bool qn_type_string_to_long_long(const char * restrict str, size_t str_len, long long * restrict val)
 {
-#if defined(__ISOC99_SOURCE || _BSD_SOURCE || _SVID_SOURCE)
+#if defined(__ISOC99_SOURCE) || defined(_BSD_SOURCE) || defined(_SVID_SOURCE)
     if (str_len == 0) {
         *val = atoll(str);
         return qn_true;
