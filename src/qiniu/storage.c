@@ -4,6 +4,7 @@
 #include "qiniu/base/errors.h"
 #include "qiniu/base/json_parser.h"
 #include "qiniu/base/json_formatter.h"
+#include "qiniu/os/types_conv.h"
 #include "qiniu/version.h"
 #include "qiniu/http.h"
 #include "qiniu/http_query.h"
@@ -2413,12 +2414,12 @@ QN_SDK qn_string qn_stor_ru_to_string(qn_stor_resumable_upload_ptr restrict ru)
     qn_bool ret;
     qn_string fsize_str;
 
-    fsize_str = qn_cs_sprintf("%ld", ru->fsize);
+    fsize_str = qn_type_fsize_to_string(ru->fsize);
     ret = qn_json_set_text(ru->progress, "fsize", qn_str_cstr(fsize_str), qn_str_size(fsize_str));
     qn_str_destroy(fsize_str);
     if (! ret) return NULL;
 
-    fsize_str = qn_cs_sprintf("%ld", ru->uploaded_fsize);
+    fsize_str = qn_type_fsize_to_string(ru->uploaded_fsize);
     ret = qn_json_set_text(ru->progress, "uploaded_fsize", qn_str_cstr(fsize_str), qn_str_size(fsize_str));
     qn_str_destroy(fsize_str);
     if (! ret) return NULL;
@@ -2844,7 +2845,7 @@ QN_SDK qn_json_object_ptr qn_stor_ru_api_mkfile(qn_storage_ptr restrict stor, co
 
     // ---- Prepare upload URL.
     // TODO: Use the correct directive depends on the type of fsize on different platforms.
-    tmp_str = qn_cs_sprintf("%ld", fsize);
+    tmp_str = qn_type_fsize_to_string(fsize);
     if (! tmp_str) return NULL;
     url = qn_cs_sprintf("%.*s/mkfile/%.*s", qn_str_size(host), qn_str_cstr(host), qn_str_size(tmp_str), qn_str_cstr(tmp_str));
     qn_str_destroy(tmp_str);
