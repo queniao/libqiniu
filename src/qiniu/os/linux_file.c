@@ -1,3 +1,8 @@
+#include <sys/stat.h>
+#include <fcntl.h>
+#include <unistd.h>
+#include <errno.h>
+
 #include "qiniu/base/errors.h"
 #include "qiniu/os/file.h"
 
@@ -50,15 +55,20 @@ static qn_fl_info_ptr qn_fl_info_duplicate(qn_fl_info_ptr restrict fi)
     return new_fi;
 }
 
-#if defined(_MSC_VER)
+// ---- File Functions (abbreviation: fl) ----
 
+static inline qn_foffset qn_fl_lseek_wrapper(int fd, qn_foffset offset, int whence)
+{
+#if defined(QN_CFG_LARGE_FILE_SUPPORT)
+    return lseek64(fd, offset, whence);
 #else
-
-#include <sys/stat.h>
-#include <fcntl.h>
-#include <unistd.h>
-
-// ---- Definition of file depends on operating system ----
+    if (sizeof(offset) == 8 && 0xFFFFFFFFL < offset) {
+        errno = EINVAL;
+        return -1;
+    } // if
+    return lseek(fd, (off_t)(offset & 0xFFFFFFFFL), whence);
+#endif
+}
 
 struct _QN_FILE
 {
@@ -226,7 +236,7 @@ QN_SDK ssize_t qn_fl_read(qn_file_ptr restrict fl, char * restrict buf, size_t b
 
 QN_SDK qn_bool qn_fl_seek(qn_file_ptr restrict fl, qn_foffset offset)
 {
-    if (lseek(fl->fd, offset, SEEK_SET) < 0) {
+    if (qn_fl_lseek_wrapper(fl->fd, offset, SEEK_SET) < 0) {
         qn_err_fl_set_seeking_file_failed();
         return qn_false;
     } // if
@@ -235,7 +245,7 @@ QN_SDK qn_bool qn_fl_seek(qn_file_ptr restrict fl, qn_foffset offset)
 
 QN_SDK qn_bool qn_fl_advance(qn_file_ptr restrict fl, size_t delta)
 {
-    if (lseek(fl->fd, delta, SEEK_CUR) < 0) {
+    if (qn_fl_lseek_wrapper(fl->fd, delta, SEEK_CUR) < 0) {
         qn_err_fl_set_seeking_file_failed();
         return qn_false;
     } // if
@@ -512,8 +522,6 @@ QN_SDK size_t qn_fl_sec_reader_callback(void * restrict user_data, char * restri
     if ((ret = qn_fl_sec_read(fs, buf, buf_size)) <= 0) return 0;
     return ret;
 }
-
-#endif
 
 #ifdef __cplusplus
 }
