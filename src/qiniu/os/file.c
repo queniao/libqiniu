@@ -87,7 +87,7 @@ static ssize_t qn_fl_read_fn(qn_io_reader_itf restrict itf, char * restrict buf,
     return qn_fl_read(qn_fl_from_io_reader(itf), buf, buf_size);
 }
 
-static qn_bool qn_fl_seek_fn(qn_io_reader_itf restrict itf, qn_fsize offset)
+static qn_bool qn_fl_seek_fn(qn_io_reader_itf restrict itf, qn_foffset offset)
 {
     return qn_fl_seek(qn_fl_from_io_reader(itf), offset);
 }
@@ -114,7 +114,7 @@ static qn_io_reader_itf qn_fl_duplicate_fn(qn_io_reader_itf restrict itf)
     return qn_fl_to_io_reader(new_file);
 }
 
-static qn_io_reader_itf qn_fl_section_fn(qn_io_reader_itf restrict itf, qn_fsize offset, size_t sec_size)
+static qn_io_reader_itf qn_fl_section_fn(qn_io_reader_itf restrict itf, qn_foffset offset, size_t sec_size)
 {
     qn_fl_section_ptr new_file = qn_fl_section(qn_fl_from_io_reader(itf), offset, sec_size);
     if (!new_file) return NULL;
@@ -224,7 +224,7 @@ QN_SDK ssize_t qn_fl_read(qn_file_ptr restrict fl, char * restrict buf, size_t b
     return ret;
 }
 
-QN_SDK qn_bool qn_fl_seek(qn_file_ptr restrict fl, qn_fsize offset)
+QN_SDK qn_bool qn_fl_seek(qn_file_ptr restrict fl, qn_foffset offset)
 {
     if (lseek(fl->fd, offset, SEEK_SET) < 0) {
         qn_err_fl_set_seeking_file_failed();
@@ -242,7 +242,7 @@ QN_SDK qn_bool qn_fl_advance(qn_file_ptr restrict fl, size_t delta)
     return qn_true;
 }
 
-QN_SDK qn_fl_section_ptr qn_fl_section(qn_file_ptr restrict fl, qn_fsize offset, size_t sec_size)
+QN_SDK qn_fl_section_ptr qn_fl_section(qn_file_ptr restrict fl, qn_foffset offset, size_t sec_size)
 {
     qn_fl_section_ptr new_sec = qn_fl_sec_create(fl, offset, sec_size);
     if (!new_sec) return NULL;
@@ -293,7 +293,7 @@ typedef struct _QN_FL_SECTION
 {
     qn_io_reader_ptr rdr_vtbl;
     qn_file_ptr file;
-    qn_fsize offset;
+    qn_foffset offset;
     size_t sec_size;
     size_t rem_size;
 } qn_fl_section_st;
@@ -318,7 +318,7 @@ static ssize_t qn_fl_sec_read_fn(qn_io_reader_itf restrict itf, char * restrict 
     return qn_fl_sec_read(qn_fl_sec_from_io_reader(itf), buf, buf_size);
 }
 
-static qn_bool qn_fl_sec_seek_fn(qn_io_reader_itf restrict itf, qn_fsize offset)
+static qn_bool qn_fl_sec_seek_fn(qn_io_reader_itf restrict itf, qn_foffset offset)
 {
     return qn_fl_sec_seek(qn_fl_sec_from_io_reader(itf), offset);
 }
@@ -335,7 +335,7 @@ static qn_io_reader_itf qn_fl_sec_duplicate_fn(qn_io_reader_itf restrict itf)
     return qn_fl_sec_to_io_reader(new_section);
 }
 
-static qn_io_reader_itf qn_fl_sec_section_fn(qn_io_reader_itf restrict itf, qn_fsize offset, size_t sec_size)
+static qn_io_reader_itf qn_fl_sec_section_fn(qn_io_reader_itf restrict itf, qn_foffset offset, size_t sec_size)
 {
     qn_fl_section_ptr new_section = qn_fl_sec_section(qn_fl_sec_from_io_reader(itf), offset, sec_size);
     if (!new_section) return NULL;
@@ -352,7 +352,7 @@ static qn_io_reader_st qn_fl_sec_rdr_vtable = {
     &qn_fl_sec_section_fn
 };
 
-QN_SDK qn_fl_section_ptr qn_fl_sec_create(qn_file_ptr restrict fl, qn_fsize offset, size_t sec_size)
+QN_SDK qn_fl_section_ptr qn_fl_sec_create(qn_file_ptr restrict fl, qn_foffset offset, size_t sec_size)
 {
     qn_fl_section_ptr new_section = calloc(1, sizeof(qn_fl_section_st));
     if (!new_section) {
@@ -386,7 +386,7 @@ QN_SDK qn_fl_section_ptr qn_fl_sec_duplicate(qn_fl_section_ptr restrict fs)
     return qn_fl_sec_create(fs->file, fs->offset, fs->sec_size);
 }
 
-QN_SDK qn_fl_section_ptr qn_fl_sec_section(qn_fl_section_ptr restrict fs, qn_fsize offset, size_t sec_size)
+QN_SDK qn_fl_section_ptr qn_fl_sec_section(qn_fl_section_ptr restrict fs, qn_foffset offset, size_t sec_size)
 {
     if (offset < fs->offset || offset + sec_size > fs->offset + fs->sec_size) return NULL;
     qn_fl_section_ptr new_section = qn_fl_sec_create(fs->file, offset, sec_size);
@@ -468,7 +468,7 @@ QN_SDK ssize_t qn_fl_sec_read(qn_fl_section_ptr restrict fs, char * restrict buf
     return ret;
 }
 
-QN_SDK qn_bool qn_fl_sec_seek(qn_fl_section_ptr restrict fs, qn_fsize offset)
+QN_SDK qn_bool qn_fl_sec_seek(qn_fl_section_ptr restrict fs, qn_foffset offset)
 {
     if (offset < fs->offset) {
 #if !defined(QN_OS_FILE_SHARED_FOR_SECTION)

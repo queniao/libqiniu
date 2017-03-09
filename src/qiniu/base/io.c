@@ -47,7 +47,7 @@ static ssize_t qn_io_srdr_read_vfn(qn_io_reader_itf restrict itf, char * restric
     return ret;
 }
 
-static qn_bool qn_io_srdr_seek_vfn(qn_io_reader_itf restrict itf, qn_fsize offset)
+static qn_bool qn_io_srdr_seek_vfn(qn_io_reader_itf restrict itf, qn_foffset offset)
 {
     return qn_true;
 }

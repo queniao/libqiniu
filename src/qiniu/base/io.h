@@ -25,11 +25,11 @@ typedef qn_io_reader_ptr * qn_io_reader_itf;
 typedef void (*qn_io_close_fn)(qn_io_reader_itf restrict itf);
 typedef ssize_t (*qn_io_peek_fn)(qn_io_reader_itf restrict itf, char * restrict buf, size_t buf_size);
 typedef ssize_t (*qn_io_read_fn)(qn_io_reader_itf restrict itf, char * restrict buf, size_t buf_size);
-typedef qn_bool (*qn_io_seek_fn)(qn_io_reader_itf restrict itf, qn_fsize offset);
+typedef qn_bool (*qn_io_seek_fn)(qn_io_reader_itf restrict itf, qn_foffset offset);
 typedef qn_bool (*qn_io_advance_fn)(qn_io_reader_itf restrict itf, size_t delta);
 
 typedef qn_io_reader_itf (*qn_io_duplicate_fn)(qn_io_reader_itf restrict itf);
-typedef qn_io_reader_itf (*qn_io_section_fn)(qn_io_reader_itf restrict itf, qn_fsize offset, size_t sec_size);
+typedef qn_io_reader_itf (*qn_io_section_fn)(qn_io_reader_itf restrict itf, qn_foffset offset, size_t sec_size);
 
 typedef qn_string (*qn_io_name_fn)(qn_io_reader_itf restrict itf);
 typedef qn_fsize (*qn_io_size_fn)(qn_io_reader_itf restrict itf);
@@ -64,7 +64,7 @@ static inline ssize_t qn_io_read(qn_io_reader_itf restrict itf, char * restrict 
     return (*itf)->read(itf, buf, buf_size);
 }
 
-static inline qn_bool qn_io_seek(qn_io_reader_itf restrict itf, qn_fsize offset)
+static inline qn_bool qn_io_seek(qn_io_reader_itf restrict itf, qn_foffset offset)
 {
     return (*itf)->seek(itf, offset);
 }
@@ -89,7 +89,7 @@ static inline qn_io_reader_itf qn_io_duplicate(qn_io_reader_itf restrict itf)
     return (*itf)->duplicate(itf);
 }
 
-static inline qn_io_reader_itf qn_io_section(qn_io_reader_itf restrict itf, qn_fsize offset, size_t sec_size)
+static inline qn_io_reader_itf qn_io_section(qn_io_reader_itf restrict itf, qn_foffset offset, size_t sec_size)
 {
     return (*itf)->section(itf, offset, sec_size);
 }

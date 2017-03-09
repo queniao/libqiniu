@@ -46,7 +46,7 @@ static ssize_t qn_rdr_read_fn(qn_io_reader_itf restrict itf, char * restrict buf
     return qn_rdr_read(qn_rdr_from_io_reader(itf), buf, buf_size);
 }
 
-static qn_bool qn_rdr_seek_fn(qn_io_reader_itf restrict itf, qn_fsize offset)
+static qn_bool qn_rdr_seek_fn(qn_io_reader_itf restrict itf, qn_foffset offset)
 {
     return qn_rdr_seek(qn_rdr_from_io_reader(itf), offset);
 }
@@ -63,7 +63,7 @@ static qn_io_reader_itf qn_rdr_duplicate_fn(qn_io_reader_itf restrict itf)
     return qn_rdr_to_io_reader(new_rdr);
 }
 
-static qn_io_reader_itf qn_rdr_section_fn(qn_io_reader_itf restrict itf, qn_fsize offset, size_t sec_size)
+static qn_io_reader_itf qn_rdr_section_fn(qn_io_reader_itf restrict itf, qn_foffset offset, size_t sec_size)
 {
     qn_reader_ptr new_rdr = qn_rdr_section(qn_rdr_from_io_reader(itf), offset, sec_size);
     if (!new_rdr) return NULL;
@@ -214,7 +214,7 @@ QN_SDK ssize_t qn_rdr_read(qn_reader_ptr restrict rdr, char * restrict buf, size
     return qn_rdr_do_read(rdr, buf, size, qn_false);
 }
 
-QN_SDK qn_bool qn_rdr_seek(qn_reader_ptr restrict rdr, qn_fsize offset)
+QN_SDK qn_bool qn_rdr_seek(qn_reader_ptr restrict rdr, qn_foffset offset)
 {
     return qn_io_seek(rdr->src_rdr, offset);
 }
@@ -247,7 +247,7 @@ QN_SDK qn_reader_ptr qn_rdr_duplicate(qn_reader_ptr restrict rdr)
     return qn_rdr_do_duplicate(rdr, new_src_rdr);
 }
 
-QN_SDK qn_reader_ptr qn_rdr_section(qn_reader_ptr restrict rdr, qn_fsize offset, size_t sec_size)
+QN_SDK qn_reader_ptr qn_rdr_section(qn_reader_ptr restrict rdr, qn_foffset offset, size_t sec_size)
 {
     qn_io_reader_itf new_src_rdr = qn_io_section(rdr->src_rdr, offset, sec_size);
     if (!new_src_rdr) return NULL;
