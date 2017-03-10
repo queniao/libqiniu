@@ -1,3 +1,10 @@
+## v0.7.0
+
+- 调整部分函数接口，以统一 qn_fsize 和 qn_foffset 类型；
+- 添加部分构建配置选项：
+    1. QN_SHARED_FD_FOR_SECTIONS_SUPPORT 为分段数据读取器启用或禁用底层共享文件句柄；
+    2. QN_LARGE_FILE_SUPPORT_AWARE 启用或禁止动态探测 32 位环境是否支持对大于 2GB 文件的 seek 。
+
 ## v0.6.1
 
 - 将有歧义的 QN_API 修改为 QN_SDK ，以正确说明修饰对象属于导出对象（具有外部符号）。

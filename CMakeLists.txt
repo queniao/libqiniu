@@ -5,7 +5,6 @@ include (CheckSymbolExists)
 
 set (QN_LARGE_FILE_SUPPORT_AWARE OFF CACHE BOOL "Set to ON to detect Large File Support dynamically (default: OFF)")
 set (QN_SHARED_FD_FOR_SECTIONS_SUPPORT ON CACHE BOOL "Set to ON to enable shared fd for sections (default: ON)")
-set (QN_X86_PLATFORM_SUPPORT OFF CACHE BOOL "Set to ON to build for x86 platform only (default: OFF)")
 
 include_directories (/usr/include /usr/local/include SYSTEM)
 link_directories (/usr/lib /usr/local/lib)
