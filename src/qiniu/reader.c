@@ -22,7 +22,6 @@ typedef struct _QN_READER
     qn_rdr_pos pre_end;
     qn_rdr_pos post_end;
     qn_rdr_pos cap;
-    qn_rdr_pos auto_close_source:1;
     qn_rdr_entry entries[1];
 } qn_reader_st;
 
@@ -121,7 +120,7 @@ QN_SDK qn_reader_ptr qn_rdr_create(qn_io_reader_itf src_rdr, qn_rdr_pos filter_n
 QN_SDK void qn_rdr_destroy(qn_reader_ptr restrict rdr)
 {
     if (rdr) {
-        if (rdr->auto_close_source) qn_io_close(rdr->src_rdr);
+        qn_io_close(rdr->src_rdr);
         free(rdr);
     } // if
 }
@@ -236,7 +235,6 @@ static qn_reader_ptr qn_rdr_do_duplicate(qn_reader_ptr restrict rdr, qn_io_reade
 
     memcpy(new_rdr, rdr, size);
     new_rdr->src_rdr = src_rdr;
-    new_rdr->auto_close_source = 1;
     return new_rdr;
 }
 
