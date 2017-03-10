@@ -4,6 +4,7 @@ project (libqiniu)
 include (CheckSymbolExists)
 
 set (QN_LARGE_FILE_SUPPORT_AWARE OFF CACHE BOOL "Set to ON to detect Large File Support dynamically (default: OFF)")
+set (QN_SHARED_FD_FOR_SECTIONS_SUPPORT ON CACHE BOOL "Set to ON to enable shared fd for sections (default: ON)")
 set (QN_X86_PLATFORM_SUPPORT OFF CACHE BOOL "Set to ON to build for x86 platform only (default: OFF)")
 
 include_directories (/usr/include /usr/local/include SYSTEM)
@@ -11,6 +12,7 @@ link_directories (/usr/lib /usr/local/lib)
 
 set (CMAKE_REQUIRED_DEFINITIONS "-D_GNU_SOURCE")
 check_symbol_exists (lseek64 "unistd.h" HAVE_LSEEK64)
+check_symbol_exists (pread "unistd.h" HAVE_PREAD)
 set (CMAKE_REQUIRED_DEFINITIONS "")
 
 if (DEFINED HAVE_LSEEK64)
@@ -19,6 +21,10 @@ if (DEFINED HAVE_LSEEK64)
         add_compile_options (-DQN_CFG_LARGE_FILE_SUPPORT_AWARE)
     endif (DEFINED QN_LARGE_FILE_SUPPORT_AWARE AND ${QN_LARGE_FILE_SUPPORT_AWARE})
 endif (DEFINED HAVE_LSEEK64)
+
+if (DEFINED HAVE_PREAD AND DEFINED QN_SHARED_FD_FOR_SECTIONS_SUPPORT AND ${QN_SHARED_FD_FOR_SECTIONS_SUPPORT})
+    add_compile_options (-DQN_CFG_SHARED_FD_FOR_SECTIONS)
+endif (DEFINED HAVE_PREAD AND DEFINED QN_SHARED_FD_FOR_SECTIONS_SUPPORT AND ${QN_SHARED_FD_FOR_SECTIONS_SUPPORT})
 
 add_compile_options (-D_GNU_SOURCE --std=c99 -Wall)
 

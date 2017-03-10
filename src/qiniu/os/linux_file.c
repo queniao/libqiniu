@@ -340,10 +340,6 @@ QN_SDK qn_fl_info_ptr qn_fl_info_stat(const char * restrict fname)
 
 // ---- Definition of file section depends on operating system ----
 
-#if !defined(QN_OS_FILE_SHARED_FOR_SECTION) && (defined(_XOPEN_SOURCE) && (_XOPEN_SOURCE >= 500))
-#define QN_OS_FILE_SHARED_FOR_SECTION
-#endif
-
 typedef struct _QN_FL_SECTION
 {
     qn_io_reader_ptr rdr_vtbl;
@@ -415,7 +411,7 @@ QN_SDK qn_fl_section_ptr qn_fl_sec_create(qn_file_ptr restrict fl, qn_foffset of
         return NULL;
     } // if
 
-#if !defined(QN_OS_FILE_SHARED_FOR_SECTION)
+#if ! defined(QN_CFG_SHARED_FD_FOR_SECTIONS)
     new_section->file = qn_fl_duplicate(fl);
 #else
     new_section->file = fl;
@@ -452,7 +448,7 @@ QN_SDK qn_fl_section_ptr qn_fl_sec_section(qn_fl_section_ptr restrict fs, qn_fof
 QN_SDK void qn_fl_sec_destroy(qn_fl_section_ptr restrict fs)
 {
     if (fs) {
-#if !defined(QN_OS_FILE_SHARED_FOR_SECTION)
+#if ! defined(QN_CFG_SHARED_FD_FOR_SECTIONS)
         qn_fl_close(fs->file);
 #endif
         free(fs);
@@ -461,7 +457,7 @@ QN_SDK void qn_fl_sec_destroy(qn_fl_section_ptr restrict fs)
 
 QN_SDK qn_bool qn_fl_sec_reset(qn_fl_section_ptr restrict fs)
 {
-#if !defined(QN_OS_FILE_SHARED_FOR_SECTION)
+#if ! defined(QN_CFG_SHARED_FD_FOR_SECTIONS)
     if (! qn_fl_seek(fs->file, fs->offset)) return qn_false;
 #endif
 
@@ -483,7 +479,7 @@ QN_SDK ssize_t qn_fl_sec_peek(qn_fl_section_ptr restrict fs, char * restrict buf
 
     read_size = (buf_size < fs->rem_size) ? buf_size : fs->rem_size;
 
-#if !defined(QN_OS_FILE_SHARED_FOR_SECTION)
+#if ! defined(QN_CFG_SHARED_FD_FOR_SECTIONS)
     ret = read(fs->file->fd, buf, read_size); 
     if (ret > 0 && !qn_fl_sec_advance(fs, -read_size)) return QN_IO_RDR_READING_FAILED;
 #else
@@ -508,7 +504,7 @@ QN_SDK ssize_t qn_fl_sec_read(qn_fl_section_ptr restrict fs, char * restrict buf
 
     read_size = (buf_size < fs->rem_size) ? buf_size : fs->rem_size;
 
-#if !defined(QN_OS_FILE_SHARED_FOR_SECTION)
+#if ! defined(QN_CFG_SHARED_FD_FOR_SECTIONS)
     ret = read(fs->file->fd, buf, read_size); 
 #else
     ret = pread(fs->file->fd, buf, read_size, fs->offset + (fs->sec_size - fs->rem_size));
@@ -526,17 +522,17 @@ QN_SDK ssize_t qn_fl_sec_read(qn_fl_section_ptr restrict fs, char * restrict buf
 QN_SDK qn_bool qn_fl_sec_seek(qn_fl_section_ptr restrict fs, qn_foffset offset)
 {
     if (offset < fs->offset) {
-#if !defined(QN_OS_FILE_SHARED_FOR_SECTION)
+#if ! defined(QN_CFG_SHARED_FD_FOR_SECTIONS)
         if (! qn_fl_seek(fs->file, fs->offset)) return qn_false;
 #endif
         fs->rem_size = fs->sec_size;
     } else if (offset > fs->offset + fs->sec_size) {
-#if !defined(QN_OS_FILE_SHARED_FOR_SECTION)
+#if ! defined(QN_CFG_SHARED_FD_FOR_SECTIONS)
         if (! qn_fl_seek(fs->file, fs->offset + fs->sec_size)) return qn_false;
 #endif
         fs->rem_size = 0;
     } else {
-#if !defined(QN_OS_FILE_SHARED_FOR_SECTION)
+#if ! defined(QN_CFG_SHARED_FD_FOR_SECTIONS)
         if (! qn_fl_seek(fs->file, offset)) return qn_false;
 #endif
         fs->rem_size = fs->offset + fs->sec_size - offset;
@@ -547,12 +543,12 @@ QN_SDK qn_bool qn_fl_sec_seek(qn_fl_section_ptr restrict fs, qn_foffset offset)
 QN_SDK qn_bool qn_fl_sec_advance(qn_fl_section_ptr restrict fs, size_t delta)
 {
     if (delta <= fs->rem_size) {
-#if !defined(QN_OS_FILE_SHARED_FOR_SECTION)
+#if ! defined(QN_CFG_SHARED_FD_FOR_SECTIONS)
         if (! qn_fl_advance(fs->file, delta)) return qn_false;
 #endif
         fs->rem_size -= delta;
     } else {
-#if !defined(QN_OS_FILE_SHARED_FOR_SECTION)
+#if ! defined(QN_CFG_SHARED_FD_FOR_SECTIONS)
         if (! qn_fl_advance(fs->file, fs->rem_size)) return qn_false;
 #endif
         fs->rem_size = 0;
