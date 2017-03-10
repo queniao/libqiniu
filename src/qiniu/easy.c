@@ -225,7 +225,6 @@ static ssize_t qn_easy_filter_qetag(void * restrict user_data, char ** restrict 
 static qn_io_reader_itf qn_easy_create_put_reader(const char * restrict fname, qn_easy_put_extra_ptr real_ext)
 {
     qn_file_ptr fl = NULL;
-    qn_fl_info_ptr fi;
     qn_io_reader_itf io_rdr;
     qn_reader_ptr rdr;
     qn_rdr_pos filter_num = 0;
@@ -233,15 +232,10 @@ static qn_io_reader_itf qn_easy_create_put_reader(const char * restrict fname, q
     if (real_ext->put_ctrl.rdr) {
         io_rdr = real_ext->put_ctrl.rdr;
     } else {
-        fi = qn_fl_info_stat(fname);
-        if (! fi) return NULL;
-
-        real_ext->put_ctrl.fsize = qn_fl_info_fsize(fi);
-        qn_fl_info_destroy(fi);
-
         fl = qn_fl_open(fname, NULL);
         if (! fl) return NULL;
 
+        real_ext->put_ctrl.fsize = qn_fl_fsize(fl);
         io_rdr = qn_fl_to_io_reader(fl);
     } // if
 
@@ -256,10 +250,8 @@ static qn_io_reader_itf qn_easy_create_put_reader(const char * restrict fname, q
     if (filter_num == 0) return io_rdr;
 
     rdr = qn_rdr_create(io_rdr, filter_num);
-    if (! rdr) {
-        if (fl) qn_fl_close(fl);
-        return NULL;
-    } // if
+    qn_fl_close(fl);
+    if (! rdr) return NULL;
 
     if (real_ext->put_ctrl.check_qetag) qn_rdr_add_post_filter(rdr, real_ext->temp.qetag, &qn_easy_filter_qetag);
 
@@ -471,7 +463,7 @@ QN_SDK qn_json_object_ptr qn_easy_put_file(qn_easy_ptr restrict easy, const char
         } else {
             rgn_host = qn_easy_select_putting_region_host(easy, uptoken, &pp, &real_ext);
             if (! rgn_host) {
-                if (pp) qn_json_destroy_object(pp);
+                qn_json_destroy_object(pp);
                 return NULL;
             } // if
         } // if
@@ -479,14 +471,14 @@ QN_SDK qn_json_object_ptr qn_easy_put_file(qn_easy_ptr restrict easy, const char
 
     if (! real_ext.attr.final_key) {
         if (! qn_easy_check_putting_key(easy, uptoken, &pp, &real_ext)) {
-            if (pp) qn_json_destroy_object(pp);
+            qn_json_destroy_object(pp);
             return NULL;
         } // if
     } // if
 
     io_rdr = qn_easy_create_put_reader(fname, &real_ext);
     if (! io_rdr) {
-        if (pp) qn_json_destroy_object(pp);
+        qn_json_destroy_object(pp);
         return NULL;
     } // if
 
@@ -508,8 +500,8 @@ QN_SDK qn_json_object_ptr qn_easy_put_file(qn_easy_ptr restrict easy, const char
         } // for
     } // if
 
-    if (io_rdr != real_ext.put_ctrl.rdr) qn_io_close(io_rdr);
-    if (pp) qn_json_destroy_object(pp);
+    qn_io_close(io_rdr);
+    qn_json_destroy_object(pp);
 
     if (put_ret && (qn_json_get_integer(put_ret, "fn-code", 0) == 200)) {
         if (real_ext.put_ctrl.check_qetag) {
