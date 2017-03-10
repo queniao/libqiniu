@@ -2812,6 +2812,7 @@ QN_SDK extern qn_json_object_ptr qn_stor_ru_api_bput(qn_storage_ptr restrict sto
 
 QN_SDK qn_json_object_ptr qn_stor_ru_api_mkfile(qn_storage_ptr restrict stor, const char * restrict uptoken, qn_io_reader_itf restrict ctx_rdr, qn_json_object_ptr restrict last_blk_info, qn_fsize fsize, qn_stor_upload_extra_ptr restrict upe)
 {
+    qn_bool ret;
     qn_string url;
     qn_string url_tmp;
     qn_string host;
@@ -2868,7 +2869,9 @@ QN_SDK qn_json_object_ptr qn_stor_ru_api_mkfile(qn_storage_ptr restrict stor, co
     } // if
 
     // ---- Do the mkfile action.
-    if (! qn_http_conn_post(stor->conn, url, stor->req, stor->resp)) return NULL;
+    ret = qn_http_conn_post(stor->conn, url, stor->req, stor->resp);
+    qn_str_destroy(url);
+    if (! ret) return NULL;
     return qn_stor_rename_error_info(stor);
 }
 
