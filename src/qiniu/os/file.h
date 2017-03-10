@@ -1,6 +1,7 @@
 #ifndef __QN_OS_FILE_H__
 #define __QN_OS_FILE_H__
 
+#include "qiniu/os/types.h"
 #include "qiniu/base/string.h"
 #include "qiniu/base/io.h"
 #include "qiniu/macros.h"

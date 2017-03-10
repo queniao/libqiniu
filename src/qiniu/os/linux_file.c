@@ -1,10 +1,15 @@
+#include "qiniu/os/file.h"
+
 #include <sys/stat.h>
 #include <fcntl.h>
 #include <unistd.h>
 #include <errno.h>
 
+#if defined(QN_CFG_LARGE_FILE_SUPPORT_AWARE)
+#include <dlfcn.h>
+#endif
+
 #include "qiniu/base/errors.h"
-#include "qiniu/os/file.h"
 
 #ifdef __cplusplus
 extern "C"
@@ -57,6 +62,44 @@ static qn_fl_info_ptr qn_fl_info_duplicate(qn_fl_info_ptr restrict fi)
 
 // ---- File Functions (abbreviation: fl) ----
 
+#if defined(QN_CFG_LARGE_FILE_SUPPORT_AWARE)
+
+static qn_foffset qn_fl_lseek_loader(int fd, qn_foffset offset, int whence);
+
+typedef qn_foffset (*qn_fl_lseek_fn)(int, qn_foffset, int);
+qn_fl_lseek_fn qn_fl_lseek_wrapper = &qn_fl_lseek_loader;
+
+static qn_foffset qn_fl_lseek(int fd, qn_foffset offset, int whence)
+{
+    if (0xFFFFFFFFL < offset) {
+        errno = EINVAL;
+        return -1;
+    } // if
+    return lseek(fd, (off_t)(offset & 0xFFFFFFFFL), whence);
+}
+
+static qn_foffset qn_fl_lseek_loader(int fd, qn_foffset offset, int whence)
+{
+    void * libc = NULL;
+    void * posix_lseek64 = NULL;
+
+    libc = dlopen("libc.so.6", RTLD_LAZY);
+    if (! libc) {
+        libc = dlopen("libc.so", RTLD_LAZY);
+        if (! libc) {
+            dlclose(libc);
+            return -1;
+        } // if
+    } // if
+
+    posix_lseek64 = dlsym(libc, "lseek64");
+    dlclose(libc);
+    qn_fl_lseek_wrapper = (posix_lseek64) ? (qn_fl_lseek_fn)(posix_lseek64) : &qn_fl_lseek;
+    return (*qn_fl_lseek_wrapper)(fd, offset, whence);
+}
+
+#else
+
 static inline qn_foffset qn_fl_lseek_wrapper(int fd, qn_foffset offset, int whence)
 {
 #if defined(QN_CFG_LARGE_FILE_SUPPORT)
@@ -69,6 +112,8 @@ static inline qn_foffset qn_fl_lseek_wrapper(int fd, qn_foffset offset, int when
     return lseek(fd, (off_t)(offset & 0xFFFFFFFFL), whence);
 #endif
 }
+
+#endif
 
 struct _QN_FILE
 {

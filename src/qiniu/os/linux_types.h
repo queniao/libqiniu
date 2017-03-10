@@ -30,7 +30,7 @@ typedef double qn_number;
 #if defined(QN_CFG_LARGE_FILE_SUPPORT)
 
 typedef long long qn_fsize; // A signed long long integer for file sizes.
-typedef off_t qn_foffset;   // A signed long long integer for file offsets.
+typedef off64_t qn_foffset; // A signed long long integer for file offsets.
 
 #else
 
