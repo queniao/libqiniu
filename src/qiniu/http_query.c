@@ -50,7 +50,7 @@ QN_SDK int qn_http_qry_count(qn_http_query_ptr restrict qry)
     return qn_etbl_count(qry->etbl);
 }
 
-QN_SDK qn_bool qn_http_qry_set_raw(qn_http_query_ptr restrict qry, const char * restrict key, size_t key_size, const char * restrict val, size_t val_size)
+QN_SDK qn_bool qn_http_qry_set_raw(qn_http_query_ptr restrict qry, const char * restrict key, qn_size key_size, const char * restrict val, qn_size val_size)
 {
     qn_bool ret;
     qn_string encoded_val = qn_cs_percent_encode(val, val_size);

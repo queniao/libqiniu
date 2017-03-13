@@ -21,9 +21,9 @@ QN_SDK extern void qn_http_qry_reset(qn_http_query_ptr restrict qry);
 
 QN_SDK extern int qn_http_qry_count(qn_http_query_ptr restrict qry);
 
-QN_SDK extern qn_bool qn_http_qry_set_raw(qn_http_query_ptr restrict qry, const char * restrict key, size_t key_size, const char * restrict val, size_t val_size);
+QN_SDK extern qn_bool qn_http_qry_set_raw(qn_http_query_ptr restrict qry, const char * restrict key, qn_size key_size, const char * restrict val, qn_size val_size);
 
-static inline qn_bool qn_http_qry_set_text(qn_http_query_ptr restrict qry, const char * restrict key, const char * restrict val, size_t val_size)
+static inline qn_bool qn_http_qry_set_text(qn_http_query_ptr restrict qry, const char * restrict key, const char * restrict val, qn_size val_size)
 {
     return qn_http_qry_set_raw(qry, key, strlen(key), val, val_size);
 }

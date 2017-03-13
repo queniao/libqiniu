@@ -61,7 +61,7 @@ QN_SDK const char * qn_http_hdr_get_value(qn_http_header_ptr restrict hdr, const
     return qn_etbl_get_value(hdr->etbl, key);
 }
 
-QN_SDK qn_bool qn_http_hdr_set_raw(qn_http_header_ptr restrict hdr, const char * restrict key, size_t key_size, const char * restrict val, size_t val_size)
+QN_SDK qn_bool qn_http_hdr_set_raw(qn_http_header_ptr restrict hdr, const char * restrict key, qn_size key_size, const char * restrict val, qn_size val_size)
 {
     return qn_etbl_set_raw(hdr->etbl, key, key_size, val, val_size);
 }
@@ -98,7 +98,7 @@ QN_SDK const qn_string qn_http_hdr_itr_next_entry(qn_http_hdr_iterator_ptr restr
     return qn_etbl_itr_next_entry(itr);
 }
 
-QN_SDK qn_bool qn_http_hdr_itr_next_pair_raw(qn_http_hdr_iterator_ptr restrict itr, const char ** restrict key, size_t * restrict key_size, const char ** restrict val, size_t * restrict val_size)
+QN_SDK qn_bool qn_http_hdr_itr_next_pair_raw(qn_http_hdr_iterator_ptr restrict itr, const char ** restrict key, qn_size * restrict key_size, const char ** restrict val, qn_size * restrict val_size)
 {
     return qn_etbl_itr_next_pair_raw(itr, key, key_size, val, val_size);
 }

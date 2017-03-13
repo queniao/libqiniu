@@ -23,9 +23,9 @@ QN_SDK extern int qn_http_hdr_count(qn_http_header_ptr restrict hdr);
 QN_SDK extern qn_string qn_http_hdr_get_entry(qn_http_header_ptr restrict hdr, const char * restrict key);
 QN_SDK extern const char * qn_http_hdr_get_value(qn_http_header_ptr restrict hdr, const char * restrict key);
 
-QN_SDK extern qn_bool qn_http_hdr_set_raw(qn_http_header_ptr restrict hdr, const char * restrict key, size_t key_size, const char * restrict val, size_t val_size);
+QN_SDK extern qn_bool qn_http_hdr_set_raw(qn_http_header_ptr restrict hdr, const char * restrict key, qn_size key_size, const char * restrict val, qn_size val_size);
 
-static inline qn_bool qn_http_hdr_set_text(qn_http_header_ptr restrict hdr, const char * restrict key, const char * restrict val, size_t val_size)
+static inline qn_bool qn_http_hdr_set_text(qn_http_header_ptr restrict hdr, const char * restrict key, const char * restrict val, qn_size val_size)
 {
     return qn_http_hdr_set_raw(hdr, key, strlen(key), val, val_size);
 }
@@ -47,7 +47,7 @@ QN_SDK extern void qn_http_hdr_itr_destroy(qn_http_hdr_iterator_ptr restrict itr
 QN_SDK extern void qn_http_hdr_itr_rewind(qn_http_hdr_iterator_ptr restrict itr);
 
 QN_SDK extern const qn_string qn_http_hdr_itr_next_entry(qn_http_hdr_iterator_ptr restrict itr);
-QN_SDK extern qn_bool qn_http_hdr_itr_next_pair_raw(qn_http_hdr_iterator_ptr restrict itr, const char ** restrict key, size_t * restrict key_size, const char ** restrict val, size_t * restrict val_size);
+QN_SDK extern qn_bool qn_http_hdr_itr_next_pair_raw(qn_http_hdr_iterator_ptr restrict itr, const char ** restrict key, qn_size * restrict key_size, const char ** restrict val, qn_size * restrict val_size);
 
 #ifdef __cplusplus
 }
