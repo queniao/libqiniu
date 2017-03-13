@@ -21,8 +21,8 @@ QN_SDK extern void qn_json_fmt_reset(qn_json_formatter_ptr restrict fmt);
 QN_SDK extern void qn_json_fmt_enable_escape_utf8_string(qn_json_formatter_ptr restrict fmt);
 QN_SDK extern void qn_json_fmt_disable_escape_utf8_string(qn_json_formatter_ptr restrict fmt);
 
-QN_SDK extern qn_bool qn_json_fmt_format_object(qn_json_formatter_ptr restrict fmt, qn_json_object_ptr restrict root, char * restrict buf, size_t * restrict buf_size);
-QN_SDK extern qn_bool qn_json_fmt_format_array(qn_json_formatter_ptr restrict fmt, qn_json_array_ptr restrict root, char * restrict buf, size_t * restrict buf_size);
+QN_SDK extern qn_bool qn_json_fmt_format_object(qn_json_formatter_ptr restrict fmt, qn_json_object_ptr restrict root, char * restrict buf, qn_size * restrict buf_size);
+QN_SDK extern qn_bool qn_json_fmt_format_array(qn_json_formatter_ptr restrict fmt, qn_json_array_ptr restrict root, char * restrict buf, qn_size * restrict buf_size);
 
 QN_SDK extern qn_string qn_json_object_to_string(qn_json_object_ptr restrict root);
 QN_SDK extern qn_string qn_json_array_to_string(qn_json_array_ptr restrict root);
