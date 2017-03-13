@@ -1287,7 +1287,6 @@ void test_parse_empty_array(void)
     CU_ASSERT_TRUE(qn_json_is_empty_array(arr_root));
 
     qn_json_destroy_array(arr_root);
-    qn_json_prs_destroy(prs);
 }
 
 void test_parse_array_holding_one_element(void)
@@ -1316,7 +1315,6 @@ void test_parse_array_holding_one_element(void)
     CU_ASSERT_TRUE(strcmp(qn_str_cstr(str), "This is a trivial element.") == 0);
 
     qn_json_destroy_array(arr_root);
-    qn_json_prs_destroy(prs);
 }
 
 void test_parse_array_holding_two_elements(void)
@@ -1341,7 +1339,6 @@ void test_parse_array_holding_two_elements(void)
     CU_ASSERT_TRUE(qn_json_pick_integer(arr_root, 1, 0) == -123);
 
     qn_json_destroy_array(arr_root);
-    qn_json_prs_destroy(prs);
 }
 
 void test_parse_array_holding_ordinary_elements(void)
@@ -1369,7 +1366,6 @@ void test_parse_array_holding_ordinary_elements(void)
     CU_ASSERT_LONG_DOUBLE_EQUAL(qn_json_pick_number(arr_root, 0, 0.0L), 123.456L, 0.001L);
 
     qn_json_destroy_array(arr_root);
-    qn_json_prs_destroy(prs);
 }
 
 void test_parse_array_holding_empty_complex_elements(void)
@@ -1405,7 +1401,6 @@ void test_parse_array_holding_empty_complex_elements(void)
     CU_ASSERT_TRUE(qn_json_is_empty_array(arr_elem));
 
     qn_json_destroy_array(arr_root);
-    qn_json_prs_destroy(prs);
 }
 
 void test_parse_array_holding_embedded_arrays(void)
@@ -1444,7 +1439,6 @@ void test_parse_array_holding_embedded_arrays(void)
     CU_ASSERT_TRUE(qn_json_is_empty_array(arr_elem));
 
     qn_json_destroy_array(arr_root);
-    qn_json_prs_destroy(prs);
 }
 
 CU_TestInfo test_normal_cases_of_json_parsing[] = {
