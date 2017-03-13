@@ -173,6 +173,13 @@ QN_SDK qn_bool qn_http_form_add_string(qn_http_form_ptr restrict form, const cha
 {
     CURLFORMcode ret;
 
+    if (sizeof(curl_off_t) < sizeof(qn_size)) {
+        if (UINT32_MAX < size) {
+            qn_err_set_overflow_upper_bound();
+            return qn_false;
+        } // if
+    } // if
+    
     ret = curl_formadd(&form->first, &form->last, CURLFORM_COPYNAME, field, CURLFORM_COPYCONTENTS, value, CURLFORM_CONTENTLEN, size, CURLFORM_END);
     if (ret != 0) {
         qn_err_http_set_adding_string_field_failed();
