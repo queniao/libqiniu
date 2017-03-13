@@ -762,7 +762,7 @@ QN_SDK qn_bool qn_json_set_string(qn_json_object_ptr restrict obj, const char * 
 * @retval true Operation succeed.
 * @retval false Failed in setting and an error code is set.
 *******************************************************************************/
-QN_SDK qn_bool qn_json_set_text(qn_json_object_ptr restrict obj, const char * restrict key, const char * restrict val, size_t size)
+QN_SDK qn_bool qn_json_set_text(qn_json_object_ptr restrict obj, const char * restrict key, const char * restrict val, qn_size size)
 {
     qn_json_variant elem;
     if (obj->cap == 0) {
@@ -986,7 +986,7 @@ QN_SDK qn_bool qn_json_push_string(qn_json_array_ptr restrict arr, const char * 
 * @retval true Operation succeed.
 * @retval false Failed in pushing and an error code is set.
 *******************************************************************************/
-QN_SDK qn_bool qn_json_push_text(qn_json_array_ptr restrict arr, const char * restrict val, size_t size)
+QN_SDK qn_bool qn_json_push_text(qn_json_array_ptr restrict arr, const char * restrict val, qn_size size)
 {
     qn_json_variant elem;
     if (arr->cap == 0) {
@@ -1134,7 +1134,7 @@ QN_SDK qn_bool qn_json_unshift_string(qn_json_array_ptr restrict arr, const char
 * @retval true Operation succeed.
 * @retval false Failed in unshifting and an error code is set.
 *******************************************************************************/
-QN_SDK qn_bool qn_json_unshift_text(qn_json_array_ptr restrict arr, const char * restrict val, size_t size)
+QN_SDK qn_bool qn_json_unshift_text(qn_json_array_ptr restrict arr, const char * restrict val, qn_size size)
 {
     qn_json_variant elem;
     if (arr->cap == 0) {
@@ -1318,7 +1318,7 @@ QN_SDK qn_bool qn_json_replace_string(qn_json_array_ptr restrict arr, int n, con
     return qn_true;
 }
 
-QN_SDK qn_bool qn_json_replace_text(qn_json_array_ptr restrict arr, int n, const char * restrict val, size_t size)
+QN_SDK qn_bool qn_json_replace_text(qn_json_array_ptr restrict arr, int n, const char * restrict val, qn_size size)
 {
     qn_json_variant elem;
 
