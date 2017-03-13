@@ -2174,7 +2174,7 @@ QN_SDK qn_json_object_ptr qn_stor_up_api_upload_file(qn_storage_ptr restrict sto
     return stor->obj_body;
 }
 
-QN_SDK qn_json_object_ptr qn_stor_up_api_upload_buffer(qn_storage_ptr restrict stor, const char * restrict uptoken, const char * restrict buf, int buf_size, qn_stor_upload_extra_ptr restrict upe)
+QN_SDK qn_json_object_ptr qn_stor_up_api_upload_buffer(qn_storage_ptr restrict stor, const char * restrict uptoken, const char * restrict buf, qn_size buf_size, qn_stor_upload_extra_ptr restrict upe)
 {
     qn_bool ret;
     qn_http_form_ptr form;
@@ -2183,6 +2183,9 @@ QN_SDK qn_json_object_ptr qn_stor_up_api_upload_buffer(qn_storage_ptr restrict s
     assert(stor);
     assert(uptoken);
     assert(buf);
+    assert(0 <= buf_size);
+
+    // TODO: Allow to upload an empty buffer (buf_size == 0).
 
     if (upe) {
         if (! (rgn_entry = upe->rgn_entry)) qn_rgn_tbl_choose_first_entry(NULL, QN_RGN_SVC_UP, NULL, &rgn_entry);

@@ -166,7 +166,7 @@ QN_SDK extern void qn_stor_upe_set_region_entry(qn_stor_upload_extra_ptr restric
 // -------- Ordinary Upload (abbreviation: up) --------
 
 QN_SDK extern qn_json_object_ptr qn_stor_up_api_upload_file(qn_storage_ptr restrict stor, const char * restrict uptoken, const char * restrict fname, qn_stor_upload_extra_ptr restrict upe);
-QN_SDK extern qn_json_object_ptr qn_stor_up_api_upload_buffer(qn_storage_ptr restrict stor, const char * restrict uptoken, const char * restrict buf, int buf_size, qn_stor_upload_extra_ptr restrict upe);
+QN_SDK extern qn_json_object_ptr qn_stor_up_api_upload_buffer(qn_storage_ptr restrict stor, const char * restrict uptoken, const char * restrict buf, qn_size buf_size, qn_stor_upload_extra_ptr restrict upe);
 
 QN_SDK extern qn_json_object_ptr qn_stor_up_api_upload(qn_storage_ptr restrict stor, const char * restrict uptoken, qn_io_reader_itf restrict data_rdr, qn_stor_upload_extra_ptr restrict upe);
 

@@ -223,9 +223,18 @@ QN_SDK qn_bool qn_http_form_add_file_reader(qn_http_form_ptr restrict form, cons
     return qn_true;
 }
 
-QN_SDK qn_bool qn_http_form_add_buffer(qn_http_form_ptr restrict form, const char * restrict field, const char * restrict fname, const char * restrict buf, int buf_size)
+QN_SDK qn_bool qn_http_form_add_buffer(qn_http_form_ptr restrict form, const char * restrict field, const char * restrict fname, const char * restrict buf, qn_size buf_size)
 {
-    CURLFORMcode ret = curl_formadd(&form->first, &form->last, CURLFORM_COPYNAME, field, CURLFORM_BUFFER, fname, CURLFORM_BUFFERPTR, buf, CURLFORM_BUFFERLENGTH, buf_size, CURLFORM_END);
+    CURLFORMcode ret;
+
+    if (sizeof(long) < sizeof(qn_size)) {
+        if (UINT32_MAX < buf_size) {
+            qn_err_set_overflow_upper_bound();
+            return qn_false;
+        } // if
+    } // if
+    
+    ret = curl_formadd(&form->first, &form->last, CURLFORM_COPYNAME, field, CURLFORM_BUFFER, fname, CURLFORM_BUFFERPTR, buf, CURLFORM_BUFFERLENGTH, buf_size, CURLFORM_END);
     if (ret != 0) {
         qn_err_http_set_adding_buffer_field_failed();
         return qn_false;
