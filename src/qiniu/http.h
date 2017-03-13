@@ -68,10 +68,10 @@ QN_SDK extern void qn_http_req_set_form(qn_http_request_ptr restrict req, qn_htt
 
 // ----
 
-QN_SDK extern void qn_http_req_set_body_data(qn_http_request_ptr restrict req, char * restrict body_data, size_t body_size);
-QN_SDK extern void qn_http_req_set_body_reader(qn_http_request_ptr restrict req, void * restrict body_reader, qn_http_body_reader_callback body_reader_callback, size_t body_size);
+QN_SDK extern void qn_http_req_set_body_data(qn_http_request_ptr restrict req, char * restrict body_data, qn_size body_size);
+QN_SDK extern void qn_http_req_set_body_reader(qn_http_request_ptr restrict req, void * restrict body_reader, qn_http_body_reader_callback body_reader_callback, qn_fsize body_size);
 QN_SDK extern char * qn_http_req_body_data(qn_http_request_ptr restrict req);
-QN_SDK extern size_t qn_http_req_body_size(qn_http_request_ptr restrict req);
+QN_SDK extern qn_fsize qn_http_req_body_size(qn_http_request_ptr restrict req);
 
 // ---- Declaration of HTTP response ----
 

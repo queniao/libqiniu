@@ -256,7 +256,7 @@ typedef struct _QN_HTTP_REQUEST
     qn_http_form_ptr form;
 
     char * body_data;
-    size_t body_size;
+    qn_fsize body_size;
 
     void * body_rdr;
     qn_http_body_reader_callback body_rdr_cb;
@@ -360,13 +360,13 @@ QN_SDK void qn_http_req_set_form(qn_http_request_ptr restrict req, qn_http_form_
 
 // ----
 
-QN_SDK void qn_http_req_set_body_data(qn_http_request_ptr restrict req, char * restrict body_data, size_t body_size)
+QN_SDK void qn_http_req_set_body_data(qn_http_request_ptr restrict req, char * restrict body_data, qn_size body_size)
 {
     req->body_data = body_data;
     req->body_size = body_size;
 }
 
-QN_SDK void qn_http_req_set_body_reader(qn_http_request_ptr restrict req, void * restrict body_rdr, qn_http_body_reader_callback body_rdr_cb, size_t body_size)
+QN_SDK void qn_http_req_set_body_reader(qn_http_request_ptr restrict req, void * restrict body_rdr, qn_http_body_reader_callback body_rdr_cb, qn_fsize body_size)
 {
     req->body_rdr = body_rdr;
     req->body_rdr_cb = body_rdr_cb;
@@ -378,7 +378,7 @@ QN_SDK char * qn_http_req_body_data(qn_http_request_ptr restrict req)
     return req->body_data;
 }
 
-QN_SDK size_t qn_http_req_body_size(qn_http_request_ptr restrict req)
+QN_SDK qn_fsize qn_http_req_body_size(qn_http_request_ptr restrict req)
 {
     return req->body_size;
 }
