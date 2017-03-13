@@ -89,7 +89,7 @@ QN_SDK extern void qn_stor_lse_reset(qn_stor_list_extra_ptr restrict lse);
 
 QN_SDK extern void qn_stor_lse_set_prefix(qn_stor_list_extra_ptr restrict lse, const char * restrict prefix, const char * restrict delimiter);
 QN_SDK extern void qn_stor_lse_set_marker(qn_stor_list_extra_ptr restrict lse, const char * restrict marker);
-QN_SDK extern void qn_stor_lse_set_limit(qn_stor_list_extra_ptr restrict lse, int limit);
+QN_SDK extern void qn_stor_lse_set_limit(qn_stor_list_extra_ptr restrict lse, qn_uint32 limit);
 
 // -------- List Functions (abbreviation: ls) --------
 
@@ -113,11 +113,11 @@ QN_SDK extern qn_json_object_ptr qn_stor_ft_api_prefetch(qn_storage_ptr restrict
 
 // -------- Put Policy (abbreviation: pp) --------
 
-QN_SDK extern qn_json_object_ptr qn_stor_pp_create(const char * restrict bucket, const char * restrict key, qn_uint32 deadline);
+QN_SDK extern qn_json_object_ptr qn_stor_pp_create(const char * restrict bucket, const char * restrict key, qn_json_integer deadline);
 QN_SDK extern void qn_stor_pp_destroy(qn_json_object_ptr restrict pp);
 
 QN_SDK extern qn_bool qn_stor_pp_set_scope(qn_json_object_ptr restrict pp, const char * restrict bucket, const char * restrict key);
-QN_SDK extern qn_bool qn_stor_pp_set_deadline(qn_json_object_ptr restrict pp, qn_uint32 deadline);
+QN_SDK extern qn_bool qn_stor_pp_set_deadline(qn_json_object_ptr restrict pp, qn_json_integer deadline);
 
 QN_SDK extern qn_bool qn_stor_pp_dont_overwrite(qn_json_object_ptr restrict pp);
 
@@ -128,22 +128,22 @@ QN_SDK extern qn_bool qn_stor_pp_callback_to_server(qn_json_object_ptr restrict 
 QN_SDK extern qn_bool qn_stor_pp_callback_with_body(qn_json_object_ptr restrict pp, const char * restrict body, const char * restrict mime_type);
 
 QN_SDK extern qn_bool qn_stor_pp_pfop_set_commands(qn_json_object_ptr restrict pp, const char * restrict pipeline, const char * restrict cmd1, const char * restrict cmd2, ...);
-QN_SDK extern qn_bool qn_stor_pp_pfop_set_command_list(qn_json_object_ptr restrict pp, const char * restrict pipeline, const char ** restrict cmds, int cmd_count);
+QN_SDK extern qn_bool qn_stor_pp_pfop_set_command_list(qn_json_object_ptr restrict pp, const char * restrict pipeline, const char ** restrict cmds, size_t cmd_count);
 QN_SDK extern qn_bool qn_stor_pp_pfop_notify_to_server(qn_json_object_ptr restrict pp, const char * restrict url);
 
 QN_SDK extern qn_bool qn_stor_pp_mime_enable_auto_detecting(qn_json_object_ptr restrict pp);
 QN_SDK extern qn_bool qn_stor_pp_mime_allow(qn_json_object_ptr restrict pp, const char * restrict mime1, const char * restrict mime2, ...);
-QN_SDK extern qn_bool qn_stor_pp_mime_allow_list(qn_json_object_ptr restrict pp, const char ** restrict mime_list, int mime_count);
+QN_SDK extern qn_bool qn_stor_pp_mime_allow_list(qn_json_object_ptr restrict pp, const char ** restrict mime_list, size_t mime_count);
 QN_SDK extern qn_bool qn_stor_pp_mime_deny(qn_json_object_ptr restrict pp, const char * restrict mime1, const char * restrict mime2, ...);
-QN_SDK extern qn_bool qn_stor_pp_mime_deny_list(qn_json_object_ptr restrict pp, const char ** restrict mime_list, int mime_count);
+QN_SDK extern qn_bool qn_stor_pp_mime_deny_list(qn_json_object_ptr restrict pp, const char ** restrict mime_list, size_t mime_count);
 
-QN_SDK extern qn_bool qn_stor_pp_fsize_set_minimum(qn_json_object_ptr restrict pp, qn_uint32 min_size);
-QN_SDK extern qn_bool qn_stor_pp_fsize_set_maximum(qn_json_object_ptr restrict pp, qn_uint32 max_size);
+QN_SDK extern qn_bool qn_stor_pp_fsize_set_minimum(qn_json_object_ptr restrict pp, qn_json_integer min_size);
+QN_SDK extern qn_bool qn_stor_pp_fsize_set_maximum(qn_json_object_ptr restrict pp, qn_json_integer max_size);
 
 QN_SDK extern qn_bool qn_stor_pp_key_enable_fetching_from_callback_response(qn_json_object_ptr restrict pp);
 QN_SDK extern qn_bool qn_stor_pp_key_make_from_template(qn_json_object_ptr restrict pp, const char * restrict key_template);
 
-QN_SDK extern qn_bool qn_stor_pp_auto_delete_after_days(qn_json_object_ptr restrict pp, qn_uint32 days);
+QN_SDK extern qn_bool qn_stor_pp_auto_delete_after_days(qn_json_object_ptr restrict pp, qn_json_integer days);
 
 QN_SDK extern qn_bool qn_stor_pp_upload_message(qn_json_object_ptr restrict pp, const char * restrict msg_queue, const char * restrict msg_body, const char * restrict msg_mime_type);
 

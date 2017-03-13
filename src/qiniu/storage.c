@@ -1151,7 +1151,7 @@ typedef struct _QN_STOR_LIST_EXTRA
     const char * prefix;
     const char * delimiter;
     const char * marker;
-    int limit;
+    qn_uint32 limit;
 
     qn_http_query_ptr qry;
     qn_rgn_entry_ptr rgn_entry;
@@ -1203,7 +1203,7 @@ QN_SDK void qn_stor_lse_set_marker(qn_stor_list_extra_ptr restrict lse, const ch
     lse->marker = marker;
 }
 
-QN_SDK void qn_stor_lse_set_limit(qn_stor_list_extra_ptr restrict lse, int limit)
+QN_SDK void qn_stor_lse_set_limit(qn_stor_list_extra_ptr restrict lse, qn_uint32 limit)
 {
     lse->limit = limit;
 }
@@ -1728,7 +1728,7 @@ QN_SDK qn_json_object_ptr qn_stor_ft_api_prefetch(qn_storage_ptr restrict stor, 
 
 // -------- Put Policy (abbreviation: pp) --------
 
-QN_SDK qn_json_object_ptr qn_stor_pp_create(const char * restrict bucket, const char * restrict key, qn_uint32 deadline)
+QN_SDK qn_json_object_ptr qn_stor_pp_create(const char * restrict bucket, const char * restrict key, qn_json_integer deadline)
 {
     qn_json_object_ptr pp = qn_json_create_object();
     if (pp) {
@@ -1758,7 +1758,7 @@ QN_SDK qn_bool qn_stor_pp_set_scope(qn_json_object_ptr restrict pp, const char *
     return ret;
 }
 
-QN_SDK qn_bool qn_stor_pp_set_deadline(qn_json_object_ptr restrict pp, qn_uint32 deadline)
+QN_SDK qn_bool qn_stor_pp_set_deadline(qn_json_object_ptr restrict pp, qn_json_integer deadline)
 {
     return qn_json_set_integer(pp, "deadline", deadline);
 }
@@ -1816,7 +1816,7 @@ QN_SDK qn_bool qn_stor_pp_pfop_set_commands(qn_json_object_ptr restrict pp, cons
     return ret;
 }
 
-QN_SDK qn_bool qn_stor_pp_pfop_set_command_list(qn_json_object_ptr restrict pp, const char * restrict pipeline, const char ** restrict cmds, int cmd_count)
+QN_SDK qn_bool qn_stor_pp_pfop_set_command_list(qn_json_object_ptr restrict pp, const char * restrict pipeline, const char ** restrict cmds, size_t cmd_count)
 {
     qn_bool ret = qn_false;
     qn_string ops = NULL;
@@ -1863,7 +1863,7 @@ QN_SDK qn_bool qn_stor_pp_mime_allow(qn_json_object_ptr restrict pp, const char 
     return ret;
 }
 
-QN_SDK qn_bool qn_stor_pp_mime_allow_list(qn_json_object_ptr restrict pp, const char ** restrict mime_list, int mime_count)
+QN_SDK qn_bool qn_stor_pp_mime_allow_list(qn_json_object_ptr restrict pp, const char ** restrict mime_list, size_t mime_count)
 {
     qn_bool ret = qn_false;
     qn_string mime_str = NULL;
@@ -1902,7 +1902,7 @@ QN_SDK qn_bool qn_stor_pp_mime_deny(qn_json_object_ptr restrict pp, const char *
     return ret;
 }
 
-QN_SDK qn_bool qn_stor_pp_mime_deny_list(qn_json_object_ptr restrict pp, const char ** restrict mime_list, int mime_count)
+QN_SDK qn_bool qn_stor_pp_mime_deny_list(qn_json_object_ptr restrict pp, const char ** restrict mime_list, size_t mime_count)
 {
     qn_bool ret;
     qn_string deny_mime_str;
@@ -1923,12 +1923,12 @@ QN_SDK qn_bool qn_stor_pp_mime_deny_list(qn_json_object_ptr restrict pp, const c
     return ret;
 }
 
-QN_SDK qn_bool qn_stor_pp_fsize_set_minimum(qn_json_object_ptr restrict pp, qn_uint32 min_size)
+QN_SDK qn_bool qn_stor_pp_fsize_set_minimum(qn_json_object_ptr restrict pp, qn_json_integer min_size)
 {
     return qn_json_set_integer(pp, "fsizeMin", min_size);
 }
 
-QN_SDK qn_bool qn_stor_pp_fsize_set_maximum(qn_json_object_ptr restrict pp, qn_uint32 max_size)
+QN_SDK qn_bool qn_stor_pp_fsize_set_maximum(qn_json_object_ptr restrict pp, qn_json_integer max_size)
 {
     return qn_json_set_integer(pp, "fsizeLimit", max_size);
 }
@@ -1943,7 +1943,7 @@ QN_SDK qn_bool qn_stor_pp_key_make_from_template(qn_json_object_ptr restrict pp,
     return qn_json_set_string(pp, "saveKey", key_template);
 }
 
-QN_SDK qn_bool qn_stor_pp_auto_delete_after_days(qn_json_object_ptr restrict pp, qn_uint32 days)
+QN_SDK qn_bool qn_stor_pp_auto_delete_after_days(qn_json_object_ptr restrict pp, qn_json_integer days)
 {
     return qn_json_set_integer(pp, "deleteAfterDays", days);
 }
@@ -2845,7 +2845,6 @@ QN_SDK qn_json_object_ptr qn_stor_ru_api_mkfile(qn_storage_ptr restrict stor, co
     if (! qn_stor_ru_prepare_for_resumable_upload(stor, uptoken, "text/plain", ctx_rdr, ctx_size, rgn_entry)) return NULL;
 
     // ---- Prepare upload URL.
-    // TODO: Use the correct directive depends on the type of fsize on different platforms.
     tmp_str = qn_type_fsize_to_string(fsize);
     if (! tmp_str) return NULL;
     url = qn_cs_sprintf("%.*s/mkfile/%.*s", qn_str_size(host), qn_str_cstr(host), qn_str_size(tmp_str), qn_str_cstr(tmp_str));
