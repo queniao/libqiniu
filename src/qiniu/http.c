@@ -192,7 +192,7 @@ static inline const char * qn_http_get_fname_utf8(const char * restrict fname)
 #endif
 }
 
-QN_SDK qn_bool qn_http_form_add_file(qn_http_form_ptr restrict form, const char * restrict field, const char * restrict fname, const char * restrict fname_utf8, size_t fsize)
+QN_SDK qn_bool qn_http_form_add_file(qn_http_form_ptr restrict form, const char * restrict field, const char * restrict fname, const char * restrict fname_utf8, qn_fsize fsize)
 {
     CURLFORMcode ret;
 
@@ -208,7 +208,7 @@ QN_SDK qn_bool qn_http_form_add_file(qn_http_form_ptr restrict form, const char 
     return qn_true;
 }
 
-QN_SDK qn_bool qn_http_form_add_file_reader(qn_http_form_ptr restrict form, const char * restrict field, const char * restrict fname, const char * restrict fname_utf8, size_t fsize, void * restrict req)
+QN_SDK qn_bool qn_http_form_add_file_reader(qn_http_form_ptr restrict form, const char * restrict field, const char * restrict fname, const char * restrict fname_utf8, qn_fsize fsize, void * restrict req)
 {
     CURLFORMcode ret;
 
