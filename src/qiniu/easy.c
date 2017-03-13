@@ -32,7 +32,7 @@ typedef struct _QN_EASY_PUT_EXTRA
         // Specifies a const-volatile boolean variable to check if need to abort or not.
         const volatile qn_bool * abort;
 
-        size_t min_resumable_fsize; // The minimum file size to enable resumable uploading.
+        qn_size min_resumable_fsize; // The minimum file size to enable resumable uploading.
                                     // It must be less than 500MB due to the limit set by the server, and larger than
                                     // 4MB since uploading a small file in multiple HTTP round trips is not efficient.
                                     // If set less than 4MB, the default size is 10MB.
@@ -122,7 +122,7 @@ QN_SDK void qn_easy_pe_set_abort_variable(qn_easy_put_extra_ptr restrict pe, con
     pe->put_ctrl.abort = abort;
 }
 
-QN_SDK void qn_easy_pe_set_min_resumable_fsize(qn_easy_put_extra_ptr restrict pe, size_t fsize)
+QN_SDK void qn_easy_pe_set_min_resumable_fsize(qn_easy_put_extra_ptr restrict pe, qn_size fsize)
 {
     pe->put_ctrl.min_resumable_fsize = fsize;
 }
@@ -138,7 +138,7 @@ QN_SDK void qn_easy_pe_set_source_reader(qn_easy_put_extra_ptr restrict pe, qn_i
     pe->put_ctrl.fsize = fsize;
 }
 
-QN_SDK qn_bool qn_easy_pe_clone_and_set_resumable_info(qn_easy_put_extra_ptr restrict pe, const char * restrict str, size_t str_size)
+QN_SDK qn_bool qn_easy_pe_clone_and_set_resumable_info(qn_easy_put_extra_ptr restrict pe, const char * restrict str, qn_size str_size)
 {
     qn_string tmp = qn_cs_clone(str, str_size);
     if (! tmp) return qn_false;
@@ -320,9 +320,9 @@ QN_EASY_PUT_HUGE_ERROR_HANDLING:
     return put_ret;
 }
 
-static qn_bool qn_easy_parse_putting_policy(qn_easy_ptr restrict easy, const char * restrict str, size_t str_size, qn_json_object_ptr * restrict pp)
+static qn_bool qn_easy_parse_putting_policy(qn_easy_ptr restrict easy, const char * restrict str, qn_size str_size, qn_json_object_ptr * restrict pp)
 {
-    size_t pp_size;
+    qn_size pp_size;
     qn_bool ret;
     qn_string pp_str;
 
