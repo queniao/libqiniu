@@ -74,7 +74,7 @@ static qn_bool qn_rgn_host_augment(qn_rgn_host_ptr restrict host)
     return qn_true;
 }
 
-static qn_bool qn_rgn_host_add_entry_raw(qn_rgn_host_ptr restrict host, const char * restrict base_url, size_t base_url_size, const char * restrict hostname, size_t hostname_size)
+static qn_bool qn_rgn_host_add_entry_raw(qn_rgn_host_ptr restrict host, const char * restrict base_url, qn_size base_url_size, const char * restrict hostname, qn_size hostname_size)
 {
     qn_rgn_entry_ptr new_ent;
 
@@ -547,9 +547,9 @@ static qn_bool qn_rgn_svc_parse_and_add_entry(qn_string txt, qn_rgn_host_ptr hos
 {
     const char * end;
     const char * base_url = NULL;
-    size_t base_url_size = 0;
+    qn_size base_url_size = 0;
     const char * hostname = NULL;
-    size_t hostname_size = 0;
+    qn_size hostname_size = 0;
 
     if ((hostname = strstr(qn_str_cstr(txt), "-H"))) {
         hostname += 2;
