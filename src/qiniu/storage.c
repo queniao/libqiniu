@@ -1816,7 +1816,7 @@ QN_SDK qn_bool qn_stor_pp_pfop_set_commands(qn_json_object_ptr restrict pp, cons
     return ret;
 }
 
-QN_SDK qn_bool qn_stor_pp_pfop_set_command_list(qn_json_object_ptr restrict pp, const char * restrict pipeline, const char ** restrict cmds, size_t cmd_count)
+QN_SDK qn_bool qn_stor_pp_pfop_set_command_list(qn_json_object_ptr restrict pp, const char * restrict pipeline, const char ** restrict cmds, qn_uint cmd_count)
 {
     qn_bool ret = qn_false;
     qn_string ops = NULL;
@@ -1863,7 +1863,7 @@ QN_SDK qn_bool qn_stor_pp_mime_allow(qn_json_object_ptr restrict pp, const char 
     return ret;
 }
 
-QN_SDK qn_bool qn_stor_pp_mime_allow_list(qn_json_object_ptr restrict pp, const char ** restrict mime_list, size_t mime_count)
+QN_SDK qn_bool qn_stor_pp_mime_allow_list(qn_json_object_ptr restrict pp, const char ** restrict mime_list, qn_uint mime_count)
 {
     qn_bool ret = qn_false;
     qn_string mime_str = NULL;
@@ -1902,7 +1902,7 @@ QN_SDK qn_bool qn_stor_pp_mime_deny(qn_json_object_ptr restrict pp, const char *
     return ret;
 }
 
-QN_SDK qn_bool qn_stor_pp_mime_deny_list(qn_json_object_ptr restrict pp, const char ** restrict mime_list, size_t mime_count)
+QN_SDK qn_bool qn_stor_pp_mime_deny_list(qn_json_object_ptr restrict pp, const char ** restrict mime_list, qn_uint mime_count)
 {
     qn_bool ret;
     qn_string deny_mime_str;
@@ -2430,7 +2430,7 @@ QN_SDK qn_string qn_stor_ru_to_string(qn_stor_resumable_upload_ptr restrict ru)
     return qn_json_object_to_string(ru->progress);
 }
 
-QN_SDK qn_stor_resumable_upload_ptr qn_stor_ru_from_string(const char * restrict str, size_t str_len)
+QN_SDK qn_stor_resumable_upload_ptr qn_stor_ru_from_string(const char * restrict str, qn_size str_len)
 {
     qn_string fsize_str;
     qn_stor_resumable_upload_ptr ru;

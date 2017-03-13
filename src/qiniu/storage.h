@@ -128,14 +128,14 @@ QN_SDK extern qn_bool qn_stor_pp_callback_to_server(qn_json_object_ptr restrict 
 QN_SDK extern qn_bool qn_stor_pp_callback_with_body(qn_json_object_ptr restrict pp, const char * restrict body, const char * restrict mime_type);
 
 QN_SDK extern qn_bool qn_stor_pp_pfop_set_commands(qn_json_object_ptr restrict pp, const char * restrict pipeline, const char * restrict cmd1, const char * restrict cmd2, ...);
-QN_SDK extern qn_bool qn_stor_pp_pfop_set_command_list(qn_json_object_ptr restrict pp, const char * restrict pipeline, const char ** restrict cmds, size_t cmd_count);
+QN_SDK extern qn_bool qn_stor_pp_pfop_set_command_list(qn_json_object_ptr restrict pp, const char * restrict pipeline, const char ** restrict cmds, qn_uint cmd_count);
 QN_SDK extern qn_bool qn_stor_pp_pfop_notify_to_server(qn_json_object_ptr restrict pp, const char * restrict url);
 
 QN_SDK extern qn_bool qn_stor_pp_mime_enable_auto_detecting(qn_json_object_ptr restrict pp);
 QN_SDK extern qn_bool qn_stor_pp_mime_allow(qn_json_object_ptr restrict pp, const char * restrict mime1, const char * restrict mime2, ...);
-QN_SDK extern qn_bool qn_stor_pp_mime_allow_list(qn_json_object_ptr restrict pp, const char ** restrict mime_list, size_t mime_count);
+QN_SDK extern qn_bool qn_stor_pp_mime_allow_list(qn_json_object_ptr restrict pp, const char ** restrict mime_list, qn_uint mime_count);
 QN_SDK extern qn_bool qn_stor_pp_mime_deny(qn_json_object_ptr restrict pp, const char * restrict mime1, const char * restrict mime2, ...);
-QN_SDK extern qn_bool qn_stor_pp_mime_deny_list(qn_json_object_ptr restrict pp, const char ** restrict mime_list, size_t mime_count);
+QN_SDK extern qn_bool qn_stor_pp_mime_deny_list(qn_json_object_ptr restrict pp, const char ** restrict mime_list, qn_uint mime_count);
 
 QN_SDK extern qn_bool qn_stor_pp_fsize_set_minimum(qn_json_object_ptr restrict pp, qn_json_integer min_size);
 QN_SDK extern qn_bool qn_stor_pp_fsize_set_maximum(qn_json_object_ptr restrict pp, qn_json_integer max_size);
@@ -186,7 +186,7 @@ QN_SDK extern qn_stor_resumable_upload_ptr qn_stor_ru_create(qn_io_reader_itf re
 QN_SDK extern void qn_stor_ru_destroy(qn_stor_resumable_upload_ptr restrict ru);
 
 QN_SDK extern qn_string qn_stor_ru_to_string(qn_stor_resumable_upload_ptr restrict ru);
-QN_SDK extern qn_stor_resumable_upload_ptr qn_stor_ru_from_string(const char * restrict str, size_t str_len);
+QN_SDK extern qn_stor_resumable_upload_ptr qn_stor_ru_from_string(const char * restrict str, qn_size str_len);
 
 QN_SDK extern qn_bool qn_stor_ru_attach(qn_stor_resumable_upload_ptr restrict ru, qn_io_reader_itf restrict data_rdr);
 
