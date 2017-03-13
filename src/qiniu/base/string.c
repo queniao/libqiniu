@@ -21,7 +21,7 @@ QN_SDK extern qn_string qn_cs_duplicate(const char * restrict s)
     return qn_cs_clone(s, strlen(s));
 }
 
-QN_SDK qn_string qn_cs_clone(const char * restrict s, size_t sz)
+QN_SDK qn_string qn_cs_clone(const char * restrict s, qn_size sz)
 {
     qn_string new_str = malloc(sz + 1);
     if (!new_str) {
@@ -38,9 +38,9 @@ QN_SDK qn_string qn_cs_join_list(const char * restrict deli, const char ** restr
 {
     qn_string new_str;
     char * pos;
-    size_t final_size;
-    size_t deli_size;
-    size_t str_size;
+    qn_size final_size;
+    qn_size deli_size;
+    qn_size str_size;
     int i;
 
     if (n == 1) return qn_cs_duplicate(ss[0]);
@@ -79,9 +79,9 @@ QN_SDK qn_string qn_cs_join_va(const char * restrict deli, const char * restrict
     va_list cp;
     qn_string new_str;
     qn_string str;
-    size_t final_size;
-    size_t str_size;
-    size_t deli_size = strlen(deli);
+    qn_size final_size;
+    qn_size str_size;
+    qn_size deli_size = strlen(deli);
     int n;
     char * pos;
 
@@ -189,12 +189,12 @@ QN_SDK qn_string qn_cs_sprintf(const char * restrict format, ...)
 #error The version of the MSVC is lower then VC++ 2005.
 #endif
 
-QN_SDK int qn_cs_snprintf(char * restrict buf, size_t buf_size, const char * restrict format, ...)
+QN_SDK int qn_cs_snprintf(char * restrict buf, qn_size buf_size, const char * restrict format, ...)
 {
     va_list ap;
     int printed_size;
     char * buf = str;
-    size_t buf_cap = buf_size;
+    qn_size buf_cap = buf_size;
 
     if (str == NULL || buf_size == 0) {
         buf = 0x1;
@@ -209,7 +209,7 @@ QN_SDK int qn_cs_snprintf(char * restrict buf, size_t buf_size, const char * res
 
 #else
 
-QN_SDK int qn_cs_snprintf(char * restrict str, size_t size,  const char * restrict format, ...)
+QN_SDK int qn_cs_snprintf(char * restrict str, qn_size size,  const char * restrict format, ...)
 {
     va_list ap;
     int printed_size;
@@ -223,10 +223,10 @@ QN_SDK int qn_cs_snprintf(char * restrict str, size_t size,  const char * restri
 
 #endif
 
-QN_SDK qn_string qn_cs_encode_base64_urlsafe(const char * restrict bin, size_t bin_size)
+QN_SDK qn_string qn_cs_encode_base64_urlsafe(const char * restrict bin, qn_size bin_size)
 {
     qn_string new_str = NULL;
-    size_t encoding_size = qn_b64_encode_urlsafe(NULL, 0, bin, bin_size, QN_B64_APPEND_PADDING);
+    qn_size encoding_size = qn_b64_encode_urlsafe(NULL, 0, bin, bin_size, QN_B64_APPEND_PADDING);
     
     if (encoding_size == 0) {
         return "";
@@ -243,10 +243,10 @@ QN_SDK qn_string qn_cs_encode_base64_urlsafe(const char * restrict bin, size_t b
     return new_str;
 }
 
-QN_SDK qn_string qn_cs_decode_base64_urlsafe(const char * restrict str, size_t str_size)
+QN_SDK qn_string qn_cs_decode_base64_urlsafe(const char * restrict str, qn_size str_size)
 {
     qn_string new_str = NULL;
-    size_t decoding_size = qn_b64_decode_urlsafe(NULL, 0, str, str_size, 0);
+    qn_size decoding_size = qn_b64_decode_urlsafe(NULL, 0, str, str_size, 0);
     
     if (decoding_size == 0) {
         return "";
@@ -290,7 +290,7 @@ QN_SDK qn_bool qn_cs_percent_encode_check(int c)
     return qn_true;
 }
 
-QN_SDK size_t qn_cs_percent_encode_in_buffer_with_checker(char * restrict buf, size_t buf_size, const char * restrict bin, size_t bin_size, qn_cs_percent_encode_check_fn need_to_encode)
+QN_SDK qn_size qn_cs_percent_encode_in_buffer_with_checker(char * restrict buf, qn_size buf_size, const char * restrict bin, qn_size bin_size, qn_cs_percent_encode_check_fn need_to_encode)
 {
     int i = 0;
     int m = 0;
@@ -347,10 +347,10 @@ QN_SDK size_t qn_cs_percent_encode_in_buffer_with_checker(char * restrict buf, s
     return m;
 }
 
-QN_SDK qn_string qn_cs_percent_encode_with_checker(const char * restrict bin, size_t bin_size, qn_cs_percent_encode_check_fn need_to_encode)
+QN_SDK qn_string qn_cs_percent_encode_with_checker(const char * restrict bin, qn_size bin_size, qn_cs_percent_encode_check_fn need_to_encode)
 {
     qn_string new_str = NULL;
-    size_t buf_size = qn_cs_percent_encode_in_buffer_with_checker(NULL, 0, bin, bin_size, need_to_encode);
+    qn_size buf_size = qn_cs_percent_encode_in_buffer_with_checker(NULL, 0, bin, bin_size, need_to_encode);
 
     if (buf_size == bin_size) return qn_cs_clone(bin, bin_size);
 
@@ -372,8 +372,8 @@ QN_SDK qn_string qn_str_join_list(const char * restrict deli, const qn_string * 
 {
     qn_string new_str = NULL;
     char * pos = NULL;
-    size_t final_size = 0;
-    size_t deli_size = 0L;
+    qn_size final_size = 0;
+    qn_size deli_size = 0L;
     int i = 0;
 
     if (n == 1) return qn_str_duplicate(ss[0]);
@@ -409,8 +409,8 @@ QN_SDK qn_string qn_str_join_va(const char * restrict deli, const qn_string rest
     va_list cp;
     qn_string new_str = NULL;
     qn_string str = NULL;
-    size_t final_size = 0;
-    size_t deli_size = strlen(deli);
+    qn_size final_size = 0;
+    qn_size deli_size = strlen(deli);
     int n = 0;
     char * pos = NULL;
 

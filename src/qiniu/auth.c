@@ -45,11 +45,11 @@ QN_SDK void qn_mac_destroy(qn_mac_ptr restrict mac)
     } // if
 }
 
-static int qn_mac_hmac_update(HMAC_CTX * restrict ctx, const unsigned char * restrict data, size_t data_size)
+static int qn_mac_hmac_update(HMAC_CTX * restrict ctx, const unsigned char * restrict data, qn_size data_size)
 {
 #define QN_MAC_HMAC_MAX_WRITING_BYTES ( ((~((int)0)) << 1) >> 1 )
     int writing_bytes;
-    size_t rem_size = data_size;
+    qn_size rem_size = data_size;
     const unsigned char * pos = data;
 
     while (rem_size > 0) {
@@ -62,7 +62,7 @@ static int qn_mac_hmac_update(HMAC_CTX * restrict ctx, const unsigned char * res
 #undef QN_MAC_HMAC_MAX_WRITING_BYTES
 }
 
-QN_SDK const qn_string qn_mac_make_uptoken(qn_mac_ptr restrict mac, const char * restrict pp, size_t pp_size)
+QN_SDK const qn_string qn_mac_make_uptoken(qn_mac_ptr restrict mac, const char * restrict pp, qn_size pp_size)
 {
     qn_string sign;
     qn_string encoded_pp;
@@ -87,7 +87,7 @@ QN_SDK const qn_string qn_mac_make_uptoken(qn_mac_ptr restrict mac, const char *
     return sign;
 }
 
-QN_SDK const qn_string qn_mac_make_acctoken(qn_mac_ptr restrict mac, const char * restrict url, const char * restrict body, size_t body_size)
+QN_SDK const qn_string qn_mac_make_acctoken(qn_mac_ptr restrict mac, const char * restrict url, const char * restrict body, qn_size body_size)
 {
     qn_string encoded_digest;
     qn_string acctoken;

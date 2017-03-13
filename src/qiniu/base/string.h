@@ -23,23 +23,23 @@ typedef char * qn_string;
 // ---- Declaration of C String ----
 
 QN_SDK extern qn_string qn_cs_duplicate(const char * restrict s);
-QN_SDK extern qn_string qn_cs_clone(const char * restrict s, size_t sz);
+QN_SDK extern qn_string qn_cs_clone(const char * restrict s, qn_size sz);
 
 QN_SDK extern qn_string qn_cs_join_list(const char * restrict delimiter, const char ** restrict ss, int n);
 QN_SDK extern qn_string qn_cs_join_va(const char * restrict delimiter, const char * restrict s1, const char * restrict s2, va_list ap);
 
 QN_SDK extern qn_string qn_cs_vprintf(const char * restrict format, va_list ap);
 QN_SDK extern qn_string qn_cs_sprintf(const char * restrict format, ...);
-QN_SDK extern int qn_cs_snprintf(char * restrict buf, size_t buf_size, const char * restrict format, ...);
+QN_SDK extern int qn_cs_snprintf(char * restrict buf, qn_size buf_size, const char * restrict format, ...);
 
-QN_SDK extern qn_string qn_cs_encode_base64_urlsafe(const char * restrict bin, size_t bin_size);
-QN_SDK extern qn_string qn_cs_decode_base64_urlsafe(const char * restrict str, size_t str_size);
+QN_SDK extern qn_string qn_cs_encode_base64_urlsafe(const char * restrict bin, qn_size bin_size);
+QN_SDK extern qn_string qn_cs_decode_base64_urlsafe(const char * restrict str, qn_size str_size);
 
 typedef qn_bool (*qn_cs_percent_encode_check_fn)(int c);
 
 QN_SDK extern qn_bool qn_cs_percent_encode_check(int c);
-QN_SDK extern size_t qn_cs_percent_encode_in_buffer_with_checker(char * restrict buf, size_t buf_size, const char * restrict bin, size_t bin_size, qn_cs_percent_encode_check_fn need_to_encode);
-QN_SDK extern qn_string qn_cs_percent_encode_with_checker(const char * restrict bin, size_t bin_size, qn_cs_percent_encode_check_fn need_to_encode);
+QN_SDK extern qn_size qn_cs_percent_encode_in_buffer_with_checker(char * restrict buf, qn_size buf_size, const char * restrict bin, qn_size bin_size, qn_cs_percent_encode_check_fn need_to_encode);
+QN_SDK extern qn_string qn_cs_percent_encode_with_checker(const char * restrict bin, qn_size bin_size, qn_cs_percent_encode_check_fn need_to_encode);
 
 #define qn_cs_percent_encode_in_buffer(buf, buf_size, bin, bin_size) qn_cs_percent_encode_in_buffer_with_checker(buf, buf_size, bin, bin_size, NULL)
 #define qn_cs_percent_encode(bin, bin_size) qn_cs_percent_encode_with_checker(bin, bin_size, NULL)
@@ -52,7 +52,7 @@ QN_SDK extern const qn_string qn_str_empty_string;
 
 #define qn_str_cstr(s) (s)
 
-static inline size_t qn_str_size(const qn_string restrict s)
+static inline qn_size qn_str_size(const qn_string restrict s)
 {
     if (!s) return 0;
     return posix_strlen(s);
