@@ -206,11 +206,11 @@ QN_SDK extern qn_bool qn_stor_ru_is_file_uploaded(qn_stor_resumable_upload_ptr r
 
 // -------- Resumable Upload Functions (abbreviation: ru) --------
 
-QN_SDK extern qn_json_object_ptr qn_stor_ru_api_mkblk(qn_storage_ptr restrict stor, const char * restrict uptoken, qn_io_reader_itf restrict data_rdr, qn_json_object_ptr restrict blk_info, int chk_size, qn_stor_upload_extra_ptr restrict upe);
-QN_SDK extern qn_json_object_ptr qn_stor_ru_api_bput(qn_storage_ptr restrict stor, const char * restrict uptoken, qn_io_reader_itf restrict data_rdr, qn_json_object_ptr restrict blk_info, int chk_size, qn_stor_upload_extra_ptr restrict upe);
+QN_SDK extern qn_json_object_ptr qn_stor_ru_api_mkblk(qn_storage_ptr restrict stor, const char * restrict uptoken, qn_io_reader_itf restrict data_rdr, qn_json_object_ptr restrict blk_info, qn_uint chk_size, qn_stor_upload_extra_ptr restrict upe);
+QN_SDK extern qn_json_object_ptr qn_stor_ru_api_bput(qn_storage_ptr restrict stor, const char * restrict uptoken, qn_io_reader_itf restrict data_rdr, qn_json_object_ptr restrict blk_info, qn_uint chk_size, qn_stor_upload_extra_ptr restrict upe);
 QN_SDK extern qn_json_object_ptr qn_stor_ru_api_mkfile(qn_storage_ptr restrict stor, const char * restrict uptoken, qn_io_reader_itf restrict ctx_rdr, qn_json_object_ptr restrict last_blk_info, qn_fsize fsize, qn_stor_upload_extra_ptr restrict upe);
 
-QN_SDK extern qn_json_object_ptr qn_stor_ru_upload_huge(qn_storage_ptr restrict stor, const char * restrict uptoken, qn_stor_resumable_upload_ptr ru, int * start_idx, int chk_size, qn_stor_upload_extra_ptr restrict upe);
+QN_SDK extern qn_json_object_ptr qn_stor_ru_upload_huge(qn_storage_ptr restrict stor, const char * restrict uptoken, qn_stor_resumable_upload_ptr ru, int * start_idx, qn_uint chk_size, qn_stor_upload_extra_ptr restrict upe);
 
 #ifdef __cplusplus
 }
