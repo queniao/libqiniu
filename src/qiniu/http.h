@@ -92,8 +92,8 @@ QN_SDK extern int qn_http_resp_get_writer_retcode(qn_http_response_ptr restrict 
 QN_SDK extern qn_http_hdr_iterator_ptr qn_http_resp_get_header_iterator(qn_http_response_ptr restrict resp);
 QN_SDK extern const char * qn_http_resp_get_header(qn_http_response_ptr restrict resp, const char * restrict hdr);
 
-QN_SDK extern qn_bool qn_http_resp_set_header(qn_http_response_ptr restrict resp, const char * restrict hdr, const char * restrict val, int val_size);
-QN_SDK extern void qn_http_resp_unset_header(qn_http_response_ptr restrict resp, const qn_string restrict header);
+QN_SDK extern qn_bool qn_http_resp_set_header(qn_http_response_ptr restrict resp, const char * restrict hdr, const char * restrict val, size_t val_size);
+QN_SDK extern void qn_http_resp_unset_header(qn_http_response_ptr restrict resp, const char * restrict hdr);
 
 // ----
 
