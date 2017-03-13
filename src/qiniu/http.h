@@ -56,9 +56,9 @@ QN_SDK extern void qn_http_req_reset(qn_http_request_ptr restrict req);
 
 QN_SDK extern const char * qn_http_req_get_header(qn_http_request_ptr restrict req, const char * restrict hdr);
 
-QN_SDK extern qn_bool qn_http_req_set_header_with_values(qn_http_request_ptr restrict req, const qn_string restrict header, const qn_string restrict val1, const qn_string val2, ...);
-QN_SDK extern qn_bool qn_http_req_set_header(qn_http_request_ptr restrict req, const qn_string restrict header, const qn_string restrict value);
-QN_SDK extern void qn_http_req_unset_header(qn_http_request_ptr restrict req, const qn_string restrict header);
+QN_SDK extern qn_bool qn_http_req_set_header_with_values(qn_http_request_ptr restrict req, const char * restrict hdr, const char * restrict val1, const char * val2, ...);
+QN_SDK extern qn_bool qn_http_req_set_header(qn_http_request_ptr restrict req, const char * restrict hdr, const char * restrict value);
+QN_SDK extern void qn_http_req_unset_header(qn_http_request_ptr restrict req, const char * restrict hdr);
 
 // ----
 
@@ -68,9 +68,9 @@ QN_SDK extern void qn_http_req_set_form(qn_http_request_ptr restrict req, qn_htt
 
 // ----
 
-QN_SDK extern void qn_http_req_set_body_data(qn_http_request_ptr restrict req, char * restrict body_data, qn_size body_size);
+QN_SDK extern void qn_http_req_set_body_data(qn_http_request_ptr restrict req, const char * restrict body_data, qn_size body_size);
 QN_SDK extern void qn_http_req_set_body_reader(qn_http_request_ptr restrict req, void * restrict body_reader, qn_http_body_reader_callback body_reader_callback, qn_fsize body_size);
-QN_SDK extern char * qn_http_req_body_data(qn_http_request_ptr restrict req);
+QN_SDK extern const char * qn_http_req_body_data(qn_http_request_ptr restrict req);
 QN_SDK extern qn_fsize qn_http_req_body_size(qn_http_request_ptr restrict req);
 
 // ---- Declaration of HTTP response ----
@@ -107,8 +107,8 @@ typedef struct _QN_HTTP_CONNECTION * qn_http_connection_ptr;
 QN_SDK extern qn_http_connection_ptr qn_http_conn_create(void);
 QN_SDK extern void qn_http_conn_destroy(qn_http_connection_ptr restrict conn);
 
-QN_SDK extern qn_bool qn_http_conn_get(qn_http_connection_ptr restrict conn, const qn_string restrict url, qn_http_request_ptr restrict req, qn_http_response_ptr restrict resp);
-QN_SDK extern qn_bool qn_http_conn_post(qn_http_connection_ptr restrict conn, const qn_string restrict url, qn_http_request_ptr restrict req, qn_http_response_ptr restrict resp);
+QN_SDK extern qn_bool qn_http_conn_get(qn_http_connection_ptr restrict conn, const char * restrict url, qn_http_request_ptr restrict req, qn_http_response_ptr restrict resp);
+QN_SDK extern qn_bool qn_http_conn_post(qn_http_connection_ptr restrict conn, const char * restrict url, qn_http_request_ptr restrict req, qn_http_response_ptr restrict resp);
 
 #ifdef __cplusplus
 }
