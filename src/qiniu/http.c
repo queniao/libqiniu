@@ -106,7 +106,7 @@ static size_t qn_http_json_wrt_parse_array(qn_http_json_writer_ptr w, char * res
     return 0;
 }
 
-QN_SDK size_t qn_http_json_writer_cfn(void * user_data, char * restrict buf, size_t buf_size)
+QN_SDK size_t qn_http_json_wrt_write_cfn(void * user_data, char * restrict buf, size_t buf_size)
 {
     size_t ret;
     qn_http_json_writer_ptr w = (qn_http_json_writer_ptr) user_data;
@@ -493,7 +493,7 @@ QN_SDK void qn_http_resp_set_data_writer(qn_http_response_ptr restrict resp, voi
     resp->body_wrt_cb = body_wrt_cb;
 }
 
-static size_t qn_http_resp_hdr_writer_cfn(char * buf, size_t size, size_t nitems, void * user_data)
+static size_t qn_http_resp_hdr_wrt_write_cfn(char * buf, size_t size, size_t nitems, void * user_data)
 {
     qn_http_response_ptr resp = (qn_http_response_ptr) user_data;
     size_t buf_size = size * nitems;
@@ -558,7 +558,7 @@ static size_t qn_http_resp_hdr_writer_cfn(char * buf, size_t size, size_t nitems
     return buf_size;
 }
 
-static size_t qn_http_resp_body_writer_cfn(char * buf, size_t size, size_t nitems, void * user_data)
+static size_t qn_http_resp_body_wrt_write_cfn(char * buf, size_t size, size_t nitems, void * user_data)
 {
     qn_http_response_ptr resp = (qn_http_response_ptr) user_data;
     size_t buf_size = size * nitems;
@@ -635,10 +635,10 @@ static qn_bool qn_http_conn_do_request(qn_http_connection_ptr restrict conn, qn_
     qn_string entry = NULL;
     qn_http_hdr_iterator_ptr itr;
 
-    curl_easy_setopt(conn->curl, CURLOPT_HEADERFUNCTION, qn_http_resp_hdr_writer_cfn);
+    curl_easy_setopt(conn->curl, CURLOPT_HEADERFUNCTION, qn_http_resp_hdr_wrt_write_cfn);
     curl_easy_setopt(conn->curl, CURLOPT_HEADERDATA, resp);
 
-    curl_easy_setopt(conn->curl, CURLOPT_WRITEFUNCTION, qn_http_resp_body_writer_cfn);
+    curl_easy_setopt(conn->curl, CURLOPT_WRITEFUNCTION, qn_http_resp_body_wrt_write_cfn);
     curl_easy_setopt(conn->curl, CURLOPT_WRITEDATA, resp);
 
     if (qn_http_hdr_count(req->hdr) > 0) {

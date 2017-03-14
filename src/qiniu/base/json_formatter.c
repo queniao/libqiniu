@@ -269,7 +269,7 @@ static qn_bool qn_json_fmt_format_ordinary(qn_json_formatter_ptr fmt)
     return qn_true;
 }
 
-static int qn_json_fmt_callback_cfn(void * data, qn_json_class cls, qn_json_variant_ptr val)
+static int qn_json_fmt_advance_cfn(void * data, qn_json_class cls, qn_json_variant_ptr val)
 {
     qn_json_formatter_ptr fmt = (qn_json_formatter_ptr)data;
     if (cls == QN_JSON_UNKNOWN) return QN_JSON_ITR_NO_MORE;
@@ -287,7 +287,7 @@ static qn_bool qn_json_fmt_format(qn_json_formatter_ptr fmt, char * restrict buf
     while ((obj = qn_json_itr_top_object(fmt->iterator)) || (arr = qn_json_itr_top_array(fmt->iterator))) {
         switch (qn_json_itr_get_status(fmt->iterator)) {
             case QN_JSON_FORMATTING_NEXT:
-                itr_ret = qn_json_itr_advance(fmt->iterator, fmt, &qn_json_fmt_callback_cfn);
+                itr_ret = qn_json_itr_advance(fmt->iterator, fmt, &qn_json_fmt_advance_cfn);
                 if (itr_ret == QN_JSON_ITR_OK) {
                     if (qn_json_itr_done_steps(fmt->iterator) > 1 && !qn_json_fmt_putc(fmt, ',')) {
                         // Output the comma between each element.

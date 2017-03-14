@@ -319,7 +319,7 @@ QN_SDK qn_json_object_ptr qn_stor_mn_api_stat(qn_storage_ptr restrict stor, cons
     } // if
 
     qn_http_json_wrt_prepare(stor->resp_json_wrt, &stor->obj_body, NULL);
-    qn_http_resp_set_data_writer(stor->resp, stor->resp_json_wrt, &qn_http_json_writer_cfn);
+    qn_http_resp_set_data_writer(stor->resp, stor->resp_json_wrt, &qn_http_json_wrt_write_cfn);
 
     // ---- Do the stat action.
     ret = qn_http_conn_get(stor->conn, url, stor->req, stor->resp);
@@ -485,7 +485,7 @@ QN_SDK qn_json_object_ptr qn_stor_mn_api_copy(qn_storage_ptr restrict stor, cons
     } // if
 
     qn_http_json_wrt_prepare(stor->resp_json_wrt, &stor->obj_body, NULL);
-    qn_http_resp_set_data_writer(stor->resp, stor->resp_json_wrt, &qn_http_json_writer_cfn);
+    qn_http_resp_set_data_writer(stor->resp, stor->resp_json_wrt, &qn_http_json_wrt_write_cfn);
 
     // ---- Do the copy action.
     ret = qn_http_conn_post(stor->conn, url, stor->req, stor->resp);
@@ -640,7 +640,7 @@ QN_SDK qn_json_object_ptr qn_stor_mn_api_move(qn_storage_ptr restrict stor, cons
     } // if
 
     qn_http_json_wrt_prepare(stor->resp_json_wrt, &stor->obj_body, NULL);
-    qn_http_resp_set_data_writer(stor->resp, stor->resp_json_wrt, &qn_http_json_writer_cfn);
+    qn_http_resp_set_data_writer(stor->resp, stor->resp_json_wrt, &qn_http_json_wrt_write_cfn);
 
     // ---- Do the move action.
     ret = qn_http_conn_post(stor->conn, url, stor->req, stor->resp);
@@ -779,7 +779,7 @@ QN_SDK qn_json_object_ptr qn_stor_mn_api_delete(qn_storage_ptr restrict stor, co
     } // if
 
     qn_http_json_wrt_prepare(stor->resp_json_wrt, &stor->obj_body, NULL);
-    qn_http_resp_set_data_writer(stor->resp, stor->resp_json_wrt, &qn_http_json_writer_cfn);
+    qn_http_resp_set_data_writer(stor->resp, stor->resp_json_wrt, &qn_http_json_wrt_write_cfn);
 
     // ---- Do the delete action.
     ret = qn_http_conn_post(stor->conn, url, stor->req, stor->resp);
@@ -914,7 +914,7 @@ QN_SDK qn_json_object_ptr qn_stor_mn_api_chgm(qn_storage_ptr restrict stor, cons
     } // if
 
     qn_http_json_wrt_prepare(stor->resp_json_wrt, &stor->obj_body, NULL);
-    qn_http_resp_set_data_writer(stor->resp, stor->resp_json_wrt, &qn_http_json_writer_cfn);
+    qn_http_resp_set_data_writer(stor->resp, stor->resp_json_wrt, &qn_http_json_wrt_write_cfn);
 
     // ---- Do the change mime action.
     ret = qn_http_conn_post(stor->conn, url, stor->req, stor->resp);
@@ -1122,7 +1122,7 @@ QN_SDK qn_json_object_ptr qn_stor_bt_api_batch(qn_storage_ptr restrict stor, con
     } // if
 
     qn_http_json_wrt_prepare(stor->resp_json_wrt, &stor->obj_body, &stor->arr_body);
-    qn_http_resp_set_data_writer(stor->resp, stor->resp_json_wrt, &qn_http_json_writer_cfn);
+    qn_http_resp_set_data_writer(stor->resp, stor->resp_json_wrt, &qn_http_json_wrt_write_cfn);
 
     // ---- Do the batch action.
     ret = qn_http_conn_post(stor->conn, url, stor->req, stor->resp);
@@ -1379,7 +1379,7 @@ QN_SDK qn_json_object_ptr qn_stor_ls_api_list(qn_storage_ptr restrict stor, cons
     } // if
 
     qn_http_json_wrt_prepare(stor->resp_json_wrt, &stor->obj_body, NULL);
-    qn_http_resp_set_data_writer(stor->resp, stor->resp_json_wrt, &qn_http_json_writer_cfn);
+    qn_http_resp_set_data_writer(stor->resp, stor->resp_json_wrt, &qn_http_json_wrt_write_cfn);
 
     // ---- Do the list action.
     ret = qn_http_conn_post(stor->conn, url, stor->req, stor->resp);
@@ -1570,7 +1570,7 @@ QN_SDK qn_json_object_ptr qn_stor_ft_api_fetch(qn_storage_ptr restrict stor, con
     } // if
 
     qn_http_json_wrt_prepare(stor->resp_json_wrt, &stor->obj_body, NULL);
-    qn_http_resp_set_data_writer(stor->resp, stor->resp_json_wrt, &qn_http_json_writer_cfn);
+    qn_http_resp_set_data_writer(stor->resp, stor->resp_json_wrt, &qn_http_json_wrt_write_cfn);
 
     // ---- Do the fetch action.
     ret = qn_http_conn_post(stor->conn, url, stor->req, stor->resp);
@@ -1710,7 +1710,7 @@ QN_SDK qn_json_object_ptr qn_stor_ft_api_prefetch(qn_storage_ptr restrict stor, 
     } // if
 
     qn_http_json_wrt_prepare(stor->resp_json_wrt, &stor->obj_body, NULL);
-    qn_http_resp_set_data_writer(stor->resp, stor->resp_json_wrt, &qn_http_json_writer_cfn);
+    qn_http_resp_set_data_writer(stor->resp, stor->resp_json_wrt, &qn_http_json_wrt_write_cfn);
 
     // ---- Do the prefetch action.
     ret = qn_http_conn_post(stor->conn, url, stor->req, stor->resp);
@@ -2053,7 +2053,7 @@ static qn_bool qn_stor_up_prepare_for_upload(qn_storage_ptr restrict stor, const
     if (! (qn_json_set_string(stor->obj_body, "fn-error", "OK"))) return NULL;
 
     qn_http_json_wrt_prepare(stor->resp_json_wrt, &stor->obj_body, NULL);
-    qn_http_resp_set_data_writer(stor->resp, stor->resp_json_wrt, &qn_http_json_writer_cfn);
+    qn_http_resp_set_data_writer(stor->resp, stor->resp_json_wrt, &qn_http_json_wrt_write_cfn);
 
     return qn_true;
 }
@@ -2210,7 +2210,7 @@ QN_SDK qn_json_object_ptr qn_stor_up_api_upload_buffer(qn_storage_ptr restrict s
     return stor->obj_body;
 }
 
-static size_t qn_stor_upload_callback_cfn(void * user_data, char * buf, size_t size)
+static size_t qn_stor_upload_cfn(void * user_data, char * buf, size_t size)
 {
     qn_io_reader_itf rdr = (qn_io_reader_itf) user_data;
     ssize_t ret;
@@ -2241,7 +2241,7 @@ QN_SDK qn_json_object_ptr qn_stor_up_api_upload(qn_storage_ptr restrict stor, co
     ret = qn_http_form_add_file_reader(qn_http_req_get_form(stor->req), "file", qn_str_cstr(qn_io_name(data_rdr)), NULL, qn_io_size(data_rdr), stor->req);
     if (! ret) return NULL;
 
-    qn_http_req_set_body_reader(stor->req, data_rdr, qn_stor_upload_callback_cfn, qn_io_size(data_rdr));
+    qn_http_req_set_body_reader(stor->req, data_rdr, qn_stor_upload_cfn, qn_io_size(data_rdr));
 
     // ----
     if (rgn_entry->hostname && !qn_http_req_set_header(stor->req, "Host", qn_str_cstr(rgn_entry->hostname))) return NULL;
@@ -2695,14 +2695,14 @@ static qn_bool qn_stor_ru_prepare_for_resumable_upload(qn_storage_ptr restrict s
     if (! ret) return qn_false;
 
     // ---- Prepare the request body reader.
-    qn_http_req_set_body_reader(stor->req, rdr, qn_stor_upload_callback_cfn, size);
+    qn_http_req_set_body_reader(stor->req, rdr, qn_stor_upload_cfn, size);
 
     // ---- Prepare the response body writer.
     if (! (stor->obj_body = qn_json_create_object())) return qn_false;
     if (! qn_stor_prepare_error_info(stor)) return qn_false;
 
     qn_http_json_wrt_prepare(stor->resp_json_wrt, &stor->obj_body, NULL);
-    qn_http_resp_set_data_writer(stor->resp, stor->resp_json_wrt, &qn_http_json_writer_cfn);
+    qn_http_resp_set_data_writer(stor->resp, stor->resp_json_wrt, &qn_http_json_wrt_write_cfn);
     return qn_true;
 }
 
