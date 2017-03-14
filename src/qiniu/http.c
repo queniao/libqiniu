@@ -106,7 +106,7 @@ static size_t qn_http_json_wrt_parse_array(qn_http_json_writer_ptr w, char * res
     return 0;
 }
 
-QN_SDK size_t qn_http_json_wrt_callback(void * user_data, char * restrict buf, size_t buf_size)
+QN_SDK size_t qn_http_json_writer_cfn(void * user_data, char * restrict buf, size_t buf_size)
 {
     size_t ret;
     qn_http_json_writer_ptr w = (qn_http_json_writer_ptr) user_data;

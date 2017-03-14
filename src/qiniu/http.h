@@ -27,7 +27,7 @@ QN_SDK extern qn_http_json_writer_ptr qn_http_json_wrt_create(void);
 QN_SDK extern void qn_http_json_wrt_destroy(qn_http_json_writer_ptr restrict writer);
 
 QN_SDK extern void qn_http_json_wrt_prepare(qn_http_json_writer_ptr restrict writer, qn_json_object_ptr * restrict obj, qn_json_array_ptr * restrict arr);
-QN_SDK extern size_t qn_http_json_wrt_callback(void * restrict writer, char * restrict buf, size_t buf_size);
+QN_SDK extern size_t qn_http_json_writer_cfn(void * restrict writer, char * restrict buf, size_t buf_size);
 
 // ---- Declaration of HTTP form
 

@@ -652,7 +652,7 @@ QN_SDK qn_bool qn_rgn_svc_grab_bucket_region(qn_rgn_service_ptr restrict svc, qn
 
     root = NULL;
     qn_http_json_wrt_prepare(svc->resp_json_wrt, &root, NULL);
-    qn_http_resp_set_data_writer(svc->resp, svc->resp_json_wrt, &qn_http_json_wrt_callback);
+    qn_http_resp_set_data_writer(svc->resp, svc->resp_json_wrt, &qn_http_json_writer_cfn);
 
     ret = qn_http_conn_get(svc->conn, url, svc->req, svc->resp);
     qn_str_destroy(url);
