@@ -82,9 +82,9 @@ QN_SDK extern void qn_easy_le_destroy(qn_easy_list_extra_ptr restrict le);
 QN_SDK extern void qn_easy_le_set_prefix(qn_easy_list_extra_ptr restrict le, const char * restrict prefix, const char * delimiter);
 QN_SDK extern void qn_easy_le_set_limit(qn_easy_list_extra_ptr restrict le, unsigned int limit);
 
-typedef qn_bool (*qn_easy_le_iterator_fn)(void * restrict user_data, qn_json_object_ptr restrict entry);
+typedef qn_bool (*qn_easy_le_itr_callback_fn)(void * restrict user_data, qn_json_object_ptr restrict entry);
 
-QN_SDK extern qn_json_object_ptr qn_easy_list(qn_easy_ptr restrict easy, const qn_mac_ptr restrict mac, const char * restrict bucket, void * restrict itr_data, qn_easy_le_iterator_fn itr, qn_easy_list_extra_ptr restrict ext);
+QN_SDK extern qn_json_object_ptr qn_easy_list(qn_easy_ptr restrict easy, const qn_mac_ptr restrict mac, const char * restrict bucket, void * restrict itr_data, qn_easy_le_itr_callback_fn itr_cb, qn_easy_list_extra_ptr restrict ext);
 
 #ifdef __cplusplus
 }

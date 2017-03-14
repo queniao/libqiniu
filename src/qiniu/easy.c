@@ -590,7 +590,7 @@ QN_SDK void qn_easy_le_set_limit(qn_easy_list_extra_ptr restrict le, unsigned in
 
 // ----
 
-QN_SDK extern qn_json_object_ptr qn_easy_list(qn_easy_ptr restrict easy, const qn_mac_ptr restrict mac, const char * restrict bucket, void * restrict itr_data, qn_easy_le_iterator_fn itr, qn_easy_list_extra_ptr restrict ext)
+QN_SDK extern qn_json_object_ptr qn_easy_list(qn_easy_ptr restrict easy, const qn_mac_ptr restrict mac, const char * restrict bucket, void * restrict itr_data, qn_easy_le_itr_callback_fn itr_cb, qn_easy_list_extra_ptr restrict ext)
 {
     qn_string marker = NULL;
     qn_json_object_ptr list_ret;
@@ -602,7 +602,7 @@ QN_SDK extern qn_json_object_ptr qn_easy_list(qn_easy_ptr restrict easy, const q
 
     assert(easy);
     assert(bucket);
-    assert(itr);
+    assert(itr_cb);
 
     if (ext) {
         memcpy(&real_ext, ext, sizeof(qn_easy_list_extra_st));
@@ -641,7 +641,7 @@ QN_SDK extern qn_json_object_ptr qn_easy_list(qn_easy_ptr restrict easy, const q
 
         for (i = 0; i < qn_json_size_array(items); i += 1) {
             item = qn_json_pick_object(items, i, NULL);
-            if (! itr(itr_data, item)) {
+            if (! itr_cb(itr_data, item)) {
                 qn_stor_lse_destroy(lse);
                 return NULL;
             } // if
