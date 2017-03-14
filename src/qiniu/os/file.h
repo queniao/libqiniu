@@ -39,7 +39,7 @@ QN_SDK extern ssize_t qn_fl_read(qn_file_ptr restrict fl, char * restrict buf, s
 QN_SDK extern qn_bool qn_fl_seek(qn_file_ptr restrict fl, qn_foffset offset);
 QN_SDK extern qn_bool qn_fl_advance(qn_file_ptr restrict fl, qn_foffset delta);
 
-QN_SDK extern size_t qn_fl_reader_callback(void * restrict user_data, char * restrict buf, size_t buf_size);
+QN_SDK extern size_t qn_fl_reader_read_cfn(void * restrict user_data, char * restrict buf, size_t buf_size);
 
 // ---- Declaration of file info ----
 
@@ -68,7 +68,7 @@ QN_SDK extern ssize_t qn_fl_sec_read(qn_fl_section_ptr restrict fs, char * restr
 QN_SDK extern qn_bool qn_fl_sec_seek(qn_fl_section_ptr restrict fs, qn_foffset offset);
 QN_SDK extern qn_bool qn_fl_sec_advance(qn_fl_section_ptr restrict fs, qn_foffset delta);
 
-QN_SDK extern size_t qn_fl_sec_reader_callback(void * restrict user_data, char * restrict buf, size_t buf_size);
+QN_SDK extern size_t qn_fl_sec_reader_read_cfn(void * restrict user_data, char * restrict buf, size_t buf_size);
 
 #ifdef __cplusplus
 }

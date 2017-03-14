@@ -304,7 +304,7 @@ QN_SDK qn_fl_section_ptr qn_fl_section(qn_file_ptr restrict fl, qn_foffset offse
     return new_sec;
 }
 
-QN_SDK size_t qn_fl_reader_callback(void * restrict user_data, char * restrict buf, size_t buf_size)
+QN_SDK size_t qn_fl_reader_read_cfn(void * restrict user_data, char * restrict buf, size_t buf_size)
 {
     qn_file_ptr fl = (qn_file_ptr) user_data;
     return qn_fl_read(fl, buf, buf_size);
@@ -556,7 +556,7 @@ QN_SDK qn_bool qn_fl_sec_advance(qn_fl_section_ptr restrict fs, qn_foffset delta
     return qn_true;
 }
 
-QN_SDK size_t qn_fl_sec_reader_callback(void * restrict user_data, char * restrict buf, size_t buf_size)
+QN_SDK size_t qn_fl_sec_reader_read_cfn(void * restrict user_data, char * restrict buf, size_t buf_size)
 {
     size_t ret;
     qn_fl_section_ptr fs = (qn_fl_section_ptr) user_data;
