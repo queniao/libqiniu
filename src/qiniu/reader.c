@@ -50,7 +50,7 @@ static qn_bool qn_rdr_seek_fn(qn_io_reader_itf restrict itf, qn_foffset offset)
     return qn_rdr_seek(qn_rdr_from_io_reader(itf), offset);
 }
 
-static qn_bool qn_rdr_advance_fn(qn_io_reader_itf restrict itf, size_t delta)
+static qn_bool qn_rdr_advance_fn(qn_io_reader_itf restrict itf, qn_foffset delta)
 {
     return qn_rdr_advance(qn_rdr_from_io_reader(itf), delta);
 }
@@ -218,7 +218,7 @@ QN_SDK qn_bool qn_rdr_seek(qn_reader_ptr restrict rdr, qn_foffset offset)
     return qn_io_seek(rdr->src_rdr, offset);
 }
 
-QN_SDK qn_bool qn_rdr_advance(qn_reader_ptr restrict rdr, size_t delta)
+QN_SDK qn_bool qn_rdr_advance(qn_reader_ptr restrict rdr, qn_foffset delta)
 {
     return qn_io_advance(rdr->src_rdr, delta);
 }

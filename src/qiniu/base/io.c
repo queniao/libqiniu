@@ -52,7 +52,7 @@ static qn_bool qn_io_srdr_seek_vfn(qn_io_reader_itf restrict itf, qn_foffset off
     return qn_true;
 }
 
-static qn_bool qn_io_srdr_advance_vfn(qn_io_reader_itf restrict itf, size_t delta)
+static qn_bool qn_io_srdr_advance_vfn(qn_io_reader_itf restrict itf, qn_foffset delta)
 {
     qn_bool ret;
     qn_io_section_reader_ptr srdr = qn_io_srdr_from_io_reader(itf);

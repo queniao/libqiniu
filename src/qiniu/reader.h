@@ -35,7 +35,7 @@ QN_SDK extern ssize_t qn_rdr_peek(qn_reader_ptr restrict rdr, char * restrict bu
 QN_SDK extern ssize_t qn_rdr_read(qn_reader_ptr restrict rdr, char * restrict buf, size_t size);
 
 QN_SDK extern qn_bool qn_rdr_seek(qn_reader_ptr restrict rdr, qn_foffset offset);
-QN_SDK extern qn_bool qn_rdr_advance(qn_reader_ptr restrict rdr, size_t delta);
+QN_SDK extern qn_bool qn_rdr_advance(qn_reader_ptr restrict rdr, qn_foffset delta);
 
 #ifdef __cplusplus
 }

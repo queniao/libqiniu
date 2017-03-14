@@ -147,7 +147,7 @@ static qn_bool qn_fl_seek_fn(qn_io_reader_itf restrict itf, qn_foffset offset)
     return qn_fl_seek(qn_fl_from_io_reader(itf), offset);
 }
 
-static qn_bool qn_fl_advance_fn(qn_io_reader_itf restrict itf, size_t delta)
+static qn_bool qn_fl_advance_fn(qn_io_reader_itf restrict itf, qn_foffset delta)
 {
     return qn_fl_advance(qn_fl_from_io_reader(itf), delta);
 }
@@ -288,7 +288,7 @@ QN_SDK qn_bool qn_fl_seek(qn_file_ptr restrict fl, qn_foffset offset)
     return qn_true;
 }
 
-QN_SDK qn_bool qn_fl_advance(qn_file_ptr restrict fl, size_t delta)
+QN_SDK qn_bool qn_fl_advance(qn_file_ptr restrict fl, qn_foffset delta)
 {
     if (qn_fl_lseek_wrapper(fl->fd, delta, SEEK_CUR) < 0) {
         qn_err_fl_set_seeking_file_failed();
@@ -374,7 +374,7 @@ static qn_bool qn_fl_sec_seek_fn(qn_io_reader_itf restrict itf, qn_foffset offse
     return qn_fl_sec_seek(qn_fl_sec_from_io_reader(itf), offset);
 }
 
-static qn_bool qn_fl_sec_advance_fn(qn_io_reader_itf restrict itf, size_t delta)
+static qn_bool qn_fl_sec_advance_fn(qn_io_reader_itf restrict itf, qn_foffset delta)
 {
     return qn_fl_sec_advance(qn_fl_sec_from_io_reader(itf), delta);
 }
@@ -540,7 +540,7 @@ QN_SDK qn_bool qn_fl_sec_seek(qn_fl_section_ptr restrict fs, qn_foffset offset)
     return qn_true;
 }
 
-QN_SDK qn_bool qn_fl_sec_advance(qn_fl_section_ptr restrict fs, size_t delta)
+QN_SDK qn_bool qn_fl_sec_advance(qn_fl_section_ptr restrict fs, qn_foffset delta)
 {
     if (delta <= fs->rem_size) {
 #if ! defined(QN_CFG_SHARED_FD_FOR_SECTIONS)
