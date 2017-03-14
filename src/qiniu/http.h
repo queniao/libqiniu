@@ -15,8 +15,8 @@ extern "C"
 
 // ---- Declaration of body reader and writer
 
-typedef size_t (*qn_http_body_reader_callback)(void * restrict reader, char * restrict buf, size_t size);
-typedef size_t (*qn_http_data_writer_callback)(void * restrict writer, char * restrict buf, size_t size);
+typedef size_t (*qn_http_body_reader_callback_fn)(void * restrict reader, char * restrict buf, size_t size);
+typedef size_t (*qn_http_data_writer_callback_fn)(void * restrict writer, char * restrict buf, size_t size);
 
 // ----
 
@@ -69,7 +69,7 @@ QN_SDK extern void qn_http_req_set_form(qn_http_request_ptr restrict req, qn_htt
 // ----
 
 QN_SDK extern void qn_http_req_set_body_data(qn_http_request_ptr restrict req, const char * restrict body_data, qn_size body_size);
-QN_SDK extern void qn_http_req_set_body_reader(qn_http_request_ptr restrict req, void * restrict body_reader, qn_http_body_reader_callback body_reader_callback, qn_fsize body_size);
+QN_SDK extern void qn_http_req_set_body_reader(qn_http_request_ptr restrict req, void * restrict body_reader, qn_http_body_reader_callback_fn body_reader_cb, qn_fsize body_size);
 QN_SDK extern const char * qn_http_req_body_data(qn_http_request_ptr restrict req);
 QN_SDK extern qn_fsize qn_http_req_body_size(qn_http_request_ptr restrict req);
 
@@ -97,7 +97,7 @@ QN_SDK extern void qn_http_resp_unset_header(qn_http_response_ptr restrict resp,
 
 // ----
 
-QN_SDK extern void qn_http_resp_set_data_writer(qn_http_response_ptr restrict resp, void * restrict body_writer, qn_http_data_writer_callback body_writer_callback);
+QN_SDK extern void qn_http_resp_set_data_writer(qn_http_response_ptr restrict resp, void * restrict body_writer, qn_http_data_writer_callback_fn body_writer_cb);
 
 // ---- Declaration of HTTP connection ----
 
