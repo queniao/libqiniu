@@ -11,7 +11,7 @@ extern "C"
 
 typedef short int qn_rdr_pos;
 
-typedef ssize_t (*qn_rdr_filter_callback)(void * restrict user_data, char ** restrict buf, size_t * restrict size);
+typedef ssize_t (*qn_rdr_filter_callback_fn)(void * restrict user_data, char ** restrict buf, size_t * restrict size);
 
 struct _QN_READER;
 typedef struct _QN_READER * qn_reader_ptr;
@@ -28,8 +28,8 @@ QN_SDK extern qn_fsize qn_rdr_size(qn_reader_ptr restrict rdr);
 
 QN_SDK extern qn_io_reader_itf qn_rdr_to_io_reader(qn_reader_ptr restrict rdr);
 
-QN_SDK extern qn_bool qn_rdr_add_pre_filter(qn_reader_ptr restrict rdr, void * restrict filter_data, qn_rdr_filter_callback filter_cb);
-QN_SDK extern qn_bool qn_rdr_add_post_filter(qn_reader_ptr restrict rdr, void * restrict filter_data, qn_rdr_filter_callback filter_cb);
+QN_SDK extern qn_bool qn_rdr_add_pre_filter(qn_reader_ptr restrict rdr, void * restrict filter_data, qn_rdr_filter_callback_fn filter_cb);
+QN_SDK extern qn_bool qn_rdr_add_post_filter(qn_reader_ptr restrict rdr, void * restrict filter_data, qn_rdr_filter_callback_fn filter_cb);
 
 QN_SDK extern ssize_t qn_rdr_peek(qn_reader_ptr restrict rdr, char * restrict buf, size_t size);
 QN_SDK extern ssize_t qn_rdr_read(qn_reader_ptr restrict rdr, char * restrict buf, size_t size);

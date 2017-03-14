@@ -12,7 +12,7 @@ extern "C"
 typedef struct _QN_RDR_ENTRY
 {
     void * filter_data;
-    qn_rdr_filter_callback filter_cb;
+    qn_rdr_filter_callback_fn filter_cb;
 } qn_rdr_entry, *qn_rdr_entry_ptr;
 
 typedef struct _QN_READER
@@ -136,7 +136,7 @@ QN_SDK qn_io_reader_itf qn_rdr_to_io_reader(qn_reader_ptr restrict rdr)
     return &rdr->rdr_vtbl;
 }
 
-QN_SDK qn_bool qn_rdr_add_pre_filter(qn_reader_ptr restrict rdr, void * restrict filter_data, qn_rdr_filter_callback filter_cb)
+QN_SDK qn_bool qn_rdr_add_pre_filter(qn_reader_ptr restrict rdr, void * restrict filter_data, qn_rdr_filter_callback_fn filter_cb)
 {
     if (rdr->post_end < rdr->pre_end) {
         qn_err_set_out_of_capacity();
@@ -149,7 +149,7 @@ QN_SDK qn_bool qn_rdr_add_pre_filter(qn_reader_ptr restrict rdr, void * restrict
     return qn_true;
 }
 
-QN_SDK qn_bool qn_rdr_add_post_filter(qn_reader_ptr restrict rdr, void * restrict filter_data, qn_rdr_filter_callback filter_cb)
+QN_SDK qn_bool qn_rdr_add_post_filter(qn_reader_ptr restrict rdr, void * restrict filter_data, qn_rdr_filter_callback_fn filter_cb)
 {
     if (rdr->post_end < rdr->pre_end) {
         qn_err_set_out_of_capacity();
