@@ -14,7 +14,7 @@ typedef struct _FSIZE_CHECKER {
 
 static fsize_checker fc;
 
-static ssize_t fsize_checker_post_callback(void * user_data, char ** restrict buf, size_t * restrict buf_size)
+static ssize_t fsize_checker_post_cfn(void * user_data, char ** restrict buf, size_t * restrict buf_size)
 {
     fsize_checker_ptr fc = (fsize_checker_ptr) user_data;
     if ((fc->offset += *buf_size) > fc->max_fsize) return QN_IO_RDR_READING_ABORTED;
@@ -97,7 +97,7 @@ int main(int argc, char * argv[])
             printf("Cannot create a controllabl reader due to application error `%s`.\n", qn_err_get_message());
             return 1;
         } // if
-        if (!qn_rdr_add_post_filter(ctrl_rdr, &fc, fsize_checker_post_callback)) {
+        if (!qn_rdr_add_post_filter(ctrl_rdr, &fc, fsize_checker_post_cfn)) {
             qn_rdr_destroy(ctrl_rdr);
             qn_fl_close(fl);
             qn_str_destroy(uptoken);
@@ -114,7 +114,7 @@ int main(int argc, char * argv[])
             return 1;
         } // if
 
-        if (!qn_rdr_add_post_filter(ctrl_rdr, etag, qn_flt_etag_callback)) {
+        if (!qn_rdr_add_post_filter(ctrl_rdr, etag, qn_flt_etag_cfn)) {
             qn_flt_etag_destroy(etag);
             qn_rdr_destroy(ctrl_rdr);
             qn_fl_close(fl);

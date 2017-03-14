@@ -38,7 +38,7 @@ QN_SDK qn_string qn_flt_etag_result(qn_flt_etag_ptr restrict etag)
     return qn_etag_ctx_final((qn_etag_context_ptr) etag);
 }
 
-QN_SDK ssize_t qn_flt_etag_callback(void * restrict user_data, char ** restrict buf, size_t * restrict size)
+QN_SDK ssize_t qn_flt_etag_cfn(void * restrict user_data, char ** restrict buf, size_t * restrict size)
 {
     if (!qn_etag_ctx_update((qn_etag_context_ptr) user_data, *buf, *size)) return QN_IO_RDR_FILTERING_FAILED;
     return *size;
