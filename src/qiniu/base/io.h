@@ -22,31 +22,31 @@ struct _QN_IO_READER;
 typedef struct _QN_IO_READER * qn_io_reader_ptr;
 typedef qn_io_reader_ptr * qn_io_reader_itf;
 
-typedef void (*qn_io_close_fn)(qn_io_reader_itf restrict itf);
-typedef ssize_t (*qn_io_peek_fn)(qn_io_reader_itf restrict itf, char * restrict buf, size_t buf_size);
-typedef ssize_t (*qn_io_read_fn)(qn_io_reader_itf restrict itf, char * restrict buf, size_t buf_size);
-typedef qn_bool (*qn_io_seek_fn)(qn_io_reader_itf restrict itf, qn_foffset offset);
-typedef qn_bool (*qn_io_advance_fn)(qn_io_reader_itf restrict itf, qn_foffset delta);
+typedef void (*qn_io_close_virtual_fn)(qn_io_reader_itf restrict itf);
+typedef ssize_t (*qn_io_peek_virtual_fn)(qn_io_reader_itf restrict itf, char * restrict buf, size_t buf_size);
+typedef ssize_t (*qn_io_read_virtual_fn)(qn_io_reader_itf restrict itf, char * restrict buf, size_t buf_size);
+typedef qn_bool (*qn_io_seek_virtual_fn)(qn_io_reader_itf restrict itf, qn_foffset offset);
+typedef qn_bool (*qn_io_advance_virtual_fn)(qn_io_reader_itf restrict itf, qn_foffset delta);
 
-typedef qn_io_reader_itf (*qn_io_duplicate_fn)(qn_io_reader_itf restrict itf);
-typedef qn_io_reader_itf (*qn_io_section_fn)(qn_io_reader_itf restrict itf, qn_foffset offset, size_t sec_size);
+typedef qn_io_reader_itf (*qn_io_duplicate_virtual_fn)(qn_io_reader_itf restrict itf);
+typedef qn_io_reader_itf (*qn_io_section_virtual_fn)(qn_io_reader_itf restrict itf, qn_foffset offset, size_t sec_size);
 
-typedef qn_string (*qn_io_name_fn)(qn_io_reader_itf restrict itf);
-typedef qn_fsize (*qn_io_size_fn)(qn_io_reader_itf restrict itf);
+typedef qn_string (*qn_io_name_virtual_fn)(qn_io_reader_itf restrict itf);
+typedef qn_fsize (*qn_io_size_virtual_fn)(qn_io_reader_itf restrict itf);
 
 typedef struct _QN_IO_READER
 {
-    qn_io_close_fn close;
-    qn_io_peek_fn peek;
-    qn_io_read_fn read;
-    qn_io_seek_fn seek;
-    qn_io_advance_fn advance;
+    qn_io_close_virtual_fn close;
+    qn_io_peek_virtual_fn peek;
+    qn_io_read_virtual_fn read;
+    qn_io_seek_virtual_fn seek;
+    qn_io_advance_virtual_fn advance;
 
-    qn_io_duplicate_fn duplicate;
-    qn_io_section_fn section;
+    qn_io_duplicate_virtual_fn duplicate;
+    qn_io_section_virtual_fn section;
 
-    qn_io_name_fn name;
-    qn_io_size_fn size;
+    qn_io_name_virtual_fn name;
+    qn_io_size_virtual_fn size;
 } qn_io_reader_st;
 
 static inline void qn_io_close(qn_io_reader_itf restrict itf)
