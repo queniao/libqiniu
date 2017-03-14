@@ -1593,7 +1593,7 @@ QN_SDK qn_json_array_ptr qn_json_itr_top_array(qn_json_iterator_ptr restrict itr
     return (itr->cnt <= 0 || itr->lvl[itr->cnt - 1].class != QN_JSON_ARRAY) ? NULL : itr->lvl[itr->cnt - 1].parent.array;
 }
 
-QN_SDK int qn_json_itr_advance(qn_json_iterator_ptr restrict itr, void * data, qn_json_itr_callback cb)
+QN_SDK int qn_json_itr_advance(qn_json_iterator_ptr restrict itr, void * data, qn_json_itr_callback_fn cb)
 {
     qn_json_class class;
     qn_json_variant elem;

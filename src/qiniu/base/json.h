@@ -205,8 +205,8 @@ enum
     QN_JSON_ITR_NO_MORE = 1
 };
 
-typedef int (*qn_json_itr_callback)(void * data, qn_json_class cls, qn_json_variant_ptr restrict val);
-QN_SDK extern int qn_json_itr_advance(qn_json_iterator_ptr restrict itr, void * data, qn_json_itr_callback cb);
+typedef int (*qn_json_itr_callback_fn)(void * data, qn_json_class cls, qn_json_variant_ptr restrict val);
+QN_SDK extern int qn_json_itr_advance(qn_json_iterator_ptr restrict itr, void * data, qn_json_itr_callback_fn cb);
 
 #ifdef __cplusplus
 }
