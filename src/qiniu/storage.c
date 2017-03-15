@@ -2185,8 +2185,6 @@ QN_SDK qn_json_object_ptr qn_stor_up_api_upload_buffer(qn_storage_ptr restrict s
     assert(buf);
     assert(0 <= buf_size);
 
-    // TODO: Allow to upload an empty buffer (buf_size == 0).
-
     if (upe) {
         if (! (rgn_entry = upe->rgn_entry)) qn_rgn_tbl_choose_first_entry(NULL, QN_RGN_SVC_UP, NULL, &rgn_entry);
     } else {
@@ -2198,7 +2196,8 @@ QN_SDK qn_json_object_ptr qn_stor_up_api_upload_buffer(qn_storage_ptr restrict s
 
     form = qn_http_req_get_form(stor->req);
 
-    if (!qn_http_form_add_buffer(form, "file", "<null>", buf, buf_size)) return NULL;
+    if (buf_size == 0) buf = "";
+    if (! qn_http_form_add_buffer(form, "file", "LIBQINIU-MANDATORY-FILENAME", buf, buf_size)) return NULL;
 
     // ----
     if (rgn_entry->hostname && !qn_http_req_set_header(stor->req, "Host", qn_str_cstr(rgn_entry->hostname))) return NULL;

@@ -64,7 +64,7 @@ int main(int argc, char * argv[])
     buf_size = qn_fl_info_fsize(fi);
     qn_fl_info_destroy(fi);
 
-    buf = malloc(buf_size);
+    buf = calloc(1, buf_size);
     if (! buf) {
         qn_str_destroy(uptoken);
         printf("Cannot allocate enough memory to load the content of the file `%s`.\n", fname);
@@ -79,11 +79,11 @@ int main(int argc, char * argv[])
         return 1;
     } // if
 
-    if (qn_fl_read(fl, buf, buf_size) <= 0) {
+    if (buf_size > 0 && qn_fl_read(fl, buf, buf_size) < 0) {
         qn_fl_close(fl);
         free(buf);
         qn_str_destroy(uptoken);
-        printf("Cannot read the file `%s`, or it is an empty one due to application error `%s`.\n", fname, qn_err_get_message());
+        printf("Cannot read the file `%s` due to application error `%s`.\n", fname, qn_err_get_message());
         return 1;
     } // if
     qn_fl_close(fl);
