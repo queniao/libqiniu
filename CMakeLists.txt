@@ -29,7 +29,7 @@ add_compile_options (-D_GNU_SOURCE --std=c99 -Wall)
 
 file (GLOB_RECURSE SOURCE_FILES src/qiniu/*.c)
 include_directories (src)
-add_library (qiniu STATIC ${SOURCE_FILES})
+add_library (qiniu SHARED ${SOURCE_FILES})
 
 if (DEFINED HAVE_LSEEK64 AND DEFINED QN_LARGE_FILE_SUPPORT_AWARE AND ${QN_LARGE_FILE_SUPPORT_AWARE})
     target_link_libraries (qiniu dl)
