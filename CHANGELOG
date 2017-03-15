@@ -2,7 +2,8 @@
 
 - 添加处理 CURL EASY 模块出错时设置错误信息的逻辑；
 - 添加处理 OpenSSL 模块出错时设置错误信息的逻辑；
-- 添加处理 glibc 模块出错时设置错误信息的逻辑。
+- 添加处理 glibc 模块出错时设置错误信息的逻辑；
+- 修正 qn_cs_percent_encode_in_buffer_with_checker() 的返回类型与返回值不匹配的 Bug 。
 
 ## v0.10.1
 
