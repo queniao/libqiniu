@@ -1,4 +1,5 @@
 #include <stdlib.h>
+#include <curl/curl.h>
 
 #include "qiniu/base/string.h"
 #include "qiniu/base/errors.h"
@@ -64,7 +65,9 @@ static qn_err_message_map_st qn_err_message_maps[] = {
     {QN_ERR_ETAG_MAKING_DIGEST_FAILED, "Failed in making the qetag digest"},
 
     {QN_ERR_EASY_INVALID_UPTOKEN, "Got an invalid uptoken"},
-    {QN_ERR_EASY_INVALID_PUT_POLICY, "Got an invalid put policy"}
+    {QN_ERR_EASY_INVALID_PUT_POLICY, "Got an invalid put policy"},
+    {QN_ERR_3RDP_CURL_EASY_ERROR_OCCURED, "cURL easy error occured"},
+    {QN_ERR_3RDP_OPENSSL_ERROR_OCCURED, "OpenSSL error occured"}
 };
 
 typedef struct _QN_ERR_MESSAGE
@@ -72,7 +75,7 @@ typedef struct _QN_ERR_MESSAGE
     const char * file;
     int line;
     qn_err_code_em code;
-    qn_uint lib_code;
+    qn_uint32 lib_code;
 } qn_err_message_st;
 
 static qn_err_message_st qn_err_msg;
@@ -90,8 +93,21 @@ static int qn_err_compare(const void * restrict key, const void * restrict item)
 
 QN_SDK extern ssize_t qn_err_format_message(char * buf, size_t buf_size)
 {
+    ssize_t ret;
+    ssize_t ret2 = 0;
     char * short_file = posix_strstr(qn_err_msg.file, "src/qiniu/") + 4;
-    return qn_cs_snprintf(buf, buf_size, "%s:%d %s", short_file, qn_err_msg.line, qn_err_get_message());
+    ret = qn_cs_snprintf(buf, buf_size, "%s:%d %s", short_file, qn_err_msg.line, qn_err_get_message());
+    if (0 < ret) {
+        switch (qn_err_msg.code) {
+            case QN_ERR_3RDP_CURL_EASY_ERROR_OCCURED:
+                ret2 = qn_cs_snprintf(buf + ret, buf_size - ret, "(%lu:%s)", qn_err_msg.lib_code, curl_easy_strerror(qn_err_msg.lib_code));
+                break;
+            default:
+                break;
+        } // switch
+    } // if
+    if (ret2 < 0) return ret2;
+    return ret + ret2;
 }
 
 QN_SDK const char * qn_err_get_message(void)
@@ -100,7 +116,7 @@ QN_SDK const char * qn_err_get_message(void)
     return map->message;
 }
 
-QN_SDK void qn_err_set_code(qn_err_code_em cd, qn_uint lib_cd, const char * restrict file, int line)
+QN_SDK void qn_err_set_code(qn_err_code_em cd, qn_uint32 lib_cd, const char * restrict file, int line)
 {
     qn_err_msg.file = file;
     qn_err_msg.line = line;

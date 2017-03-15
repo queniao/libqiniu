@@ -60,13 +60,16 @@ typedef enum _QN_ERR_CODE
     QN_ERR_ETAG_MAKING_DIGEST_FAILED = 22005,
 
     QN_ERR_EASY_INVALID_UPTOKEN = 23001,
-    QN_ERR_EASY_INVALID_PUT_POLICY = 23002
+    QN_ERR_EASY_INVALID_PUT_POLICY = 23002,
+
+    QN_ERR_3RDP_CURL_EASY_ERROR_OCCURED = 101001,
+    QN_ERR_3RDP_OPENSSL_ERROR_OCCURED = 101002
 } qn_err_code_em;
 
 QN_SDK extern ssize_t qn_err_format_message(char * buf, size_t buf_size);
 QN_SDK extern const char * qn_err_get_message(void);
 
-QN_SDK extern void qn_err_set_code(qn_err_code_em cd, qn_uint lib_cd, const char * restrict file, int line);
+QN_SDK extern void qn_err_set_code(qn_err_code_em cd, qn_uint32 lib_cd, const char * restrict file, int line);
 QN_SDK extern qn_err_code_em qn_err_get_code(void);
 
 // ----
@@ -122,6 +125,9 @@ QN_SDK extern qn_err_code_em qn_err_get_code(void);
 
 #define qn_err_easy_set_invalid_uptoken() qn_err_set_code(QN_ERR_EASY_INVALID_UPTOKEN, 0, __FILE__, __LINE__)
 #define qn_err_easy_set_invalid_put_policy() qn_err_set_code(QN_ERR_EASY_INVALID_PUT_POLICY, 0, __FILE__, __LINE__)
+
+#define qn_err_3rdp_set_easy_curl_error_occured(lib_cd) qn_err_set_code(QN_ERR_3RDP_CURL_EASY_ERROR_OCCURED, lib_cd, __FILE__, __LINE__)
+#define qn_err_3rdp_set_openssl_error_occured(lib_cd) qn_err_set_code(QN_ERR_3RDP_OPENSSL_ERROR_OCCURED, lib_cd, __FILE__, __LINE__)
 
 // ----
 
