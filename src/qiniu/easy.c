@@ -6,6 +6,7 @@
 #include "qiniu/etag.h"
 #include "qiniu/region.h"
 #include "qiniu/storage.h"
+#include "qiniu/reader_filter.h"
 
 #include "qiniu/easy.h"
 
@@ -215,13 +216,6 @@ static void qn_easy_init_put_extra(qn_easy_put_extra_ptr ext, qn_easy_put_extra_
     if (real_ext->temp.qetag) qn_etag_ctx_init(real_ext->temp.qetag);
 }
 
-static ssize_t qn_easy_filter_qetag(void * restrict user_data, char ** restrict buf, size_t * restrict size)
-{
-    // TODO: Match the size type.
-    if (*size > 0 && ! qn_etag_ctx_update((qn_etag_context_ptr) user_data, *buf, *size)) return QN_IO_RDR_FILTERING_FAILED;
-    return *size;
-}
-
 static qn_io_reader_itf qn_easy_create_put_reader(const char * restrict fname, qn_easy_put_extra_ptr real_ext)
 {
     qn_file_ptr fl = NULL;
@@ -253,7 +247,7 @@ static qn_io_reader_itf qn_easy_create_put_reader(const char * restrict fname, q
     qn_fl_close(fl);
     if (! rdr) return NULL;
 
-    if (real_ext->put_ctrl.check_qetag) qn_rdr_add_post_filter(rdr, real_ext->temp.qetag, &qn_easy_filter_qetag);
+    if (real_ext->put_ctrl.check_qetag) qn_rdr_add_post_filter(rdr, real_ext->temp.qetag, &qn_flt_etag_update_cfn);
 
     // TODO: Implement filters.
 
