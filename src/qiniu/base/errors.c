@@ -72,6 +72,7 @@ typedef struct _QN_ERR_MESSAGE
     const char * file;
     int line;
     qn_err_code_em code;
+    qn_uint lib_code;
 } qn_err_message_st;
 
 static qn_err_message_st qn_err_msg;
@@ -99,11 +100,12 @@ QN_SDK const char * qn_err_get_message(void)
     return map->message;
 }
 
-QN_SDK void qn_err_set_code(qn_err_code_em cd, const char * restrict file, int line)
+QN_SDK void qn_err_set_code(qn_err_code_em cd, qn_uint lib_cd, const char * restrict file, int line)
 {
     qn_err_msg.file = file;
     qn_err_msg.line = line;
     qn_err_msg.code = cd;
+    qn_err_msg.lib_code = lib_cd;
 }
 
 QN_SDK qn_err_code_em qn_err_get_code(void)
