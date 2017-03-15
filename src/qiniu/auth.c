@@ -1,4 +1,6 @@
 #include <openssl/hmac.h>
+#include <openssl/err.h>
+
 #include "qiniu/base/json_formatter.h"
 #include "qiniu/auth.h"
 #include "qiniu/base/errors.h"
@@ -54,11 +56,14 @@ static int qn_mac_hmac_update(HMAC_CTX * restrict ctx, const unsigned char * res
 
     while (rem_size > 0) {
         writing_bytes = (rem_size > QN_MAC_HMAC_MAX_WRITING_BYTES) ? (QN_MAC_HMAC_MAX_WRITING_BYTES) : (rem_size & QN_MAC_HMAC_MAX_WRITING_BYTES);
-        HMAC_Update(ctx, (const unsigned char *)pos, writing_bytes);
+        if (! HMAC_Update(ctx, (const unsigned char *)pos, writing_bytes)) {
+            qn_err_3rdp_set_openssl_error_occured(ERR_get_error());
+            return 0;
+        } // if
         pos += writing_bytes;
         rem_size -= writing_bytes;
     } // while
-    return 0;
+    return 1;
 #undef QN_MAC_HMAC_MAX_WRITING_BYTES
 }
 
@@ -75,9 +80,19 @@ QN_SDK const qn_string qn_mac_make_uptoken(qn_mac_ptr restrict mac, const char *
     if (!encoded_pp) return NULL;
 
     HMAC_CTX_init(&ctx);
-    HMAC_Init_ex(&ctx, qn_str_cstr(mac->secret_key), qn_str_size(mac->secret_key), EVP_sha1(), NULL);
-    qn_mac_hmac_update(&ctx, (const unsigned char *)qn_str_cstr(encoded_pp), qn_str_size(encoded_pp));
-    HMAC_Final(&ctx, (unsigned char *)digest, &digest_size);
+
+    if (! HMAC_Init_ex(&ctx, qn_str_cstr(mac->secret_key), qn_str_size(mac->secret_key), EVP_sha1(), NULL)) {
+        qn_err_3rdp_set_openssl_error_occured(ERR_get_error());
+        return NULL;
+    } // if
+
+    if (! qn_mac_hmac_update(&ctx, (const unsigned char *)qn_str_cstr(encoded_pp), qn_str_size(encoded_pp))) return NULL;
+
+    if (! HMAC_Final(&ctx, (unsigned char *)digest, &digest_size)) {
+        qn_err_3rdp_set_openssl_error_occured(ERR_get_error());
+        return NULL;
+    } // if
+
     HMAC_CTX_cleanup(&ctx);
 
     encoded_digest = qn_cs_encode_base64_urlsafe(digest, digest_size);
@@ -110,13 +125,28 @@ QN_SDK const qn_string qn_mac_make_acctoken(qn_mac_ptr restrict mac, const char 
     } // if
 
     HMAC_CTX_init(&ctx);
-    HMAC_Init_ex(&ctx, qn_str_cstr(mac->secret_key), qn_str_size(mac->secret_key), EVP_sha1(), NULL);
+
+    if (! HMAC_Init_ex(&ctx, qn_str_cstr(mac->secret_key), qn_str_size(mac->secret_key), EVP_sha1(), NULL)) {
+        qn_err_3rdp_set_openssl_error_occured(ERR_get_error());
+        return NULL;
+    } // if
+
     qn_mac_hmac_update(&ctx, (const unsigned char *)begin, strlen(url) - (begin - url));
-    HMAC_Update(&ctx, (const unsigned char *)"\n", 1);
 
-    if (body && body_size > 0) qn_mac_hmac_update(&ctx, (const unsigned char *)body, body_size);
+    if (! HMAC_Update(&ctx, (const unsigned char *)"\n", 1)) {
+        qn_err_3rdp_set_openssl_error_occured(ERR_get_error());
+        return NULL;
+    } // if
 
-    HMAC_Final(&ctx, (unsigned char *)digest, &digest_size);
+    if (body && body_size > 0) {
+        if (! qn_mac_hmac_update(&ctx, (const unsigned char *)body, body_size)) return NULL;
+    } // if
+
+    if (! HMAC_Final(&ctx, (unsigned char *)digest, &digest_size)) {
+        qn_err_3rdp_set_openssl_error_occured(ERR_get_error());
+        return NULL;
+    } // if
+
     HMAC_CTX_cleanup(&ctx);
 
     encoded_digest = qn_cs_encode_base64_urlsafe(digest, digest_size);
@@ -186,9 +216,19 @@ QN_SDK const qn_string qn_mac_make_dnurl(qn_mac_ptr restrict mac, const char * r
     if (!url_with_deadline) return NULL;
 
     HMAC_CTX_init(&ctx);
-    HMAC_Init_ex(&ctx, qn_str_cstr(mac->secret_key), qn_str_size(mac->secret_key), EVP_sha1(), NULL);
-    qn_mac_hmac_update(&ctx, (const unsigned char *)qn_str_cstr(url_with_deadline), qn_str_size(url_with_deadline));
-    HMAC_Final(&ctx, (unsigned char *)digest, &digest_size);
+
+    if (! HMAC_Init_ex(&ctx, qn_str_cstr(mac->secret_key), qn_str_size(mac->secret_key), EVP_sha1(), NULL)) {
+        qn_err_3rdp_set_openssl_error_occured(ERR_get_error());
+        return NULL;
+    } // if
+
+    if (! qn_mac_hmac_update(&ctx, (const unsigned char *)qn_str_cstr(url_with_deadline), qn_str_size(url_with_deadline))) return NULL;
+
+    if (! HMAC_Final(&ctx, (unsigned char *)digest, &digest_size)) {
+        qn_err_3rdp_set_openssl_error_occured(ERR_get_error());
+        return NULL;
+    } // if
+
     HMAC_CTX_cleanup(&ctx);
 
     encoded_digest = qn_cs_encode_base64_urlsafe(digest, digest_size);
