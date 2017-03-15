@@ -2,6 +2,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <ctype.h>
+#include <errno.h>
 
 #include <assert.h>
 
@@ -217,7 +218,7 @@ QN_SDK int qn_cs_snprintf(char * restrict str, qn_size size,  const char * restr
     va_start(ap, format);
     printed_size = vsnprintf(str, size, format, ap);
     va_end(ap);
-    // TODO: Convert system errno to local errors.
+    if (printed_size < 0) qn_err_3rdp_set_glibc_error_occurred(errno);
     return printed_size;
 }
 
