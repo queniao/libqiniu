@@ -3,6 +3,7 @@
 #include "qiniu/base/errors.h"
 #include "qiniu/http.h"
 #include "qiniu/region.h"
+#include "qiniu/version.h"
 
 #ifdef __cplusplus
 extern "C"
@@ -646,7 +647,10 @@ QN_SDK qn_bool qn_rgn_svc_grab_bucket_region(qn_rgn_service_ptr restrict svc, qn
         qn_str_destroy(url);
         return qn_false;
     } // if
-    // TODO: Add User-Agent header.
+    if (! qn_http_req_set_header(svc->req, "User-Agent", qn_ver_get_full_string())) {
+        qn_str_destroy(url);
+        return qn_false;
+    } // if
 
     qn_http_req_set_body_data(svc->req, "", 0);
 
