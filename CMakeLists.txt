@@ -35,7 +35,7 @@ if (DEFINED HAVE_LSEEK64 AND DEFINED QN_LARGE_FILE_SUPPORT_AWARE AND ${QN_LARGE_
     target_link_libraries (qiniu dl)
 endif (DEFINED HAVE_LSEEK64 AND DEFINED QN_LARGE_FILE_SUPPORT_AWARE AND ${QN_LARGE_FILE_SUPPORT_AWARE})
 
-target_link_libraries (qiniu curl crypto)
+target_link_libraries (qiniu curl ssl crypto)
 
 add_subdirectory (test)
 add_subdirectory (demo)
