@@ -57,7 +57,7 @@ static int qn_mac_hmac_update(HMAC_CTX * restrict ctx, const unsigned char * res
     while (rem_size > 0) {
         writing_bytes = (rem_size > QN_MAC_HMAC_MAX_WRITING_BYTES) ? (QN_MAC_HMAC_MAX_WRITING_BYTES) : (rem_size & QN_MAC_HMAC_MAX_WRITING_BYTES);
         if (! HMAC_Update(ctx, (const unsigned char *)pos, writing_bytes)) {
-            qn_err_3rdp_set_openssl_error_occured(ERR_get_error());
+            qn_err_3rdp_set_openssl_error_occurred(ERR_get_error());
             return 0;
         } // if
         pos += writing_bytes;
@@ -82,14 +82,14 @@ QN_SDK const qn_string qn_mac_make_uptoken(qn_mac_ptr restrict mac, const char *
     HMAC_CTX_init(&ctx);
 
     if (! HMAC_Init_ex(&ctx, qn_str_cstr(mac->secret_key), qn_str_size(mac->secret_key), EVP_sha1(), NULL)) {
-        qn_err_3rdp_set_openssl_error_occured(ERR_get_error());
+        qn_err_3rdp_set_openssl_error_occurred(ERR_get_error());
         return NULL;
     } // if
 
     if (! qn_mac_hmac_update(&ctx, (const unsigned char *)qn_str_cstr(encoded_pp), qn_str_size(encoded_pp))) return NULL;
 
     if (! HMAC_Final(&ctx, (unsigned char *)digest, &digest_size)) {
-        qn_err_3rdp_set_openssl_error_occured(ERR_get_error());
+        qn_err_3rdp_set_openssl_error_occurred(ERR_get_error());
         return NULL;
     } // if
 
@@ -127,14 +127,14 @@ QN_SDK const qn_string qn_mac_make_acctoken(qn_mac_ptr restrict mac, const char 
     HMAC_CTX_init(&ctx);
 
     if (! HMAC_Init_ex(&ctx, qn_str_cstr(mac->secret_key), qn_str_size(mac->secret_key), EVP_sha1(), NULL)) {
-        qn_err_3rdp_set_openssl_error_occured(ERR_get_error());
+        qn_err_3rdp_set_openssl_error_occurred(ERR_get_error());
         return NULL;
     } // if
 
     qn_mac_hmac_update(&ctx, (const unsigned char *)begin, strlen(url) - (begin - url));
 
     if (! HMAC_Update(&ctx, (const unsigned char *)"\n", 1)) {
-        qn_err_3rdp_set_openssl_error_occured(ERR_get_error());
+        qn_err_3rdp_set_openssl_error_occurred(ERR_get_error());
         return NULL;
     } // if
 
@@ -143,7 +143,7 @@ QN_SDK const qn_string qn_mac_make_acctoken(qn_mac_ptr restrict mac, const char 
     } // if
 
     if (! HMAC_Final(&ctx, (unsigned char *)digest, &digest_size)) {
-        qn_err_3rdp_set_openssl_error_occured(ERR_get_error());
+        qn_err_3rdp_set_openssl_error_occurred(ERR_get_error());
         return NULL;
     } // if
 
@@ -218,14 +218,14 @@ QN_SDK const qn_string qn_mac_make_dnurl(qn_mac_ptr restrict mac, const char * r
     HMAC_CTX_init(&ctx);
 
     if (! HMAC_Init_ex(&ctx, qn_str_cstr(mac->secret_key), qn_str_size(mac->secret_key), EVP_sha1(), NULL)) {
-        qn_err_3rdp_set_openssl_error_occured(ERR_get_error());
+        qn_err_3rdp_set_openssl_error_occurred(ERR_get_error());
         return NULL;
     } // if
 
     if (! qn_mac_hmac_update(&ctx, (const unsigned char *)qn_str_cstr(url_with_deadline), qn_str_size(url_with_deadline))) return NULL;
 
     if (! HMAC_Final(&ctx, (unsigned char *)digest, &digest_size)) {
-        qn_err_3rdp_set_openssl_error_occured(ERR_get_error());
+        qn_err_3rdp_set_openssl_error_occurred(ERR_get_error());
         return NULL;
     } // if
 

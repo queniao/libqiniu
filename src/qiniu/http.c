@@ -607,7 +607,7 @@ QN_SDK qn_http_connection_ptr qn_http_conn_create(void)
     new_conn->curl = curl_easy_init();
     if (!new_conn->curl) {
         free(new_conn);
-        qn_err_3rdp_set_easy_curl_error_occured(CURLE_FAILED_INIT);
+        qn_err_3rdp_set_curl_easy_error_occurred(CURLE_FAILED_INIT);
         return NULL;
     }
     return new_conn;
@@ -636,20 +636,20 @@ static qn_bool qn_http_conn_do_request(qn_http_connection_ptr restrict conn, qn_
     qn_http_hdr_iterator_ptr itr;
 
     if ((curl_code = curl_easy_setopt(conn->curl, CURLOPT_HEADERFUNCTION, qn_http_resp_hdr_wrt_write_cfn)) != CURLE_OK) {
-        qn_err_3rdp_set_easy_curl_error_occured(curl_code);
+        qn_err_3rdp_set_curl_easy_error_occurred(curl_code);
         return qn_false;
     } // if
     if ((curl_code = curl_easy_setopt(conn->curl, CURLOPT_HEADERDATA, resp)) != CURLE_OK) {
-        qn_err_3rdp_set_easy_curl_error_occured(curl_code);
+        qn_err_3rdp_set_curl_easy_error_occurred(curl_code);
         return qn_false;
     } // if
 
     if ((curl_code = curl_easy_setopt(conn->curl, CURLOPT_WRITEFUNCTION, qn_http_resp_body_wrt_write_cfn)) != CURLE_OK) {
-        qn_err_3rdp_set_easy_curl_error_occured(curl_code);
+        qn_err_3rdp_set_curl_easy_error_occurred(curl_code);
         return qn_false;
     } // if
     if ((curl_code = curl_easy_setopt(conn->curl, CURLOPT_WRITEDATA, resp)) != CURLE_OK) {
-        qn_err_3rdp_set_easy_curl_error_occured(curl_code);
+        qn_err_3rdp_set_curl_easy_error_occurred(curl_code);
         return qn_false;
     } // if
 
@@ -675,14 +675,14 @@ static qn_bool qn_http_conn_do_request(qn_http_connection_ptr restrict conn, qn_
     } // if
 
     if ((curl_code = curl_easy_setopt(conn->curl, CURLOPT_HTTPHEADER, headers)) != CURLE_OK) {
-        qn_err_3rdp_set_easy_curl_error_occured(curl_code);
+        qn_err_3rdp_set_curl_easy_error_occurred(curl_code);
         return qn_false;
     } // if
 
     curl_code = curl_easy_perform(conn->curl);
     curl_slist_free_all(headers);
     if (curl_code != CURLE_OK) {
-        qn_err_3rdp_set_easy_curl_error_occured(curl_code);
+        qn_err_3rdp_set_curl_easy_error_occurred(curl_code);
         return qn_false;
     } // if
 
@@ -695,11 +695,11 @@ QN_SDK qn_bool qn_http_conn_get(qn_http_connection_ptr restrict conn, const char
 
     curl_easy_reset(conn->curl);
     if ((curl_code = curl_easy_setopt(conn->curl, CURLOPT_POST, 0)) != CURLE_OK) {
-        qn_err_3rdp_set_easy_curl_error_occured(curl_code);
+        qn_err_3rdp_set_curl_easy_error_occurred(curl_code);
         return qn_false;
     } // if
     if ((curl_code = curl_easy_setopt(conn->curl, CURLOPT_URL, url)) != CURLE_OK) {
-        qn_err_3rdp_set_easy_curl_error_occured(curl_code);
+        qn_err_3rdp_set_curl_easy_error_occurred(curl_code);
         return qn_false;
     } // if
     return qn_http_conn_do_request(conn, req, resp);
@@ -712,42 +712,42 @@ QN_SDK qn_bool qn_http_conn_post(qn_http_connection_ptr restrict conn, const cha
     curl_easy_reset(conn->curl);
 
     if ((curl_code = curl_easy_setopt(conn->curl, CURLOPT_POST, 1)) != CURLE_OK) {
-        qn_err_3rdp_set_easy_curl_error_occured(curl_code);
+        qn_err_3rdp_set_curl_easy_error_occurred(curl_code);
         return qn_false;
     } // if
     if ((curl_code = curl_easy_setopt(conn->curl, CURLOPT_URL, url)) != CURLE_OK) {
-        qn_err_3rdp_set_easy_curl_error_occured(curl_code);
+        qn_err_3rdp_set_curl_easy_error_occurred(curl_code);
         return qn_false;
     } // if
 
     if (req->form) {
         if ((curl_code = curl_easy_setopt(conn->curl, CURLOPT_HTTPPOST, req->form->first)) != CURLE_OK) {
-            qn_err_3rdp_set_easy_curl_error_occured(curl_code);
+            qn_err_3rdp_set_curl_easy_error_occurred(curl_code);
             return qn_false;
         } // if
         
         if (req->body_rdr && req->body_rdr_cb) {
             if ((curl_code = curl_easy_setopt(conn->curl, CURLOPT_READFUNCTION, qn_http_conn_body_reader)) != CURLE_OK) {
-                qn_err_3rdp_set_easy_curl_error_occured(curl_code);
+                qn_err_3rdp_set_curl_easy_error_occurred(curl_code);
                 return qn_false;
             } // if
         } // if
     } else if (req->body_data) {
         if ((curl_code = curl_easy_setopt(conn->curl, CURLOPT_POSTFIELDS, req->body_data)) != CURLE_OK) {
-            qn_err_3rdp_set_easy_curl_error_occured(curl_code);
+            qn_err_3rdp_set_curl_easy_error_occurred(curl_code);
             return qn_false;
         } // if
         if ((curl_code = curl_easy_setopt(conn->curl, CURLOPT_POSTFIELDSIZE, req->body_size)) != CURLE_OK) {
-            qn_err_3rdp_set_easy_curl_error_occured(curl_code);
+            qn_err_3rdp_set_curl_easy_error_occurred(curl_code);
             return qn_false;
         } // if
     } else {
         if ((curl_code = curl_easy_setopt(conn->curl, CURLOPT_READFUNCTION, qn_http_conn_body_reader)) != CURLE_OK) {
-            qn_err_3rdp_set_easy_curl_error_occured(curl_code);
+            qn_err_3rdp_set_curl_easy_error_occurred(curl_code);
             return qn_false;
         } // if
         if ((curl_code = curl_easy_setopt(conn->curl, CURLOPT_READDATA, req)) != CURLE_OK) {
-            qn_err_3rdp_set_easy_curl_error_occured(curl_code);
+            qn_err_3rdp_set_curl_easy_error_occurred(curl_code);
             return qn_false;
         } // if
     } // form

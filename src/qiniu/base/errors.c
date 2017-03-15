@@ -66,8 +66,10 @@ static qn_err_message_map_st qn_err_message_maps[] = {
 
     {QN_ERR_EASY_INVALID_UPTOKEN, "Got an invalid uptoken"},
     {QN_ERR_EASY_INVALID_PUT_POLICY, "Got an invalid put policy"},
-    {QN_ERR_3RDP_CURL_EASY_ERROR_OCCURED, "cURL easy error occured"},
-    {QN_ERR_3RDP_OPENSSL_ERROR_OCCURED, "OpenSSL error occured"}
+
+    {QN_ERR_3RDP_GLIBC_ERROR_OCCURRED, "glibc error occurred"},
+    {QN_ERR_3RDP_CURL_EASY_ERROR_OCCURRED, "cURL easy error occurred"},
+    {QN_ERR_3RDP_OPENSSL_ERROR_OCCURRED, "OpenSSL error occurred"}
 };
 
 typedef struct _QN_ERR_MESSAGE
@@ -96,11 +98,18 @@ QN_SDK extern ssize_t qn_err_format_message(char * buf, size_t buf_size)
     ssize_t ret;
     ssize_t ret2 = 0;
     char * short_file = posix_strstr(qn_err_msg.file, "src/qiniu/") + 4;
+
     ret = qn_cs_snprintf(buf, buf_size, "%s:%d %s", short_file, qn_err_msg.line, qn_err_get_message());
     if (0 < ret) {
         switch (qn_err_msg.code) {
-            case QN_ERR_3RDP_CURL_EASY_ERROR_OCCURED:
+            case QN_ERR_3RDP_GLIBC_ERROR_OCCURRED:
+                ret2 = qn_cs_snprintf(buf + ret, buf_size - ret, "(%lu:%s)", qn_err_msg.lib_code, strerror(qn_err_msg.lib_code));
+                break;
+            case QN_ERR_3RDP_CURL_EASY_ERROR_OCCURRED:
                 ret2 = qn_cs_snprintf(buf + ret, buf_size - ret, "(%lu:%s)", qn_err_msg.lib_code, curl_easy_strerror(qn_err_msg.lib_code));
+                break;
+            case QN_ERR_3RDP_OPENSSL_ERROR_OCCURRED:
+                ret2 = qn_cs_snprintf(buf + ret, buf_size - ret, "(%lu:%s)", qn_err_msg.lib_code, ERR_error_string(qn_err_msg.lib_code, NULL));
                 break;
             default:
                 break;
