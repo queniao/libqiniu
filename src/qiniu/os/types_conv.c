@@ -1,6 +1,8 @@
 #include <stdio.h>
+#include <errno.h>
 
 #include "qiniu/os/types_conv.h"
+#include "qiniu/base/errors.h"
 
 #ifdef __cplusplus
 extern "C"
@@ -22,7 +24,7 @@ QN_SDK qn_bool qn_type_string_to_long_long(const char * restrict str, size_t str
 #endif
 
     if (sscanf(str, "%Ld", val) == EOF) {
-        // TODO: Set an appropriate error if the call fails.
+        qn_err_3rdp_set_glibc_error_occurred(errno);
         return qn_false;
     } // if
     return qn_true;
@@ -41,7 +43,7 @@ QN_SDK qn_bool qn_type_string_to_long(const char * restrict str, size_t str_len,
     } // if
 
     if (sscanf(str, "%ld", val) == EOF) {
-        // TODO: Set an appropriate error if the call fails.
+        qn_err_3rdp_set_glibc_error_occurred(errno);
         return qn_false;
     } // if
     return val;
