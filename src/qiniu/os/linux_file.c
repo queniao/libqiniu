@@ -421,7 +421,10 @@ QN_SDK qn_fl_section_ptr qn_fl_sec_create(qn_file_ptr restrict fl, qn_foffset of
     new_section->sec_size = sec_size;
     new_section->rem_size = sec_size;
 
-    // TODO: Check if the offset is larger than the file's size.
+    if (qn_fl_fsize(fl) <= offset) {
+        qn_err_set_out_of_range();
+        return NULL;
+    } // if
 
     if (! qn_fl_sec_seek(new_section, offset)) {
         qn_fl_sec_destroy(new_section);
