@@ -1252,7 +1252,6 @@ QN_SDK void qn_json_shift(qn_json_array_ptr restrict arr)
 static inline qn_bool qn_json_arr_replace(qn_json_array_ptr restrict arr, int n, qn_json_class cls, qn_json_variant new_elem)
 {
     if (n < 0 || (arr->end - arr->begin) <= n) {
-        // TODO: Set an appropriate error.
         qn_err_json_set_out_of_index();
         return qn_false;
     } // if

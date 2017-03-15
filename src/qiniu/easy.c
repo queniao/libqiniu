@@ -634,7 +634,6 @@ QN_SDK extern qn_json_object_ptr qn_easy_list(qn_easy_ptr restrict easy, const q
 
         items = qn_json_get_array(list_ret, "items", NULL);
         if (! items) {
-            // TODO: Set an appropriate error.
             qn_stor_lse_destroy(lse);
             return list_ret;
         } // if

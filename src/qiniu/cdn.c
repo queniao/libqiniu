@@ -83,7 +83,6 @@ QN_SDK qn_string qn_cdn_make_dnurl_with_deadline(const char * restrict key, cons
         } else if (encoded_path_size == path_size) {
             encoded_path = (char *)path;
         } else {
-            // TODO: Set an appropriate error.
             return NULL;
         } // if
     } else {
