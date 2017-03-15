@@ -38,7 +38,7 @@ QN_SDK extern qn_string qn_cs_decode_base64_urlsafe(const char * restrict str, q
 typedef qn_bool (*qn_cs_percent_encode_check_fn)(int c);
 
 QN_SDK extern qn_bool qn_cs_percent_encode_check(int c);
-QN_SDK extern qn_size qn_cs_percent_encode_in_buffer_with_checker(char * restrict buf, qn_size buf_size, const char * restrict bin, qn_size bin_size, qn_cs_percent_encode_check_fn need_to_encode);
+QN_SDK extern qn_ssize qn_cs_percent_encode_in_buffer_with_checker(char * restrict buf, qn_size buf_size, const char * restrict bin, qn_size bin_size, qn_cs_percent_encode_check_fn need_to_encode);
 QN_SDK extern qn_string qn_cs_percent_encode_with_checker(const char * restrict bin, qn_size bin_size, qn_cs_percent_encode_check_fn need_to_encode);
 
 #define qn_cs_percent_encode_in_buffer(buf, buf_size, bin, bin_size) qn_cs_percent_encode_in_buffer_with_checker(buf, buf_size, bin, bin_size, NULL)

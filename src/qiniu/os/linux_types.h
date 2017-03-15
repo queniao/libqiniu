@@ -9,6 +9,7 @@
 typedef unsigned int qn_uint;
 typedef uint32_t qn_uint32;
 typedef uint64_t qn_uint64;
+typedef ssize_t qn_ssize;
 typedef size_t qn_size;
 
 typedef bool qn_bool;

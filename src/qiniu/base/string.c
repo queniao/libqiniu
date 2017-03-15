@@ -291,7 +291,7 @@ QN_SDK qn_bool qn_cs_percent_encode_check(int c)
     return qn_true;
 }
 
-QN_SDK qn_size qn_cs_percent_encode_in_buffer_with_checker(char * restrict buf, qn_size buf_size, const char * restrict bin, qn_size bin_size, qn_cs_percent_encode_check_fn need_to_encode)
+QN_SDK qn_ssize qn_cs_percent_encode_in_buffer_with_checker(char * restrict buf, qn_size buf_size, const char * restrict bin, qn_size bin_size, qn_cs_percent_encode_check_fn need_to_encode)
 {
     int i = 0;
     int m = 0;
@@ -351,7 +351,7 @@ QN_SDK qn_size qn_cs_percent_encode_in_buffer_with_checker(char * restrict buf, 
 QN_SDK qn_string qn_cs_percent_encode_with_checker(const char * restrict bin, qn_size bin_size, qn_cs_percent_encode_check_fn need_to_encode)
 {
     qn_string new_str = NULL;
-    qn_size buf_size = qn_cs_percent_encode_in_buffer_with_checker(NULL, 0, bin, bin_size, need_to_encode);
+    qn_ssize buf_size = qn_cs_percent_encode_in_buffer_with_checker(NULL, 0, bin, bin_size, need_to_encode);
 
     if (buf_size == bin_size) return qn_cs_clone(bin, bin_size);
 

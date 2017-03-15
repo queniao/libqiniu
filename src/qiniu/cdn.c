@@ -26,11 +26,11 @@ QN_SDK qn_string qn_cdn_make_dnurl_with_deadline(const char * restrict key, cons
     int i;
     const char * begin;
     const char * path;
-    size_t path_size;
+    qn_size path_size;
     char * encoded_path;
-    size_t encoded_path_size;
-    size_t url_size;
-    size_t base_url_size;
+    qn_ssize encoded_path_size;
+    qn_size url_size;
+    qn_size base_url_size;
     const char * query;
     qn_string sign_str;
     qn_string authed_url;
