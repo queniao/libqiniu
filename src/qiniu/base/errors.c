@@ -1,5 +1,6 @@
 #include <stdlib.h>
 #include <curl/curl.h>
+#include <openssl/err.h>
 
 #include "qiniu/base/string.h"
 #include "qiniu/base/errors.h"
