@@ -10,6 +10,7 @@
 
 #define posix_strlen strlen
 #define posix_strcmp strcmp
+#define posix_strncmp strncmp
 #define posix_strchr strchr
 #define posix_strstr strstr
 
