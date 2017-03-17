@@ -1980,6 +1980,8 @@ typedef struct _QN_STOR_UPLOAD_EXTRA
 
     qn_fsize fsize;
     qn_io_reader_itf rdr;
+
+    qn_ud_variable_ptr ud_vars;
 } qn_stor_upload_extra_st;
 
 QN_SDK qn_stor_upload_extra_ptr qn_stor_upe_create(void)
@@ -2019,6 +2021,11 @@ QN_SDK extern void qn_stor_upe_set_accept_type(qn_stor_upload_extra_ptr restrict
     upe->accept_type = accept_type;
 }
 
+QN_SDK void qn_stor_upe_set_user_defined_variables(qn_stor_upload_extra_ptr restrict upe, qn_ud_variable_ptr ud_vars)
+{
+    upe->ud_vars = ud_vars;
+}
+
 QN_SDK extern void qn_stor_upe_set_region_entry(qn_stor_upload_extra_ptr restrict upe, qn_rgn_entry_ptr restrict entry)
 {
     upe->rgn_entry = entry;
@@ -2029,6 +2036,12 @@ QN_SDK extern void qn_stor_upe_set_region_entry(qn_stor_upload_extra_ptr restric
 static qn_bool qn_stor_up_prepare_for_upload(qn_storage_ptr restrict stor, const char * restrict uptoken, qn_stor_upload_extra_ptr restrict upe)
 {
     qn_http_form_ptr form;
+    const qn_string * entries = NULL;
+    int i = 0;
+    const char * key = NULL;
+    const char * val = NULL;
+    qn_size key_size = 0;
+    qn_size val_size = 0;
 
     // ---- Prepare request and response
     qn_stor_reset(stor);
@@ -2045,7 +2058,14 @@ static qn_bool qn_stor_up_prepare_for_upload(qn_storage_ptr restrict stor, const
     if (upe->crc32 && !qn_http_form_add_string(form, "crc32", upe->crc32, strlen(upe->crc32))) return qn_false;
     if (upe->accept_type && !qn_http_form_add_string(form, "accept", upe->accept_type, strlen(upe->accept_type))) return qn_false;
 
-    // TODO: User defined variabales.
+    if (upe->ud_vars && qn_ud_var_count(upe->ud_vars) > 0) {
+        entries = qn_etbl_entries((qn_etable_ptr) upe->ud_vars);
+
+        for (i = 0; i < qn_ud_var_count(upe->ud_vars); i += 1) {
+            qn_ud_var_get_pair_raw(upe->ud_vars, entries[i], &key, &key_size, &val, &val_size);
+            if (! qn_http_form_add_string(form, key, val, val_size)) return qn_false;
+        } // if
+    } // if
 
     // ----
     if (! (stor->obj_body = qn_json_create_object())) return NULL;
@@ -2824,6 +2844,13 @@ QN_SDK qn_json_object_ptr qn_stor_ru_api_mkfile(qn_storage_ptr restrict stor, co
     qn_string tmp_str;
     int ctx_size;
     qn_rgn_entry_ptr rgn_entry;
+    const qn_string * entries = NULL;
+    int i = 0;
+    const char * key = NULL;
+    const char * val = NULL;
+    qn_size key_size = 0;
+    qn_size val_size = 0;
+    qn_string tmp_str2 = NULL;
 
     // ---- Check preconditions.
     assert(stor);
@@ -2869,6 +2896,32 @@ QN_SDK qn_json_object_ptr qn_stor_ru_api_mkfile(qn_storage_ptr restrict stor, co
             if (! url_tmp) return NULL;
 
             url = url_tmp;
+        } // if
+
+        // TODO: Specify MIME if exists.
+
+        if (upe->ud_vars && qn_ud_var_count(upe->ud_vars) > 0) {
+            entries = qn_etbl_entries((qn_etable_ptr) upe->ud_vars);
+
+            for (i = 0; i < qn_ud_var_count(upe->ud_vars); i += 1) {
+                qn_ud_var_get_pair_raw(upe->ud_vars, entries[i], &key, &key_size, &val, &val_size);
+
+                tmp_str = qn_cs_percent_encode(key, key_size);
+                tmp_str2 = qn_cs_percent_encode(val, val_size);
+                if (! tmp_str || ! tmp_str2) {
+                    qn_str_destroy(tmp_str);
+                    qn_str_destroy(tmp_str2);
+                    return NULL;
+                } // if
+
+                url_tmp = qn_cs_sprintf("%.*s/%.*s/%.*s", qn_str_size(url), qn_str_cstr(url), qn_str_size(tmp_str), qn_str_cstr(tmp_str), qn_str_size(tmp_str2), qn_str_cstr(tmp_str2));
+                qn_str_destroy(tmp_str);
+                qn_str_destroy(tmp_str2);
+                qn_str_destroy(url);
+                if (! url_tmp) return NULL;
+
+                url = url_tmp;
+            } // if
         } // if
     } // if
 
