@@ -74,9 +74,9 @@ QN_SDK int qn_etbl_count(qn_etable_ptr restrict etbl)
     return etbl->cnt;
 }
 
-static qn_etbl_pos qn_etbl_bsearch(qn_etable_ptr restrict etbl, const char * key, size_t key_size, int * ord)
+static qn_etbl_pos qn_etbl_bsearch(qn_etable_ptr restrict etbl, const char * key, qn_size key_size, int * ord)
 {
-    size_t mid_key_size;
+    qn_size mid_key_size;
     qn_etbl_pos begin = 0;
     qn_etbl_pos end = etbl->cnt;
     qn_etbl_pos mid = 0;
@@ -131,7 +131,7 @@ QN_SDK const char * qn_etbl_get_value(qn_etable_ptr restrict etbl, const char * 
     return (pos == etbl->cnt) ? NULL : (strstr(etbl->entries[pos], etbl->deli) + qn_str_size(etbl->deli));
 }
 
-QN_SDK void qn_etbl_get_pair_raw(qn_etable_ptr restrict etbl, const qn_string ent, const char ** restrict key, size_t * restrict key_size, const char ** restrict val, size_t * restrict val_size)
+QN_SDK void qn_etbl_get_pair_raw(qn_etable_ptr restrict etbl, const qn_string ent, const char ** restrict key, qn_size * restrict key_size, const char ** restrict val, qn_size * restrict val_size)
 {
     *key = ent;
     *key_size = strstr(ent, etbl->deli) - ent;
@@ -139,7 +139,7 @@ QN_SDK void qn_etbl_get_pair_raw(qn_etable_ptr restrict etbl, const qn_string en
     *val_size = (ent + qn_str_size(ent)) - *val;
 }
 
-static qn_bool qn_etbl_set_entry(qn_etable_ptr restrict etbl, const char * restrict key, size_t key_size, const char * restrict val, size_t val_size)
+static qn_bool qn_etbl_set_entry(qn_etable_ptr restrict etbl, const char * restrict key, qn_size key_size, const char * restrict val, qn_size val_size)
 {
     int ord;
     qn_string new_entry;
@@ -165,7 +165,7 @@ static qn_bool qn_etbl_set_entry(qn_etable_ptr restrict etbl, const char * restr
     return qn_true;
 }
 
-QN_SDK qn_bool qn_etbl_set_raw(qn_etable_ptr restrict etbl, const char * restrict key, size_t key_size, const char * restrict val, size_t val_size)
+QN_SDK qn_bool qn_etbl_set_raw(qn_etable_ptr restrict etbl, const char * restrict key, qn_size key_size, const char * restrict val, qn_size val_size)
 {
     return qn_etbl_set_entry(etbl, key, key_size, val, val_size);
 }
@@ -230,7 +230,7 @@ QN_SDK qn_string qn_etbl_itr_next_entry(qn_etbl_iterator_ptr restrict itr)
     return itr->etbl->entries[itr->pos++];
 }
 
-QN_SDK qn_bool qn_etbl_itr_next_pair_raw(qn_etbl_iterator_ptr restrict itr, const char ** restrict key, size_t * restrict key_size, const char ** restrict val, size_t * restrict val_size)
+QN_SDK qn_bool qn_etbl_itr_next_pair_raw(qn_etbl_iterator_ptr restrict itr, const char ** restrict key, qn_size * restrict key_size, const char ** restrict val, qn_size * restrict val_size)
 {
     qn_string ent;
 
