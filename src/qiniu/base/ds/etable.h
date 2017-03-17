@@ -23,6 +23,7 @@ QN_SDK extern int qn_etbl_count(qn_etable_ptr restrict etbl);
 
 QN_SDK extern qn_string qn_etbl_get_entry(qn_etable_ptr restrict etbl, const char * restrict key);
 QN_SDK extern const char * qn_etbl_get_value(qn_etable_ptr restrict etbl, const char * restrict key);
+QN_SDK extern void qn_etbl_get_pair_raw(qn_etable_ptr restrict etbl, const qn_string ent, const char ** restrict key, size_t * restrict key_size, const char ** restrict val, size_t * restrict val_size);
 
 QN_SDK extern qn_bool qn_etbl_set_raw(qn_etable_ptr restrict etbl, const char * restrict key, size_t key_size, const char * restrict val, size_t val_size);
 
