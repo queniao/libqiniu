@@ -33,6 +33,11 @@ static inline int qn_ud_var_count(qn_ud_variable_ptr restrict udv)
     return qn_etbl_count((qn_etable_ptr) udv);
 }
 
+static inline void qn_ud_var_get_pair_raw(qn_ud_variable_ptr restrict udv, const qn_string ent, const char ** restrict key, qn_size * restrict key_size, const char ** restrict val, qn_size * restrict val_size)
+{
+    return qn_etbl_get_pair_raw((qn_etable_ptr) udv, ent, key, key_size, val, val_size);
+}
+
 QN_SDK extern qn_bool qn_ud_var_set_raw(qn_ud_variable_ptr restrict udv, const char * restrict key, qn_size key_size, const char * restrict val, qn_size val_size);
 
 static inline qn_bool qn_ud_var_set_text(qn_ud_variable_ptr restrict udv, const char * restrict key, const char * restrict val, qn_size val_size)
