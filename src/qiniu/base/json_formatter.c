@@ -137,6 +137,12 @@ static qn_bool qn_json_fmt_format_string(qn_json_formatter_ptr fmt)
 
                 pos += 1;
                 fmt->buf_size += ret;
+            } else if (c1 == '"') {
+                if (! qn_json_fmt_putc(fmt, '\\') || ! qn_json_fmt_putc(fmt, '"')) goto FORMATTING_STRING_FAILED;
+                pos += 1;
+            } else if (c1 == '\\') {
+                if (! qn_json_fmt_putc(fmt, '\\') || ! qn_json_fmt_putc(fmt, '\\')) goto FORMATTING_STRING_FAILED;
+                pos += 1;
             } else {
                 if (!qn_json_fmt_putc(fmt, c1)) goto FORMATTING_STRING_FAILED;
                 pos += 1;

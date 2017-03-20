@@ -1729,6 +1729,32 @@ void test_format_object_holding_null_element(void)
     qn_json_fmt_destroy(fmt);
 }
 
+void test_format_object_holding_string_contains_double_quotes(void)
+{
+    qn_bool ret = qn_false;
+    qn_json_object_ptr obj_root = NULL;
+    qn_json_formatter_ptr fmt = NULL;
+    char buf[128];
+    qn_size buf_size = sizeof(buf);
+
+    fmt = qn_json_fmt_create();
+    CU_ASSERT_FATAL(fmt != NULL);
+
+    obj_root = qn_json_create_object();
+    CU_ASSERT_FATAL(obj_root != NULL);
+
+    ret = qn_json_set_string(obj_root, "_str", "ab\"cd\"ef");
+    CU_ASSERT_TRUE(ret);
+
+    ret = qn_json_fmt_format_object(fmt, obj_root, buf, &buf_size);
+    CU_ASSERT_TRUE(ret);
+    CU_ASSERT_EQUAL_FATAL(buf_size, 21);
+    CU_ASSERT_EQUAL_FATAL(memcmp(buf, "{\"_str\":\"ab\\\"cd\\\"ef\"}", 21), 0);
+
+    qn_json_destroy_object(obj_root);
+    qn_json_fmt_destroy(fmt);
+}
+
 void test_format_empty_array(void)
 {
     qn_bool ret = qn_false;
@@ -1986,6 +2012,7 @@ CU_TestInfo test_normal_cases_of_json_formatting[] = {
     {"test_format_object_holding_number_element()", test_format_object_holding_number_element},
     {"test_format_object_holding_boolean_element()", test_format_object_holding_boolean_element},
     {"test_format_object_holding_null_element()", test_format_object_holding_null_element},
+    {"test_format_object_holding_string_contains_double_quotes()", test_format_object_holding_string_contains_double_quotes},
     {"test_format_empty_array()", test_format_empty_array},
     {"test_format_immutable_array()", test_format_immutable_array},
     {"test_format_array_holding_string_element()", test_format_array_holding_string_element},
