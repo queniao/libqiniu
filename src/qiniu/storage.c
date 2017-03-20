@@ -2063,7 +2063,7 @@ static qn_bool qn_stor_up_prepare_for_upload(qn_storage_ptr restrict stor, const
 
         for (i = 0; i < qn_ud_var_count(upe->ud_vars); i += 1) {
             qn_ud_var_get_pair_raw(upe->ud_vars, entries[i], &key, &key_size, &val, &val_size);
-            if (!  qn_http_form_add_raw(form, key, key_size, val, val_size)) return qn_false;
+            if (! qn_http_form_add_raw(form, key, key_size, val, val_size)) return qn_false;
         } // if
     } // if
 
@@ -2850,7 +2850,6 @@ QN_SDK qn_json_object_ptr qn_stor_ru_api_mkfile(qn_storage_ptr restrict stor, co
     const char * val = NULL;
     qn_size key_size = 0;
     qn_size val_size = 0;
-    qn_string tmp_str2 = NULL;
 
     // ---- Check preconditions.
     assert(stor);
@@ -2906,17 +2905,14 @@ QN_SDK qn_json_object_ptr qn_stor_ru_api_mkfile(qn_storage_ptr restrict stor, co
             for (i = 0; i < qn_ud_var_count(upe->ud_vars); i += 1) {
                 qn_ud_var_get_pair_raw(upe->ud_vars, entries[i], &key, &key_size, &val, &val_size);
 
-                tmp_str = qn_cs_percent_encode(key, key_size);
-                tmp_str2 = qn_cs_percent_encode(val, val_size);
-                if (! tmp_str || ! tmp_str2) {
+                tmp_str = qn_cs_encode_base64_urlsafe(val, val_size);
+                if (! tmp_str) {
                     qn_str_destroy(tmp_str);
-                    qn_str_destroy(tmp_str2);
                     return NULL;
                 } // if
 
-                url_tmp = qn_cs_sprintf("%.*s/%.*s/%.*s", qn_str_size(url), qn_str_cstr(url), qn_str_size(tmp_str), qn_str_cstr(tmp_str), qn_str_size(tmp_str2), qn_str_cstr(tmp_str2));
+                url_tmp = qn_cs_sprintf("%.*s/%.*s/%.*s", qn_str_size(url), qn_str_cstr(url), key_size, key, qn_str_size(tmp_str), qn_str_cstr(tmp_str));
                 qn_str_destroy(tmp_str);
-                qn_str_destroy(tmp_str2);
                 qn_str_destroy(url);
                 if (! url_tmp) return NULL;
 
