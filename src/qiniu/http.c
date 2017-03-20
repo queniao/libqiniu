@@ -169,18 +169,18 @@ QN_SDK void qn_http_form_reset(qn_http_form_ptr restrict form)
     form->last = NULL;
 }
 
-QN_SDK qn_bool qn_http_form_add_string(qn_http_form_ptr restrict form, const char * restrict field, const char * restrict value, qn_size size)
+QN_SDK qn_bool qn_http_form_add_raw(qn_http_form_ptr restrict form, const char * restrict fld, qn_size fld_size, const char * restrict val, qn_size val_size)
 {
     CURLFORMcode ret;
 
     if (sizeof(curl_off_t) < sizeof(qn_size)) {
-        if (UINT32_MAX < size) {
+        if (UINT32_MAX < fld_size || UINT32_MAX < val_size) {
             qn_err_set_overflow_upper_bound();
             return qn_false;
         } // if
     } // if
     
-    ret = curl_formadd(&form->first, &form->last, CURLFORM_COPYNAME, field, CURLFORM_COPYCONTENTS, value, CURLFORM_CONTENTLEN, size, CURLFORM_END);
+    ret = curl_formadd(&form->first, &form->last, CURLFORM_COPYNAME, fld, CURLFORM_NAMELENGTH, fld_size, CURLFORM_COPYCONTENTS, val, CURLFORM_CONTENTLEN, val_size, CURLFORM_END);
     if (ret != 0) {
         qn_err_http_set_adding_string_field_failed();
         return qn_false;

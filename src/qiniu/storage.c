@@ -2053,17 +2053,17 @@ static qn_bool qn_stor_up_prepare_for_upload(qn_storage_ptr restrict stor, const
     if (! (form = qn_http_req_prepare_form(stor->req))) return qn_false;
 
     // **NOTE** : The uptoken MUST be the first form item.
-    if (!qn_http_form_add_string(form, "token", uptoken, strlen(uptoken))) return qn_false;
-    if (upe->final_key && !qn_http_form_add_string(form, "key", upe->final_key, strlen(upe->final_key))) return qn_false;
-    if (upe->crc32 && !qn_http_form_add_string(form, "crc32", upe->crc32, strlen(upe->crc32))) return qn_false;
-    if (upe->accept_type && !qn_http_form_add_string(form, "accept", upe->accept_type, strlen(upe->accept_type))) return qn_false;
+    if (! qn_http_form_add_text(form, "token", uptoken, strlen(uptoken))) return qn_false;
+    if (upe->final_key && ! qn_http_form_add_text(form, "key", upe->final_key, strlen(upe->final_key))) return qn_false;
+    if (upe->crc32 && ! qn_http_form_add_text(form, "crc32", upe->crc32, strlen(upe->crc32))) return qn_false;
+    if (upe->accept_type && ! qn_http_form_add_text(form, "accept", upe->accept_type, strlen(upe->accept_type))) return qn_false;
 
     if (upe->ud_vars && qn_ud_var_count(upe->ud_vars) > 0) {
         entries = qn_etbl_entries((qn_etable_ptr) upe->ud_vars);
 
         for (i = 0; i < qn_ud_var_count(upe->ud_vars); i += 1) {
             qn_ud_var_get_pair_raw(upe->ud_vars, entries[i], &key, &key_size, &val, &val_size);
-            if (! qn_http_form_add_string(form, key, val, val_size)) return qn_false;
+            if (!  qn_http_form_add_raw(form, key, key_size, val, val_size)) return qn_false;
         } // if
     } // if
 
