@@ -55,6 +55,8 @@ QN_SDK extern void qn_easy_pe_set_min_resumable_fsize(qn_easy_put_extra_ptr rest
 QN_SDK extern void qn_easy_pe_set_local_crc32(qn_easy_put_extra_ptr restrict pe, qn_uint32 crc32);
 QN_SDK extern void qn_easy_pe_set_source_reader(qn_easy_put_extra_ptr restrict pe, qn_io_reader_itf restrict rdr, qn_fsize fsize);
 
+QN_SDK extern void qn_easy_pe_set_user_defined_variables(qn_easy_put_extra_ptr restrict pe, qn_ud_variable_ptr ud_vars);
+
 QN_SDK extern qn_bool qn_easy_pe_clone_and_set_resumable_info(qn_easy_put_extra_ptr restrict pe, const char * restrict str, qn_size str_size);
 QN_SDK extern qn_string qn_easy_pe_get_resumable_info(qn_easy_put_extra_ptr restrict pe);
 

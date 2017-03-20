@@ -7,6 +7,7 @@
 #include "qiniu/region.h"
 #include "qiniu/storage.h"
 #include "qiniu/reader_filter.h"
+#include "qiniu/ud/variable.h"
 
 #include "qiniu/easy.h"
 
@@ -43,6 +44,7 @@ typedef struct _QN_EASY_PUT_EXTRA
         qn_io_reader_itf rdr;       // A customized data reader provided by the caller.
 
         qn_string resumable_info;
+        qn_ud_variable_ptr ud_vars; // User-Defined Variables.
 
         qn_rgn_entry_ptr rgn_entry;
         qn_rgn_host_ptr rgn_host;
@@ -137,6 +139,11 @@ QN_SDK void qn_easy_pe_set_source_reader(qn_easy_put_extra_ptr restrict pe, qn_i
 {
     pe->put_ctrl.rdr = rdr;
     pe->put_ctrl.fsize = fsize;
+}
+
+QN_SDK void qn_easy_pe_set_user_defined_variables(qn_easy_put_extra_ptr restrict pe, qn_ud_variable_ptr ud_vars)
+{
+    pe->put_ctrl.ud_vars = ud_vars;
 }
 
 QN_SDK qn_bool qn_easy_pe_clone_and_set_resumable_info(qn_easy_put_extra_ptr restrict pe, const char * restrict str, qn_size str_size)
@@ -257,18 +264,19 @@ static qn_io_reader_itf qn_easy_create_put_reader(const char * restrict fname, q
 static qn_json_object_ptr qn_easy_put_file_in_one_piece(qn_easy_ptr restrict easy, const char * restrict uptoken, const char * restrict fname, qn_io_reader_itf restrict io_rdr, qn_easy_put_extra_ptr restrict ext)
 {
     qn_json_object_ptr ret;
-    qn_stor_upload_extra_ptr put_ext;
+    qn_stor_upload_extra_ptr upe;
 
-    if (! (put_ext = qn_stor_upe_create())) return NULL;
+    if (! (upe = qn_stor_upe_create())) return NULL;
 
-    qn_stor_upe_set_final_key(put_ext, ext->attr.final_key);
+    qn_stor_upe_set_final_key(upe, ext->attr.final_key);
+    qn_stor_upe_set_user_defined_variables(upe, ext->put_ctrl.ud_vars);
 
     if (io_rdr) {
-        ret = qn_stor_up_api_upload(easy->stor, uptoken, io_rdr, put_ext);
+        ret = qn_stor_up_api_upload(easy->stor, uptoken, io_rdr, upe);
     } else {
-        ret = qn_stor_up_api_upload_file(easy->stor, uptoken, fname, put_ext);
+        ret = qn_stor_up_api_upload_file(easy->stor, uptoken, fname, upe);
     } // if
-    qn_stor_upe_destroy(put_ext);
+    qn_stor_upe_destroy(upe);
     return ret;
 }
 
@@ -276,15 +284,15 @@ static qn_json_object_ptr qn_easy_put_huge(qn_easy_ptr restrict easy, const char
 {
     int start_idx = 0;
     qn_string resumable_info = NULL;
-    qn_stor_upload_extra_ptr ue = NULL;
+    qn_stor_upload_extra_ptr upe = NULL;
     qn_json_object_ptr put_ret;
     qn_stor_resumable_upload_ptr ru;
 
     if (ext) {
-        ue = qn_stor_upe_create();
-        if (ext->attr.final_key) {
-            qn_stor_upe_set_final_key(ue, ext->attr.final_key);
-        } // if
+        if (! (upe = qn_stor_upe_create())) return NULL;
+
+        qn_stor_upe_set_final_key(upe, ext->attr.final_key);
+        qn_stor_upe_set_user_defined_variables(upe, ext->put_ctrl.ud_vars);
 
         resumable_info = ext->put_ctrl.resumable_info;
     } // if
@@ -297,7 +305,7 @@ static qn_json_object_ptr qn_easy_put_huge(qn_easy_ptr restrict easy, const char
         if (! ru) goto QN_EASY_PUT_HUGE_ERROR_HANDLING;
     } // if
 
-    put_ret = qn_stor_ru_upload_huge(easy->stor, uptoken, ru, &start_idx, QN_STOR_RU_CHUNK_DEFAULT_SIZE, ue);
+    put_ret = qn_stor_ru_upload_huge(easy->stor, uptoken, ru, &start_idx, QN_STOR_RU_CHUNK_DEFAULT_SIZE, upe);
     qn_str_destroy(ext->put_ctrl.resumable_info);
 
     if (ext) {
@@ -310,7 +318,7 @@ static qn_json_object_ptr qn_easy_put_huge(qn_easy_ptr restrict easy, const char
 
 QN_EASY_PUT_HUGE_ERROR_HANDLING:
     qn_stor_ru_destroy(ru);
-    qn_stor_upe_destroy(ue);
+    qn_stor_upe_destroy(upe);
     return put_ret;
 }
 
