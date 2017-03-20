@@ -812,6 +812,52 @@ void test_parse_object_holding_utf8_string(void)
     qn_json_prs_destroy(prs);
 }
 
+void test_parse_object_holding_string_contains_double_quotes(void)
+{
+    qn_bool ret;
+    const char buf[] = {"{\"_str\":\"ab\\\"cd\\\"ef\"}"};
+    qn_size buf_len = strlen(buf);
+    qn_string str;
+    qn_json_object_ptr obj_root = NULL;
+    qn_json_parser_ptr prs = NULL;
+
+    prs = qn_json_prs_create();
+    CU_ASSERT_FATAL(prs != NULL);
+
+    ret = qn_json_prs_parse_object(prs, buf, &buf_len, &obj_root);
+    CU_ASSERT_TRUE(ret);
+
+    str = qn_json_get_string(obj_root, "_str", NULL);
+    CU_ASSERT_PTR_NOT_NULL(str);
+    CU_ASSERT_STRING_EQUAL(qn_str_cstr(str), "ab\"cd\"ef");
+
+    qn_json_destroy_object(obj_root);
+    qn_json_prs_destroy(prs);
+}
+
+void test_parse_object_holding_string_contains_backslash(void)
+{
+    qn_bool ret;
+    const char buf[] = {"{\"_str\":\"\\\\t\"}"};
+    qn_size buf_len = strlen(buf);
+    qn_string str;
+    qn_json_object_ptr obj_root = NULL;
+    qn_json_parser_ptr prs = NULL;
+
+    prs = qn_json_prs_create();
+    CU_ASSERT_FATAL(prs != NULL);
+
+    ret = qn_json_prs_parse_object(prs, buf, &buf_len, &obj_root);
+    CU_ASSERT_TRUE(ret);
+
+    str = qn_json_get_string(obj_root, "_str", NULL);
+    CU_ASSERT_PTR_NOT_NULL(str);
+    CU_ASSERT_STRING_EQUAL(qn_str_cstr(str), "\\t");
+
+    qn_json_destroy_object(obj_root);
+    qn_json_prs_destroy(prs);
+}
+
 void test_parse_object_integer_value_in_next_chunk_followed_by_others(void)
 {
     qn_bool ret;
@@ -1449,6 +1495,8 @@ CU_TestInfo test_normal_cases_of_json_parsing[] = {
     {"test_parse_object_holding_empty_complex_elements()", test_parse_object_holding_empty_complex_elements},
     {"test_parse_object_holding_embedded_objects()", test_parse_object_holding_embedded_objects},
     {"test_parse_object_holding_utf8_string()", test_parse_object_holding_utf8_string}, 
+    {"test_parse_object_holding_string_contains_double_quotes()", test_parse_object_holding_string_contains_double_quotes}, 
+    {"test_parse_object_holding_string_contains_backslash()", test_parse_object_holding_string_contains_backslash},
     {"test_parse_object_integer_value_in_next_chunk_followed_by_others()", test_parse_object_integer_value_in_next_chunk_followed_by_others}, 
     {"test_parse_object_key_input_in_two_chunks_1()", test_parse_object_key_input_in_two_chunks_1},
     {"test_parse_object_key_input_in_two_chunks_2()", test_parse_object_key_input_in_two_chunks_2},
@@ -1755,6 +1803,32 @@ void test_format_object_holding_string_contains_double_quotes(void)
     qn_json_fmt_destroy(fmt);
 }
 
+void test_format_object_holding_string_contains_backslash(void)
+{
+    qn_bool ret = qn_false;
+    qn_json_object_ptr obj_root = NULL;
+    qn_json_formatter_ptr fmt = NULL;
+    char buf[128];
+    qn_size buf_size = sizeof(buf);
+
+    fmt = qn_json_fmt_create();
+    CU_ASSERT_FATAL(fmt != NULL);
+
+    obj_root = qn_json_create_object();
+    CU_ASSERT_FATAL(obj_root != NULL);
+
+    ret = qn_json_set_string(obj_root, "_str", "\\t");
+    CU_ASSERT_TRUE(ret);
+
+    ret = qn_json_fmt_format_object(fmt, obj_root, buf, &buf_size);
+    CU_ASSERT_TRUE(ret);
+    CU_ASSERT_EQUAL_FATAL(buf_size, 14);
+    CU_ASSERT_EQUAL_FATAL(memcmp(buf, "{\"_str\":\"\\\\t\"}", 14), 0);
+
+    qn_json_destroy_object(obj_root);
+    qn_json_fmt_destroy(fmt);
+}
+
 void test_format_empty_array(void)
 {
     qn_bool ret = qn_false;
@@ -2013,6 +2087,7 @@ CU_TestInfo test_normal_cases_of_json_formatting[] = {
     {"test_format_object_holding_boolean_element()", test_format_object_holding_boolean_element},
     {"test_format_object_holding_null_element()", test_format_object_holding_null_element},
     {"test_format_object_holding_string_contains_double_quotes()", test_format_object_holding_string_contains_double_quotes},
+    {"test_format_object_holding_string_contains_backslash()", test_format_object_holding_string_contains_backslash},
     {"test_format_empty_array()", test_format_empty_array},
     {"test_format_immutable_array()", test_format_immutable_array},
     {"test_format_array_holding_string_element()", test_format_array_holding_string_element},
