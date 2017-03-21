@@ -17,7 +17,7 @@ extern "C"
 
 // ---- Declaration of C String ----
 
-QN_SDK extern qn_string qn_cs_duplicate(const char * restrict s)
+QN_SDK qn_string qn_cs_duplicate(const char * restrict s)
 {
     return qn_cs_clone(s, strlen(s));
 }

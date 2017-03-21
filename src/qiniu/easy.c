@@ -592,7 +592,7 @@ QN_SDK void qn_easy_le_set_limit(qn_easy_list_extra_ptr restrict le, unsigned in
 
 // ----
 
-QN_SDK extern qn_json_object_ptr qn_easy_list(qn_easy_ptr restrict easy, const qn_mac_ptr restrict mac, const char * restrict bucket, void * restrict itr_data, qn_easy_le_itr_callback_fn itr_cb, qn_easy_list_extra_ptr restrict ext)
+QN_SDK qn_json_object_ptr qn_easy_list(qn_easy_ptr restrict easy, const qn_mac_ptr restrict mac, const char * restrict bucket, void * restrict itr_data, qn_easy_le_itr_callback_fn itr_cb, qn_easy_list_extra_ptr restrict ext)
 {
     qn_string marker = NULL;
     qn_json_object_ptr list_ret;

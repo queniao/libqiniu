@@ -94,7 +94,7 @@ static int qn_err_compare(const void * restrict key, const void * restrict item)
     return 0;
 }
 
-QN_SDK extern ssize_t qn_err_format_message(char * buf, size_t buf_size)
+QN_SDK ssize_t qn_err_format_message(char * buf, size_t buf_size)
 {
     ssize_t ret;
     ssize_t ret2 = 0;

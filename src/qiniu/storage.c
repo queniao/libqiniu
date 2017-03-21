@@ -2011,12 +2011,12 @@ QN_SDK void qn_stor_upe_set_final_key(qn_stor_upload_extra_ptr restrict upe, con
     upe->final_key = final_key;
 }
 
-QN_SDK extern void qn_stor_upe_set_local_crc32(qn_stor_upload_extra_ptr restrict upe, const char * restrict crc32)
+QN_SDK void qn_stor_upe_set_local_crc32(qn_stor_upload_extra_ptr restrict upe, const char * restrict crc32)
 {
     upe->crc32 = crc32;
 }
 
-QN_SDK extern void qn_stor_upe_set_accept_type(qn_stor_upload_extra_ptr restrict upe, const char * restrict accept_type)
+QN_SDK void qn_stor_upe_set_accept_type(qn_stor_upload_extra_ptr restrict upe, const char * restrict accept_type)
 {
     upe->accept_type = accept_type;
 }
@@ -2026,7 +2026,7 @@ QN_SDK void qn_stor_upe_set_user_defined_variables(qn_stor_upload_extra_ptr rest
     upe->ud_vars = ud_vars;
 }
 
-QN_SDK extern void qn_stor_upe_set_region_entry(qn_stor_upload_extra_ptr restrict upe, qn_rgn_entry_ptr restrict entry)
+QN_SDK void qn_stor_upe_set_region_entry(qn_stor_upload_extra_ptr restrict upe, qn_rgn_entry_ptr restrict entry)
 {
     upe->rgn_entry = entry;
 }
@@ -2730,7 +2730,7 @@ static qn_bool qn_stor_ru_prepare_for_resumable_upload(qn_storage_ptr restrict s
 
 // -------- Resumable Upload Functions (abbreviation: ru) --------
 
-QN_SDK extern qn_json_object_ptr qn_stor_ru_api_mkblk(qn_storage_ptr restrict stor, const char * restrict uptoken, qn_io_reader_itf restrict data_rdr, qn_json_object_ptr restrict blk_info, qn_uint chk_size, qn_stor_upload_extra_ptr restrict upe)
+QN_SDK qn_json_object_ptr qn_stor_ru_api_mkblk(qn_storage_ptr restrict stor, const char * restrict uptoken, qn_io_reader_itf restrict data_rdr, qn_json_object_ptr restrict blk_info, qn_uint chk_size, qn_stor_upload_extra_ptr restrict upe)
 {
     qn_bool ret;
     int blk_size;
@@ -2772,7 +2772,7 @@ QN_SDK extern qn_json_object_ptr qn_stor_ru_api_mkblk(qn_storage_ptr restrict st
     return qn_stor_rename_error_info(stor);
 }
 
-QN_SDK extern qn_json_object_ptr qn_stor_ru_api_bput(qn_storage_ptr restrict stor, const char * restrict uptoken, qn_io_reader_itf restrict data_rdr, qn_json_object_ptr restrict blk_info, qn_uint chk_size, qn_stor_upload_extra_ptr restrict upe)
+QN_SDK qn_json_object_ptr qn_stor_ru_api_bput(qn_storage_ptr restrict stor, const char * restrict uptoken, qn_io_reader_itf restrict data_rdr, qn_json_object_ptr restrict blk_info, qn_uint chk_size, qn_stor_upload_extra_ptr restrict upe)
 {
     qn_bool ret;
     qn_string url;
