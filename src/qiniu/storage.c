@@ -2607,7 +2607,10 @@ QN_SDK qn_io_reader_itf qn_stor_ru_create_block_reader(qn_stor_resumable_upload_
             if (! (new_blk_info = qn_json_create_and_push_object(blk_arr))) return NULL;
             if (! qn_json_set_integer(new_blk_info, "bsize", blk_size)) return NULL;
         } // for
-        if (i == ru->blk_cnt - 1) blk_size = (qn_io_size(ru->src_rdr) % QN_STOR_RU_BLOCK_MAX_SIZE);
+        if (i == ru->blk_cnt - 1) {
+            blk_size = (int)(ru->fsize & (QN_STOR_RU_BLOCK_MAX_SIZE - 1));
+            if (blk_size == 0) blk_size = QN_STOR_RU_BLOCK_MAX_SIZE;
+        } // if
         if (! (new_blk_info = qn_json_create_and_push_object(blk_arr))) return NULL;
         if (! qn_json_set_integer(new_blk_info, "bsize", blk_size)) return NULL;
     } // if
