@@ -199,15 +199,16 @@ static inline const char * qn_http_get_fname_utf8(const char * restrict fname)
 #endif
 }
 
-QN_SDK qn_bool qn_http_form_add_file(qn_http_form_ptr restrict form, const char * restrict field, const char * restrict fname, const char * restrict fname_utf8, qn_fsize fsize)
+QN_SDK qn_bool qn_http_form_add_file(qn_http_form_ptr restrict form, const char * restrict field, const char * restrict fname, const char * restrict fname_utf8, qn_fsize fsize, const char * restrict mime_type)
 {
     CURLFORMcode ret;
 
     /// BUG NOTE 1 : Golang HTTP server will fail in case that the fsize is larger than 10MB and the `filename` attribute of the multipart-data section doesn't exist.
     /// BUG FIX    : Use a mandatory filename value to prevent Golang HTTP server from failing.
     if (!fname_utf8) fname_utf8 = qn_http_get_fname_utf8(fname);
+    if (! mime_type) mime_type = "application/octet-stream";
 
-    ret = curl_formadd(&form->first, &form->last, CURLFORM_COPYNAME, field, CURLFORM_FILE, fname, CURLFORM_FILENAME, fname_utf8, CURLFORM_END);
+    ret = curl_formadd(&form->first, &form->last, CURLFORM_COPYNAME, field, CURLFORM_FILE, fname, CURLFORM_FILENAME, fname_utf8, CURLFORM_CONTENTTYPE, mime_type, CURLFORM_END);
     if (ret != 0) {
         qn_err_http_set_adding_file_field_failed();
         return qn_false;
@@ -215,14 +216,15 @@ QN_SDK qn_bool qn_http_form_add_file(qn_http_form_ptr restrict form, const char 
     return qn_true;
 }
 
-QN_SDK qn_bool qn_http_form_add_file_reader(qn_http_form_ptr restrict form, const char * restrict field, const char * restrict fname, const char * restrict fname_utf8, qn_fsize fsize, void * restrict req)
+QN_SDK qn_bool qn_http_form_add_file_reader(qn_http_form_ptr restrict form, const char * restrict field, const char * restrict fname, const char * restrict fname_utf8, qn_fsize fsize, const char * restrict mime_type, void * restrict req)
 {
     CURLFORMcode ret;
 
     /// See BUG NOTE 1.
     if (!fname_utf8) fname_utf8 = qn_http_get_fname_utf8(fname);
+    if (! mime_type) mime_type = "application/octet-stream";
 
-    ret = curl_formadd(&form->first, &form->last, CURLFORM_COPYNAME, field, CURLFORM_STREAM, req, CURLFORM_CONTENTSLENGTH, (long)fsize, CURLFORM_FILENAME, fname_utf8, CURLFORM_END);
+    ret = curl_formadd(&form->first, &form->last, CURLFORM_COPYNAME, field, CURLFORM_STREAM, req, CURLFORM_CONTENTSLENGTH, (long)fsize, CURLFORM_FILENAME, fname_utf8, CURLFORM_CONTENTTYPE, mime_type, CURLFORM_END);
     if (ret != 0) {
         qn_err_http_set_adding_file_field_failed();
         return qn_false;
@@ -230,7 +232,7 @@ QN_SDK qn_bool qn_http_form_add_file_reader(qn_http_form_ptr restrict form, cons
     return qn_true;
 }
 
-QN_SDK qn_bool qn_http_form_add_buffer(qn_http_form_ptr restrict form, const char * restrict field, const char * restrict fname, const char * restrict buf, qn_size buf_size)
+QN_SDK qn_bool qn_http_form_add_buffer(qn_http_form_ptr restrict form, const char * restrict field, const char * restrict fname, const char * restrict buf, qn_size buf_size, const char * restrict mime_type)
 {
     CURLFORMcode ret;
 
@@ -240,8 +242,10 @@ QN_SDK qn_bool qn_http_form_add_buffer(qn_http_form_ptr restrict form, const cha
             return qn_false;
         } // if
     } // if
+
+    if (! mime_type) mime_type = "application/octet-stream";
     
-    ret = curl_formadd(&form->first, &form->last, CURLFORM_COPYNAME, field, CURLFORM_BUFFER, fname, CURLFORM_BUFFERPTR, buf, CURLFORM_BUFFERLENGTH, buf_size, CURLFORM_END);
+    ret = curl_formadd(&form->first, &form->last, CURLFORM_COPYNAME, field, CURLFORM_BUFFER, fname, CURLFORM_BUFFERPTR, buf, CURLFORM_BUFFERLENGTH, buf_size, CURLFORM_CONTENTTYPE, mime_type, CURLFORM_END);
     if (ret != 0) {
         qn_err_http_set_adding_buffer_field_failed();
         return qn_false;

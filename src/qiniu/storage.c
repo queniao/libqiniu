@@ -2161,6 +2161,7 @@ static qn_bool qn_stor_up_prepare_for_upload(qn_storage_ptr restrict stor, const
 *******************************************************************************/
 QN_SDK qn_json_object_ptr qn_stor_up_api_upload_file(qn_storage_ptr restrict stor, const char * restrict uptoken, const char * restrict fname, qn_stor_upload_extra_ptr restrict upe)
 {
+    const char * mime_type = NULL;
     qn_bool ret;
     qn_fl_info_ptr fi;
     qn_http_form_ptr form;
@@ -2171,6 +2172,7 @@ QN_SDK qn_json_object_ptr qn_stor_up_api_upload_file(qn_storage_ptr restrict sto
 
     if (upe) {
         if (! (rgn_entry = upe->rgn_entry)) qn_rgn_tbl_choose_first_entry(NULL, QN_RGN_SVC_UP, NULL, &rgn_entry);
+        mime_type = upe->mime_type;
     } else {
         rgn_entry = NULL;
         qn_rgn_tbl_choose_first_entry(NULL, QN_RGN_SVC_UP, NULL, &rgn_entry);
@@ -2184,7 +2186,7 @@ QN_SDK qn_json_object_ptr qn_stor_up_api_upload_file(qn_storage_ptr restrict sto
     fi = qn_fl_info_stat(fname);
     if (!fi) return NULL;
 
-    ret = qn_http_form_add_file(form, "file", qn_str_cstr(qn_fl_info_fname(fi)), NULL, qn_fl_info_fsize(fi));
+    ret = qn_http_form_add_file(form, "file", qn_str_cstr(qn_fl_info_fname(fi)), NULL, qn_fl_info_fsize(fi), mime_type);
     qn_fl_info_destroy(fi);
     if (!ret) return NULL;
 
@@ -2202,6 +2204,7 @@ QN_SDK qn_json_object_ptr qn_stor_up_api_upload_file(qn_storage_ptr restrict sto
 
 QN_SDK qn_json_object_ptr qn_stor_up_api_upload_buffer(qn_storage_ptr restrict stor, const char * restrict uptoken, const char * restrict buf, qn_size buf_size, qn_stor_upload_extra_ptr restrict upe)
 {
+    const char * mime_type = NULL;
     qn_bool ret;
     qn_http_form_ptr form;
     qn_rgn_entry_ptr rgn_entry;
@@ -2213,6 +2216,7 @@ QN_SDK qn_json_object_ptr qn_stor_up_api_upload_buffer(qn_storage_ptr restrict s
 
     if (upe) {
         if (! (rgn_entry = upe->rgn_entry)) qn_rgn_tbl_choose_first_entry(NULL, QN_RGN_SVC_UP, NULL, &rgn_entry);
+        mime_type = upe->mime_type;
     } else {
         rgn_entry = NULL;
         qn_rgn_tbl_choose_first_entry(NULL, QN_RGN_SVC_UP, NULL, &rgn_entry);
@@ -2223,7 +2227,7 @@ QN_SDK qn_json_object_ptr qn_stor_up_api_upload_buffer(qn_storage_ptr restrict s
     form = qn_http_req_get_form(stor->req);
 
     if (buf_size == 0) buf = "";
-    if (! qn_http_form_add_buffer(form, "file", "LIBQINIU-MANDATORY-FILENAME", buf, buf_size)) return NULL;
+    if (! qn_http_form_add_buffer(form, "file", "LIBQINIU-MANDATORY-FILENAME", buf, buf_size, mime_type)) return NULL;
 
     // ----
     if (rgn_entry->hostname && !qn_http_req_set_header(stor->req, "Host", qn_str_cstr(rgn_entry->hostname))) return NULL;
@@ -2247,6 +2251,7 @@ static size_t qn_stor_upload_cfn(void * user_data, char * buf, size_t size)
 
 QN_SDK qn_json_object_ptr qn_stor_up_api_upload(qn_storage_ptr restrict stor, const char * restrict uptoken, qn_io_reader_itf restrict data_rdr, qn_stor_upload_extra_ptr restrict upe)
 {
+    const char * mime_type = NULL;
     qn_bool ret;
     qn_rgn_entry_ptr rgn_entry;
 
@@ -2256,6 +2261,7 @@ QN_SDK qn_json_object_ptr qn_stor_up_api_upload(qn_storage_ptr restrict stor, co
 
     if (upe) {
         if (! (rgn_entry = upe->rgn_entry)) qn_rgn_tbl_choose_first_entry(NULL, QN_RGN_SVC_UP, NULL, &rgn_entry);
+        mime_type = upe->mime_type;
     } else {
         rgn_entry = NULL;
         qn_rgn_tbl_choose_first_entry(NULL, QN_RGN_SVC_UP, NULL, &rgn_entry);
@@ -2263,7 +2269,7 @@ QN_SDK qn_json_object_ptr qn_stor_up_api_upload(qn_storage_ptr restrict stor, co
 
     if (! qn_stor_up_prepare_for_upload(stor, uptoken, upe)) return NULL;
 
-    ret = qn_http_form_add_file_reader(qn_http_req_get_form(stor->req), "file", qn_str_cstr(qn_io_name(data_rdr)), NULL, qn_io_size(data_rdr), stor->req);
+    ret = qn_http_form_add_file_reader(qn_http_req_get_form(stor->req), "file", qn_str_cstr(qn_io_name(data_rdr)), NULL, qn_io_size(data_rdr), mime_type, stor->req);
     if (! ret) return NULL;
 
     qn_http_req_set_body_reader(stor->req, data_rdr, qn_stor_upload_cfn, qn_io_size(data_rdr));
