@@ -156,34 +156,6 @@ static qn_bool qn_json_obj_augment(qn_json_object_ptr restrict obj)
     return qn_true;
 }
 
-static qn_bool qn_json_obj_set(qn_json_object_ptr restrict obj, const char * restrict key, qn_json_class cls, qn_json_variant new_elem)
-{
-    qn_json_pos pos;
-    qn_string new_key;
-    int existence;
-
-    pos = qn_json_obj_bsearch(obj->itm, obj->cnt, key, &existence);
-    if (existence == 0) {
-        // There is an element according to the given key.
-        qn_json_destroy_element(obj->itm[pos].class, &obj->itm[pos].elem);
-        obj->itm[pos].class = cls;
-        obj->itm[pos].elem = new_elem;
-        return qn_true;
-    } // if
-
-    if ((obj->cap - obj->cnt) <= 0 && !qn_json_obj_augment(obj)) return qn_false;
-    if (!(new_key = qn_cs_duplicate(key))) return qn_false;
-
-    if (pos < obj->cnt) memmove(&obj->itm[pos+1], &obj->itm[pos], sizeof(qn_json_obj_item) * (obj->cnt - pos));
-
-    obj->itm[pos].class = cls;
-    obj->itm[pos].key = new_key;
-    obj->itm[pos].elem = new_elem;
-
-    obj->cnt += 1;
-    return qn_true;
-}
-
 // ---- Inplementation of array of JSON ----
 
 typedef struct _QN_JSON_ARR_ITEM
@@ -290,26 +262,6 @@ static inline qn_json_pos qn_json_arr_find(qn_json_array_ptr restrict arr, int n
     return (n < 0 || n >= arr->cnt) ? arr->cnt : (arr->begin + n);
 }
 
-static qn_bool qn_json_arr_push(qn_json_array_ptr restrict arr, qn_json_class cls, qn_json_variant new_elem)
-{
-    if ((arr->end == arr->cap) && !qn_json_arr_augment(arr, QN_JSON_ARR_PUSHING)) return qn_false;
-    arr->itm[arr->end].elem = new_elem;
-    arr->itm[arr->end].class = cls;
-    arr->end += 1;
-    arr->cnt += 1;
-    return qn_true;
-}
-
-static qn_bool qn_json_arr_unshift(qn_json_array_ptr restrict arr, qn_json_class cls, qn_json_variant new_elem)
-{
-    if ((arr->begin == 0) && !qn_json_arr_augment(arr, QN_JSON_ARR_UNSHIFTING)) return qn_false;
-    arr->begin -= 1;
-    arr->itm[arr->begin].elem = new_elem;
-    arr->itm[arr->begin].class = cls;
-    arr->cnt += 1;
-    return qn_true;
-}
-
 // ---- Inplementation of JSON ----
 
 /***************************************************************************//**
@@ -326,7 +278,7 @@ QN_SDK qn_json_object_ptr qn_json_create_and_set_object(qn_json_object_ptr restr
 {
     qn_json_variant new_elem;
     new_elem.object = qn_json_create_object();
-    if (new_elem.object && !qn_json_obj_set(obj, key, QN_JSON_OBJECT, new_elem)) {
+    if (new_elem.object && ! qn_json_set_variant(obj, key, QN_JSON_OBJECT, new_elem)) {
         qn_json_destroy_object(new_elem.object);
         return NULL;
     } // if
@@ -347,7 +299,7 @@ QN_SDK qn_json_array_ptr qn_json_create_and_set_array(qn_json_object_ptr restric
 {
     qn_json_variant new_elem;
     new_elem.array = qn_json_create_array();
-    if (new_elem.array && !qn_json_obj_set(obj, key, QN_JSON_ARRAY, new_elem)) {
+    if (new_elem.array && ! qn_json_set_variant(obj, key, QN_JSON_ARRAY, new_elem)) {
         qn_json_destroy_array(new_elem.array);
         return NULL;
     } // if
@@ -367,7 +319,7 @@ QN_SDK qn_json_object_ptr qn_json_create_and_push_object(qn_json_array_ptr restr
 {
     qn_json_variant new_elem;
     new_elem.object = qn_json_create_object();
-    if (new_elem.object && !qn_json_arr_push(arr, QN_JSON_OBJECT, new_elem)) {
+    if (new_elem.object && ! qn_json_push_variant(arr, QN_JSON_OBJECT, new_elem)) {
         qn_json_destroy_object(new_elem.object);
         return NULL;
     } // if
@@ -387,7 +339,7 @@ QN_SDK qn_json_array_ptr qn_json_create_and_push_array(qn_json_array_ptr restric
 {
     qn_json_variant new_elem;
     new_elem.array = qn_json_create_array();
-    if (new_elem.array && !qn_json_arr_push(arr, QN_JSON_ARRAY, new_elem)) {
+    if (new_elem.array && ! qn_json_push_variant(arr, QN_JSON_ARRAY, new_elem)) {
         qn_json_destroy_array(new_elem.array);
         return NULL;
     } // if
@@ -407,7 +359,7 @@ QN_SDK qn_json_object_ptr qn_json_create_and_unshift_object(qn_json_array_ptr re
 {
     qn_json_variant new_elem;
     new_elem.object = qn_json_create_object();
-    if (new_elem.object && !qn_json_arr_unshift(arr, QN_JSON_OBJECT, new_elem)) {
+    if (new_elem.object && ! qn_json_unshift_variant(arr, QN_JSON_OBJECT, new_elem)) {
         qn_json_destroy_object(new_elem.object);
         return NULL;
     } // if
@@ -427,7 +379,7 @@ QN_SDK qn_json_array_ptr qn_json_create_and_unshift_array(qn_json_array_ptr rest
 {
     qn_json_variant new_elem;
     new_elem.array = qn_json_create_array();
-    if (new_elem.array && !qn_json_arr_unshift(arr, QN_JSON_ARRAY, new_elem)) {
+    if (new_elem.array && ! qn_json_unshift_variant(arr, QN_JSON_ARRAY, new_elem)) {
         qn_json_destroy_array(new_elem.array);
         return NULL;
     } // if
@@ -477,8 +429,12 @@ QN_SDK qn_json_variant_ptr qn_json_pick_variant(qn_json_array_ptr restrict arr, 
     return (pos == arr->cnt || arr->itm[pos].class != cls) ? NULL : &arr->itm[pos].elem;
 }
 
-QN_SDK qn_bool qn_json_set_variant(qn_json_object_ptr restrict obj, const char * restrict key, qn_json_class cls, qn_json_variant var)
+QN_SDK qn_bool qn_json_set_variant(qn_json_object_ptr restrict obj, const char * restrict key, qn_json_class cls, qn_json_variant new_elem)
 {
+    qn_json_pos pos;
+    qn_string new_key;
+    int existence;
+
     assert(obj);
     assert(key);
 
@@ -486,7 +442,27 @@ QN_SDK qn_bool qn_json_set_variant(qn_json_object_ptr restrict obj, const char *
         qn_err_json_set_modifying_immutable_object();
         return qn_false;
     } // if
-    return qn_json_obj_set(obj, key, cls, var);
+
+    pos = qn_json_obj_bsearch(obj->itm, obj->cnt, key, &existence);
+    if (existence == 0) {
+        // There is an element according to the given key.
+        qn_json_destroy_element(obj->itm[pos].class, &obj->itm[pos].elem);
+        obj->itm[pos].class = cls;
+        obj->itm[pos].elem = new_elem;
+        return qn_true;
+    } // if
+
+    if ((obj->cap - obj->cnt) <= 0 && !qn_json_obj_augment(obj)) return qn_false;
+    if (!(new_key = qn_cs_duplicate(key))) return qn_false;
+
+    if (pos < obj->cnt) memmove(&obj->itm[pos+1], &obj->itm[pos], sizeof(qn_json_obj_item) * (obj->cnt - pos));
+
+    obj->itm[pos].class = cls;
+    obj->itm[pos].key = new_key;
+    obj->itm[pos].elem = new_elem;
+
+    obj->cnt += 1;
+    return qn_true;
 }
 
 /***************************************************************************//**
@@ -578,13 +554,22 @@ QN_SDK qn_bool qn_json_rename(qn_json_object_ptr restrict obj, const char * rest
     return qn_true;
 }
 
-QN_SDK qn_bool qn_json_push_variant(qn_json_array_ptr restrict arr, qn_json_class cls, qn_json_variant var)
+QN_SDK qn_bool qn_json_push_variant(qn_json_array_ptr restrict arr, qn_json_class cls, qn_json_variant new_elem)
 {
+    assert(arr);
+
     if (arr->cap == 0) {
         qn_err_json_set_modifying_immutable_array();
         return qn_false;
     } // if
-    return qn_json_arr_push(arr, cls, var);
+
+    if ((arr->end == arr->cap) && !qn_json_arr_augment(arr, QN_JSON_ARR_PUSHING)) return qn_false;
+
+    arr->itm[arr->end].elem = new_elem;
+    arr->itm[arr->end].class = cls;
+    arr->end += 1;
+    arr->cnt += 1;
+    return qn_true;
 }
 
 /***************************************************************************//**
@@ -604,13 +589,22 @@ QN_SDK void qn_json_pop(qn_json_array_ptr restrict arr)
     } // if
 }
 
-QN_SDK qn_bool qn_json_unshift_variant(qn_json_array_ptr restrict arr, qn_json_class cls, qn_json_variant var)
+QN_SDK qn_bool qn_json_unshift_variant(qn_json_array_ptr restrict arr, qn_json_class cls, qn_json_variant new_elem)
 {
+    assert(arr);
+
     if (arr->cap == 0) {
         qn_err_json_set_modifying_immutable_array();
         return qn_false;
     } // if
-    return qn_json_arr_unshift(arr, cls, var);
+
+    if ((arr->begin == 0) && !qn_json_arr_augment(arr, QN_JSON_ARR_UNSHIFTING)) return qn_false;
+
+    arr->begin -= 1;
+    arr->itm[arr->begin].elem = new_elem;
+    arr->itm[arr->begin].class = cls;
+    arr->cnt += 1;
+    return qn_true;
 }
 
 /***************************************************************************//**
@@ -630,19 +624,7 @@ QN_SDK void qn_json_shift(qn_json_array_ptr restrict arr)
     } // if
 }
 
-static inline qn_bool qn_json_arr_replace(qn_json_array_ptr restrict arr, int n, qn_json_class cls, qn_json_variant new_elem)
-{
-    if (n < 0 || (arr->end - arr->begin) <= n) {
-        qn_err_json_set_out_of_index();
-        return qn_false;
-    } // if
-    qn_json_destroy_element(arr->itm[arr->begin + n].class, &arr->itm[arr->begin + n].elem);
-    arr->itm[arr->begin + n].elem = new_elem;
-    arr->itm[arr->begin + n].class = cls;
-    return qn_true;
-}
-
-QN_SDK qn_bool qn_json_replace_variant(qn_json_array_ptr restrict arr, int n, qn_json_class cls, qn_json_variant var)
+QN_SDK qn_bool qn_json_replace_variant(qn_json_array_ptr restrict arr, int n, qn_json_class cls, qn_json_variant new_elem)
 {
     assert(arr);
     assert(0 <= n);
@@ -651,7 +633,16 @@ QN_SDK qn_bool qn_json_replace_variant(qn_json_array_ptr restrict arr, int n, qn
         qn_err_json_set_modifying_immutable_array();
         return qn_false;
     } // if
-    return qn_json_arr_replace(arr, n, cls, var);
+
+    if (n < 0 || (arr->end - arr->begin) <= n) {
+        qn_err_json_set_out_of_index();
+        return qn_false;
+    } // if
+
+    qn_json_destroy_element(arr->itm[arr->begin + n].class, &arr->itm[arr->begin + n].elem);
+    arr->itm[arr->begin + n].elem = new_elem;
+    arr->itm[arr->begin + n].class = cls;
+    return qn_true;
 }
 
 // ---- Inplementation of iterator of JSON ----
