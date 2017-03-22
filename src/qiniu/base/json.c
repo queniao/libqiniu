@@ -642,139 +642,8 @@ static inline qn_bool qn_json_arr_replace(qn_json_array_ptr restrict arr, int n,
     return qn_true;
 }
 
-QN_SDK qn_bool qn_json_replace_object(qn_json_array_ptr restrict arr, int n, qn_json_object_ptr restrict val)
+QN_SDK qn_bool qn_json_replace_variant(qn_json_array_ptr restrict arr, int n, qn_json_class cls, qn_json_variant var)
 {
-    qn_json_variant elem;
-
-    assert(arr);
-    assert(0 <= n);
-    assert(val);
-
-    if (arr->cap == 0) {
-        qn_err_json_set_modifying_immutable_array();
-        return qn_false;
-    } // if
-
-    elem.object = val;
-    return qn_json_arr_replace(arr, n, QN_JSON_OBJECT, elem);
-}
-
-QN_SDK qn_bool qn_json_replace_array(qn_json_array_ptr restrict arr, int n, qn_json_array_ptr restrict val)
-{
-    qn_json_variant elem;
-
-    assert(arr);
-    assert(0 <= n);
-    assert(val);
-
-    if (arr->cap == 0) {
-        qn_err_json_set_modifying_immutable_array();
-        return qn_false;
-    } // if
-
-    elem.array = val;
-    return qn_json_arr_replace(arr, n, QN_JSON_ARRAY, elem);
-}
-
-QN_SDK qn_bool qn_json_replace_string(qn_json_array_ptr restrict arr, int n, const char * restrict val)
-{
-    qn_json_variant elem;
-
-    assert(arr);
-    assert(0 <= n);
-    assert(val);
-
-    if (arr->cap == 0) {
-        qn_err_json_set_modifying_immutable_array();
-        return qn_false;
-    } // if
-
-    elem.string = qn_cs_duplicate(val);
-    if (! elem.string) return qn_false;
-    if (! qn_json_arr_replace(arr, n, QN_JSON_STRING, elem)) {
-        qn_str_destroy(elem.string);
-        return qn_false;
-    } // if
-    return qn_true;
-}
-
-QN_SDK qn_bool qn_json_replace_text(qn_json_array_ptr restrict arr, int n, const char * restrict val, qn_size size)
-{
-    qn_json_variant elem;
-
-    assert(arr);
-    assert(0 <= n);
-    assert(val);
-
-    if (arr->cap == 0) {
-        qn_err_json_set_modifying_immutable_array();
-        return qn_false;
-    } // if
-
-    elem.string = qn_cs_clone(val, size);
-    if (! elem.string) return qn_false;
-    if (! qn_json_arr_replace(arr, n, QN_JSON_STRING, elem)) {
-        qn_str_destroy(elem.string);
-        return qn_false;
-    } // if
-    return qn_true;
-}
-
-QN_SDK qn_bool qn_json_replace_integer(qn_json_array_ptr restrict arr, int n, qn_json_integer val)
-{
-    qn_json_variant elem;
-
-    assert(arr);
-    assert(0 <= n);
-    assert(val);
-
-    if (arr->cap == 0) {
-        qn_err_json_set_modifying_immutable_array();
-        return qn_false;
-    } // if
-
-    elem.integer = val;
-    return qn_json_arr_replace(arr, n, QN_JSON_INTEGER, elem);
-}
-
-QN_SDK qn_bool qn_json_replace_number(qn_json_array_ptr restrict arr, int n, qn_json_number val)
-{
-    qn_json_variant elem;
-
-    assert(arr);
-    assert(0 <= n);
-    assert(val);
-
-    if (arr->cap == 0) {
-        qn_err_json_set_modifying_immutable_array();
-        return qn_false;
-    } // if
-
-    elem.number = val;
-    return qn_json_arr_replace(arr, n, QN_JSON_NUMBER, elem);
-}
-
-QN_SDK qn_bool qn_json_replace_boolean(qn_json_array_ptr restrict arr, int n, qn_bool val)
-{
-    qn_json_variant elem;
-
-    assert(arr);
-    assert(0 <= n);
-    assert(val);
-
-    if (arr->cap == 0) {
-        qn_err_json_set_modifying_immutable_array();
-        return qn_false;
-    } // if
-
-    elem.boolean = val;
-    return qn_json_arr_replace(arr, n, QN_JSON_BOOLEAN, elem);
-}
-
-QN_SDK qn_bool qn_json_replace_null(qn_json_array_ptr restrict arr, int n)
-{
-    qn_json_variant elem;
-
     assert(arr);
     assert(0 <= n);
 
@@ -782,9 +651,7 @@ QN_SDK qn_bool qn_json_replace_null(qn_json_array_ptr restrict arr, int n)
         qn_err_json_set_modifying_immutable_array();
         return qn_false;
     } // if
-
-    elem.integer = 0;
-    return qn_json_arr_replace(arr, n, QN_JSON_NULL, elem);
+    return qn_json_arr_replace(arr, n, cls, var);
 }
 
 // ---- Inplementation of iterator of JSON ----
