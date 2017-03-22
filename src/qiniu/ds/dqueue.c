@@ -2,7 +2,7 @@
 #include <string.h>
 #include <errno.h>
 
-#include "qiniu/base/ds/dqueue.h"
+#include "qiniu/ds/dqueue.h"
 
 #ifdef __cplusplus
 extern "C"

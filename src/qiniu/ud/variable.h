@@ -1,7 +1,7 @@
 #ifndef __QN_UD_VARIABLE_H_
 #define __QN_UD_VARIABLE_H_
 
-#include "qiniu/base/ds/etable.h"
+#include "qiniu/ds/etable.h"
 
 #ifdef __cplusplus
 extern "C"

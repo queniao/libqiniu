@@ -2,7 +2,7 @@
 #define __QN_HTTP_HEADER_H__
 
 #include "qiniu/base/string.h"
-#include "qiniu/base/ds/etable.h"
+#include "qiniu/ds/etable.h"
 #include "qiniu/macros.h"
 
 #ifdef __cplusplus

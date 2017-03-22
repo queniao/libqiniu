@@ -3,7 +3,7 @@
 
 #include "qiniu/base/errors.h"
 #include "qiniu/base/string.h"
-#include "qiniu/base/ds/etable.h"
+#include "qiniu/ds/etable.h"
 
 #ifdef __cplusplus
 extern "C"

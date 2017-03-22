@@ -1,7 +1,7 @@
 #ifndef __QN_HTTP_QUERY_H__
 #define __QN_HTTP_QUERY_H__
 
-#include "qiniu/base/ds/etable.h"
+#include "qiniu/ds/etable.h"
 #include "qiniu/base/string.h"
 #include "qiniu/macros.h"
 
