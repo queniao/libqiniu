@@ -20,6 +20,7 @@ typedef struct _QN_EASY_PUT_EXTRA
 {
     struct {
         const char * final_key;     // Final key of the file in the bucket.
+        const char * mime_type;     // MIME type of the file in the bucket.
         const char * owner_desc;    // The owner description of the file, used for business identificaiton.
         qn_string local_qetag;      // The local QETAG hash calculated by filters.
     } attr;
@@ -88,6 +89,11 @@ QN_SDK void qn_easy_pe_reset(qn_easy_put_extra_ptr restrict pe)
 QN_SDK void qn_easy_pe_set_final_key(qn_easy_put_extra_ptr restrict pe, const char * restrict key)
 {
     pe->attr.final_key = key;
+}
+
+QN_SDK void qn_easy_pe_set_mime_type(qn_easy_put_extra_ptr restrict pe, const char * restrict mime_type)
+{
+    pe->attr.mime_type = mime_type;
 }
 
 QN_SDK void qn_easy_pe_set_owner_description(qn_easy_put_extra_ptr restrict pe, const char * restrict desc)
@@ -269,6 +275,7 @@ static qn_json_object_ptr qn_easy_put_file_in_one_piece(qn_easy_ptr restrict eas
     if (! (upe = qn_stor_upe_create())) return NULL;
 
     qn_stor_upe_set_final_key(upe, ext->attr.final_key);
+    qn_stor_upe_set_mime_type(upe, ext->attr.mime_type);
     qn_stor_upe_set_user_defined_variables(upe, ext->put_ctrl.ud_vars);
 
     if (io_rdr) {
@@ -292,6 +299,7 @@ static qn_json_object_ptr qn_easy_put_huge(qn_easy_ptr restrict easy, const char
         if (! (upe = qn_stor_upe_create())) return NULL;
 
         qn_stor_upe_set_final_key(upe, ext->attr.final_key);
+        qn_stor_upe_set_mime_type(upe, ext->attr.mime_type);
         qn_stor_upe_set_user_defined_variables(upe, ext->put_ctrl.ud_vars);
 
         resumable_info = ext->put_ctrl.resumable_info;

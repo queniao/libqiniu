@@ -13,6 +13,7 @@ int main(int argc, char * argv[])
     const char * fname;
     const char * return_url = NULL;
     const char * return_body = NULL;
+    const char * mime_type = NULL;
     const char * pos = NULL;
     qn_mac_ptr mac;
     qn_string local_qetag;
@@ -78,6 +79,8 @@ int main(int argc, char * argv[])
                     return_url = pos + 1;
                 } else if (strncmp(argv[i], "RETURN_BODY", 11) == 0) {
                     return_body = pos + 1;
+                } else if (strncmp(argv[i], "MIME_TYPE", 9) == 0) {
+                    mime_type = pos + 1;
                 } // if
             } // if
         } // for
@@ -113,6 +116,7 @@ int main(int argc, char * argv[])
     } // if
 
     qn_easy_pe_set_final_key(pe, key);
+    qn_easy_pe_set_mime_type(pe, mime_type);
     qn_easy_pe_set_qetag_checking(pe, qn_true);
 
     qn_easy_pe_set_user_defined_variables(pe, ud_vars);

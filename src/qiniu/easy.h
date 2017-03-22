@@ -40,6 +40,7 @@ QN_SDK extern void qn_easy_pe_destroy(qn_easy_put_extra_ptr restrict pe);
 QN_SDK extern void qn_easy_pe_reset(qn_easy_put_extra_ptr restrict pe);
 
 QN_SDK extern void qn_easy_pe_set_final_key(qn_easy_put_extra_ptr restrict pe, const char * restrict key);
+QN_SDK extern void qn_easy_pe_set_mime_type(qn_easy_put_extra_ptr restrict pe, const char * restrict mime_type);
 QN_SDK extern void qn_easy_pe_set_owner_description(qn_easy_put_extra_ptr restrict pe, const char * restrict desc);
 
 QN_SDK extern void qn_easy_pe_set_crc32_checking(qn_easy_put_extra_ptr restrict pe, qn_bool check);
