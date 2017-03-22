@@ -1973,6 +1973,7 @@ QN_SDK qn_string qn_stor_pp_to_uptoken(qn_json_object_ptr restrict pp, qn_mac_pt
 typedef struct _QN_STOR_UPLOAD_EXTRA
 {
     const char * final_key;
+    const char * mime_type;
     const char * crc32;
     const char * accept_type;
 
@@ -2009,6 +2010,11 @@ QN_SDK void qn_stor_upe_reset(qn_stor_upload_extra_ptr restrict upe)
 QN_SDK void qn_stor_upe_set_final_key(qn_stor_upload_extra_ptr restrict upe, const char * restrict final_key)
 {
     upe->final_key = final_key;
+}
+
+QN_SDK void qn_stor_upe_set_mime_type(qn_stor_upload_extra_ptr restrict upe, const char * restrict mime_type)
+{
+    upe->mime_type = mime_type;
 }
 
 QN_SDK void qn_stor_upe_set_local_crc32(qn_stor_upload_extra_ptr restrict upe, const char * restrict crc32)
@@ -2897,7 +2903,20 @@ QN_SDK qn_json_object_ptr qn_stor_ru_api_mkfile(qn_storage_ptr restrict stor, co
             url = url_tmp;
         } // if
 
-        // TODO: Specify MIME if exists.
+        if (upe->mime_type) {
+            tmp_str = qn_cs_encode_base64_urlsafe(upe->mime_type, posix_strlen(upe->mime_type));
+            if (! tmp_str) {
+                qn_str_destroy(url);
+                return NULL;
+            } // if
+
+            url_tmp = qn_cs_sprintf("%.*s/mimeType/%.*s", qn_str_size(url), qn_str_cstr(url), qn_str_size(tmp_str), qn_str_cstr(tmp_str));
+            qn_str_destroy(tmp_str);
+            qn_str_destroy(url);
+            if (! url_tmp) return NULL;
+
+            url = url_tmp;
+        } // if
 
         if (upe->ud_vars && qn_ud_var_count(upe->ud_vars) > 0) {
             entries = qn_etbl_entries((qn_etable_ptr) upe->ud_vars);

@@ -160,6 +160,7 @@ QN_SDK extern void qn_stor_upe_destroy(qn_stor_upload_extra_ptr restrict upe);
 QN_SDK extern void qn_stor_upe_reset(qn_stor_upload_extra_ptr restrict upe);
 
 QN_SDK extern void qn_stor_upe_set_final_key(qn_stor_upload_extra_ptr restrict upe, const char * restrict final_key);
+QN_SDK extern void qn_stor_upe_set_mime_type(qn_stor_upload_extra_ptr restrict upe, const char * restrict mime_type);
 QN_SDK extern void qn_stor_upe_set_local_crc32(qn_stor_upload_extra_ptr restrict upe, const char * restrict crc32);
 QN_SDK extern void qn_stor_upe_set_accept_type(qn_stor_upload_extra_ptr restrict upe, const char * restrict accept_type);
 QN_SDK extern void qn_stor_upe_set_user_defined_variables(qn_stor_upload_extra_ptr restrict upe, qn_ud_variable_ptr ud_vars);
