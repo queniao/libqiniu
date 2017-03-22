@@ -193,7 +193,7 @@ static const qn_string qn_stor_mn_make_stat_op(const char * restrict bucket, con
     encoded_uri = qn_misc_encode_uri(bucket, key);
     if (!encoded_uri) return NULL;
 
-    op = qn_cs_sprintf("stat/%.*s", qn_str_size(encoded_uri), qn_str_cstr(encoded_uri));
+    op = qn_cs_sprintf("stat/%s", qn_str_cstr(encoded_uri));
     qn_str_destroy(encoded_uri);
     return op;
 }
@@ -291,7 +291,7 @@ QN_SDK qn_json_object_ptr qn_stor_mn_api_stat(qn_storage_ptr restrict stor, cons
     op = qn_stor_mn_make_stat_op(bucket, key);
     if (!op) return NULL;
 
-    url = qn_cs_sprintf("%.*s/%.*s", qn_str_size(rgn_entry->base_url), qn_str_cstr(rgn_entry->base_url), qn_str_size(op), qn_str_cstr(op));
+    url = qn_cs_sprintf("%s/%s", qn_str_cstr(rgn_entry->base_url), qn_str_cstr(op));
     qn_str_destroy(op);
     if (!url) return NULL;
 
@@ -346,7 +346,7 @@ static const qn_string qn_stor_mn_make_copy_op(const char * restrict src_bucket,
         return NULL;
     } // if
 
-    op = qn_cs_sprintf("copy/%.*s/%.*s", qn_str_size(encoded_src_uri), qn_str_cstr(encoded_src_uri), qn_str_size(encoded_dest_uri), qn_str_cstr(encoded_dest_uri));
+    op = qn_cs_sprintf("copy/%s/%s", qn_str_cstr(encoded_src_uri), qn_str_cstr(encoded_dest_uri));
     qn_str_destroy(encoded_dest_uri);
     qn_str_destroy(encoded_src_uri);
     return op;
@@ -444,7 +444,7 @@ QN_SDK qn_json_object_ptr qn_stor_mn_api_copy(qn_storage_ptr restrict stor, cons
     op = qn_stor_mn_make_copy_op(src_bucket, src_key, dest_bucket, dest_key);
     if (!op) return NULL;
 
-    url = qn_cs_sprintf("%.*s/%.*s", qn_str_size(rgn_entry->base_url), qn_str_cstr(rgn_entry->base_url), qn_str_size(op), qn_str_cstr(op));
+    url = qn_cs_sprintf("%s/%s", qn_str_cstr(rgn_entry->base_url), qn_str_cstr(op));
     qn_str_destroy(op);
     if (!url) return NULL;
 
@@ -512,7 +512,7 @@ static const qn_string qn_stor_mn_make_move_op(const char * restrict src_bucket,
         return NULL;
     } // if
 
-    op = qn_cs_sprintf("move/%.*s/%.*s", qn_str_size(encoded_src_uri), qn_str_cstr(encoded_src_uri), qn_str_size(encoded_dest_uri), qn_str_cstr(encoded_dest_uri));
+    op = qn_cs_sprintf("move/%s/%s", qn_str_cstr(encoded_src_uri), qn_str_cstr(encoded_dest_uri));
     qn_str_destroy(encoded_dest_uri);
     qn_str_destroy(encoded_src_uri);
     return op;
@@ -609,7 +609,7 @@ QN_SDK qn_json_object_ptr qn_stor_mn_api_move(qn_storage_ptr restrict stor, cons
     op = qn_stor_mn_make_move_op(src_bucket, src_key, dest_bucket, dest_key);
     if (!op) return NULL;
 
-    url = qn_cs_sprintf("%.*s/%.*s", qn_str_size(rgn_entry->base_url), qn_str_cstr(rgn_entry->base_url), qn_str_size(op), qn_str_cstr(op));
+    url = qn_cs_sprintf("%s/%s", qn_str_cstr(rgn_entry->base_url), qn_str_cstr(op));
     qn_str_destroy(op);
     if (!url) return NULL;
 
@@ -660,7 +660,7 @@ static qn_string qn_stor_mn_make_delete_op(const char * restrict bucket, const c
     encoded_uri = qn_misc_encode_uri(bucket, key);
     if (!encoded_uri) return NULL;
 
-    op = qn_cs_sprintf("delete/%.*s", qn_str_size(encoded_uri), qn_str_cstr(encoded_uri));
+    op = qn_cs_sprintf("delete/%s", qn_str_cstr(encoded_uri));
     qn_str_destroy(encoded_uri);
     return op;
 }
@@ -748,7 +748,7 @@ QN_SDK qn_json_object_ptr qn_stor_mn_api_delete(qn_storage_ptr restrict stor, co
     op = qn_stor_mn_make_delete_op(bucket, key);
     if (!op) return NULL;
 
-    url = qn_cs_sprintf("%.*s/%.*s", qn_str_size(rgn_entry->base_url), qn_str_cstr(rgn_entry->base_url), qn_str_size(op), qn_str_cstr(op));
+    url = qn_cs_sprintf("%s/%s", qn_str_cstr(rgn_entry->base_url), qn_str_cstr(op));
     qn_str_destroy(op);
     if (!url) return NULL;
 
@@ -883,7 +883,7 @@ QN_SDK qn_json_object_ptr qn_stor_mn_api_chgm(qn_storage_ptr restrict stor, cons
         return NULL;
     } // if
 
-    url = qn_cs_sprintf("%.*s/chgm/%.*s/mime/%.*s", qn_str_size(rgn_entry->base_url), qn_str_cstr(rgn_entry->base_url), qn_str_size(encoded_uri), qn_str_cstr(encoded_uri), qn_str_size(encoded_mime), qn_str_cstr(encoded_mime));
+    url = qn_cs_sprintf("%s/chgm/%s/mime/%s", qn_str_cstr(rgn_entry->base_url), qn_str_cstr(encoded_uri), qn_str_cstr(encoded_mime));
     qn_str_destroy(encoded_uri);
     qn_str_destroy(encoded_mime);
     if (!url) return NULL;
@@ -993,7 +993,7 @@ static qn_bool qn_stor_bt_add_op(qn_stor_batch_ptr restrict bt, const qn_string 
     encoded_op = qn_cs_percent_encode(qn_str_cstr(op), qn_str_size(op));
     if (!encoded_op) return qn_false;
 
-    entry = qn_cs_sprintf("op=%.*s", qn_str_size(encoded_op), qn_str_cstr(encoded_op));
+    entry = qn_cs_sprintf("op=%s", qn_str_cstr(encoded_op));
     qn_str_destroy(encoded_op);
     if (!entry) return qn_false;
 
@@ -1079,7 +1079,7 @@ QN_SDK qn_json_object_ptr qn_stor_bt_api_batch(qn_storage_ptr restrict stor, con
     body = qn_str_join_list("&", bt->ops, bt->cnt);
     if (!body) return NULL;
 
-    url = qn_cs_sprintf("%.*s/batch", qn_str_size(rgn_entry->base_url), qn_str_cstr(rgn_entry->base_url));
+    url = qn_cs_sprintf("%s/batch", qn_str_cstr(rgn_entry->base_url));
     if (!url) {
         qn_str_destroy(body);
         return NULL;
@@ -1349,7 +1349,7 @@ QN_SDK qn_json_object_ptr qn_stor_ls_api_list(qn_storage_ptr restrict stor, cons
     if (! qry_str) return NULL;
 
     // ---- Prepare the copy URL.
-    url = qn_cs_sprintf("%.*s/list?%.*s", qn_str_size(rgn_entry->base_url), qn_str_cstr(rgn_entry->base_url), qn_str_size(qry_str), qn_str_cstr(qry_str));
+    url = qn_cs_sprintf("%s/list?%s", qn_str_cstr(rgn_entry->base_url), qn_str_cstr(qry_str));
     qn_str_destroy(qry_str);
     if (! url) return NULL;
 
@@ -1538,7 +1538,7 @@ QN_SDK qn_json_object_ptr qn_stor_ft_api_fetch(qn_storage_ptr restrict stor, con
         return NULL;
     } // if
 
-    url = qn_cs_sprintf("%.*s/fetch/%.*s/to/%.*s", qn_str_size(rgn_entry->base_url), qn_str_cstr(rgn_entry->base_url), qn_str_size(encoded_src_url), qn_str_cstr(encoded_src_url), qn_str_size(encoded_dest_uri), qn_str_cstr(encoded_dest_uri));
+    url = qn_cs_sprintf("%s/fetch/%s/to/%s", qn_str_cstr(rgn_entry->base_url), qn_str_cstr(encoded_src_url), qn_str_cstr(encoded_dest_uri));
     qn_str_destroy(encoded_src_url);
     qn_str_destroy(encoded_dest_uri);
     if (!url) return NULL;
@@ -2775,7 +2775,7 @@ QN_SDK qn_json_object_ptr qn_stor_ru_api_mkblk(qn_storage_ptr restrict stor, con
     if (! qn_stor_ru_prepare_for_resumable_upload(stor, uptoken, "application/octet-stream", data_rdr, chk_size, rgn_entry)) return NULL;
 
     // ---- Prepare upload URL.
-    url = qn_cs_sprintf("%.*s/mkblk/%d", qn_str_size(rgn_entry->base_url), qn_str_cstr(rgn_entry->base_url), blk_size);
+    url = qn_cs_sprintf("%s/mkblk/%d", qn_str_cstr(rgn_entry->base_url), blk_size);
 
     // ---- Do the mkblk action.
     ret = qn_http_conn_post(stor->conn, url, stor->req, stor->resp);
@@ -2838,7 +2838,7 @@ QN_SDK qn_json_object_ptr qn_stor_ru_api_bput(qn_storage_ptr restrict stor, cons
     if (! qn_stor_ru_prepare_for_resumable_upload(stor, uptoken, "application/octet-stream", data_rdr, chk_size, rgn_entry)) return NULL;
 
     // ---- Prepare upload URL.
-    url = qn_cs_sprintf("%.*s/bput/%.*s/%d", qn_str_size(host), qn_str_cstr(host), qn_str_size(ctx), qn_str_cstr(ctx), offset);
+    url = qn_cs_sprintf("%s/bput/%s/%d", qn_str_cstr(host), qn_str_cstr(ctx), offset);
 
     // ---- Do the bput action.
     ret = qn_http_conn_post(stor->conn, url, stor->req, stor->resp);
@@ -2890,7 +2890,7 @@ QN_SDK qn_json_object_ptr qn_stor_ru_api_mkfile(qn_storage_ptr restrict stor, co
     // ---- Prepare upload URL.
     tmp_str = qn_type_fsize_to_string(fsize);
     if (! tmp_str) return NULL;
-    url = qn_cs_sprintf("%.*s/mkfile/%.*s", qn_str_size(host), qn_str_cstr(host), qn_str_size(tmp_str), qn_str_cstr(tmp_str));
+    url = qn_cs_sprintf("%s/mkfile/%s", qn_str_cstr(host), qn_str_cstr(tmp_str));
     qn_str_destroy(tmp_str);
 
     if (upe) {
@@ -2901,7 +2901,7 @@ QN_SDK qn_json_object_ptr qn_stor_ru_api_mkfile(qn_storage_ptr restrict stor, co
                 return NULL;
             } // if
 
-            url_tmp = qn_cs_sprintf("%.*s/key/%.*s", qn_str_size(url), qn_str_cstr(url), qn_str_size(tmp_str), qn_str_cstr(tmp_str));
+            url_tmp = qn_cs_sprintf("%s/key/%s", qn_str_cstr(url), qn_str_cstr(tmp_str));
             qn_str_destroy(tmp_str);
             qn_str_destroy(url);
             if (! url_tmp) return NULL;
@@ -2916,7 +2916,7 @@ QN_SDK qn_json_object_ptr qn_stor_ru_api_mkfile(qn_storage_ptr restrict stor, co
                 return NULL;
             } // if
 
-            url_tmp = qn_cs_sprintf("%.*s/mimeType/%.*s", qn_str_size(url), qn_str_cstr(url), qn_str_size(tmp_str), qn_str_cstr(tmp_str));
+            url_tmp = qn_cs_sprintf("%s/mimeType/%s", qn_str_cstr(url), qn_str_cstr(tmp_str));
             qn_str_destroy(tmp_str);
             qn_str_destroy(url);
             if (! url_tmp) return NULL;
@@ -2936,7 +2936,7 @@ QN_SDK qn_json_object_ptr qn_stor_ru_api_mkfile(qn_storage_ptr restrict stor, co
                     return NULL;
                 } // if
 
-                url_tmp = qn_cs_sprintf("%.*s/%.*s/%.*s", qn_str_size(url), qn_str_cstr(url), key_size, key, qn_str_size(tmp_str), qn_str_cstr(tmp_str));
+                url_tmp = qn_cs_sprintf("%s/%s/%s", qn_str_cstr(url), key, qn_str_cstr(tmp_str));
                 qn_str_destroy(tmp_str);
                 qn_str_destroy(url);
                 if (! url_tmp) return NULL;
