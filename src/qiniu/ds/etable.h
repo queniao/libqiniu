@@ -1,5 +1,5 @@
-#ifndef __QN_BASE_DS_ETABLE_H__
-#define __QN_BASE_DS_ETABLE_H__
+#ifndef __QN_DS_ETABLE_H__
+#define __QN_DS_ETABLE_H__
 
 #include "qiniu/base/string.h"
 #include "qiniu/macros.h"
@@ -57,4 +57,4 @@ QN_SDK extern qn_bool qn_etbl_itr_next_pair_raw(qn_etbl_iterator_ptr restrict it
 }
 #endif
 
-#endif // __QN_BASE_DS_ETABLE_H__
+#endif // __QN_DS_ETABLE_H__

@@ -1,5 +1,5 @@
-#ifndef __QN_ESLINK_H__
-#define __QN_ESLINK_H__ 1
+#ifndef __QN_DS_ESLINK_H__
+#define __QN_DS_ESLINK_H__ 1
 
 #include <assert.h>
 
@@ -56,4 +56,4 @@ void qn_eslink_remove_after(qn_eslink_ptr restrict self, qn_eslink_ptr restrict 
 }
 #endif
 
-#endif // __QN_ESLINK_H__
+#endif // __QN_DS_ESLINK_H__

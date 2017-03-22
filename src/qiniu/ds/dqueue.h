@@ -1,5 +1,5 @@
-#ifndef __QN_DQUEUE_H__
-#define __QN_DQUEUE_H__ 1
+#ifndef __QN_DS_DQUEUE_H__
+#define __QN_DS_DQUEUE_H__ 1
 
 #include <assert.h>
 
@@ -36,4 +36,4 @@ QN_SDK extern void qn_dqueue_remove(qn_dqueue_ptr restrict queue, int n);
 }
 #endif
 
-#endif // __QN_DQUEUE_H__
+#endif // __QN_DS_DQUEUE_H__
