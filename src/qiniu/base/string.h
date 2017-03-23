@@ -29,6 +29,16 @@ QN_SDK extern qn_string qn_cs_clone(const char * restrict s, qn_size sz);
 QN_SDK extern qn_string qn_cs_join_list(const char * restrict delimiter, const char ** restrict ss, int n);
 QN_SDK extern qn_string qn_cs_join_va(const char * restrict delimiter, const char * restrict s1, const char * restrict s2, va_list ap);
 
+static inline qn_string qn_cs_concat(const char * restrict s1, const char * restrict s2, ...)
+{
+    qn_string new_str = NULL;
+    va_list ap;
+    va_start(ap, s2);
+    new_str = qn_cs_join_va("", s1, s2, ap);
+    va_end(ap);
+    return new_str;
+}
+
 QN_SDK extern qn_string qn_cs_vprintf(const char * restrict format, va_list ap);
 QN_SDK extern qn_string qn_cs_sprintf(const char * restrict format, ...);
 QN_SDK extern int qn_cs_snprintf(char * restrict buf, qn_size buf_size, const char * restrict format, ...);

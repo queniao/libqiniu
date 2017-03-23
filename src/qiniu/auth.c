@@ -106,20 +106,20 @@ QN_SDK const qn_string qn_mac_make_acctoken(qn_mac_ptr restrict mac, const char 
 {
     qn_string encoded_digest;
     qn_string acctoken;
-    const char * begin;
+    const char * path;
     char digest[EVP_MAX_MD_SIZE + 1];
     unsigned int digest_size = sizeof(digest);
     HMAC_CTX ctx;
 
-    begin = qn_str_find_substring(url, "://");
-    if (!begin) {
+    path = qn_str_find_substring(url, "://");
+    if (! path) {
         qn_err_set_invalid_argument();
         return NULL;
     } // if
-    begin += 3;
+    path += 3;
 
-    begin = qn_str_find_char(begin, '/');
-    if (!begin) {
+    path = qn_str_find_char(path, '/');
+    if (! path) {
         qn_err_set_invalid_argument();
         return NULL;
     } // if
@@ -131,9 +131,9 @@ QN_SDK const qn_string qn_mac_make_acctoken(qn_mac_ptr restrict mac, const char 
         return NULL;
     } // if
 
-    qn_mac_hmac_update(&ctx, (const unsigned char *)begin, strlen(url) - (begin - url));
+    qn_mac_hmac_update(&ctx, (const unsigned char *) path, posix_strlen(url) - (path - url));
 
-    if (! HMAC_Update(&ctx, (const unsigned char *)"\n", 1)) {
+    if (! HMAC_Update(&ctx, (const unsigned char *) "\n", 1)) {
         qn_err_3rdp_set_openssl_error_occurred(ERR_get_error());
         return NULL;
     } // if
@@ -159,61 +159,69 @@ QN_SDK const qn_string qn_mac_make_acctoken(qn_mac_ptr restrict mac, const char 
 
 QN_SDK const qn_string qn_mac_make_dnurl(qn_mac_ptr restrict mac, const char * restrict url, qn_uint32 deadline)
 {
+    qn_string deadline_str = NULL;
     qn_string url_with_deadline;
     qn_string url_with_token;
     qn_string encoded_digest;
     char * buf;
-    const char * begin;
+    const char * path;
     const char * end;
-    int url_size;
-    int buf_size;
+    int base_size;
+    int encoded_size;
     char digest[EVP_MAX_MD_SIZE + 1];
     unsigned int digest_size = sizeof(digest);
     HMAC_CTX ctx;
 
-    begin = qn_str_find_substring(url, "://");
-    if (!begin) {
+    path = qn_str_find_substring(url, "://");
+    if (! path) {
         qn_err_set_invalid_argument();
         return NULL;
     } // if
-    begin += 3;
+    path += 3;
 
-    end = qn_str_find_char(begin, '/');
-    if (!end) {
+    end = qn_str_find_char(path, '/');
+    if (! end) {
         qn_err_set_invalid_argument();
         return NULL;
     } // if
-    begin = end + 1;
+    path = end + 1;
+    base_size = path - url;
 
     end = qn_str_find_char(end, '?');
-    url_size = strlen(url);
-    if (!end) end = url + url_size;
+    if (! end) end = url + posix_strlen(url);
 
-    buf_size = qn_cs_percent_encode_in_buffer(NULL, 0, begin, end - begin);
-    if (buf_size > (end - begin)) {
-        // Need to percent encode the path of the url.
-        buf = malloc(buf_size + 1);
-        if (!buf) {
+    deadline_str = qn_cs_sprintf("%u", deadline);
+    if (! deadline_str) return NULL;
+
+    encoded_size = qn_cs_percent_encode_in_buffer(NULL, 0, path, end - path);
+    if (encoded_size > (end - path)) {
+        // Case 1 : The path part contains non-URL-safe characters.
+        buf = malloc(base_size + encoded_size + 1);
+        if (! buf) {
+            qn_str_destroy(deadline_str);
             qn_err_set_out_of_memory();
             return NULL;
         } // if
-        buf[buf_size + 1] = '\0';
+        buf[base_size + encoded_size + 1] = '\0';
 
-        qn_cs_percent_encode_in_buffer(buf, buf_size, begin, end - begin);
+        memcpy(buf, url, base_size); // Copy the schema and domain parts.
+        qn_cs_percent_encode_in_buffer(buf + base_size, encoded_size, path, end - path); // Encode the path parts.
         if (*end == '?') {
-            url_with_deadline = qn_cs_sprintf("%.*s%.*s%.*s&e=%d", begin - url, url, buf_size, buf, url_size - (end - url), end, deadline);
+            url_with_deadline = qn_cs_concat(buf, end, "&e=", qn_str_cstr(deadline_str), NULL);
         } else {
-            url_with_deadline = qn_cs_sprintf("%.*s%.*s?e=%d", begin - url, url, buf_size, buf, deadline);
+            url_with_deadline = qn_cs_concat(buf, "?e=", qn_str_cstr(deadline_str), NULL);
         } // if
         free(buf);
     } else {
+        // Case 2 : The path part contains only URL-safe characters.
         if (*end == '?') {
-            url_with_deadline = qn_cs_sprintf("%.*s&e=%d", url_size, url, deadline);
+            url_with_deadline = qn_cs_concat(url, "&e=", qn_str_cstr(deadline_str), NULL);
         } else {
-            url_with_deadline = qn_cs_sprintf("%.*s?e=%d", url_size, url, deadline);
-        }
+            url_with_deadline = qn_cs_concat(url, "?e=", qn_str_cstr(deadline_str), NULL);
+        } // if
     } // if
-    if (!url_with_deadline) return NULL;
+    qn_str_destroy(deadline_str);
+    if (! url_with_deadline) return NULL;
 
     HMAC_CTX_init(&ctx);
 
