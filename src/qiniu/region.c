@@ -93,12 +93,13 @@ static qn_bool qn_rgn_host_add_entry_raw(qn_rgn_host_ptr restrict host, const ch
             qn_str_destroy(new_ent->base_url);
             return NULL;
         } // if
+    } else {
+        new_ent->hostname = NULL;
     } // if
 
     host->cnt += 1;
     return qn_true;
 }
-
 
 static qn_rgn_host_ptr qn_rgn_host_duplicate(qn_rgn_host_ptr restrict host)
 {
