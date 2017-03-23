@@ -133,6 +133,64 @@ QN_SDK qn_string qn_cs_join_va(const char * restrict deli, const char * restrict
     return new_str; 
 }
 
+QN_SDK extern qn_string qn_cs_join_raw_va(const char * restrict deli, const char * restrict s1, qn_size s1_size, const char * restrict s2, qn_size s2_size, va_list ap)
+{
+    va_list cp;
+    qn_string new_str;
+    qn_string str;
+    qn_size final_size;
+    qn_size str_size;
+    qn_size deli_size = strlen(deli);
+    int n;
+    char * pos;
+
+    if (! s1) return NULL;
+    if (! s2) return qn_cs_clone(s1, s1_size);
+
+    final_size = s1_size + deli_size + s2_size;
+
+    n = 0;
+    va_copy(cp, ap);
+    while ((str = va_arg(cp, qn_string))) {
+        str_size = va_arg(cp, qn_size);
+        final_size += deli_size + str_size;
+        n += 1;
+    } // while
+    va_end(cp);
+
+    pos = new_str = malloc(final_size + 1);
+    if (! new_str) {
+        qn_err_set_out_of_memory();
+        return NULL;
+    } // if
+
+    memcpy(pos, s1, s1_size);
+    pos += s1_size;
+
+    memcpy(pos, deli, deli_size);
+    pos += deli_size;
+
+    memcpy(pos, s2, s2_size);
+    pos += s2_size;
+
+    if (n > 0) {
+        va_copy(cp, ap);
+        while ((str = va_arg(cp, qn_string))) {
+            str_size = va_arg(cp, qn_size);
+
+            memcpy(pos, deli, deli_size);
+            pos += deli_size;
+
+            memcpy(pos, str, str_size);
+            pos += str_size;
+        } // while
+        va_end(cp);
+    } // if
+
+    new_str[final_size] = '\0';
+    return new_str; 
+}
+
 QN_SDK qn_string qn_cs_vprintf(const char * restrict format, va_list ap)
 {
     va_list cp;

@@ -147,7 +147,7 @@ static qn_bool qn_etbl_set_entry(qn_etable_ptr restrict etbl, const char * restr
 
     if (etbl->cnt == etbl->cap && !qn_etbl_augment(etbl)) return qn_false;
 
-    new_entry = qn_cs_sprintf("%.*s%s%.*s", key_size, key, etbl->deli, val_size, val);
+    new_entry = qn_cs_concat_raw(key, key_size, etbl->deli, posix_strlen(etbl->deli), val, val_size, NULL);
     if (!new_entry) {
         qn_err_set_out_of_memory();
         return qn_false;
