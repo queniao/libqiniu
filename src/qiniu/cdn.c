@@ -29,9 +29,10 @@ QN_SDK qn_string qn_cdn_make_dnurl_with_deadline(const char * restrict key, cons
     qn_size path_size;
     char * encoded_path;
     qn_ssize encoded_path_size;
-    qn_size url_size;
     qn_size base_url_size;
+    qn_size url_size;
     const char * query;
+    qn_string base_url = NULL;
     qn_string sign_str;
     qn_string authed_url;
     unsigned char sign[MD5_DIGEST_LENGTH];
@@ -61,17 +62,16 @@ QN_SDK qn_string qn_cdn_make_dnurl_with_deadline(const char * restrict key, cons
     path = posix_strchr(begin + 3, '/');
     if (! path) path = url + url_size;
 
-    if (path < query) {
+    if (path == query) {
         // Case 1: http://xxx.com/path/to/file
         // Case 2: http://xxx.com/path/to/file/
         // Case 3: http://xxx.com/path//to//file
         // Case 4: http://xxx.com/path//to//file/
-        // Case 5: http://xxx.com/path/to/file?imageView2/1/w/100/h/100
-        // Case 6: http://xxx.com/path//to//file?imageView2/1/w/100/h/100
-        // Case 7: http://xxx.com/path/to/file/?imageView2/1/w/100/h/100
-        // Case 8: http://xxx.com/path//to//file/?imageView2/1/w/100/h/100
+        // Case 5: http://xxx.com
+        // Case 6: http://xxx.com/
 
         base_url_size = path - url;
+
         path_size = query - path;
         encoded_path_size = qn_cs_percent_encode_in_buffer_with_checker(NULL, -1, path, path_size, &qn_cdn_percent_encode_check);
         if (encoded_path_size > path_size) {
@@ -80,23 +80,32 @@ QN_SDK qn_string qn_cdn_make_dnurl_with_deadline(const char * restrict key, cons
 
             qn_cs_percent_encode_in_buffer_with_checker(encoded_path, encoded_path_size, path, path_size, &qn_cdn_percent_encode_check);
             encoded_path[encoded_path_size] = '\0';
+
+            sign_str = qn_cs_concat(key, encoded_path, encoded_unix_epoch, NULL);
         } else if (encoded_path_size == path_size) {
-            encoded_path = (char *)path;
+            encoded_path = (char *) path;
+            sign_str = qn_cs_concat(key, path, encoded_unix_epoch, NULL);
         } else {
             return NULL;
         } // if
     } else {
-        // Case 9: http://xxx.com
-        // Case 10: http://xxx.com?imageView2/1/w/100/h/100
+        // Case 7: http://xxx.com?imageView2/1/w/100/h/100
+        // Case 8: http://xxx.com/?imageView2/1/w/100/h/100
+        // Case 9: http://xxx.com/path/to/file?imageView2/1/w/100/h/100
+        // Case 10: http://xxx.com/path//to//file?imageView2/1/w/100/h/100
+        // Case 11: http://xxx.com/path/to/file/?imageView2/1/w/100/h/100
+        // Case 12: http://xxx.com/path//to//file/?imageView2/1/w/100/h/100
+
         base_url_size = query - url;
 
         path = "";
         path_size = 0;
         encoded_path = "";
         encoded_path_size = 0;
+
+        sign_str = qn_cs_concat(key, "", encoded_unix_epoch, NULL);
     } // if
 
-    sign_str = qn_cs_sprintf("%s%.*s%.*s", key, encoded_path_size, encoded_path, sizeof(encoded_unix_epoch), encoded_unix_epoch);
     if (! sign_str) {
         if (encoded_path != path) free(encoded_path);
         return NULL;
@@ -111,14 +120,21 @@ QN_SDK qn_string qn_cdn_make_dnurl_with_deadline(const char * restrict key, cons
         encoded_sign[i * 2] = qn_cdn_hex_map[(sign[i] >> 4) & 0xF];
         encoded_sign[i * 2 + 1] = qn_cdn_hex_map[sign[i] & 0xF];
     } // if
+
+    base_url = qn_cs_clone(url, base_url_size);
+    if (! base_url) {
+        if (encoded_path != path) free(encoded_path);
+        return NULL;
+    } // if
     
     if (query != url + url_size) {
-        authed_url = qn_cs_sprintf("%.*s%.*s%s&sign=%.*s&t=%.*s", base_url_size, url, encoded_path_size, encoded_path, query, sizeof(encoded_sign), encoded_sign, sizeof(encoded_unix_epoch), encoded_unix_epoch);
+        authed_url = qn_cs_sprintf("%s%s%s&sign=%s&t=%s", qn_str_cstr(base_url), encoded_path, query, encoded_sign, encoded_unix_epoch);
     } else {
-        authed_url = qn_cs_sprintf("%.*s%.*s?sign=%.*s&t=%.*s", base_url_size, url, encoded_path_size, encoded_path, sizeof(encoded_sign), encoded_sign, sizeof(encoded_unix_epoch), encoded_unix_epoch);
+        authed_url = qn_cs_sprintf("%s%s?sign=%s&t=%s", qn_str_cstr(base_url), encoded_path, encoded_sign, encoded_unix_epoch);
     } // if
-    if (encoded_path != path) free(encoded_path);
+    qn_str_destroy(base_url);
 
+    if (encoded_path != path) free(encoded_path);
     return authed_url;
 }
 
