@@ -2936,7 +2936,7 @@ QN_SDK qn_json_object_ptr qn_stor_ru_api_mkfile(qn_storage_ptr restrict stor, co
                     return NULL;
                 } // if
 
-                url_tmp = qn_cs_sprintf("%s/%s/%s", qn_str_cstr(url), key, qn_str_cstr(tmp_str));
+                url_tmp = qn_cs_join_raw("/", qn_str_cstr(url), qn_str_size(url), key, key_size, qn_str_cstr(tmp_str), qn_str_size(tmp_str), NULL);
                 qn_str_destroy(tmp_str);
                 qn_str_destroy(url);
                 if (! url_tmp) return NULL;
