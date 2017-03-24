@@ -1,5 +1,7 @@
 #include <openssl/md5.h>
+#include <openssl/err.h>
 #include "qiniu/cdn.h"
+#include "qiniu/base/errors.h"
 
 #ifdef __cplusplus
 extern "C"
@@ -111,9 +113,21 @@ QN_SDK qn_string qn_cdn_make_dnurl_with_deadline(const char * restrict key, cons
         return NULL;
     } // if
 
-    MD5_Init(&md5_ctx);
-    MD5_Update(&md5_ctx, qn_str_cstr(sign_str), qn_str_size(sign_str));
-    MD5_Final((unsigned char *)sign, &md5_ctx);
+    if (! MD5_Init(&md5_ctx)) {
+        qn_err_3rdp_set_openssl_error_occurred(ERR_get_error());
+        return NULL;
+    } // if
+
+    if (! MD5_Update(&md5_ctx, qn_str_cstr(sign_str), qn_str_size(sign_str))) {
+        qn_err_3rdp_set_openssl_error_occurred(ERR_get_error());
+        return NULL;
+    } // if
+
+    if (! MD5_Final((unsigned char *)sign, &md5_ctx)) {
+        qn_err_3rdp_set_openssl_error_occurred(ERR_get_error());
+        return NULL;
+    } // if
+
     qn_str_destroy(sign_str);
 
     for (i = 0; i < MD5_DIGEST_LENGTH; i += 1) {
