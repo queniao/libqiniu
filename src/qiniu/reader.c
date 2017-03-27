@@ -103,7 +103,7 @@ QN_SDK qn_reader_ptr qn_rdr_create(qn_io_reader_itf src_rdr, qn_rdr_pos filter_n
         return NULL;
     } // if
 
-    new_rdr->src_rdr = qn_io_duplicate(src_rdr);
+    new_rdr->src_rdr = qn_io_rdr_duplicate(src_rdr);
     if (!new_rdr->src_rdr) {
         free(new_rdr);
         return NULL;
@@ -120,7 +120,7 @@ QN_SDK qn_reader_ptr qn_rdr_create(qn_io_reader_itf src_rdr, qn_rdr_pos filter_n
 QN_SDK void qn_rdr_destroy(qn_reader_ptr restrict rdr)
 {
     if (rdr) {
-        qn_io_close(rdr->src_rdr);
+        qn_io_rdr_close(rdr->src_rdr);
         free(rdr);
     } // if
 }
@@ -181,9 +181,9 @@ static ssize_t qn_rdr_do_read(qn_reader_ptr restrict rdr, char * restrict buf, s
 
     reserved_size = buf - real_buf;
     if (only_peek) {
-        ret = qn_io_peek(rdr->src_rdr, real_buf, real_size);
+        ret = qn_io_rdr_peek(rdr->src_rdr, real_buf, real_size);
     } else {
-        ret = qn_io_read(rdr->src_rdr, real_buf, real_size);
+        ret = qn_io_rdr_read(rdr->src_rdr, real_buf, real_size);
     } // if
     if (ret < 0) return ret;
 
@@ -215,12 +215,12 @@ QN_SDK ssize_t qn_rdr_read(qn_reader_ptr restrict rdr, char * restrict buf, size
 
 QN_SDK qn_bool qn_rdr_seek(qn_reader_ptr restrict rdr, qn_foffset offset)
 {
-    return qn_io_seek(rdr->src_rdr, offset);
+    return qn_io_rdr_seek(rdr->src_rdr, offset);
 }
 
 QN_SDK qn_bool qn_rdr_advance(qn_reader_ptr restrict rdr, qn_foffset delta)
 {
-    return qn_io_advance(rdr->src_rdr, delta);
+    return qn_io_rdr_advance(rdr->src_rdr, delta);
 }
 
 static qn_reader_ptr qn_rdr_do_duplicate(qn_reader_ptr restrict rdr, qn_io_reader_itf restrict src_rdr)
@@ -229,7 +229,7 @@ static qn_reader_ptr qn_rdr_do_duplicate(qn_reader_ptr restrict rdr, qn_io_reade
     qn_reader_ptr new_rdr = malloc(size);
     if (!new_rdr) {
         qn_err_set_out_of_memory();
-        qn_io_close(src_rdr);
+        qn_io_rdr_close(src_rdr);
         return NULL;
     } // if
 
@@ -240,26 +240,26 @@ static qn_reader_ptr qn_rdr_do_duplicate(qn_reader_ptr restrict rdr, qn_io_reade
 
 QN_SDK qn_reader_ptr qn_rdr_duplicate(qn_reader_ptr restrict rdr)
 {
-    qn_io_reader_itf new_src_rdr = qn_io_duplicate(rdr->src_rdr);
+    qn_io_reader_itf new_src_rdr = qn_io_rdr_duplicate(rdr->src_rdr);
     if (!new_src_rdr) return NULL;
     return qn_rdr_do_duplicate(rdr, new_src_rdr);
 }
 
 QN_SDK qn_reader_ptr qn_rdr_section(qn_reader_ptr restrict rdr, qn_foffset offset, size_t sec_size)
 {
-    qn_io_reader_itf new_src_rdr = qn_io_section(rdr->src_rdr, offset, sec_size);
+    qn_io_reader_itf new_src_rdr = qn_io_rdr_section(rdr->src_rdr, offset, sec_size);
     if (!new_src_rdr) return NULL;
     return qn_rdr_do_duplicate(rdr, new_src_rdr);
 }
 
 QN_SDK qn_string qn_rdr_name(qn_reader_ptr restrict rdr)
 {
-    return qn_io_name(rdr->src_rdr);
+    return qn_io_rdr_name(rdr->src_rdr);
 }
 
 QN_SDK qn_fsize qn_rdr_size(qn_reader_ptr restrict rdr)
 {
-    return qn_io_size(rdr->src_rdr);
+    return qn_io_rdr_size(rdr->src_rdr);
 }
 
 #ifdef __cplusplus

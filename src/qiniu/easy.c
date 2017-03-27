@@ -510,7 +510,7 @@ QN_SDK qn_json_object_ptr qn_easy_put_file(qn_easy_ptr restrict easy, const char
         } // for
     } // if
 
-    qn_io_close(io_rdr);
+    qn_io_rdr_close(io_rdr);
     qn_json_destroy_object(pp);
 
     if (put_ret && (qn_json_get_integer(put_ret, "fn-code", 0) == 200)) {

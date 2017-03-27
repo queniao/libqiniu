@@ -2244,7 +2244,7 @@ static size_t qn_stor_upload_cfn(void * user_data, char * buf, size_t size)
     qn_io_reader_itf rdr = (qn_io_reader_itf) user_data;
     ssize_t ret;
 
-    ret = qn_io_read(rdr, buf, size);
+    ret = qn_io_rdr_read(rdr, buf, size);
     if (ret < 0) return CURL_READFUNC_ABORT;
     return ret;
 }
@@ -2269,10 +2269,10 @@ QN_SDK qn_json_object_ptr qn_stor_up_api_upload(qn_storage_ptr restrict stor, co
 
     if (! qn_stor_up_prepare_for_upload(stor, uptoken, upe)) return NULL;
 
-    ret = qn_http_form_add_file_reader(qn_http_req_get_form(stor->req), "file", qn_str_cstr(qn_io_name(data_rdr)), NULL, qn_io_size(data_rdr), mime_type, stor->req);
+    ret = qn_http_form_add_file_reader(qn_http_req_get_form(stor->req), "file", qn_str_cstr(qn_io_rdr_name(data_rdr)), NULL, qn_io_rdr_size(data_rdr), mime_type, stor->req);
     if (! ret) return NULL;
 
-    qn_http_req_set_body_reader(stor->req, data_rdr, qn_stor_upload_cfn, qn_io_size(data_rdr));
+    qn_http_req_set_body_reader(stor->req, data_rdr, qn_stor_upload_cfn, qn_io_rdr_size(data_rdr));
 
     // ----
     if (rgn_entry->hostname && !qn_http_req_set_header(stor->req, "Host", qn_str_cstr(rgn_entry->hostname))) return NULL;
@@ -2409,7 +2409,7 @@ QN_SDK qn_stor_resumable_upload_ptr qn_stor_ru_create(qn_io_reader_itf restrict 
         return NULL;
     } // if
 
-    ru->fsize = qn_io_size(data_rdr);
+    ru->fsize = qn_io_rdr_size(data_rdr);
     ru->blk_cnt = qn_stor_ru_calculate_block_count(ru->fsize);
 
     if (! qn_json_set_integer(ru->progress, "bcount", ru->blk_cnt)) {
@@ -2423,7 +2423,7 @@ QN_SDK qn_stor_resumable_upload_ptr qn_stor_ru_create(qn_io_reader_itf restrict 
         return NULL;
     } // if
 
-    ru->src_rdr = qn_io_duplicate(data_rdr);
+    ru->src_rdr = qn_io_rdr_duplicate(data_rdr);
     if (! ru->src_rdr) {
         qn_json_destroy_object(ru->progress);
         free(ru);
@@ -2438,7 +2438,7 @@ QN_SDK void qn_stor_ru_destroy(qn_stor_resumable_upload_ptr restrict ru)
 {
     if (ru) {
         qn_json_destroy_object(ru->progress);
-        qn_io_close(ru->src_rdr);
+        qn_io_rdr_close(ru->src_rdr);
         free(ru);
     } // if
 }
@@ -2519,11 +2519,11 @@ QN_SDK qn_bool qn_stor_ru_attach(qn_stor_resumable_upload_ptr restrict ru, qn_io
     assert(ru);
     assert(data_rdr);
 
-    new_rdr = qn_io_duplicate(data_rdr);
+    new_rdr = qn_io_rdr_duplicate(data_rdr);
     if (! new_rdr) return qn_false;
 
     if (ru->src_rdr) {
-        qn_io_close(ru->src_rdr);
+        qn_io_rdr_close(ru->src_rdr);
         ru->src_rdr = NULL;
     } // if
 
@@ -2626,7 +2626,7 @@ QN_SDK qn_io_reader_itf qn_stor_ru_create_block_reader(qn_stor_resumable_upload_
         if (! (new_blk_info = qn_json_create_and_push_object(blk_arr))) return NULL;
         if (! qn_json_set_integer(new_blk_info, "bsize", blk_size)) return NULL;
         *blk_info = new_blk_info;
-        return qn_io_section(ru->src_rdr, 0, blk_size);
+        return qn_io_rdr_section(ru->src_rdr, 0, blk_size);
     } // if
 
     if (ru->blk_cnt <= blk_idx) {
@@ -2649,7 +2649,7 @@ QN_SDK qn_io_reader_itf qn_stor_ru_create_block_reader(qn_stor_resumable_upload_
 
     // -- The source reader is a file.
     *blk_info = new_blk_info;
-    return qn_io_section(ru->src_rdr, blk_idx * QN_STOR_RU_BLOCK_MAX_SIZE, blk_size);
+    return qn_io_rdr_section(ru->src_rdr, blk_idx * QN_STOR_RU_BLOCK_MAX_SIZE, blk_size);
 }
 
 QN_SDK qn_io_reader_itf qn_stor_ru_to_context_reader(qn_stor_resumable_upload_ptr restrict ru)
@@ -2875,7 +2875,7 @@ QN_SDK qn_json_object_ptr qn_stor_ru_api_mkfile(qn_storage_ptr restrict stor, co
         return NULL;
     } // if
 
-    ctx_size = qn_io_size(ctx_rdr);
+    ctx_size = qn_io_rdr_size(ctx_rdr);
 
     // ---- Process all extra options.
     if (upe) {
@@ -2992,7 +2992,7 @@ QN_SDK qn_json_object_ptr qn_stor_ru_upload_huge(qn_storage_ptr restrict stor, c
                 up_ret = NULL;
                 goto QN_STOR_UPLOAD_HUGE_ERROR_HANDLING;
             } // if
-        } else if (! qn_io_advance(sec_rdr, offset)) {
+        } else if (! qn_io_rdr_advance(sec_rdr, offset)) {
             goto QN_STOR_UPLOAD_HUGE_ERROR_HANDLING;
         } // if
 
@@ -3006,7 +3006,7 @@ QN_SDK qn_json_object_ptr qn_stor_ru_upload_huge(qn_storage_ptr restrict stor, c
                 goto QN_STOR_UPLOAD_HUGE_ERROR_HANDLING;
             } // if
         } // if
-        qn_io_close(sec_rdr);
+        qn_io_rdr_close(sec_rdr);
     } // for
 
     qn_io_srdr_destroy(chk_rdr);
@@ -3014,7 +3014,7 @@ QN_SDK qn_json_object_ptr qn_stor_ru_upload_huge(qn_storage_ptr restrict stor, c
     return qn_stor_ru_api_mkfile(stor, uptoken, qn_stor_ru_to_context_reader(ru), blk_info, qn_stor_ru_uploaded_fsize(ru), upe);
 
 QN_STOR_UPLOAD_HUGE_ERROR_HANDLING:
-    qn_io_close(sec_rdr);
+    qn_io_rdr_close(sec_rdr);
     qn_io_srdr_destroy(chk_rdr);
     *start_idx = i;
     return up_ret;

@@ -29,7 +29,7 @@ static void qn_io_srdr_close_vfn(qn_io_reader_itf restrict itf)
 
 static ssize_t qn_io_srdr_peek_vfn(qn_io_reader_itf restrict itf, char * restrict buf, size_t buf_size)
 {
-    return qn_io_peek((qn_io_srdr_from_io_reader(itf))->src_rdr, buf, buf_size);
+    return qn_io_rdr_peek((qn_io_srdr_from_io_reader(itf))->src_rdr, buf, buf_size);
 }
 
 static ssize_t qn_io_srdr_read_vfn(qn_io_reader_itf restrict itf, char * restrict buf, size_t buf_size)
@@ -39,9 +39,9 @@ static ssize_t qn_io_srdr_read_vfn(qn_io_reader_itf restrict itf, char * restric
     if (srdr->rem_size == 0) return QN_IO_RDR_EOF;
 
     if (srdr->rem_size < buf_size) {
-        ret = qn_io_read(srdr->src_rdr, buf, srdr->rem_size);
+        ret = qn_io_rdr_read(srdr->src_rdr, buf, srdr->rem_size);
     } else {
-        ret = qn_io_read(srdr->src_rdr, buf, buf_size);
+        ret = qn_io_rdr_read(srdr->src_rdr, buf, buf_size);
     } // if
     if (0 < ret) srdr->rem_size -= ret;
     return ret;
@@ -59,10 +59,10 @@ static qn_bool qn_io_srdr_advance_vfn(qn_io_reader_itf restrict itf, qn_foffset 
     if (srdr->rem_size == 0) return qn_true;
     
     if (srdr->rem_size < delta) {
-        ret = qn_io_advance(srdr->src_rdr, srdr->rem_size);
+        ret = qn_io_rdr_advance(srdr->src_rdr, srdr->rem_size);
         if (ret) srdr->rem_size = 0;
     } else {
-        ret = qn_io_advance(srdr->src_rdr, delta);
+        ret = qn_io_rdr_advance(srdr->src_rdr, delta);
         if (ret) srdr->rem_size -= delta;
     } // if
     return ret;
@@ -70,7 +70,7 @@ static qn_bool qn_io_srdr_advance_vfn(qn_io_reader_itf restrict itf, qn_foffset 
 
 static qn_string qn_io_srdr_name_vfn(qn_io_reader_itf restrict itf)
 {
-    return qn_io_name((qn_io_srdr_from_io_reader(itf))->src_rdr);
+    return qn_io_rdr_name((qn_io_srdr_from_io_reader(itf))->src_rdr);
 }
 
 static qn_fsize qn_io_srdr_size_vfn(qn_io_reader_itf restrict itf)
