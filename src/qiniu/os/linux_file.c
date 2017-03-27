@@ -127,49 +127,49 @@ static inline qn_file_ptr qn_fl_from_io_reader(qn_io_reader_itf restrict itf)
     return (qn_file_ptr)( ( (char *) itf ) - (char *)( &((qn_file_ptr)0)->rdr_vtbl ) );
 }
 
-static void qn_fl_close_vfn(qn_io_reader_itf restrict itf)
+static void qn_fl_rdr_close_vfn(qn_io_reader_itf restrict itf)
 {
     qn_fl_close(qn_fl_from_io_reader(itf));
 }
 
-static ssize_t qn_fl_peek_vfn(qn_io_reader_itf restrict itf, char * restrict buf, size_t buf_size)
+static ssize_t qn_fl_rdr_peek_vfn(qn_io_reader_itf restrict itf, char * restrict buf, size_t buf_size)
 {
     return qn_fl_peek(qn_fl_from_io_reader(itf), buf, buf_size);
 }
 
-static ssize_t qn_fl_read_vfn(qn_io_reader_itf restrict itf, char * restrict buf, size_t buf_size)
+static ssize_t qn_fl_rdr_read_vfn(qn_io_reader_itf restrict itf, char * restrict buf, size_t buf_size)
 {
     return qn_fl_read(qn_fl_from_io_reader(itf), buf, buf_size);
 }
 
-static qn_bool qn_fl_seek_vfn(qn_io_reader_itf restrict itf, qn_foffset offset)
+static qn_bool qn_fl_rdr_seek_vfn(qn_io_reader_itf restrict itf, qn_foffset offset)
 {
     return qn_fl_seek(qn_fl_from_io_reader(itf), offset);
 }
 
-static qn_bool qn_fl_advance_vfn(qn_io_reader_itf restrict itf, qn_foffset delta)
+static qn_bool qn_fl_rdr_advance_vfn(qn_io_reader_itf restrict itf, qn_foffset delta)
 {
     return qn_fl_advance(qn_fl_from_io_reader(itf), delta);
 }
 
-static qn_string qn_fl_name_vfn(qn_io_reader_itf restrict itf)
+static qn_string qn_fl_rdr_name_vfn(qn_io_reader_itf restrict itf)
 {
     return qn_fl_fname(qn_fl_from_io_reader(itf));
 }
 
-static qn_fsize qn_fl_size_vfn(qn_io_reader_itf restrict itf)
+static qn_fsize qn_fl_rdr_size_vfn(qn_io_reader_itf restrict itf)
 {
     return qn_fl_fsize(qn_fl_from_io_reader(itf));
 }
 
-static qn_io_reader_itf qn_fl_duplicate_vfn(qn_io_reader_itf restrict itf)
+static qn_io_reader_itf qn_fl_rdr_duplicate_vfn(qn_io_reader_itf restrict itf)
 {
     qn_file_ptr new_file = qn_fl_duplicate(qn_fl_from_io_reader(itf));
     if (!new_file) return NULL;
     return qn_fl_to_io_reader(new_file);
 }
 
-static qn_io_reader_itf qn_fl_section_vfn(qn_io_reader_itf restrict itf, qn_foffset offset, size_t sec_size)
+static qn_io_reader_itf qn_fl_rdr_section_vfn(qn_io_reader_itf restrict itf, qn_foffset offset, size_t sec_size)
 {
     qn_fl_section_ptr new_file = qn_fl_section(qn_fl_from_io_reader(itf), offset, sec_size);
     if (!new_file) return NULL;
@@ -177,15 +177,15 @@ static qn_io_reader_itf qn_fl_section_vfn(qn_io_reader_itf restrict itf, qn_foff
 }
 
 static qn_io_reader_st qn_fl_rdr_vtable = {
-    &qn_fl_close_vfn,
-    &qn_fl_peek_vfn,
-    &qn_fl_read_vfn,
-    &qn_fl_seek_vfn,
-    &qn_fl_advance_vfn,
-    &qn_fl_duplicate_vfn,
-    &qn_fl_section_vfn,
-    &qn_fl_name_vfn,
-    &qn_fl_size_vfn
+    &qn_fl_rdr_close_vfn,
+    &qn_fl_rdr_peek_vfn,
+    &qn_fl_rdr_read_vfn,
+    &qn_fl_rdr_seek_vfn,
+    &qn_fl_rdr_advance_vfn,
+    &qn_fl_rdr_duplicate_vfn,
+    &qn_fl_rdr_section_vfn,
+    &qn_fl_rdr_name_vfn,
+    &qn_fl_rdr_size_vfn
 };
 
 QN_SDK qn_file_ptr qn_fl_open(const char * restrict fname, qn_fl_open_extra_ptr restrict extra)
@@ -354,39 +354,39 @@ static inline qn_fl_section_ptr qn_fl_sec_from_io_reader(qn_io_reader_itf restri
     return (qn_fl_section_ptr)( ( (char *) itf ) - (char *)( &((qn_fl_section_ptr)0)->rdr_vtbl ) );
 }
 
-static void qn_fl_sec_close_vfn(qn_io_reader_itf restrict itf)
+static void qn_fl_sec_rdr_close_vfn(qn_io_reader_itf restrict itf)
 {
     qn_fl_sec_destroy(qn_fl_sec_from_io_reader(itf));
 }
 
-static ssize_t qn_fl_sec_peek_vfn(qn_io_reader_itf restrict itf, char * restrict buf, size_t buf_size)
+static ssize_t qn_fl_sec_rdr_peek_vfn(qn_io_reader_itf restrict itf, char * restrict buf, size_t buf_size)
 {
     return qn_fl_sec_peek(qn_fl_sec_from_io_reader(itf), buf, buf_size);
 }
 
-static ssize_t qn_fl_sec_read_vfn(qn_io_reader_itf restrict itf, char * restrict buf, size_t buf_size)
+static ssize_t qn_fl_sec_rdr_read_vfn(qn_io_reader_itf restrict itf, char * restrict buf, size_t buf_size)
 {
     return qn_fl_sec_read(qn_fl_sec_from_io_reader(itf), buf, buf_size);
 }
 
-static qn_bool qn_fl_sec_seek_vfn(qn_io_reader_itf restrict itf, qn_foffset offset)
+static qn_bool qn_fl_sec_rdr_seek_vfn(qn_io_reader_itf restrict itf, qn_foffset offset)
 {
     return qn_fl_sec_seek(qn_fl_sec_from_io_reader(itf), offset);
 }
 
-static qn_bool qn_fl_sec_advance_vfn(qn_io_reader_itf restrict itf, qn_foffset delta)
+static qn_bool qn_fl_sec_rdr_advance_vfn(qn_io_reader_itf restrict itf, qn_foffset delta)
 {
     return qn_fl_sec_advance(qn_fl_sec_from_io_reader(itf), delta);
 }
 
-static qn_io_reader_itf qn_fl_sec_duplicate_vfn(qn_io_reader_itf restrict itf)
+static qn_io_reader_itf qn_fl_sec_rdr_duplicate_vfn(qn_io_reader_itf restrict itf)
 {
     qn_fl_section_ptr new_section = qn_fl_sec_duplicate(qn_fl_sec_from_io_reader(itf));
     if (!new_section) return NULL;
     return qn_fl_sec_to_io_reader(new_section);
 }
 
-static qn_io_reader_itf qn_fl_sec_section_vfn(qn_io_reader_itf restrict itf, qn_foffset offset, size_t sec_size)
+static qn_io_reader_itf qn_fl_sec_rdr_section_vfn(qn_io_reader_itf restrict itf, qn_foffset offset, size_t sec_size)
 {
     qn_fl_section_ptr new_section = qn_fl_sec_section(qn_fl_sec_from_io_reader(itf), offset, sec_size);
     if (!new_section) return NULL;
@@ -394,13 +394,13 @@ static qn_io_reader_itf qn_fl_sec_section_vfn(qn_io_reader_itf restrict itf, qn_
 }
 
 static qn_io_reader_st qn_fl_sec_rdr_vtable = {
-    &qn_fl_sec_close_vfn,
-    &qn_fl_sec_peek_vfn,
-    &qn_fl_sec_read_vfn,
-    &qn_fl_sec_seek_vfn,
-    &qn_fl_sec_advance_vfn,
-    &qn_fl_sec_duplicate_vfn,
-    &qn_fl_sec_section_vfn
+    &qn_fl_sec_rdr_close_vfn,
+    &qn_fl_sec_rdr_peek_vfn,
+    &qn_fl_sec_rdr_read_vfn,
+    &qn_fl_sec_rdr_seek_vfn,
+    &qn_fl_sec_rdr_advance_vfn,
+    &qn_fl_sec_rdr_duplicate_vfn,
+    &qn_fl_sec_rdr_section_vfn
 };
 
 QN_SDK qn_fl_section_ptr qn_fl_sec_create(qn_file_ptr restrict fl, qn_foffset offset, size_t sec_size)
