@@ -105,6 +105,40 @@ QN_SDK extern void qn_io_srdr_destroy(qn_io_section_reader_ptr restrict srdr);
 QN_SDK extern void qn_io_srdr_reset(qn_io_section_reader_ptr restrict srdr, qn_io_reader_itf restrict src_rdr, size_t section_size);
 QN_SDK extern qn_io_reader_itf qn_io_srdr_to_io_reader(qn_io_section_reader_ptr restrict srdr);
 
+// ----
+
+struct _QN_IO_WRITER;
+typedef struct _QN_IO_WRITER * qn_io_writer_ptr;
+typedef qn_io_writer_ptr * qn_io_writer_itf;
+
+typedef void (*qn_io_wrt_close_virtual_fn)(qn_io_writer_itf restrict itf);
+typedef ssize_t (*qn_io_wrt_write_virtual_fn)(qn_io_writer_itf restrict itf, const char * restrict buf, size_t buf_size);
+
+typedef qn_io_writer_itf (*qn_io_wrt_duplicate_virtual_fn)(qn_io_writer_itf restrict itf);
+
+typedef struct _QN_IO_WRITER
+{
+    qn_io_wrt_close_virtual_fn close;
+    qn_io_wrt_write_virtual_fn write;
+
+    qn_io_wrt_duplicate_virtual_fn duplicate;
+} qn_io_writer_st;
+
+static inline void qn_io_wrt_close(qn_io_writer_itf restrict itf)
+{
+    (*itf)->close(itf);
+}
+
+static inline ssize_t qn_io_wrt_write(qn_io_writer_itf restrict itf, const char * restrict buf, size_t buf_size)
+{
+    return (*itf)->write(itf, buf, buf_size);
+}
+
+static inline qn_io_writer_itf qn_io_wrt_duplicate(qn_io_writer_itf restrict itf)
+{
+    return (*itf)->duplicate(itf);
+}
+
 #ifdef __cplusplus
 }
 #endif
