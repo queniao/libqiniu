@@ -30,65 +30,65 @@ static inline qn_reader_ptr qn_rdr_from_io_reader(qn_io_reader_itf restrict itf)
     return (qn_reader_ptr)( ( (char *) itf ) - (char *)( &((qn_reader_ptr)0)->rdr_vtbl ) );
 }
 
-static void qn_rdr_close_vfn(qn_io_reader_itf restrict itf)
+static void qn_rdr_rdr_close_vfn(qn_io_reader_itf restrict itf)
 {
     qn_rdr_destroy(qn_rdr_from_io_reader(itf));
 }
 
-static ssize_t qn_rdr_peek_vfn(qn_io_reader_itf restrict itf, char * restrict buf, size_t buf_size)
+static ssize_t qn_rdr_rdr_peek_vfn(qn_io_reader_itf restrict itf, char * restrict buf, size_t buf_size)
 {
     return qn_rdr_peek(qn_rdr_from_io_reader(itf), buf, buf_size);
 }
 
-static ssize_t qn_rdr_read_vfn(qn_io_reader_itf restrict itf, char * restrict buf, size_t buf_size)
+static ssize_t qn_rdr_rdr_read_vfn(qn_io_reader_itf restrict itf, char * restrict buf, size_t buf_size)
 {
     return qn_rdr_read(qn_rdr_from_io_reader(itf), buf, buf_size);
 }
 
-static qn_bool qn_rdr_seek_vfn(qn_io_reader_itf restrict itf, qn_foffset offset)
+static qn_bool qn_rdr_rdr_seek_vfn(qn_io_reader_itf restrict itf, qn_foffset offset)
 {
     return qn_rdr_seek(qn_rdr_from_io_reader(itf), offset);
 }
 
-static qn_bool qn_rdr_advance_vfn(qn_io_reader_itf restrict itf, qn_foffset delta)
+static qn_bool qn_rdr_rdr_advance_vfn(qn_io_reader_itf restrict itf, qn_foffset delta)
 {
     return qn_rdr_advance(qn_rdr_from_io_reader(itf), delta);
 }
 
-static qn_io_reader_itf qn_rdr_duplicate_vfn(qn_io_reader_itf restrict itf)
+static qn_io_reader_itf qn_rdr_rdr_duplicate_vfn(qn_io_reader_itf restrict itf)
 {
     qn_reader_ptr new_rdr = qn_rdr_duplicate(qn_rdr_from_io_reader(itf));
     if (!new_rdr) return NULL;
     return qn_rdr_to_io_reader(new_rdr);
 }
 
-static qn_io_reader_itf qn_rdr_section_vfn(qn_io_reader_itf restrict itf, qn_foffset offset, size_t sec_size)
+static qn_io_reader_itf qn_rdr_rdr_section_vfn(qn_io_reader_itf restrict itf, qn_foffset offset, size_t sec_size)
 {
     qn_reader_ptr new_rdr = qn_rdr_section(qn_rdr_from_io_reader(itf), offset, sec_size);
     if (!new_rdr) return NULL;
     return qn_rdr_to_io_reader(new_rdr);
 }
 
-static qn_string qn_rdr_name_vfn(qn_io_reader_itf restrict itf)
+static qn_string qn_rdr_rdr_name_vfn(qn_io_reader_itf restrict itf)
 {
     return qn_rdr_name(qn_rdr_from_io_reader(itf));
 }
 
-static qn_fsize qn_rdr_size_vfn(qn_io_reader_itf restrict itf)
+static qn_fsize qn_rdr_rdr_size_vfn(qn_io_reader_itf restrict itf)
 {
     return qn_rdr_size(qn_rdr_from_io_reader(itf));
 }
 
-static qn_io_reader_st qn_rdr_vtable = {
-    &qn_rdr_close_vfn,
-    &qn_rdr_peek_vfn,
-    &qn_rdr_read_vfn,
-    &qn_rdr_seek_vfn,
-    &qn_rdr_advance_vfn,
-    &qn_rdr_duplicate_vfn,
-    &qn_rdr_section_vfn,
-    &qn_rdr_name_vfn,
-    &qn_rdr_size_vfn
+static qn_io_reader_st qn_rdr_rdr_vtable = {
+    &qn_rdr_rdr_close_vfn,
+    &qn_rdr_rdr_peek_vfn,
+    &qn_rdr_rdr_read_vfn,
+    &qn_rdr_rdr_seek_vfn,
+    &qn_rdr_rdr_advance_vfn,
+    &qn_rdr_rdr_duplicate_vfn,
+    &qn_rdr_rdr_section_vfn,
+    &qn_rdr_rdr_name_vfn,
+    &qn_rdr_rdr_size_vfn
 };
 
 QN_SDK qn_reader_ptr qn_rdr_create(qn_io_reader_itf src_rdr, qn_rdr_pos filter_num)
@@ -113,7 +113,7 @@ QN_SDK qn_reader_ptr qn_rdr_create(qn_io_reader_itf src_rdr, qn_rdr_pos filter_n
     new_rdr->post_end = filter_num - 1;
     new_rdr->cap = filter_num;
 
-    new_rdr->rdr_vtbl = &qn_rdr_vtable;
+    new_rdr->rdr_vtbl = &qn_rdr_rdr_vtable;
     return new_rdr;
 }
 
