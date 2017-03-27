@@ -2304,7 +2304,7 @@ static inline qn_stor_resumable_upload_ptr qn_stor_ru_ctx_from_io_reader(qn_io_r
     return (qn_stor_resumable_upload_ptr)( ( (char *)itf ) - (char *)( &((qn_stor_resumable_upload_ptr)0)->rdr_vtbl ) );
 }
 
-static ssize_t qn_stor_ru_ctx_read_vfn(qn_io_reader_itf restrict itf, char * restrict buf, size_t buf_size)
+static ssize_t qn_stor_ru_ctx_rdr_read_vfn(qn_io_reader_itf restrict itf, char * restrict buf, size_t buf_size)
 {
     qn_json_array_ptr blk_arr;
     qn_json_object_ptr blk_info;
@@ -2348,7 +2348,7 @@ static ssize_t qn_stor_ru_ctx_read_vfn(qn_io_reader_itf restrict itf, char * res
     return buf_size - rem_size;
 }
 
-static qn_fsize qn_stor_ru_ctx_size_vfn(qn_io_reader_itf restrict itf)
+static qn_fsize qn_stor_ru_ctx_rdr_size_vfn(qn_io_reader_itf restrict itf)
 {
     qn_json_array_ptr blk_arr;
     qn_json_object_ptr blk_info;
@@ -2377,13 +2377,13 @@ static qn_fsize qn_stor_ru_ctx_size_vfn(qn_io_reader_itf restrict itf)
 static qn_io_reader_st qn_stor_ru_ctx_rdr_vtable = {
     NULL, // CLOSE
     NULL, // PEEK
-    &qn_stor_ru_ctx_read_vfn, // READ
+    &qn_stor_ru_ctx_rdr_read_vfn, // READ
     NULL, // SEEK
     NULL, // ADVANCE
     NULL, // DUPLICATE
     NULL, // SECTION
     NULL, // NAME
-    &qn_stor_ru_ctx_size_vfn  // SIZE
+    &qn_stor_ru_ctx_rdr_size_vfn  // SIZE
 };
 
 static inline int qn_stor_ru_calculate_block_count(qn_fsize fsize)
