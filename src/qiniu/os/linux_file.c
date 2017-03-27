@@ -297,6 +297,16 @@ QN_SDK qn_bool qn_fl_advance(qn_file_ptr restrict fl, qn_foffset delta)
     return qn_true;
 }
 
+QN_SDK ssize_t qn_fl_write(qn_file_ptr restrict fl, char * restrict buf, size_t buf_size)
+{
+    ssize_t ret = write(fl->fd, buf, buf_size);
+    if (ret < 0) {
+        qn_err_fl_set_reading_file_failed();
+        return QN_IO_RDR_READING_FAILED;
+    } // if
+    return ret;
+}
+
 QN_SDK qn_fl_section_ptr qn_fl_section(qn_file_ptr restrict fl, qn_foffset offset, size_t sec_size)
 {
     qn_fl_section_ptr new_sec = qn_fl_sec_create(fl, offset, sec_size);
