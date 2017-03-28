@@ -248,9 +248,8 @@ QN_SDK qn_string qn_cs_sprintf(const char * restrict format, ...)
 #error The version of the MSVC is lower then VC++ 2005.
 #endif
 
-QN_SDK int qn_cs_snprintf(char * restrict buf, qn_size buf_size, const char * restrict format, ...)
+QN_SDK int qn_cs_vsnprintf(char * restrict buf, qn_size buf_size, const char * restrict format, va_list ap)
 {
-    va_list ap;
     int printed_size;
     char * buf = str;
     qn_size buf_cap = buf_size;
@@ -260,22 +259,17 @@ QN_SDK int qn_cs_snprintf(char * restrict buf, qn_size buf_size, const char * re
         buf_cap = 1;
     } // if
 
-    va_start(ap, format);
     printed_size = vsnprintf(buf, buf_cap, format, ap);
-    va_end(ap);
     return printed_size;
 }
 
 #else
 
-QN_SDK int qn_cs_snprintf(char * restrict str, qn_size size,  const char * restrict format, ...)
+QN_SDK int qn_cs_vsnprintf(char * restrict buf, qn_size buf_size, const char * restrict format, va_list ap)
 {
-    va_list ap;
     int printed_size;
 
-    va_start(ap, format);
-    printed_size = vsnprintf(str, size, format, ap);
-    va_end(ap);
+    printed_size = vsnprintf(buf, buf_size, format, ap);
     if (printed_size < 0) qn_err_3rdp_set_glibc_error_occurred(errno);
     return printed_size;
 }

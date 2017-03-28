@@ -63,7 +63,17 @@ static inline qn_string qn_cs_concat_raw(const char * restrict s1, qn_size s1_si
 
 QN_SDK extern qn_string qn_cs_vprintf(const char * restrict format, va_list ap);
 QN_SDK extern qn_string qn_cs_sprintf(const char * restrict format, ...);
-QN_SDK extern int qn_cs_snprintf(char * restrict buf, qn_size buf_size, const char * restrict format, ...);
+QN_SDK extern int qn_cs_vsnprintf(char * restrict buf, qn_size buf_size, const char * restrict format, va_list ap);
+
+static inline int qn_cs_snprintf(char * restrict buf, qn_size buf_size, const char * restrict format, ...)
+{
+    int ret;
+    va_list ap;
+    va_start(ap, format);
+    ret = qn_cs_vsnprintf(buf, buf_size, format, ap);
+    va_end(ap);
+    return ret;
+}
 
 QN_SDK extern qn_string qn_cs_encode_base64_urlsafe(const char * restrict bin, qn_size bin_size);
 QN_SDK extern qn_string qn_cs_decode_base64_urlsafe(const char * restrict str, qn_size str_size);
