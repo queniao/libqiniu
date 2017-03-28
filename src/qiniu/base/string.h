@@ -12,6 +12,7 @@
 #define posix_strcmp strcmp
 #define posix_strncmp strncmp
 #define posix_strchr strchr
+#define posix_strrchr strrchr
 #define posix_strstr strstr
 
 #ifdef __cplusplus
