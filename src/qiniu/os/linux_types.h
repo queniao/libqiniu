@@ -41,5 +41,7 @@ typedef off_t qn_foffset;   // A signed long integer for file offsets.
 
 #endif
 
+typedef time_t qn_time;
+
 #endif // __QN_OS_LINUX_TYPES_H__
 
