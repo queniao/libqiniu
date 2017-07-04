@@ -1,6 +1,7 @@
 #include <errno.h>
 
 #include "qiniu/base/errors.h"
+#include "qiniu/os/time.h"
 #include "qiniu/log.h"
 
 #ifdef __cplusplus
@@ -47,7 +48,14 @@ QN_SDK void qn_log_output_va(qn_log_level lvl, const char * restrict file, int l
     fname = posix_strrchr(file, '/'); // TODO: Be compatible to Windows pathes.
     if (! fname) fname = file;
 
-    ret = qn_cs_snprintf(qn_log_buf, sizeof(qn_log_buf), "%s %s:%d", (&qn_log_level_tags[QN_LOG_DEBUG] + lvl), fname, line);
+    ret = qn_tm_format_timestamp(qn_tm_time(), qn_log_buf, sizeof(qn_log_buf));
+    if (ret <= 0) {
+        qn_err_3rdp_set_glibc_error_occurred(errno);
+        return;
+    } // if
+    size += ret;
+
+    ret = qn_cs_snprintf(qn_log_buf + size, sizeof(qn_log_buf) - size, " %s %s:%d : ", (&qn_log_level_tags[QN_LOG_DEBUG] + lvl), fname, line);
     if (ret <= 0) {
         qn_err_3rdp_set_glibc_error_occurred(errno);
         return;
