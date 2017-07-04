@@ -195,7 +195,7 @@ QN_SDK qn_easy_ptr qn_easy_create(void)
         return NULL;
     } // if
 
-    new_easy->stor = qn_stor_create();
+    new_easy->stor = qn_stor_create(NULL);
     if (! new_easy->stor) {
         free(new_easy);
         return NULL;

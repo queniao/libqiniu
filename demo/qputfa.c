@@ -124,7 +124,7 @@ int main(int argc, char * argv[])
         } // if
     } // if
 
-    stor = qn_stor_create();
+    stor = qn_stor_create(NULL);
     if (! stor) {
         if (ctrl_rdr) {
             qn_flt_etag_destroy(etag);

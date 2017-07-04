@@ -28,7 +28,7 @@ int main(int argc, char * argv[])
     bucket = argv[3];
     key = argv[4];
 
-    stor = qn_stor_create();
+    stor = qn_stor_create(NULL);
     if (! stor) {
         qn_mac_destroy(mac);
         printf("Cannot initialize a new storage object.\n");

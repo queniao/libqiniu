@@ -34,7 +34,7 @@ extern "C"
 struct _QN_STORAGE;
 typedef struct _QN_STORAGE * qn_storage_ptr;
 
-QN_SDK extern qn_storage_ptr qn_stor_create(void);
+QN_SDK extern qn_storage_ptr qn_stor_create(qn_region_ptr restrict rgn);
 QN_SDK extern void qn_stor_destroy(qn_storage_ptr restrict stor);
 
 QN_SDK extern qn_json_object_ptr qn_stor_get_object_body(const qn_storage_ptr restrict stor);
@@ -51,7 +51,6 @@ QN_SDK extern void qn_stor_mne_destroy(qn_stor_management_extra_ptr restrict me)
 QN_SDK extern void qn_stor_mne_reset(qn_stor_management_extra_ptr restrict me);
 
 QN_SDK extern void qn_stor_mne_set_force_overwrite(qn_stor_management_extra_ptr restrict me, qn_bool force);
-QN_SDK extern void qn_stor_mne_set_region_entry(qn_stor_management_extra_ptr restrict me, qn_rgn_entry_ptr restrict entry);
 
 // -------- Management Functions (abbreviation: mn) --------
 
@@ -104,8 +103,6 @@ typedef struct _QN_STOR_FETCH_EXTRA * qn_stor_fetch_extra_ptr;
 QN_SDK extern qn_stor_fetch_extra_ptr qn_stor_fte_create(void);
 QN_SDK extern void qn_stor_fte_destroy(qn_stor_fetch_extra_ptr restrict fte);
 QN_SDK extern void qn_stor_fte_reset(qn_stor_fetch_extra_ptr restrict fte);
-
-QN_SDK extern void qn_stor_fte_set_region_entry(qn_stor_fetch_extra_ptr restrict fte, qn_rgn_entry_ptr restrict entry);
 
 // -------- Fetch Functions (abbreviation: ft) --------
 
@@ -164,7 +161,6 @@ QN_SDK extern void qn_stor_upe_set_mime_type(qn_stor_upload_extra_ptr restrict u
 QN_SDK extern void qn_stor_upe_set_local_crc32(qn_stor_upload_extra_ptr restrict upe, const char * restrict crc32);
 QN_SDK extern void qn_stor_upe_set_accept_type(qn_stor_upload_extra_ptr restrict upe, const char * restrict accept_type);
 QN_SDK extern void qn_stor_upe_set_user_defined_variables(qn_stor_upload_extra_ptr restrict upe, qn_ud_variable_ptr ud_vars);
-QN_SDK extern void qn_stor_upe_set_region_entry(qn_stor_upload_extra_ptr restrict upe, qn_rgn_entry_ptr restrict entry);
 
 // -------- Ordinary Upload (abbreviation: up) --------
 

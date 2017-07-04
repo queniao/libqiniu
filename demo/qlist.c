@@ -44,7 +44,7 @@ int main(int argc, char * argv[])
     if (prefix) qn_stor_lse_set_prefix(le, prefix, delimiter);
     if (limit) qn_stor_lse_set_limit(le, atoi(limit));
 
-    stor = qn_stor_create();
+    stor = qn_stor_create(NULL);
     if (! stor) {
         qn_stor_lse_destroy(le);
         qn_mac_destroy(mac);

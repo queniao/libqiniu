@@ -59,6 +59,7 @@ static qn_err_message_map_st qn_err_message_maps[] = {
     {QN_ERR_STOR_LACK_OF_BLOCK_INFO, "Lack of block information"},
     {QN_ERR_STOR_LACK_OF_FILE_SIZE, "Lack of file size"},
     {QN_ERR_STOR_INVALID_UPLOAD_RESULT, "Invalid upload result"},
+    {QN_ERR_STOR_LACK_OF_REGION_ENTRY, "Lack of region host entry"},
 
     {QN_ERR_ETAG_INITIALIZING_CONTEXT_FAILED, "Failed in initializing a new qetag context"},
     {QN_ERR_ETAG_UPDATING_CONTEXT_FAILED, "Failed in updating the qetag context"},

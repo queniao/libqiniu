@@ -22,7 +22,6 @@ int main(int argc, char * argv[])
     qn_rgn_table_ptr rgn_tbl;
     qn_rgn_auth rgn_auth;
     qn_rgn_service_ptr rgn_svc;
-    qn_rgn_entry_ptr rgn_entry;
     qn_http_hdr_iterator_ptr hdr_itr;
 
     if (argc < 5) {
@@ -100,13 +99,9 @@ int main(int argc, char * argv[])
         return 1;
     } // if
 
-    rgn_entry = NULL;
-    qn_rgn_tbl_choose_first_entry(rgn_tbl, QN_RGN_SVC_UP, bucket, &rgn_entry);
-
     qn_stor_upe_set_final_key(upe, key);
-    qn_stor_upe_set_region_entry(upe, rgn_entry);
 
-    stor = qn_stor_create();
+    stor = qn_stor_create(NULL);
     if (! stor) {
         qn_stor_upe_destroy(upe);
         qn_rgn_tbl_destroy(rgn_tbl);

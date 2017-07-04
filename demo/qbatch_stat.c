@@ -29,7 +29,7 @@ int main(int argc, char * argv[])
 
     bucket = argv[3];
 
-    stor = qn_stor_create();
+    stor = qn_stor_create(NULL);
     if (! stor) {
         qn_mac_destroy(mac);
         printf("Cannot initialize a new storage object due to application error `%s`.\n", qn_err_get_message());

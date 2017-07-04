@@ -77,7 +77,7 @@ int main(int argc, char * argv[])
 
     qn_stor_upe_set_final_key(upe, key);
 
-    stor = qn_stor_create();
+    stor = qn_stor_create(NULL);
     if (! stor) {
         qn_stor_upe_destroy(upe);
         qn_str_destroy(uptoken);

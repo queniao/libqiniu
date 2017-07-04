@@ -56,6 +56,7 @@ typedef enum _QN_ERR_CODE
     QN_ERR_STOR_LACK_OF_BLOCK_INFO = 21009,
     QN_ERR_STOR_LACK_OF_FILE_SIZE = 21010,
     QN_ERR_STOR_INVALID_UPLOAD_RESULT = 21011,
+    QN_ERR_STOR_LACK_OF_REGION_ENTRY = 21012,
 
     QN_ERR_ETAG_INITIALIZING_CONTEXT_FAILED = 22001,
     QN_ERR_ETAG_UPDATING_CONTEXT_FAILED = 22002,
@@ -125,6 +126,7 @@ QN_SDK extern qn_err_code_em qn_err_get_code(void);
 #define qn_err_stor_set_lack_of_file_size() qn_err_set_code(QN_ERR_STOR_LACK_OF_FILE_SIZE, 0, __FILE__, __LINE__)
 #define qn_err_stor_set_lack_of_block_info() qn_err_set_code(QN_ERR_STOR_LACK_OF_BLOCK_INFO, 0, __FILE__, __LINE__)
 #define qn_err_stor_set_invalid_upload_result() qn_err_set_code(QN_ERR_STOR_INVALID_UPLOAD_RESULT, 0, __FILE__, __LINE__)
+#define qn_err_stor_set_lack_of_region_entry() qn_err_set_code(QN_ERR_STOR_LACK_OF_REGION_ENTRY, 0, __FILE__, __LINE__)
 
 #define qn_err_etag_set_initializing_context_failed() qn_err_set_code(QN_ERR_ETAG_INITIALIZING_CONTEXT_FAILED, 0, __FILE__, __LINE__)
 #define qn_err_etag_set_updating_context_failed() qn_err_set_code(QN_ERR_ETAG_UPDATING_CONTEXT_FAILED, 0, __FILE__, __LINE__)
@@ -330,6 +332,11 @@ static inline qn_bool qn_err_stor_is_lack_of_file_size(void)
 static inline qn_bool qn_err_stor_is_invalid_upload_result(void)
 {
     return qn_err_get_code() == QN_ERR_STOR_INVALID_UPLOAD_RESULT;
+}
+
+static inline qn_bool qn_err_stor_is_lack_of_region_entry(void)
+{
+    return qn_err_get_code() == QN_ERR_STOR_LACK_OF_REGION_ENTRY;
 }
 
 static inline qn_bool qn_err_etag_is_initializing_context_failed(void)
