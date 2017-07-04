@@ -374,6 +374,10 @@ static inline qn_bool qn_err_easy_is_invalid_put_policy(void)
     return qn_err_get_code() == QN_ERR_EASY_INVALID_PUT_POLICY;
 }
 
+#define qn_err_3rdp_is_glibc_error_occurred() (qn_err_get_code() == QN_ERR_3RDP_GLIBC_ERROR_OCCURRED)
+#define qn_err_3rdp_is_curl_easy_error_occurred() (qn_err_get_code() == QN_ERR_3RDP_CURL_EASY_ERROR_OCCURRED)
+#define qn_err_3rdp_is_openssl_error_occurred() (qn_err_get_code() == QN_ERR_3RDP_OPENSSL_ERROR_OCCURRED)
+
 #ifdef __cplusplus
 }
 #endif
