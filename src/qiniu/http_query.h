@@ -69,7 +69,7 @@ static inline qn_string qn_http_qry_to_string(qn_http_query_ptr restrict qry)
 struct _QN_HTTP_QRY_ITERATOR;
 typedef struct _QN_HTTP_QRY_ITERATOR * qn_http_qry_iterator_ptr;
 
-static inline qn_http_qry_iterator_ptr qn_http_qry_itr_create(qn_http_header_ptr restrict qry)
+static inline qn_http_qry_iterator_ptr qn_http_qry_itr_create(qn_http_query_ptr restrict qry)
 {
     return (qn_http_qry_iterator_ptr) qn_etbl_itr_create((qn_etable_ptr) qry);
 }
