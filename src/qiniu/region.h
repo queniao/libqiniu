@@ -19,6 +19,11 @@ typedef struct _QN_RGN_ENTRY
     qn_string hostname;
 } qn_rgn_entry, *qn_rgn_entry_ptr;
 
+static inline qn_bool qn_rgn_is_https_entry(qn_rgn_entry_ptr restrict entry)
+{
+    return posix_strstr(qn_str_cstr(entry->base_url), "https") == qn_str_cstr(entry->base_url);
+}
+
 struct _QN_RGN_HOST;
 typedef struct _QN_RGN_HOST * qn_rgn_host_ptr;
 
