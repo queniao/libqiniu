@@ -40,6 +40,7 @@ static qn_err_message_map_st qn_err_message_maps[] = {
     {QN_ERR_HTTP_ADDING_STRING_FIELD_FAILED, "Adding string field to HTTP form failed"},
     {QN_ERR_HTTP_ADDING_FILE_FIELD_FAILED, "Adding file field to HTTP form failed"},
     {QN_ERR_HTTP_ADDING_BUFFER_FIELD_FAILED, "Adding buffer field to HTTP form failed"},
+    {QN_ERR_HTTP_MISMATCHING_FILE_SIZE, "Mismatching file size"},
 
     {QN_ERR_FL_OPENING_FILE_FAILED, "Opening file failed"},
     {QN_ERR_FL_DUPLICATING_FILE_FAILED, "Duplicating file failed"},

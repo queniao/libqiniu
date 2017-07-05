@@ -34,6 +34,10 @@ typedef enum _QN_ERR_CODE
     QN_ERR_HTTP_ADDING_STRING_FIELD_FAILED = 3002,
     QN_ERR_HTTP_ADDING_FILE_FIELD_FAILED = 3003,
     QN_ERR_HTTP_ADDING_BUFFER_FIELD_FAILED = 3004,
+    QN_ERR_HTTP_MISMATCHING_FILE_SIZE = 3005,
+
+    QN_ERR_COMM_DNS_FAILED = 4001,
+    QN_ERR_COMM_TRANSMISSION_FAILED = 4002,
 
     QN_ERR_FL_OPENING_FILE_FAILED = 11001,
     QN_ERR_FL_DUPLICATING_FILE_FAILED = 11002,
@@ -64,7 +68,7 @@ typedef enum _QN_ERR_CODE
 
     QN_ERR_3RDP_GLIBC_ERROR_OCCURRED = 101001,
     QN_ERR_3RDP_CURL_EASY_ERROR_OCCURRED = 101002,
-    QN_ERR_3RDP_OPENSSL_ERROR_OCCURRED = 101003
+    QN_ERR_3RDP_OPENSSL_ERROR_OCCURRED = 101003,
 } qn_err_code_em;
 
 QN_SDK extern ssize_t qn_err_format_message(char * buf, size_t buf_size);
@@ -98,6 +102,10 @@ QN_SDK extern qn_err_code_em qn_err_get_code(void);
 #define qn_err_http_set_adding_string_field_failed() qn_err_set_code(QN_ERR_HTTP_ADDING_STRING_FIELD_FAILED, 0, __FILE__, __LINE__)
 #define qn_err_http_set_adding_file_field_failed() qn_err_set_code(QN_ERR_HTTP_ADDING_FILE_FIELD_FAILED, 0, __FILE__, __LINE__)
 #define qn_err_http_set_adding_buffer_field_failed() qn_err_set_code(QN_ERR_HTTP_ADDING_BUFFER_FIELD_FAILED, 0, __FILE__, __LINE__)
+#define qn_err_http_set_mismatching_file_size() qn_err_set_code(QN_ERR_HTTP_MISMATCHING_FILE_SIZE, 0, __FILE__, __LINE__)
+
+#define qn_err_comm_set_dns_failed() qn_err_set_code(QN_ERR_COMM_DNS_FAILED, 0, __FILE__, __LINE__)
+#define qn_err_comm_set_transmission_failed() qn_err_set_code(QN_ERR_COMM_TRANSMISSION_FAILED, 0, __FILE__, __LINE__)
 
 #define qn_err_fl_set_opening_file_failed() qn_err_set_code(QN_ERR_FL_OPENING_FILE_FAILED, 0, __FILE__, __LINE__)
 #define qn_err_fl_set_duplicating_file_failed() qn_err_set_code(QN_ERR_FL_DUPLICATING_FILE_FAILED, 0, __FILE__, __LINE__)
@@ -238,6 +246,11 @@ static inline qn_bool qn_err_http_is_adding_buffer_field_failed(void)
 {
     return qn_err_get_code() == QN_ERR_HTTP_ADDING_BUFFER_FIELD_FAILED;
 }
+
+#define qn_err_http_is_mismatching_file_size() (qn_err_get_code() == QN_ERR_HTTP_MISMATCHING_FILE_SIZE)
+
+#define qn_err_comm_is_dns_failed() (qn_err_get_code() == QN_ERR_COMM_DNS_FAILED)
+#define qn_err_comm_is_transmission_failed() (qn_err_get_code() == QN_ERR_COMM_TRANSMISSION_FAILED)
 
 static inline qn_bool qn_err_fl_is_opening_file_failed(void)
 {

@@ -686,10 +686,33 @@ static qn_bool qn_http_conn_do_request(qn_http_connection_ptr restrict conn, qn_
     curl_code = curl_easy_perform(conn->curl);
     curl_slist_free_all(headers);
     if (curl_code != CURLE_OK) {
-        qn_err_3rdp_set_curl_easy_error_occurred(curl_code);
-        return qn_false;
-    } // if
+        switch (curl_code) {
+            case CURLE_COULDNT_CONNECT:
+            case CURLE_OPERATION_TIMEDOUT:
+                qn_err_set_try_again();
+                return qn_false;
 
+            case CURLE_COULDNT_RESOLVE_HOST:
+            case CURLE_COULDNT_RESOLVE_PROXY:
+                qn_err_comm_set_dns_failed();
+                return qn_false;
+
+            case CURLE_SEND_ERROR:
+            case CURLE_RECV_ERROR:
+                qn_err_comm_set_transmission_failed();
+                return qn_false;
+
+            // case CURLE_HTTP2:
+            // case CURLE_HTTP2_STREAM:
+            // case CURLE_SSL_CONNECT_ERROR:
+            case CURLE_PARTIAL_FILE:
+                qn_err_http_set_mismatching_file_size();
+                return qn_false;
+
+            default:
+                break;
+        } // switch
+    } // if
     return qn_true;
 }
 
