@@ -38,6 +38,15 @@ QN_SDK extern qn_rgn_entry_ptr qn_rgn_host_get_entry(qn_rgn_host_ptr restrict ho
 
 // ---- Declaration of Region ----
 
+enum
+{
+    QN_RGN_SVC_UP = 0,
+    QN_RGN_SVC_IO,
+    QN_RGN_SVC_RS,
+    QN_RGN_SVC_RSF,
+    QN_RGN_SVC_API
+};
+
 struct _QN_REGION;
 typedef struct _QN_REGION * qn_region_ptr;
 
@@ -45,11 +54,13 @@ QN_SDK extern qn_region_ptr qn_rgn_create(const char * restrict name);
 QN_SDK extern void qn_rgn_destroy(qn_region_ptr restrict rgn);
 QN_SDK extern void qn_rgn_reset(qn_region_ptr restrict rgn);
 
-QN_SDK extern qn_rgn_host_ptr qn_rgn_get_up_host(qn_region_ptr restrict rgn);
-QN_SDK extern qn_rgn_host_ptr qn_rgn_get_io_host(qn_region_ptr restrict rgn);
-QN_SDK extern qn_rgn_host_ptr qn_rgn_get_rs_host(qn_region_ptr restrict rgn);
-QN_SDK extern qn_rgn_host_ptr qn_rgn_get_rsf_host(qn_region_ptr restrict rgn);
-QN_SDK extern qn_rgn_host_ptr qn_rgn_get_api_host(qn_region_ptr restrict rgn);
+QN_SDK extern qn_rgn_host_ptr qn_rgn_get_host(qn_region_ptr restrict rgn, int svc);
+
+#define qn_rgn_get_up_host(rgn) qn_rgn_get_host(rgn, QN_RGN_SVC_UP)
+#define qn_rgn_get_io_host(rgn) qn_rgn_get_host(rgn, QN_RGN_SVC_IO)
+#define qn_rgn_get_rs_host(rgn) qn_rgn_get_host(rgn, QN_RGN_SVC_RS)
+#define qn_rgn_get_rsf_host(rgn) qn_rgn_get_host(rgn, QN_RGN_SVC_RSF)
+#define qn_rgn_get_api_host(rgn) qn_rgn_get_host(rgn, QN_RGN_SVC_API)
 
 // ---- Declaration of Region Table ----
 
@@ -69,15 +80,6 @@ QN_SDK extern const qn_region_ptr qn_rgn_tbl_get_default_region(qn_rgn_table_ptr
 QN_SDK extern qn_bool qn_rgn_tbl_set_default_region(qn_rgn_table_ptr restrict rtbl, const qn_region_ptr restrict region);
 
 // ----
-
-enum
-{
-    QN_RGN_SVC_UP = 0,
-    QN_RGN_SVC_IO,
-    QN_RGN_SVC_RS,
-    QN_RGN_SVC_RSF,
-    QN_RGN_SVC_API
-};
 
 QN_SDK extern void qn_rgn_tbl_choose_first_entry(qn_rgn_table_ptr restrict rtbl, int svc, const char * restrict name, qn_rgn_entry_ptr * restrict entry);
 

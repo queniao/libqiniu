@@ -240,29 +240,16 @@ QN_SDK void qn_rgn_reset(qn_region_ptr restrict rgn)
     qn_rgn_host_reset(rgn->up);
 }
 
-QN_SDK qn_rgn_host_ptr qn_rgn_get_up_host(qn_region_ptr restrict rgn)
+QN_SDK qn_rgn_host_ptr qn_rgn_get_host(qn_region_ptr restrict rgn, int svc)
 {
-    return rgn->up;
-}
-
-QN_SDK qn_rgn_host_ptr qn_rgn_get_io_host(qn_region_ptr restrict rgn)
-{
-    return rgn->io;
-}
-
-QN_SDK qn_rgn_host_ptr qn_rgn_get_rs_host(qn_region_ptr restrict rgn)
-{
-    return rgn->rs;
-}
-
-QN_SDK qn_rgn_host_ptr qn_rgn_get_rsf_host(qn_region_ptr restrict rgn)
-{
-    return rgn->rsf;
-}
-
-QN_SDK qn_rgn_host_ptr qn_rgn_get_api_host(qn_region_ptr restrict rgn)
-{
-    return rgn->api;
+    switch (svc) {
+        case QN_RGN_SVC_UP: return rgn->up;
+        case QN_RGN_SVC_IO: return rgn->io;
+        case QN_RGN_SVC_RS: return rgn->rs;
+        case QN_RGN_SVC_RSF: return rgn->rsf;
+        case QN_RGN_SVC_API: return rgn->api;
+    } // switch
+    return NULL;
 }
 
 // ---- Definition of Region Table ----
