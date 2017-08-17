@@ -607,13 +607,13 @@ QN_SDK qn_http_connection_ptr qn_http_conn_create(void)
         qn_err_set_out_of_memory();
         return NULL;
     } // if
-
     new_conn->curl = curl_easy_init();
     if (!new_conn->curl) {
         free(new_conn);
         qn_err_3rdp_set_curl_easy_error_occurred(CURLE_FAILED_INIT);
         return NULL;
     }
+    curl_easy_setopt(new_conn->curl, CURLOPT_NOSIGNAL, 1L);
     return new_conn;
 }
 
